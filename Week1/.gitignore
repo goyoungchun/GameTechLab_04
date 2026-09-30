@@ -1,0 +1,38 @@
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.VC.db
+*.VC.opendb
+*.ipch
+
+# Build output
+Debug/
+Release/
+x64/
+x86/
+bin/
+obj/
+
+# CMake
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# Visual Studio generated files
+*.ilk
+*.pdb
+*.idb
+*.tlog
+*.log
+
+# Executable / library
+*.exe
+*.dll
+*.lib
+*.obj
+
+# Windows
+Thumbs.db
+Desktop.ini

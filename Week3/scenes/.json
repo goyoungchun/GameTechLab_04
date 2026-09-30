@@ -1,0 +1,99 @@
+{
+    "Assets": [
+        {
+            "Guid": "DE7D1E67-4971-9A8E-DBDB-19986F640394",
+            "TypeName": "UMesh",
+            "AssetName": "CylinderMesh",
+            "AssetMetaDataPath": "./Content/Metadata/CylinderMesh.meta"
+        },
+        {
+            "Guid": "E6C3F794-497C-4E4C-B1DF-FBBFB4BF10BE",
+            "TypeName": "UMesh",
+            "AssetName": "ConeMesh",
+            "AssetMetaDataPath": "./Content/Metadata/ConeMesh.meta"
+        },
+        {
+            "Guid": "70F1AF0C-428B-ADF2-90D7-06AFB66BD257",
+            "TypeName": "UColorMaterial",
+            "AssetName": "Red",
+            "AssetMetaDataPath": "./Content/Metadata/RedMaterial.meta"
+        },
+        {
+            "Guid": "03AB3533-424D-F811-1CF7-6CAD4753DDA7",
+            "TypeName": "UColorMaterial",
+            "AssetName": "Green",
+            "AssetMetaDataPath": "./Content/Metadata/GreenMaterial.meta"
+        },
+        {
+            "Guid": "E70130D2-4878-73D6-CD47-7A8B04814D91",
+            "TypeName": "UColorMaterial",
+            "AssetName": "Blue",
+            "AssetMetaDataPath": "./Content/Metadata/BlueMaterial.meta"
+        },
+        {
+            "Guid": "416AA40B-4923-5314-E41C-13B3E528F2D0",
+            "TypeName": "UPipeline",
+            "AssetName": "GizmoPipeline",
+            "AssetMetaDataPath": "./Content/Metadata/BasePipeline.meta"
+        },
+        {
+            "Guid": "E56456D5-42A3-C1C8-D7E2-9AB55C799237",
+            "TypeName": "UPipeline",
+            "AssetName": "BasePipeline",
+            "AssetMetaDataPath": "./Content/Metadata/BasePipeline.meta"
+        },
+        {
+            "Guid": "BFF8AB10-45F5-29C5-962D-CA8B571DE67C",
+            "TypeName": "UPipeline",
+            "AssetName": "AlternatePipeline",
+            "AssetMetaDataPath": "./Content/Metadata/AlternatePipeline.meta"
+        },
+        {
+            "Guid": "101BAAB6-43BD-8728-4D51-47804E7E4AF0",
+            "TypeName": "UMesh",
+            "AssetName": "SphereMesh",
+            "AssetMetaDataPath": "./Content/Metadata/TorusMesh.meta"
+        },
+        {
+            "Guid": "6C5A06F5-46F5-86DD-1476-D2877F2B72C0",
+            "TypeName": "UColorMaterial",
+            "AssetName": "GreyMaterial",
+            "AssetMetaDataPath": "./Content/Metadata/GreyMaterial.meta"
+        }
+    ],
+    "Actors": [
+        {
+            "Guid": "5659C39D-4008-A6DA-676F-B39B2310DA64",
+            "TypeName": "AActor",
+            "Components": [
+                {
+                    "Guid": "CAFD4A17-4CF6-921D-2424-0593A665AB82",
+                    "TypeName": "UCameraComponent",
+                    "bActive": true,
+                    "Transform": {
+                        "Position": [
+                            5.0,
+                            5.0,
+                            5.0
+                        ],
+                        "Rotation": [
+                            0.6030004620552063,
+                            -1.302002191543579,
+                            0.0
+                        ],
+                        "Scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    },
+                    "FOV": 1.0471999645233154,
+                    "AspectRatio": 1.7777777910232544,
+                    "NearPlane": 0.10000000149011612,
+                    "FarPlane": 1000.0
+                }
+            ],
+            "GuidRootComponent": "CAFD4A17-4CF6-921D-2424-0593A665AB82"
+        }
+    ]
+}

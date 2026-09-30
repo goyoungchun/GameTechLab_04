@@ -1,0 +1,90 @@
+{
+  "NextUUID" : 7,
+  "Version" : 0,
+  "World" : {
+    "ClassName" : "UWorld",
+    "Properties" : {
+      "Name" : "UWorld",
+      "UUID" : 0,
+      "mActors" : [{
+          "ClassName" : "AActor",
+          "Properties" : {
+            "Name" : "StaticMesh",
+            "UUID" : 2,
+            "mComponents" : [{
+                "ClassName" : "UStaticMeshComponent",
+                "ParentUUID" : -1,
+                "Properties" : {
+                  "Name" : "UStaticMeshComponent",
+                  "UUID" : 1,
+                  "mColor" : [1.000000, 1.000000, 1.000000, 0.000000],
+                  "mRelativeLocation" : [2.000000, 3.504825, 0.000000],
+                  "mRelativeRotation" : [0.000000, 0.000000, 0.000000],
+                  "mRelativeScale3D" : [1.000000, 1.000000, 1.000000],
+                  "mStaticMeshAssetKey" : "Engine/Primitives/CubeMesh",
+                  "mTextureName" : "Assets/Textures/CubeTextureSample.dds",
+                  "mbShowBoundingBox" : true,
+                  "mbUseTexture" : false,
+                  "mePrimitive" : "StaticMesh"
+                }
+              }, {
+                "ClassName" : "UNameComponent",
+                "ParentUUID" : 1,
+                "Properties" : {
+                  "Name" : "UNameComponent",
+                  "UUID" : 3,
+                  "mColor" : [1.000000, 1.000000, 1.000000, 1.000000],
+                  "mNameText" : "Name: StaticMesh, UUID: 2",
+                  "mRelativeLocation" : [0.000000, 0.000000, 1.000000],
+                  "mRelativeRotation" : [0.000000, 0.000000, 0.000000],
+                  "mRelativeScale3D" : [1.000000, 1.000000, 1.000000],
+                  "mbShowBoundingBox" : true,
+                  "mbUseTexture" : false,
+                  "mePrimitive" : "BillboardQuad"
+                }
+              }],
+            "mRootComponentUUID" : 1
+          }
+        }, {
+          "ClassName" : "AActor",
+          "Properties" : {
+            "Name" : "StaticMesh",
+            "UUID" : 5,
+            "mComponents" : [{
+                "ClassName" : "UStaticMeshComponent",
+                "ParentUUID" : -1,
+                "Properties" : {
+                  "Name" : "UStaticMeshComponent",
+                  "UUID" : 4,
+                  "mColor" : [1.000000, 1.000000, 1.000000, 0.000000],
+                  "mRelativeLocation" : [-2.000000, 0.000000, 3.321997],
+                  "mRelativeRotation" : [0.000000, 0.000000, 0.000000],
+                  "mRelativeScale3D" : [1.000000, 1.000000, 1.000000],
+                  "mStaticMeshAssetKey" : "Engine/Primitives/SphereMesh",
+                  "mTextureName" : "Assets/Textures/EarthTexture.dds",
+                  "mbShowBoundingBox" : true,
+                  "mbUseTexture" : false,
+                  "mePrimitive" : "StaticMesh"
+                }
+              }, {
+                "ClassName" : "UNameComponent",
+                "ParentUUID" : 4,
+                "Properties" : {
+                  "Name" : "UNameComponent",
+                  "UUID" : 6,
+                  "mColor" : [1.000000, 1.000000, 1.000000, 1.000000],
+                  "mNameText" : "Name: StaticMesh, UUID: 5",
+                  "mRelativeLocation" : [0.000000, 0.000000, 1.000000],
+                  "mRelativeRotation" : [0.000000, 0.000000, 0.000000],
+                  "mRelativeScale3D" : [1.000000, 1.000000, 1.000000],
+                  "mbShowBoundingBox" : true,
+                  "mbUseTexture" : false,
+                  "mePrimitive" : "BillboardQuad"
+                }
+              }],
+            "mRootComponentUUID" : 4
+          }
+        }]
+    }
+  }
+}

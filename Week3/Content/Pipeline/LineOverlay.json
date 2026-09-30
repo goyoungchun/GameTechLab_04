@@ -1,0 +1,89 @@
+{
+  "VertexShader": {
+    "Source": "./Content/Shader/Line.hlsl",
+    "EntryPoint": "mainVS",
+    "Profile": "vs_5_0"
+  },
+
+  "PixelShader": {
+    "Source": "./Content/Shader/Line.hlsl",
+    "EntryPoint": "mainPS",
+    "Profile": "ps_5_0"
+  },
+
+  "InputLayout": [
+    {
+      "SemanticName": "CORNER",
+      "SemanticIndex": 0,
+      "Format": "Float2",
+      "InputSlot": 0,
+      "AlignedByteOffset": 0,
+      "InputClassification": "PerVertex",
+      "InstanceDataStepRate": 0
+    },
+    {
+      "SemanticName": "START",
+      "SemanticIndex": 0,
+      "Format": "Float4",
+      "InputSlot": 1,
+      "AlignedByteOffset": 0,
+      "InputClassification": "PerInstance",
+      "InstanceDataStepRate": 1
+    },
+    {
+      "SemanticName": "END",
+      "SemanticIndex": 0,
+      "Format": "Float4",
+      "InputSlot": 1,
+      "AlignedByteOffset": 16,
+      "InputClassification": "PerInstance",
+      "InstanceDataStepRate": 1
+    },
+    {
+      "SemanticName": "COLOR",
+      "SemanticIndex": 0,
+      "Format": "Float4",
+      "InputSlot": 1,
+      "AlignedByteOffset": 32,
+      "InputClassification": "PerInstance",
+      "InstanceDataStepRate": 1
+    }
+  ],
+
+  "PrimitiveTopology": "TriangleList",
+
+  "Rasterizer": {
+    "FillMode": "Solid",
+    "CullMode": "None",
+    "FrontCounterClockwise": false,
+    "DepthClipEnable": true,
+    "ScissorEnable": false
+  },
+
+  "DepthStencil": {
+    "DepthEnable": false,
+    "DepthWriteEnable": false,
+    "DepthFunc": "Always",
+
+    "StencilEnable": true,
+    "StencilReadMask": 255,
+    "StencilWriteMask": 255,
+
+    "StencilFunc": "Always",
+    "StencilPassOp": "Replace",
+    "StencilFailOp": "Keep",
+    "StencilDepthFailOp": "Keep",
+
+    "StencilRef": 1
+  },
+
+  "Blend": {
+    "BlendEnable": true,
+    "SrcBlend": "SrcAlpha",
+    "DestBlend": "InvSrcAlpha",
+    "BlendOp": "Add",
+    "SrcBlendAlpha": "One",
+    "DestBlendAlpha": "InvSrcAlpha",
+    "BlendOpAlpha": "Add"
+  }
+}

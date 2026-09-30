@@ -1,0 +1,33 @@
+﻿#pragma once
+
+#include <array>
+
+namespace BasicGeometry {
+	namespace Plane {
+		inline constexpr std::array<FVector3, 4> Positions = {
+			FVector3{ -0.5f, 0.0f, -0.5f },
+			FVector3{ -0.5f, 0.0f,  0.5f },
+			FVector3{  0.5f, 0.0f,  0.5f },
+			FVector3{  0.5f, 0.0f, -0.5f }
+		};
+
+		inline constexpr std::array<FVector3, 4> Normals = {
+			FVector3{ 0.0f, 1.0f, 0.0f },
+			FVector3{ 0.0f, 1.0f, 0.0f },
+			FVector3{ 0.0f, 1.0f, 0.0f },
+			FVector3{ 0.0f, 1.0f, 0.0f }
+		};
+
+		inline constexpr std::array<FVector2D, 4> TexCoords = {
+			FVector2D{ 0.0f, 1.0f },
+			FVector2D{ 0.0f, 0.0f },
+			FVector2D{ 1.0f, 0.0f },
+			FVector2D{ 1.0f, 1.0f }
+		};
+
+		inline constexpr std::array<uint32, 6> Indices = {
+			0, 1, 2,
+			0, 2, 3
+		};
+	}
+}

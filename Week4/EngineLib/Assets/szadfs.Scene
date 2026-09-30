@@ -1,0 +1,21 @@
+{
+  "EditorState" : {
+    "PerspectiveCamera" : {
+      "FOV" : 60.000000,
+      "FarZ" : 1000.000000,
+      "Location" : [-2.000000, 1.000000, 1.000000],
+      "NearZ" : 0.100000,
+      "Rotation" : [-17.194851, 76.834969, 0.000000]
+    }
+  },
+  "NextUUID" : 10,
+  "Version" : 0,
+  "World" : {
+    "ClassName" : "UWorld",
+    "Properties" : {
+      "Name" : "UWorld",
+      "UUID" : 0,
+      "mActors" : []
+    }
+  }
+}

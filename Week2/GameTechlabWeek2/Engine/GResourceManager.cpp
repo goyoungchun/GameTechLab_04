@@ -1,0 +1,144 @@
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+
+#include "GResourceManager.h"
+#include "Engine/Renderer/FVertexSimple.h"
+#include "Models/Sphere.h"
+#include "Models/Cube.h"
+#include "Models/Plane.h"
+#include "Models/Triangle.h"
+#include "Models/PePe.h"
+#include "Models/Octopus.h"
+#include "Models/ArrowRed.h"
+#include "Models/ArrowGreen.h"
+#include "Models/ArrowBlue.h"
+#include "Models/MoveRed.h"
+#include "Models/MoveGreen.h"
+#include "Models/MoveBlue.h"
+#include "Models/ScaleRed.h"
+#include "Models/ScaleGreen.h"
+#include "Models/ScaleBlue.h"
+#include "Models/RotateRed.h"
+#include "Models/RotateGreen.h"
+#include "Models/RotateBlue.h"
+#include "Models/Grid.h"
+#include "FVector.h"
+
+
+GResourceManager* GResourceManager::GetInstance()
+{
+	static GResourceManager Instance;
+	return &Instance;
+}
+
+void GResourceManager::Initialize(GDevice* InDevice)
+{
+    Device = InDevice;
+    CreateMesh("Sphere", sphere_vertices, sphere_indices);
+    CreateMesh("Cube", cube_vertices, cube_indices);
+    CreateMesh("Triangle", triangle_vertices, triangle_indices);
+    CreateMesh("Plane", plane_vertices, plane_indices);
+    CreateMesh("Pepe", pepe_vertices, pepe_indices);
+    CreateMesh("Octopus", octopus_vertices, octopus_indices);
+    CreateMesh("ArrowRed", arrow_red_vertices, arrow_red_indices);
+    CreateMesh("ArrowGreen", arrow_green_vertices, arrow_green_indices);
+    CreateMesh("ArrowBlue", arrow_blue_vertices, arrow_blue_indices);
+    CreateMesh("MoveRed", move_red_vertices, move_red_indices);
+    CreateMesh("MoveGreen", move_green_vertices, move_green_indices);
+    CreateMesh("MoveBlue", move_blue_vertices, move_blue_indices);
+    CreateMesh("ScaleRed", scale_red_vertices, scale_red_indices);
+    CreateMesh("ScaleGreen", scale_green_vertices, scale_green_indices);
+    CreateMesh("ScaleBlue", scale_blue_vertices, scale_blue_indices);
+    CreateMesh("RotateRed", rotate_red_vertices, rotate_red_indices);
+    CreateMesh("RotateGreen", rotate_green_vertices, rotate_green_indices);
+    CreateMesh("RotateBlue", rotate_blue_vertices, rotate_blue_indices);
+    CreateMesh("Grid", grid_vertices, grid_indices);
+}
+
+FMeshResource* GResourceManager::CreateMesh(const FString& MeshName,
+    const TArray<FVertexSimple>& Vertices, const TArray<uint32>& Indices)
+{
+    auto Existing = PrimitiveCache.find(MeshName);
+    if (Existing != PrimitiveCache.end()) return Existing->second;
+    if (Vertices.IsEmpty() || Indices.IsEmpty()) return nullptr;
+    for (uint32 Index : Indices)
+        if (Index >= static_cast<uint32>(Vertices.Num())) return nullptr;
+
+    FMeshResource* Mesh = new FMeshResource;
+    Mesh->vertexs = Vertices;
+    Mesh->indexes = Indices;
+    Mesh->VertexCount = static_cast<UINT>(Vertices.Num());
+    Mesh->IndexCount = static_cast<UINT>(Indices.Num());
+    Mesh->Stride = sizeof(FVertexSimple);
+    Mesh->VertexBuffer = Device->CreateVertexBuffer(&Mesh->vertexs[0], Mesh->Stride * Mesh->VertexCount);
+    Mesh->IndexBuffer = Device->CreateIndexBuffer(&Mesh->indexes[0], sizeof(uint32) * Mesh->IndexCount);
+    Mesh->bHasBounds = false;
+    if (Mesh->vertexs.Num() > 0)
+    {
+        const auto& First = Mesh->vertexs[0];
+
+        Mesh->BoundsMin = FVector(First.x, First.y, First.z);   
+        Mesh->BoundsMax = Mesh->BoundsMin;
+
+        for (const auto& Vertex : Mesh->vertexs)
+        {
+            Mesh->BoundsMin.X = std::max(Mesh->BoundsMin.X, Vertex.x);
+            Mesh->BoundsMin.Y = std::max(Mesh->BoundsMin.Y, Vertex.y);
+            Mesh->BoundsMin.Z = std::max(Mesh->BoundsMin.Z, Vertex.z);
+
+            Mesh->BoundsMax.X = std::min(Mesh->BoundsMax.X, Vertex.x);
+            Mesh->BoundsMax.Y = std::min(Mesh->BoundsMax.Y, Vertex.y);
+            Mesh->BoundsMax.Z = std::min(Mesh->BoundsMax.Z, Vertex.z);
+        }
+
+        Mesh->bHasBounds = true;
+    }
+
+    PrimitiveCache[MeshName] = Mesh;
+    return Mesh;
+    
+}
+
+void GResourceManager::Shutdown()
+{
+    for (auto& [type, mesh] : PrimitiveCache)
+    {
+        if (mesh->VertexBuffer) mesh->VertexBuffer->Release();
+        if (mesh->IndexBuffer)  mesh->IndexBuffer->Release();
+        delete mesh;
+    }
+    PrimitiveCache.clear();
+
+    //for (auto& [path, shader] : ShaderCache)
+    //{
+    //    if (shader->VertexShader) shader->VertexShader->Release();
+    //    if (shader->PixelShader)  shader->PixelShader->Release();
+    //    if (shader->InputLayout)  shader->InputLayout->Release();
+    //    delete shader;
+    //}
+    //ShaderCache.clear();
+
+    //for (auto& [key, state] : RasterizerStateCache)
+    //    state->Release();
+    //RasterizerStateCache.clear();
+}
+
+FMeshResource* GResourceManager::GetPrimitive(const FString& Type)
+{
+    auto Item = PrimitiveCache.find(Type);
+
+    if (Item != PrimitiveCache.end())
+    {
+        return Item->second;
+    }
+    else
+    {
+        return nullptr;
+    }
+}
+
+FShaderResource* GResourceManager::GetShader(const std::wstring& FilePath, const std::string& VSEntry, const std::string& PSEntry, const D3D11_INPUT_ELEMENT_DESC* Layout, UINT LayoutCount)
+{
+	return nullptr;
+}
