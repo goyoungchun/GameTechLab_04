@@ -62,14 +62,12 @@ public:
 		const FTransform& ParentTransform = mOwner->GetTransform();
 		SetRelativeLocation(ParentTransform.GetLocation());
 		SetRelativeRotation(ParentTransform.GetRotation());
+		MarkRenderDirty();
 	}
 
 	void Render(FRenderCollector& RenderCollector) override
 	{
-		if (!FShowFlags::Get().IsEnabled(EShowFlag::Primitive))
-		{
-			return;
-		}
+		Super::Render(RenderCollector);
 
 		FTransform PivotTransform = GetTransform();
 
