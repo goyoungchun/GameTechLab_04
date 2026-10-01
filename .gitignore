@@ -283,3 +283,4 @@ editor.ini
 !Assets/**
 !BuiltInAssets/**
 !Vendor/lib/**
+engine-loop-profile.json

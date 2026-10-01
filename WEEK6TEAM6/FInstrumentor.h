@@ -235,7 +235,7 @@ namespace InstrumentorUtils {
 	}
 }
 
-#define ENABLE_PROFILE 0
+#define ENABLE_PROFILE 1
 
 #if ENABLE_PROFILE
 #define PROFILE_BEGIN_SESSION(name, filepath) FInstrumentor::Get().BeginSession(name, filepath)

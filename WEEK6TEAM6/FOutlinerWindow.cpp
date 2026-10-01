@@ -25,6 +25,7 @@ void FOutlinerWindow::Render(const FGuiReference& GuiReference)
 	ImGui::SeparatorText("Object Lists");
 	if (ImGui::BeginChild("ObjectList", ImVec2(0, 0), ImGuiChildFlags_Borders))
 	{
+		/*
 		if (mLastGUObjectRevision != UObject::GetGObjectRevision())
 		{
 			mSortedObjectLists = UObject::GetGObjectArray().ToTArray();
@@ -112,6 +113,8 @@ void FOutlinerWindow::Render(const FGuiReference& GuiReference)
 
 			FObjectFactory::DestroyObject(deleteActor);
 		}
+	*/
+
 	}
 
 

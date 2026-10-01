@@ -519,8 +519,8 @@ public:
 	uint64 GetDrawCallCount() const { return DrawCallCount; }
 	void ResetDrawCallCount() { DrawCallCount = 0; }
 
-	inline const TSharedPtr<FRenderTarget2D> GetFrameBuffer() const { return FrameBufferRenderTarget; }
-	inline const TSharedPtr<FDepthStencil> GetDepthStencilBuffer() const { return DepthStencilRenderTarget; }
+	void DrawIndexed(UINT IndexCount, UINT StartIndex = 0) const;
+	void Draw(UINT VertexCount) const;
 
 private:
 	void CreateDeviceAndSwapChain(HWND hWindow);
@@ -545,8 +545,11 @@ private:
 	FDepthStencilStatePool DepthStencilStatePool;
 	FBlendStatePool BlendStatePool;
 
-	TSharedPtr<FRenderTarget2D> FrameBufferRenderTarget;
-	TSharedPtr<FDepthStencil> DepthStencilRenderTarget;
+    ID3D11Texture2D* FrameBuffer = nullptr;
+    ID3D11RenderTargetView* FrameBufferRTV = nullptr;
+
+	ID3D11Texture2D* DepthStencilBuffer = nullptr;			// 실제 깊이값이 저장될 메모리
+	ID3D11DepthStencilView* DepthStencilView = nullptr;		// 그 메모리를 "출력 대상"으로 보는 뷰
 
 	TSharedPtr<FRenderTarget2D> BindedRenderTarget;
 	TSharedPtr<FDepthStencil> BindedDepthStencil;
@@ -571,10 +574,6 @@ private:
 	// 와이어프레임 여부. Prepare에서 갱신하고 BindPipeline이 읽는다.
 	// RSSetState는 드로우 직전마다 덮어써지므로 플래그로 들고 있어야 한다.
 	EViewModeIndex ViewModeIndex = EViewModeIndex::VMI_Lit;
-	// 프레임 경계와 관계없이 실제 마지막으로 적용한 파이프라인을 기억합니다.
-	const FRenderPipeline* LastPipeline = nullptr;
-	uint32 LastPipelineVersion = 0;
-	EViewModeIndex LastPipelineViewMode = EViewModeIndex::VMI_Lit;
 
 	// NOTE: 최적화를 위한 RenderState 캐싱.
 	ID3D11RasterizerState* CurrentRasterizerState = nullptr;

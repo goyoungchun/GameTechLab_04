@@ -118,13 +118,10 @@ private:
 	void SaveEditorSettings();
 	void LoadEditorSettings();
 
-	void RenderPerformanceOverlay(FRenderCollector& RenderCollector, FFrameTimer* FrameTimer, float ViewportWidth, float ViewportHeight);
-
 private:
 	// Todo: Make as pointer
 	FFrameTimer* FrameTimer;
 	bool GInTick = false;
-	bool bEditorMode = true;
 
 	ImGuiMouseCursor mMouseCursor = ImGuiMouseCursor_Arrow;
 
@@ -139,10 +136,6 @@ private:
 	FEditorUIManager* mEditorUIManager;
 
 	FComponentVisualizerManager* mComponentVisualizerManager;
-
-	float LastMousePickingElapsedMs = 0.0f;
-	int32 MousePickingTryCount = 0;
-	float TotalMousePickingElapsedMs = 0.0f;
 
 #if IS_OBJ_VIEWER
 	FObjViewer mObjViewer;

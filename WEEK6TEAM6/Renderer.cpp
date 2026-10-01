@@ -68,12 +68,10 @@ namespace
 
 void URenderer::Create(HWND hWindow)
 {
-	FrameBufferRenderTarget = MakeShared<FRenderTarget2D>();
-	DepthStencilRenderTarget = MakeShared<FDepthStencil>();
-
 	CreateDeviceAndSwapChain(hWindow);
 	CreateFrameBuffer();
 	CreateDepthStencilBuffer();
+
 	LineStructuredBuffer = CreateStructuredBuffer<FRenderLineInfo>(MaxLineInstances);
 
 	LinePipeline = CreateRenderPipeline();
@@ -275,27 +273,27 @@ void URenderer::ReleaseDeviceAndSwapChain()
 
 void URenderer::CreateFrameBuffer()
 {
-	SwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&FrameBufferRenderTarget->Texture);
+	SwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&FrameBuffer);
 
 	D3D11_RENDER_TARGET_VIEW_DESC framebufferRTVdesc = {};
 	framebufferRTVdesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM_SRGB;
 	framebufferRTVdesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
 
-	Device->CreateRenderTargetView(FrameBufferRenderTarget->Texture.Get(), &framebufferRTVdesc, FrameBufferRenderTarget->RTV.GetAddressOf());
-	FrameBufferRenderTarget->Width = Width;
-	FrameBufferRenderTarget->Height = Height;
+	Device->CreateRenderTargetView(FrameBuffer, &framebufferRTVdesc, &FrameBufferRTV);
 }
 
 void URenderer::ReleaseFrameBuffer()
 {
-	if (FrameBufferRenderTarget)
+	if (FrameBuffer)
 	{
-		FrameBufferRenderTarget->RTV.Reset();
-		FrameBufferRenderTarget->Texture.Reset();
-		DepthStencilRenderTarget->SRV.Reset();
-		DepthStencilRenderTarget->DepthSRV.Reset();
-		DepthStencilRenderTarget->DSV.Reset();
-		DepthStencilRenderTarget->Texture.Reset();
+		FrameBuffer->Release();
+		FrameBuffer = nullptr;
+	}
+
+	if (FrameBufferRTV)
+	{
+		FrameBufferRTV->Release();
+		FrameBufferRTV = nullptr;
 	}
 }
 
@@ -333,6 +331,8 @@ void URenderer::Release()
 	BlendStatePool.BlendStates.Empty();	
 
 	DeviceContext->OMSetRenderTargets(0, nullptr, nullptr);
+	DepthStencilView->Release();
+	DepthStencilBuffer->Release();
 	ReleaseFrameBuffer();
 	ReleaseDeviceAndSwapChain();
 }
@@ -344,10 +344,10 @@ void URenderer::SwapBuffer()
 
 void URenderer::Prepare(const FMatrix& ViewProjectionMatrix)
 {
-	DeviceContext->ClearRenderTargetView(FrameBufferRenderTarget->RTV.Get(), ClearColor);
-	DeviceContext->ClearDepthStencilView(DepthStencilRenderTarget->DSV.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+	DeviceContext->ClearRenderTargetView(FrameBufferRTV, ClearColor);
+	DeviceContext->ClearDepthStencilView(DepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
-	DeviceContext->OMSetRenderTargets(1, FrameBufferRenderTarget->RTV.GetAddressOf(), DepthStencilRenderTarget->DSV.Get());
+	DeviceContext->OMSetRenderTargets(1, &FrameBufferRTV, DepthStencilView);
 	DeviceContext->RSSetViewports(1, &ViewportInfo);
 
 	FCameraConstants CameraConstants;
@@ -495,38 +495,6 @@ TSharedPtr<FDepthStencil> URenderer::CreateDepthStencil(uint32 Width, uint32 Hei
 
 void URenderer::BindPipeline(const FRenderPipeline* Pipeline, uint32 StencilRef)
 {
-	// SRV는 Pipeline 버전과 무관하게 기존 슬롯 캐시로 항상 비교합니다.
-	const int32 NewSRVCount = Pipeline->ShaderResourceViews.Num();
-
-	bool bShouldSetSRVs = NewSRVCount > CurrentSRVCount;
-	for (int32 i = 0; !bShouldSetSRVs && i < CurrentSRVCount; i++)
-	{
-		if (i >= NewSRVCount || CurrentSRVs[i] != Pipeline->ShaderResourceViews[i])
-		{
-			bShouldSetSRVs = true;
-		}
-	}
-
-	if (bShouldSetSRVs)
-	{
-		const int32 BindCount = FPlatformMath::Max(NewSRVCount, CurrentSRVCount);
-		for (int32 i = 0; i < BindCount; ++i)
-		{
-			CurrentSRVs[i] = i < NewSRVCount ? Pipeline->ShaderResourceViews[i] : nullptr;
-		}
-
-		DeviceContext->VSSetShaderResources(0, BindCount, CurrentSRVs);
-		DeviceContext->PSSetShaderResources(0, BindCount, CurrentSRVs);
-		CurrentSRVCount = NewSRVCount;
-	}
-
-	const uint32 Version = Pipeline->GetBindingVersion();
-	if (bReuseMeshBindings && LastPipeline == Pipeline && LastPipelineVersion == Version
-		&& CurrentStencilRef == StencilRef && LastPipelineViewMode == ViewModeIndex)
-	{
-		return;
-	}
-
 	// RSSetState는 드로우 직전마다 갈아치워지므로 뷰 모드 선택은 여기서 해야 한다.
 	// 이 모드를 지원하지 않는 파이프라인(2D/기즈모)은 Lit 상태로 폴백된다.
 	ID3D11RasterizerState* NewRasterizerState = Pipeline->GetRasterizerState(ViewModeIndex);
@@ -599,6 +567,30 @@ void URenderer::BindPipeline(const FRenderPipeline* Pipeline, uint32 StencilRef)
 		CurrentCBCount = NewCBCount;
 	}
 
+	const int32 NewSRVCount = Pipeline->ShaderResourceViews.Num();
+
+	bool bShouldSetSRVs = NewSRVCount > CurrentSRVCount;
+	for (int32 i = 0; !bShouldSetSRVs && i < CurrentSRVCount; i++)
+	{
+		if (i >= NewSRVCount || CurrentSRVs[i] != Pipeline->ShaderResourceViews[i])
+		{
+			bShouldSetSRVs = true;
+		}
+	}
+
+	if (bShouldSetSRVs)
+	{
+		const int32 BindCount = FPlatformMath::Max(NewSRVCount, CurrentSRVCount);
+		for (int32 i = 0; i < BindCount; ++i)
+		{
+			CurrentSRVs[i] = i < NewSRVCount ? Pipeline->ShaderResourceViews[i] : nullptr;
+		}
+
+		DeviceContext->VSSetShaderResources(0, BindCount, CurrentSRVs);
+		DeviceContext->PSSetShaderResources(0, BindCount, CurrentSRVs);
+		CurrentSRVCount = NewSRVCount;
+	}
+
 	const int32 NewSamplerCount = Pipeline->SamplerStates.Num();
 
 	bool bShouldSetSamplers = NewSamplerCount > CurrentSamplerStateCount;
@@ -620,10 +612,6 @@ void URenderer::BindPipeline(const FRenderPipeline* Pipeline, uint32 StencilRef)
 		DeviceContext->PSSetSamplers(0, BindCount, CurrentSamplerStates);
 		CurrentSamplerStateCount = NewSamplerCount;
 	}
-
-	LastPipeline = Pipeline;
-	LastPipelineVersion = Version;
-	LastPipelineViewMode = ViewModeIndex;
 }
 
 void URenderer::BindVertexBuffer(ID3D11Buffer* VertexBuffer, UINT Stride)
@@ -652,7 +640,7 @@ void URenderer::BindIndexBuffer(ID3D11Buffer* IndexBuffer)
 
 void URenderer::BindFrameBuffer()
 {
-	DeviceContext->OMSetRenderTargets(1, FrameBufferRenderTarget->RTV.GetAddressOf(), nullptr);
+	DeviceContext->OMSetRenderTargets(1, &FrameBufferRTV, nullptr);
 	DeviceContext->RSSetViewports(1, &ViewportInfo);
 
 	Projection2D = FMatrix::Ortho(0.f, Width, Height, 0.f, 0.0f, 1.0f);
@@ -798,6 +786,17 @@ void URenderer::RenderPrimitiveIndexed(const FRenderPipeline* Pipeline, const FR
 	DeviceContext->DrawIndexed(RenderInfo.IndexCount, RenderInfo.StartIndex, 0);
 	++DrawCallCount;
 }
+void URenderer::DrawIndexed(UINT IndexCount, UINT StartIndex) const
+{
+	DeviceContext->DrawIndexed(IndexCount, StartIndex, 0);
+	++DrawCallCount;
+}
+
+void URenderer::Draw(UINT VertexCount) const
+{
+	DeviceContext->Draw(VertexCount, 0);
+	++DrawCallCount;
+}
 
 void URenderer::RenderQuad2D(const FRenderQuad2DInfo& Info)
 {
@@ -883,7 +882,22 @@ void URenderer::ClearAllShaderResources()
 //=============================================
 void URenderer::CreateDepthStencilBuffer()
 {
-	DepthStencilRenderTarget = CreateDepthStencil(Width, Height);
+	D3D11_TEXTURE2D_DESC DepthTextureDesc = {};
+	DepthTextureDesc.Width = Width;
+	DepthTextureDesc.Height = Height;
+	DepthTextureDesc.MipLevels = 1;
+	DepthTextureDesc.ArraySize = 1;
+	DepthTextureDesc.SampleDesc.Count = 1;
+	DepthTextureDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	DepthTextureDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+
+	Device->CreateTexture2D(&DepthTextureDesc, nullptr, &DepthStencilBuffer);
+
+	D3D11_DEPTH_STENCIL_VIEW_DESC DsvDesc = {};
+	DsvDesc.Format = DepthTextureDesc.Format;
+	DsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DMS;
+
+	Device->CreateDepthStencilView(DepthStencilBuffer, &DsvDesc, &DepthStencilView);
 }
 
 void URenderer::OnResize(UINT width, UINT height)
@@ -892,7 +906,10 @@ void URenderer::OnResize(UINT width, UINT height)
 
 	DeviceContext->OMSetRenderTargets(0, 0, 0);
 
-	ReleaseFrameBuffer();
+	FrameBuffer->Release();
+	FrameBufferRTV->Release();
+	DepthStencilBuffer->Release();
+	DepthStencilView->Release();
 
 	SwapChain->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING);
 
