@@ -21,8 +21,8 @@ public:
 
 	inline uint32 GetLODIndex() const { return mLODIndex; }
 
-	FAABB GetBoundingBox() const override;
-    uint32 GetLODForView(const FVector& ViewOrigin) const;
+	FAABB GetBoundingBox() override;
+    uint32 GetLODForView(const FVector& ViewOrigin);
 	// 기존 Picking의 가상 함수 호출을 메시 에셋의 로컬 Octree로 연결합니다.
 	bool RayCastComponent(const FPickingRay& PickingRay, float& OutHitT, float MaxHitT = 1.0f) const override;
 
@@ -95,6 +95,5 @@ private:
 	TArray<FVector2> mUVOffsets;
 
 	mutable FAABB mCachedWorldAABB;
-	mutable uint32 mCachedTransformVersion = 0;
 	mutable bool mbAABBDirty = true;
 };

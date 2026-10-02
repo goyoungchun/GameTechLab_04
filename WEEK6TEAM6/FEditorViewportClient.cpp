@@ -51,11 +51,8 @@ void FEditorViewportClient::SetViewportType(EViewportType InViewportType)
 	{
 	case EViewportType::Top:
 		{
-			FVector Rotate = ToEulerAngles(FQuaternion(FVector(1.0f, 0.0f, 0.0f), FMath::DegreesToRadians(90.0f)));
-			Rotate.x = FMath::RadiansToDegrees(Rotate.x);
-			Rotate.y = FMath::RadiansToDegrees(Rotate.y);
-			Rotate.z = FMath::RadiansToDegrees(Rotate.z);
-			CameraTransform.SetRotation(FRotator(Rotate.x, Rotate.y, Rotate.z));
+			FRotator Rotate = ToEulerAngles(FQuaternion(FVector(0.0f, 1.0f, 0.0f), FMath::DegreesToRadians(90.0f)));
+			CameraTransform.SetRotation(Rotate);
 			CameraTransform.SetLocation(FVector(CameraLocation.x, CameraLocation.y, 0.0f));
 		}
 		break;

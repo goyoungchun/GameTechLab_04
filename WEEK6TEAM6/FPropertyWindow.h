@@ -10,6 +10,8 @@ class USpotLightComponent;
 class UAtlasAnimationComponent;
 class UStaticMeshComponent;
 class FAssetManager;
+class USceneComponent;
+class UActorComponent;
 
 class FPropertyWindow
 {
@@ -17,7 +19,11 @@ public:
 	void Render(const FGuiReference& GuiReference);
 
 private:
-	void RenderTransformProperties(AActor* TargetActor);
+	void RenderAddComponentPopup(AActor* TargetActor);
+
+	void RenderSceneComponentHierarchy(AActor* TargetActor, USceneComponent* SceneComponent);
+
+	void RenderTransformProperties(USceneComponent* SceneComponent);
 	void RenderText3DComponent(UText3DComponent* text3DComponent);
 	void RenderSpotLightComponent(USpotLightComponent* spotLightComponent);
 	void RenderAtlasAnimationComponent(UAtlasAnimationComponent* atlasAnimationComponent);
@@ -25,4 +31,7 @@ private:
 
 private:
 	FAssetManager* mAssetManager;
+
+	AActor* mSelectedActor = nullptr;
+	UActorComponent* mSelectedComponent = nullptr;
 };

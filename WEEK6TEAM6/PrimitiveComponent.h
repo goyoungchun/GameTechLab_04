@@ -22,7 +22,7 @@ public:
 
 	virtual void Render(FRenderCollector& RenderCollector) override;
 
-	virtual FAABB GetBoundingBox() const;
+	virtual FAABB GetBoundingBox();
 	virtual const TArray<FVertex>& GetMeshVertices() const;
 	virtual const TArray<uint32>& GetMeshIndices() const;
 

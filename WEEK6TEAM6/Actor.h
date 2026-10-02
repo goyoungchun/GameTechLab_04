@@ -2,6 +2,7 @@
 
 #include "Object.h"
 #include "ActorComponent.h"
+#include "TSet.h"
 
 class UWorld;
 struct FRenderInfo;
@@ -12,6 +13,7 @@ class FRenderCollector;
 class AActor : public UObject
 {
 	REFLECT_CLASS(AActor, UObject)
+
 public:
 	AActor() = default;
 	virtual ~AActor();
@@ -21,11 +23,16 @@ public:
 	virtual void SerializeClass(json::JSON& outJson) const override;
 	virtual void DeserializeClass(const json::JSON& inJson) override;
 
-	void AddComponent(UActorComponent* actorComponent);
-	void AddRootSceneComponent(USceneComponent* sceneComponent);
+	void AddOwnedComponent(UActorComponent* actorComponent);
+	void SetRootComponent(USceneComponent* sceneComponent);
+
+	void AttachToComponent(USceneComponent* ParentComponent);
+
+	inline bool HasComponent(UActorComponent* Target) const { return mComponents.Contains(Target); }
+
 	USceneComponent* GetRootComponent() const;
-	bool RemoveComponent(uint32 componentUUID);
-	inline const TArray<UActorComponent*>& GetComponents() const { return mComponents; }
+	bool RemoveComponent(UActorComponent* Target);
+	inline const TSet<UActorComponent*>& GetComponents() const { return mComponents; }
 
 	virtual void CreateEditorComponents();
 
@@ -45,15 +52,13 @@ public:
 	inline UWorld* GetWorld() const { return mWorld; }
 
 private:
-	int32 getComponentIndex(int32 componentUUID) const;
-
-private:
 	friend class UWorld;
 
 	UWorld* mWorld = nullptr;
 
 	USceneComponent* mRootComponent = nullptr;
-	TArray<UActorComponent*> mComponents;
+	TSet<UActorComponent*> mComponents;
+
 	bool mbPressed = false;
 	bool mbStarted = false;
 };

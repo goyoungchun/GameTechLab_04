@@ -7,6 +7,8 @@
 struct FGuiReference;
 class FSceneManager;
 class UObject;
+class AActor;
+class USceneComponent;
 
 class FOutlinerWindow
 {
@@ -14,6 +16,17 @@ public:
 	void Render(const FGuiReference& GuiReference);
 
 private:
-	uint64 mLastGUObjectRevision = -1;
-	TArray<UObject*> mSortedObjectLists;
+	void RenderActorHierarchy(AActor* Actor, USceneComponent* SceneComponent);
+
+private:
+	struct FDragDropRequst
+	{
+		USceneComponent* Parent;
+		USceneComponent* Child;
+	};
+
+	AActor* SelectedActor;
+	bool SelectedActorDeleted;
+	bool HasDragDropRequest;
+	FDragDropRequst DragDropRequest;
 };

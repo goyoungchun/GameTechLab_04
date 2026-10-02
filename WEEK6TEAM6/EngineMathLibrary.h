@@ -4,6 +4,7 @@
 #include "Matrix.h"
 #include "FQuaternion.h"
 #include "MathUtility.h"
+#include "Rotator.h"
 #include <functional>
 
 template <typename T>
@@ -168,15 +169,51 @@ inline FQuaternion ToQuaternion(const FMatrix& Matrix)
 	return Q;
 }
 
-inline FVector ExtractRotationFromMatrix(const FMatrix& Matrix)
+inline FVector ExtractTranslationFromMatrix(const FMatrix& Matrix)
 {
-	float Y = asin(FMath::Clamp(Matrix.M[0][2], -1.f, 1.f));
-	float X = atan2(-Matrix.M[1][2], Matrix.M[2][2]);
-	float Z = atan2(Matrix.M[0][1], Matrix.M[0][0]);
-	return FVector(X, Y, Z);
+	return FVector(Matrix.M[3][0], Matrix.M[3][1], Matrix.M[3][2]);
 }
 
-inline FVector ToEulerAngles(const FQuaternion& Q)
+inline FRotator ExtractRotationFromMatrix(const FMatrix& Matrix)
+{
+	float XScale = FVector(Matrix.M[0][0], Matrix.M[0][1], Matrix.M[0][2]).Length();
+	float YScale = FVector(Matrix.M[1][0], Matrix.M[1][1], Matrix.M[1][2]).Length();
+	float ZScale = FVector(Matrix.M[2][0], Matrix.M[2][1], Matrix.M[2][2]).Length();
+
+	float Y = asin(FMath::Clamp(Matrix.M[0][2] / ZScale, -1.f, 1.f));
+	float X = atan2(-Matrix.M[1][2] / ZScale, Matrix.M[2][2] / ZScale);
+	float Z = atan2(Matrix.M[0][1] / YScale, Matrix.M[0][0] / XScale);
+
+	return FRotator(FMath::RadiansToDegrees(Y), FMath::RadiansToDegrees(Z), FMath::RadiansToDegrees(X));
+}
+
+inline FVector ExtractScaleFromMatrix(const FMatrix& Matrix)
+{
+	FVector Scale;
+	Scale.x = FVector(Matrix.M[0][0], Matrix.M[0][1], Matrix.M[0][2]).Length();
+	Scale.y = FVector(Matrix.M[1][0], Matrix.M[1][1], Matrix.M[1][2]).Length();
+	Scale.z = FVector(Matrix.M[2][0], Matrix.M[2][1], Matrix.M[2][2]).Length();
+	return Scale;
+}
+
+inline void DecomposeMatrix(const FMatrix& Matrix, FVector& OutTranslation, FRotator& OutRotation, FVector& OutScale)
+{
+	OutTranslation = FVector(Matrix.M[3][0], Matrix.M[3][1], Matrix.M[3][2]);
+
+	float XScale = FVector(Matrix.M[0][0], Matrix.M[0][1], Matrix.M[0][2]).Length();
+	float YScale = FVector(Matrix.M[1][0], Matrix.M[1][1], Matrix.M[1][2]).Length();
+	float ZScale = FVector(Matrix.M[2][0], Matrix.M[2][1], Matrix.M[2][2]).Length();
+
+	OutScale = FVector(XScale, YScale, ZScale);
+
+	float YRotation = asin(FMath::Clamp(Matrix.M[0][2] / ZScale, -1.f, 1.f));
+	float XRotation = atan2(-Matrix.M[1][2] / ZScale, Matrix.M[2][2] / ZScale);
+	float ZRotation = atan2(Matrix.M[0][1] / YScale, Matrix.M[0][0] / XScale);
+
+	OutRotation = FRotator(FMath::RadiansToDegrees(YRotation), FMath::RadiansToDegrees(ZRotation), FMath::RadiansToDegrees(XRotation));
+}
+
+inline FRotator ToEulerAngles(const FQuaternion& Q)
 {
 	FMatrix Matrix = ToMatrix(Q);
 	return ExtractRotationFromMatrix(Matrix);

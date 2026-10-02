@@ -109,7 +109,6 @@ void UStaticMeshComponent::Render(FRenderCollector& RenderCollector)
         return;
     }
 
-	const FTransform& Transform = GetTransform();
     // 거리 계산은 Tick에서 끝냈으므로 프록시 갱신 시에는 저장된 LOD만 사용합니다.
     const uint32 LOD = mLODIndex;
     const auto& Sections = mMeshAsset->GetSections(LOD);
@@ -143,7 +142,7 @@ void UStaticMeshComponent::Render(FRenderCollector& RenderCollector)
             RenderInfo.IndexCount = Section.IndexCount;
             RenderInfo.Texture = Material->GetDiffuseTexture().get();
             RenderInfo.UVOffset = mUVOffsets[SectionIndex];
-            RenderInfo.Model = Transform.MakeMatrix();
+            RenderInfo.Model = GetWorldMatrix();
             RenderInfo.Color = FVector4(DiffuseColor.x, DiffuseColor.y, DiffuseColor.z, Opacity);
             RenderInfo.UseVertexColor = false;
             RenderInfo.ObjectInternalIndex = mOwner->InternalIndex;
@@ -158,7 +157,7 @@ void UStaticMeshComponent::Render(FRenderCollector& RenderCollector)
 			RenderInfo.IndexCount = Section.IndexCount;
 			RenderInfo.Texture = nullptr;
 			RenderInfo.UVOffset = mUVOffsets[SectionIndex];
-			RenderInfo.Model = Transform.MakeMatrix();
+            RenderInfo.Model = GetWorldMatrix();
 			RenderInfo.Color = Color;
 			RenderInfo.UseVertexColor = true;
 			RenderInfo.ObjectInternalIndex = mOwner->InternalIndex;
@@ -189,19 +188,16 @@ bool UStaticMeshComponent::RayCastComponent(const FPickingRay& PickingRay, float
     return mMeshAsset->RayCastLocal(LocalRay, OutHitT, nullptr, MaxHitT, mRenderedLODIndex);
 }
 
-FAABB UStaticMeshComponent::GetBoundingBox() const
+FAABB UStaticMeshComponent::GetBoundingBox()
 {
     if (!mMeshAsset)
     {
         return FAABB();
     }
 
-    const FTransform& Transform = GetTransform();
-    const uint32 CurrentTransformVersion = Transform.GetTransformVersion();
-    if (mbAABBDirty || mCachedTransformVersion != CurrentTransformVersion)
+    if (mbAABBDirty)
     {
-        mCachedWorldAABB = mMeshAsset->GetLocalBoundingBox().ToWorld(Transform.MakeMatrix());
-        mCachedTransformVersion = CurrentTransformVersion;
+        mCachedWorldAABB = mMeshAsset->GetLocalBoundingBox().ToWorld(GetWorldMatrix());
         mbAABBDirty = false;
     }
 
@@ -249,19 +245,22 @@ void UStaticMeshComponent::SetMesh(const TSharedPtr<FStaticMeshAsset>& InMesh, u
     MarkRenderDirty();
 }
 
-uint32 UStaticMeshComponent::GetLODForView(const FVector& ViewOrigin) const
+uint32 UStaticMeshComponent::GetLODForView(const FVector& ViewOrigin)
 {
     if (!mMeshAsset) return 0;
+    
     FVector Center;
+    
     // Tick은 공간 조회보다 먼저 실행될 수 있으므로 Transform 버전도 확인합니다.
-    if (!mbAABBDirty && mCachedTransformVersion == GetTransform().GetTransformVersion())
+    if (!mbAABBDirty)
     {
         Center = (mCachedWorldAABB.Min + mCachedWorldAABB.Max) * 0.5f;
     }
     else
     {
-        const FAABB& Bounds = mMeshAsset->GetLocalBoundingBox();
-        Center = GetTransform().MakeMatrix().TransformPosition(Bounds.Min * .5f + Bounds.Max * .5f);
+		const FAABB LocalAABB = mMeshAsset->GetLocalBoundingBox();
+		Center = GetWorldMatrix().TransformPosition((LocalAABB.Min + LocalAABB.Max) * 0.5f);
     }
+
     return mMeshAsset->SelectLOD((Center - ViewOrigin).LengthSquared());
 }

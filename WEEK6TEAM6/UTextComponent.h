@@ -58,10 +58,6 @@ public:
 
 	void Tick(float DeltaTime) override
 	{
-		// NOTE: SpotLightComponent의 위치와 회전을 부모 액터에 맞춘다. 현재 Hierarchy가 없으므로 부모 액터의 위치와 회전만 가져와서 적용한다.
-		const FTransform& ParentTransform = mOwner->GetTransform();
-		SetRelativeLocation(ParentTransform.GetLocation());
-		SetRelativeRotation(ParentTransform.GetRotation());
 		MarkRenderDirty();
 	}
 
@@ -69,16 +65,20 @@ public:
 	{
 		Super::Render(RenderCollector);
 
-		FTransform PivotTransform = GetTransform();
+		FMatrix PivotMatrix = GetWorldMatrix();
 
 		if (mbBillboard && RenderCollector.Camera)
 		{
-			FRotator NewRotation = FRotator::LookAt(PivotTransform.GetLocation(), PivotTransform.GetLocation() + RenderCollector.Camera->GetForwardVector());
-			PivotTransform.SetRotation(NewRotation);
+			FMatrix TranslationMatrix = FMatrix::ExtractTranslation(PivotMatrix);
+			FVector Translation = FMatrix::GetTranslation(PivotMatrix);
+			FMatrix ScaleMatrix = FMatrix::ExtractScaleMatrix(PivotMatrix);
+			FRotator BillboardRotation = RenderCollector.Camera->Transform.GetRotation();
+
+			PivotMatrix = ScaleMatrix * FMatrix::Rotate(BillboardRotation) * FMatrix::Translation(Translation);
 		}
 
 		FRenderQuadInfo QuadInfo;
-		QuadInfo.Model = PivotTransform.MakeMatrix();
+		QuadInfo.Model = PivotMatrix;
 		QuadInfo.Color = FVector4(1.f, 1.f, 1.f, 1.f);
 		QuadInfo.TextureSRV = mTextureAsset ? mTextureAsset->GetSRV() : nullptr;
 		QuadInfo.TextureFormat = mTextureAsset ? mTextureAsset->GetFormat() : DXGI_FORMAT_UNKNOWN;
@@ -90,14 +90,15 @@ public:
 		RenderCollector.AddQuadInfo(QuadInfo);
 	}
 
-	FAABB GetBoundingBox() const override
+	FAABB GetBoundingBox() override
 	{
 		if (!mMeshAsset)
 		{
 			return FAABB();
 		}
 
-		return mMeshAsset->GetLocalBoundingBox().ToWorld(GetTransform().MakeMatrix());
+		const FMatrix& WorldMatrix = GetWorldMatrix();
+		return mMeshAsset->GetLocalBoundingBox().ToWorld(WorldMatrix);
 	}
 
 	const TArray<FVertex>& GetMeshVertices() const override
@@ -145,15 +146,6 @@ class USpotLightComponent : public USceneComponent
 public:
     USpotLightComponent() { SetTickable(true); }
 
-	void Tick(float DeltaTime) override
-	{
-		// NOTE: SpotLightComponent의 위치와 회전을 부모 액터에 맞춘다. 현재 Hierarchy가 없으므로 부모 액터의 위치와 회전만 가져와서 적용한다.
-		const FTransform& ParentTransform = mOwner->GetTransform();
-		SetRelativeLocation(ParentTransform.GetLocation());
-		SetRelativeRotation(ParentTransform.GetRotation());
-		SetRelativeScale3D(ParentTransform.GetScale());
-	}
-
 	inline float GetRange() const { return Range; }
 	inline float GetInnerConeAngle() const { return mInnerConeAngle; }
 	inline float GetOuterConeAngle() const { return mOuterConeAngle; }
@@ -186,13 +178,10 @@ class ASpotLight : public AActor
 	REFLECT_CLASS(ASpotLight, AActor)
 
 public:
-	ASpotLight() = default;
-	
-	void Initialize()
+	ASpotLight()
 	{
-		Super::Initialize();
-		USpotLightComponent* SpotLightComponent = FObjectFactory::ConstructObject<USpotLightComponent>(FVector(0, 0, 0), FRotator(0, 0, 0), FVector(1, 1, 1));
-		AddRootSceneComponent(SpotLightComponent);
+		USpotLightComponent* SpotLightComponent = CreateDefaultSubobject<USpotLightComponent>();
+		SetRootComponent(SpotLightComponent);
 	}
 
 	void DeserializeClass(const json::JSON& inJson) override
@@ -220,7 +209,7 @@ public:
 	{
 		Super::CreateEditorComponents();
 
-		UPlaneComponent* PlaneComponent = FObjectFactory::ConstructObject<UPlaneComponent>(FVector(0, 0, 1), FRotator(0, 0, 0), FVector(1, 1, 1));
+		UPlaneComponent* PlaneComponent = CreateDefaultSubobject<UPlaneComponent>();
 		PlaneComponent->SetTexture(FAssetManager::Get().GetAssetAs<FTexture2DAsset>(BuiltInAssetID::SpotLightIcon, true));
 		PlaneComponent->SetBillboard(true);
 		PlaneComponent->SetBlendState(ERenderBlendMode::Transparent);
@@ -229,7 +218,13 @@ public:
 		PlaneComponent->SetEditorOnly(true);
 		PlaneComponent->SetDoNotSerialize(true);
 
-		AddComponent(PlaneComponent);
+		USceneComponent* RootComp = GetRootComponent();
+		if (RootComp)
+		{
+			PlaneComponent->SetupAttachment(RootComp);
+		}
+
+		AddOwnedComponent(PlaneComponent);
 	}
 };
 
@@ -247,8 +242,9 @@ public:
     void Tick(float DeltaTime) override
     {
         // 텍스트의 부모 위치 추적은 Tick에서 한 번 처리하고 각 Viewport에서는 결과를 사용합니다.
-        if (!mOwner || !mOwner->GetRootComponent()) return;
-        SetRelativeLocation(mOwner->GetTransform().GetLocation() + FVector(0.f, 0.f, 1.f));
+        //if (!mOwner || !mOwner->GetRootComponent()) return;
+        //SetRelativeLocation(mOwner->GetTransform().GetLocation() + FVector(0.f, 0.f, 1.f));
+		MarkRenderDirty();
     }
 
 	void SerializeClass(json::JSON& outJson) const override
@@ -304,22 +300,24 @@ public:
 		float TotalHeight = 0.0f;
 		TextBuilder.CalculateSize(mText, TotalWidth, TotalHeight);
 
-		const FTransform& OwnerTransform = mOwner->GetTransform();
-		FTransform PivotTransform = GetTransform();
-
-		UPrimitiveComponent* Primitive = mOwner->GetRootComponent()->Cast<UPrimitiveComponent>();
-		if (Primitive)
-		{
-			const FAABB Bounds = Primitive->GetBoundingBox();
-			PivotTransform.SetLocation(FVector(PivotTransform.GetLocation().x, PivotTransform.GetLocation().y, Bounds.Max.z + 0.2f));
-		}
+		FMatrix PivotMatrix = GetWorldMatrix();
 
 		if (mbBillboard && RenderCollector.Camera)
 		{
-			PivotTransform.SetRotation(RenderCollector.Camera->Transform.GetRotation());
-		}
+			FMatrix TranslationMatrix = FMatrix::ExtractTranslation(PivotMatrix);
+			FVector Translation = FMatrix::GetTranslation(PivotMatrix);
+			FMatrix ScaleMatrix = FMatrix::ExtractScaleMatrix(PivotMatrix);
+			FRotator BillboardRotation = RenderCollector.Camera->Transform.GetRotation();
 
-		const FMatrix& PivotMatrix = PivotTransform.MakeMatrix();
+			UPrimitiveComponent* Primitive = mOwner->GetRootComponent()->Cast<UPrimitiveComponent>();
+			if (Primitive)
+			{
+				const FAABB Bounds = Primitive->GetBoundingBox();
+				Translation = FVector(Translation.x, Translation.y, Bounds.Max.z + 0.2f);
+			}
+
+			PivotMatrix = ScaleMatrix * FMatrix::Rotate(BillboardRotation) * FMatrix::Translation(Translation);
+		}
 
 		TextBuilder.Build(mText, TotalWidth, TotalHeight, [&](const FRect& Rect, const FRect& UV) {
 			// 공백 등은 Builder에서 advance만 적용하고, 쿼드는 생략한다.

@@ -87,7 +87,7 @@ AActor* FObjectFactory::SpawnPrimitiveActor(
 
 	UPrimitiveComponent* component = ConstructObject<UPrimitiveComponent>(primitiveType, Location, Rotation, Scale);
 
-	actor->AddRootSceneComponent(component);
+	actor->SetRootComponent(component);
 
 	return actor;
 }

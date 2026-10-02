@@ -243,7 +243,7 @@ void FObjViewer::OpenObj(const std::filesystem::path& FilePath)
 
 	objComponent->SetMesh(MeshAsset);
 	mViewerComponent = objComponent;
-	mViewerActor->AddRootSceneComponent(objComponent);
+	mViewerActor->SetRootComponent(objComponent);
 	mSceneManager->GetCurrentWorld()->AddActor(mViewerActor);
 }
 
@@ -379,7 +379,7 @@ void FObjViewer::OpenStaticMeshAsset(const std::filesystem::path& FilePath)
 	Component->SetMesh(MeshAsset);
 
 	mViewerActor = FObjectFactory::ConstructObject<AActor>();
-	mViewerActor->AddRootSceneComponent(Component);
+	mViewerActor->SetRootComponent(Component);
 	mSceneManager->GetCurrentWorld()->AddActor(mViewerActor);
 
 	mViewerComponent = Component;

@@ -12,6 +12,8 @@
 #include "FEditorUIManager.h"
 #include "SceneManager.h"
 #include "Assets.h"
+#include "SceneComponent.h"
+#include "ActorComponent.h"
 
 void FPropertyWindow::Render(const FGuiReference& GuiReference)
 {
@@ -25,27 +27,95 @@ void FPropertyWindow::Render(const FGuiReference& GuiReference)
 	{
 		mAssetManager = GuiReference.AssetManager;
 
-		RenderTransformProperties(TargetActor);
-
-		for (UActorComponent* component : TargetActor->GetComponents())
+		if (TargetActor != mSelectedActor)
 		{
-			ImGui::SeparatorText(component->GetClass()->Name.c_str());
+			mSelectedComponent = TargetActor->GetRootComponent();
+		}
 
-			if (component->IsA<UText3DComponent>())
+		mSelectedActor = TargetActor;
+
+		const TSet<UActorComponent*>& Components = TargetActor->GetComponents();
+
+		if (mSelectedComponent)
+		{
+			if (!TargetActor || !Components.Contains(mSelectedComponent))
 			{
-				RenderText3DComponent(component->Cast<UText3DComponent>());
+				mSelectedComponent = nullptr;
 			}
-			else if (component->IsA<USpotLightComponent>())
+		}
+
+		ImGui::Text("Actor: %s", "Unknown");
+		ImGui::SameLine();
+		
+		if (ImGui::Button("+ Add"))
+		{
+			ImGui::OpenPopup("Add Component");
+		}
+
+		RenderAddComponentPopup(TargetActor);
+		
+		if (ImGui::TreeNode("Actor (Instance)"))
+		{
+			USceneComponent* RootComponent = TargetActor->GetRootComponent();
+			if (RootComponent)
 			{
-				RenderSpotLightComponent(component->Cast<USpotLightComponent>());
+				RenderSceneComponentHierarchy(TargetActor, RootComponent);
 			}
-			else if (component->IsA< UAtlasAnimationComponent>())
+
+			for (UActorComponent* Component : Components)
 			{
-				RenderAtlasAnimationComponent(component->Cast<UAtlasAnimationComponent>());
+				if (Component->IsA<USceneComponent>() || Component->IsEditorOnly())
+				{
+					continue;
+				}
+
+				bool bSelected = mSelectedComponent == Component;
+
+				ImGuiTreeNodeFlags NodeFlags = bSelected ? ImGuiTreeNodeFlags_Selected : 0;
+
+				bool Open = ImGui::TreeNodeEx(Component->GetClass()->Name.c_str(), NodeFlags);
+
+				if (ImGui::IsItemClicked())
+				{
+					mSelectedComponent = Component;
+				}
+
+				if (Open)
+				{
+					ImGui::Text("Component: %s", Component->GetClass()->Name.c_str());
+					ImGui::TreePop();
+				}
 			}
-			else if (component->IsA<UStaticMeshComponent>())
+
+			ImGui::TreePop();
+		}
+
+		if (mSelectedComponent)
+		{
+			ImGui::Separator();
+
+			if (mSelectedComponent->IsA<USceneComponent>())
 			{
-				RenderStaticMeshComponent(component->Cast<UStaticMeshComponent>());
+				RenderTransformProperties(mSelectedComponent->Cast<USceneComponent>());
+			}
+
+			ImGui::SeparatorText(mSelectedComponent->GetClass()->Name.c_str());
+
+			if (mSelectedComponent->IsA<UText3DComponent>())
+			{
+				RenderText3DComponent(mSelectedComponent->Cast<UText3DComponent>());
+			}
+			else if (mSelectedComponent->IsA<USpotLightComponent>())
+			{
+				RenderSpotLightComponent(mSelectedComponent->Cast<USpotLightComponent>());
+			}
+			else if (mSelectedComponent->IsA< UAtlasAnimationComponent>())
+			{
+				RenderAtlasAnimationComponent(mSelectedComponent->Cast<UAtlasAnimationComponent>());
+			}
+			else if (mSelectedComponent->IsA<UStaticMeshComponent>())
+			{
+				RenderStaticMeshComponent(mSelectedComponent->Cast<UStaticMeshComponent>());
 			}
 		}
 	}
@@ -53,34 +123,90 @@ void FPropertyWindow::Render(const FGuiReference& GuiReference)
 	ImGui::End();
 }
 
-void FPropertyWindow::RenderTransformProperties(AActor* TargetActor)
+void FPropertyWindow::RenderAddComponentPopup(AActor* TargetActor)
 {
-	FTransform OriginalTransform = TargetActor->GetTransform();
-	FVector translationInput = OriginalTransform.GetLocation();
+	if (ImGui::BeginPopup("Add Component"))
+	{
+		if (ImGui::MenuItem("StaticMeshComponent"))
+		{
+			UStaticMeshComponent* NewComponent = TargetActor->CreateDefaultSubobject<UStaticMeshComponent>();
+
+			if (mSelectedComponent && mSelectedComponent->IsA<USceneComponent>())
+			{
+				NewComponent->SetupAttachment(mSelectedComponent->Cast<USceneComponent>());
+			}
+
+			TargetActor->AddOwnedComponent(NewComponent);
+
+			ImGui::CloseCurrentPopup();
+		}
+
+		ImGui::EndPopup();
+	}
+}
+
+void FPropertyWindow::RenderSceneComponentHierarchy(AActor* TargetActor, USceneComponent* SceneComponent)
+{
+	if (TargetActor != SceneComponent->GetOwner())
+	{
+		// 서로 다른 owner를 가지거나 EditorOnly인 SceneComponent는 렌더링하지 않습니다.
+		return;
+	}
+
+	const TArray<USceneComponent*> ChildComponents = SceneComponent->GetChildComponents();
+
+	bool bIsSelected = mSelectedComponent == SceneComponent;
+	bool bHasChildren = !ChildComponents.IsEmpty();
+
+	ImGuiTreeNodeFlags NodeFlags = ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_OpenOnArrow;
+	NodeFlags |= bIsSelected ? ImGuiTreeNodeFlags_Selected : 0;
+	NodeFlags |= bHasChildren ? 0 : ImGuiTreeNodeFlags_Leaf;
+
+	bool Open = ImGui::TreeNodeEx(SceneComponent->GetClass()->Name.c_str(), NodeFlags);
+
+	if (ImGui::IsItemClicked())
+	{
+		mSelectedComponent = SceneComponent;
+	}
+
+	if (Open)
+	{
+		for (USceneComponent* ChildComponent : ChildComponents)
+		{
+			RenderSceneComponentHierarchy(TargetActor, ChildComponent);
+		}
+
+		ImGui::TreePop();
+	}
+}
+
+void FPropertyWindow::RenderTransformProperties(USceneComponent* SceneComponent)
+{
+	FVector translationInput = SceneComponent->GetRelativeLocation();
 	FVector rotationInput = {
-		OriginalTransform.GetRotation().Roll,
-		OriginalTransform.GetRotation().Pitch,
-		OriginalTransform.GetRotation().Yaw
+		SceneComponent->GetRelativeRotation().Roll,
+		SceneComponent->GetRelativeRotation().Pitch,
+		SceneComponent->GetRelativeRotation().Yaw
 	};
-	FVector scaleInput = OriginalTransform.GetScale();
+	FVector scaleInput = SceneComponent->GetRelativeScale3D();
 
 	if (ImGui::DragFloat3("Translation", &translationInput.x, 0.1f))
 	{
-		TargetActor->SetLocation(translationInput);
+		SceneComponent->SetRelativeLocation(translationInput);
 	}
 
 	if (ImGui::DragFloat3("Rotation", &rotationInput.x, 0.1f))
 	{
-		TargetActor->SetRotation({
+		SceneComponent->SetRelativeRotation({
 			rotationInput.y, // Pitch
 			rotationInput.z, // Yaw
 			rotationInput.x  // Roll
-			});
+		});
 	}
 
 	if (ImGui::DragFloat3("Scale", &scaleInput.x, 0.1f, MIN_SCALE, FLT_MAX, "%.3f", ImGuiSliderFlags_AlwaysClamp))
 	{
-		TargetActor->SetScale(scaleInput);
+		SceneComponent->SetRelativeScale3D(scaleInput);
 	}
 }
 

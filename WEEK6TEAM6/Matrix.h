@@ -302,6 +302,29 @@ struct FMatrix {
 		};
 	}
 
+	static FVector GetTranslation(const FMatrix& M)
+	{
+		return FVector(M.M[3][0], M.M[3][1], M.M[3][2]);
+	}
+
+	static FMatrix ExtractTranslation(const FMatrix& M)
+	{
+		FMatrix Result = Identity;
+		Result.M[3][0] = M.M[3][0];
+		Result.M[3][1] = M.M[3][1];
+		Result.M[3][2] = M.M[3][2];
+		return Result;
+	}
+
+	static FMatrix ExtractScaleMatrix(const FMatrix& M)
+	{
+		FMatrix Result = Identity;
+		Result.M[0][0] = FVector(M.M[0][0], M.M[0][1], M.M[0][2]).Length();
+		Result.M[1][1] = FVector(M.M[1][0], M.M[1][1], M.M[1][2]).Length();
+		Result.M[2][2] = FVector(M.M[2][0], M.M[2][1], M.M[2][2]).Length();
+		return Result;
+	}
+
 	[[nodiscard]] FVector GetUnitAxis(EAxis Axis) const
 	{
 		const int i = static_cast<int>(Axis);

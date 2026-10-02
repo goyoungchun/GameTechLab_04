@@ -58,6 +58,71 @@ void USceneComponent::DeserializeClass(const json::JSON& inJson)
 	mRelativeTransform.SetScale(JsonUtils::FromJson<FVector>(propertiesJson.at("mRelativeScale3D")));
 }
 
+void USceneComponent::SetupAttachment(USceneComponent* ParentComponent, bool KeepWorldTransform)
+{
+	if (mParentComponent == ParentComponent)
+	{
+		return;
+	}
+
+	if (!CanAttachTo(ParentComponent))
+	{
+		return;
+	}
+
+	FMatrix CurrentWorldMatrix = GetWorldMatrix();
+
+	if (mParentComponent)
+	{
+		int32 Index = mParentComponent->mChildComponents.Find(this);
+		if (Index != -1)
+		{
+			mParentComponent->mChildComponents.RemoveAtSwap(Index);
+		}
+	}
+
+	mParentComponent = ParentComponent;
+	if (mParentComponent)
+	{
+		mParentComponent->mChildComponents.Add(this);
+
+		if (KeepWorldTransform)
+		{
+			FMatrix ParentWorldMatrix = mParentComponent->GetWorldMatrix();
+			FMatrix ParentInverseMatrix = ParentWorldMatrix.AffineInverse();
+			FMatrix RelativeMatrix = CurrentWorldMatrix * ParentInverseMatrix;
+
+			FVector RelativeLocation;
+			FRotator RelativeRotation;
+			FVector RelativeScale;
+			DecomposeMatrix(RelativeMatrix, RelativeLocation, RelativeRotation, RelativeScale);
+
+			mRelativeTransform.SetLocation(RelativeLocation);
+			mRelativeTransform.SetRotation(RelativeRotation);
+			mRelativeTransform.SetScale(RelativeScale);
+		}
+
+		mbWorldMatrixDirty = true;
+	}
+}
+
+bool USceneComponent::CanAttachTo(USceneComponent* ParentComponent) const
+{
+	// Prevent circular attachment
+	const USceneComponent* CurrentParent = ParentComponent;
+	while (CurrentParent)
+	{
+		if (CurrentParent == this)
+		{
+			return false;
+		}
+
+		CurrentParent = CurrentParent->mParentComponent;
+	}
+
+	return true;
+}
+
 FVector USceneComponent::GetRelativeLocation() const
 {
 	return mRelativeTransform.GetLocation();
@@ -66,7 +131,20 @@ FVector USceneComponent::GetRelativeLocation() const
 void USceneComponent::SetRelativeLocation(FVector location)
 {
 	mRelativeTransform.SetLocation(location);
-	OnTransformChanged();
+	PostWorldMatrixChanged();
+}
+
+void USceneComponent::SetWorldLocation(FVector WorldLocation)
+{
+	FVector RelativeLocation = WorldLocation;
+	if (mParentComponent)
+	{
+		FMatrix ParentWorldMatrix = mParentComponent->GetWorldMatrix();
+		FMatrix ParentInverseMatrix = ParentWorldMatrix.AffineInverse();
+		RelativeLocation = ParentInverseMatrix.TransformPosition(WorldLocation);
+	}
+
+	SetRelativeLocation(RelativeLocation);
 }
 
 FRotator USceneComponent::GetRelativeRotation() const
@@ -77,7 +155,21 @@ FRotator USceneComponent::GetRelativeRotation() const
 void USceneComponent::SetRelativeRotation(FRotator rotation)
 {
 	mRelativeTransform.SetRotation(rotation);
-	OnTransformChanged();
+	PostWorldMatrixChanged();
+}
+
+void USceneComponent::SetWorldRotation(FRotator WorldRotation)
+{
+	FRotator RelativeRotation = WorldRotation;
+	if (mParentComponent)
+	{
+		FRotator ParentWorldRotation = mParentComponent->GetWorldRotation();
+		FMatrix ParentInverseMatrix = FMatrix::Rotate(ParentWorldRotation).Transpose();
+		FMatrix LocalMatrix = FMatrix::Rotate(WorldRotation) * ParentInverseMatrix;
+		RelativeRotation = ExtractRotationFromMatrix(LocalMatrix);
+	}
+
+	SetRelativeRotation(RelativeRotation);
 }
 
 FVector USceneComponent::GetRelativeScale3D() const
@@ -88,10 +180,49 @@ FVector USceneComponent::GetRelativeScale3D() const
 void USceneComponent::SetRelativeScale3D(FVector scale)
 {
 	mRelativeTransform.SetScale(scale);
-	OnTransformChanged();
+	PostWorldMatrixChanged();
+}
+
+FVector USceneComponent::GetWorldLocation()
+{
+	FMatrix WorldMatrix = GetWorldMatrix();
+	return FVector(WorldMatrix.M[3][0], WorldMatrix.M[3][1], WorldMatrix.M[3][2]);
+}
+
+FRotator USceneComponent::GetWorldRotation()
+{
+	FMatrix WorldMatrix = GetWorldMatrix();
+	return ExtractRotationFromMatrix(WorldMatrix);
 }
 
 const FTransform& USceneComponent::GetTransform() const
 {
 	return mRelativeTransform;
+}
+
+void USceneComponent::PostWorldMatrixChanged()
+{
+	mbWorldMatrixDirty = true;
+	OnTransformChanged();
+
+	for (USceneComponent* Child : mChildComponents)
+	{
+		Child->PostWorldMatrixChanged();
+	}
+}
+
+const FMatrix& USceneComponent::GetWorldMatrix()
+{
+	if (mbWorldMatrixDirty)
+	{
+		mWorldMatrix = mRelativeTransform.MakeMatrix();
+		if (mParentComponent)
+		{
+			mWorldMatrix *= mParentComponent->GetWorldMatrix();
+		}
+		
+		mbWorldMatrixDirty = false;
+	}
+
+	return mWorldMatrix;
 }

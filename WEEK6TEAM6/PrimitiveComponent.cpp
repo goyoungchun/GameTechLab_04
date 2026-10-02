@@ -64,7 +64,7 @@ void UPrimitiveComponent::Render(FRenderCollector& RenderCollector)
 	Super::Render(RenderCollector);
 }
 
-FAABB UPrimitiveComponent::GetBoundingBox() const
+FAABB UPrimitiveComponent::GetBoundingBox()
 {
 	return FAABB();
 }

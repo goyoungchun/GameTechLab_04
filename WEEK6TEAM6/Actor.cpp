@@ -9,7 +9,11 @@
 
 AActor::~AActor()
 {
-    if (mWorld) mWorld->RemoveActor(UUID);
+	if (mWorld)
+	{
+		mWorld->RemoveActor(UUID);
+	}
+
 	for (UActorComponent* removeComponent : mComponents)
 	{
         removeComponent->mOwner = nullptr;
@@ -73,33 +77,35 @@ void AActor::DeserializeClass(const json::JSON& inJson)
 			throw std::runtime_error(std::format("{}: Unknown class name: {}", GetClass()->Name, className));
 		}
 		UActorComponent* component = static_cast<UActorComponent*>(FObjectFactory::LoadObject(classInfo, componentJson));
-		AddComponent(component);
+		AddOwnedComponent(component);
 	}
 
 	if (!propertiesJson.hasKey("mRootComponentUUID") || propertiesJson.at("mRootComponentUUID").JSONType() != json::JSON::Class::Integral)
 	{
 		throw std::runtime_error(std::format("{}: mRootComponentUUID requires an integral", GetClass()->Name));
 	}
-	int32 rootComponentUUID = propertiesJson.at("mRootComponentUUID").ToInt();
-	if (rootComponentUUID == -1)
+	int32 RootComponentUUID = propertiesJson.at("mRootComponentUUID").ToInt();
+	if (RootComponentUUID == -1)
 	{
 		mRootComponent = nullptr;
 	}
 	else
 	{
-		int32 rootComponentIndex = getComponentIndex(rootComponentUUID);
-		if (rootComponentIndex == -1)
+		for (UActorComponent* Component : mComponents)
 		{
-			throw std::runtime_error(std::format("{}: Invalid root component UUID: {}", GetClass()->Name, rootComponentUUID));
+			if (Component->UUID == RootComponentUUID)
+			{
+				mRootComponent = static_cast<USceneComponent*>(Component);
+				break;
+			}
 		}
-		mRootComponent = static_cast<USceneComponent*>(mComponents[rootComponentIndex]);
 	}
 }
 
-void AActor::AddComponent(UActorComponent* actorComponent)
+void AActor::AddOwnedComponent(UActorComponent* actorComponent)
 {
 	assert(actorComponent);
-	assert(getComponentIndex(actorComponent->UUID) == -1);
+	assert(!mComponents.Contains(actorComponent));
 
 	mComponents.Add(actorComponent);
 
@@ -111,13 +117,18 @@ void AActor::AddComponent(UActorComponent* actorComponent)
 	}
 }
 
-void AActor::AddRootSceneComponent(USceneComponent* sceneComponent)
+void AActor::SetRootComponent(USceneComponent* sceneComponent)
 {
 	assert(sceneComponent);
-	assert(getComponentIndex(sceneComponent->UUID) == -1);
+	assert(!mComponents.Contains(sceneComponent));
 
 	mRootComponent = sceneComponent;
-	AddComponent(sceneComponent);
+	AddOwnedComponent(sceneComponent);
+}
+
+void AActor::AttachToComponent(USceneComponent* ParentComponent)
+{
+	mRootComponent->SetupAttachment(ParentComponent);
 }
 
 USceneComponent* AActor::GetRootComponent() const
@@ -125,29 +136,32 @@ USceneComponent* AActor::GetRootComponent() const
 	return mRootComponent;
 }
 
-bool AActor::RemoveComponent(uint32 componentUUID)
+bool AActor::RemoveComponent(UActorComponent* Target)
 {
-	int32 componentIndex = getComponentIndex(componentUUID);
-	if (componentIndex == -1)
+	if (!mComponents.Contains(Target))
 	{
 		return false;
 	}
 
 	if (mWorld)
 	{
-		mWorld->UnregisterComponent(mComponents[componentIndex]);
+		mWorld->UnregisterComponent(Target);
 	}
 
-    if (mComponents[componentIndex] == mRootComponent) mRootComponent = nullptr;
-    mComponents[componentIndex]->mOwner = nullptr;
-	mComponents.RemoveAtSwap(componentIndex);
+	if (Target == mRootComponent)
+	{
+		mRootComponent = nullptr;
+	}
+    Target->mOwner = nullptr;
+
+	mComponents.Remove(Target);
 
 	return true;
 }
 
 void AActor::CreateEditorComponents()
 {
-	UText3DComponent* Text3DComponent = FObjectFactory::ConstructObject<UText3DComponent>(FVector(0, 0, 1), FRotator(0, 0, 0), FVector(1, 1, 1));
+	UText3DComponent* Text3DComponent = CreateDefaultSubobject<UText3DComponent>();
 	Text3DComponent->SetBillboard(true);
 	Text3DComponent->SetText(Utf2Wide(std::format("UUID: {}", UUID)));
 	Text3DComponent->SetFontAtlasAsset(FAssetManager::Get().GetAssetAs<FFontAtlasAsset>(FName("TestFontAtlas")));
@@ -155,7 +169,12 @@ void AActor::CreateEditorComponents()
 	Text3DComponent->SetEditorOnly(true);
 	Text3DComponent->SetDoNotSerialize(true);
 
-	AddComponent(Text3DComponent);
+	if (mRootComponent)
+	{
+		Text3DComponent->SetupAttachment(mRootComponent);
+	}
+	
+	AddOwnedComponent(Text3DComponent);
 }
 
 const FTransform& AActor::GetTransform() const
@@ -232,15 +251,3 @@ void AActor::SetScale(FVector scale)
 	}
 }
 
-int32 AActor::getComponentIndex(int32 componentUUID) const
-{
-	for (uint32 i = 0; i < mComponents.Num(); ++i)
-	{
-		if (mComponents[i]->UUID == componentUUID)
-		{
-			return i;
-		}
-	}
-
-	return -1;
-}

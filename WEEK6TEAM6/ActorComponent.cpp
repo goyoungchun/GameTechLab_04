@@ -12,7 +12,12 @@ UActorComponent::UActorComponent()
 UActorComponent::~UActorComponent()
 {
 	SetTickable(false);
-	if (mOwner) mOwner->RemoveComponent(UUID);
+	
+	if (mOwner)
+	{
+		mOwner->RemoveComponent(this);
+	}
+
 	delete mRenderProxy;
 }
 

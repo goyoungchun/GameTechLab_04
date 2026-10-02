@@ -165,10 +165,8 @@ void FGraphicsManager::RenderHighLight(const TArray<UPrimitiveComponent*>& Primi
 		mHighlightVertexBuffer->UpdateBuffer(Vertices.Data(), Vertices.Num());
 		mHighlightIndexBuffer->UpdateBuffer(Indices.Data(), Indices.Num());
 
-		const FTransform& Transform = Primitive->GetTransform();
-
 		FConstants Constants{};
-		Constants.Matrix = Transform.MakeMatrix();
+		Constants.Matrix = Primitive->GetWorldMatrix();
 		Constants.Color = FVector4(0.f, 0.f, 0.f, 0.f);
 		Constants.HasTexture = 0;
 		Constants.UseVertexColor = 0;
@@ -182,7 +180,7 @@ void FGraphicsManager::RenderHighLight(const TArray<UPrimitiveComponent*>& Primi
 		RenderInfo.IndexBuffer = mHighlightIndexBuffer->Buffer.Get();
 		RenderInfo.StartIndex = 0;
 		RenderInfo.IndexCount = static_cast<uint32>(Indices.Num());
-		RenderInfo.Model = Transform.MakeMatrix();
+		RenderInfo.Model = Primitive->GetWorldMatrix();
 
 		mRenderer->RenderPrimitiveIndexed(mHighlightMarkPipeline.get(), RenderInfo, 1);
 	}

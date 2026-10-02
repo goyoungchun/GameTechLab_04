@@ -81,6 +81,8 @@ public:
 
 	inline FVector GetScale() const { return Scale; }
 
+	inline void MarkTransformDirty() { mbTransformDirty = true; mbInverseTransformDirty = true; ++TransformVersion; }
+
 	inline uint32 GetTransformVersion() const { return TransformVersion; }
 
 private:

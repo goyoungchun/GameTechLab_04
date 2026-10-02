@@ -40,6 +40,16 @@ public:
 
 	void Initialize();
 
+	template <typename T>
+	T* CreateDefaultSubobject()
+	{
+		UObject* Subobject = FObjectFactory::ConstructUnInitializedObject(T::GetStaticClass());
+		Subobject->PostInitProperties();
+		return Subobject->Cast<T>();
+	}
+
+	virtual void PostInitProperties() {}
+
 	// StaticClass() in Unreal Engine
 	static const FClassInfo* GetStaticClass();
 

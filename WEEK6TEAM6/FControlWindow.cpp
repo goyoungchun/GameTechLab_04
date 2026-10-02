@@ -74,28 +74,25 @@ void FControlWindow::RenderSpawnActorControl(const FGuiReference& GuiReference)
 				AnimComponent->SetDepthState(true, false);
 				AnimComponent->Play();
 
-				NewActor->AddRootSceneComponent(AnimComponent);
+				NewActor->SetRootComponent(AnimComponent);
 			}
 			else if (strcmp(ActorTypeName, "Sphere") == 0 || strcmp(ActorTypeName, "Cube") == 0 || strcmp(ActorTypeName, "Triangle") == 0 || strcmp(ActorTypeName, "GizmoArrow") == 0 || strcmp(ActorTypeName, "Circle") == 0)
 			{
 				NewActor = FObjectFactory::ConstructObject<AActor>();
 
-				UStaticMeshComponent* MeshComponent = FObjectFactory::ConstructObject<UStaticMeshComponent>(FVector(0, 0, 0), FRotator(0, 0, 0), FVector(1, 1, 1));
+				UStaticMeshComponent* MeshComponent = NewActor->CreateDefaultSubobject<UStaticMeshComponent>();
 				MeshComponent->SetMesh(FAssetManager::Get().GetAssetAs<FStaticMeshAsset>(FName(std::format("{}Mesh", ActorTypeName)), true));
-
-				NewActor->AddRootSceneComponent(MeshComponent);
+				NewActor->SetRootComponent(MeshComponent);
 			}
 			else if (strcmp(ActorTypeName, "SpotLight") == 0)
 			{
-				NewActor = FObjectFactory::ConstructObject<ASpotLight>();
+				NewActor = FObjectFactory::ConstructUnInitializedObject<ASpotLight>();
 			}
 			else if (strcmp(ActorTypeName, "StaticMesh") == 0)
 			{
 				NewActor = FObjectFactory::ConstructObject<AActor>();
-
-				UStaticMeshComponent* MeshComponent = FObjectFactory::ConstructObject<UStaticMeshComponent>(FVector(0, 0, 0), FRotator(0, 0, 0), FVector(1, 1, 1));
-
-				NewActor->AddRootSceneComponent(MeshComponent);
+				UStaticMeshComponent* MeshComponent = NewActor->CreateDefaultSubobject<UStaticMeshComponent>();
+				NewActor->SetRootComponent(MeshComponent);
 			}
 			else
 			{
