@@ -6,6 +6,24 @@
 #include "FFrustum.h"
 #include "TActiveTickList.h"
 
+enum class EWorldType
+{
+	Eidtor,
+	EditorPreview,
+	PIE,
+	Game,
+};
+
+class ULevel : public UObject
+{
+	REFLECT_CLASS(ULevel, UObject)
+
+public:
+
+private:
+	TArray<AActor*> Actors;
+};
+
 class UWorld final : public UObject
 {
 	REFLECT_CLASS(UWorld, UObject)
@@ -36,10 +54,11 @@ public:
 	TArray<AActor*>& GetActors() { return mActors; }
 
 	void Tick(float deltaTime);
+	void Render(float deltaTime, FRenderCollector& outCollector);
+
 	// 모든 메시가 공유할 LOD 기준 카메라 위치를 Tick 시작 전에 전달합니다.
 	void SetLODViewOrigin(const FVector& ViewOrigin) { mLODViewOrigin = ViewOrigin; }
 	const FVector& GetLODViewOrigin() const { return mLODViewOrigin; }
-	void Render(float deltaTime, FRenderCollector& outCollector);
 
 	bool IsAABBsDirty() const { return mbAABBsDirty; }
 	void SetAABBsClean() { mbAABBsDirty = false; }
@@ -53,21 +72,20 @@ private:
 	{
 		DEFAULT_RESERVE_MEM = 1024U
 	};
+
+	EWorldType mWorldType;
+	ULevel* mLevel;
 	
-	// Todo: Must reserve
 	TArray<AActor*> mActors;
 	TArray<UPrimitiveComponent*> mPrimitiveComponents;
 	TArray<UActorComponent*> mNonPrimitiveRenderableComponents; // Primitive는 아닌데 렌더링 기능이 있는 컴포넌트.
-	TArray<UActorComponent*> mUUIDRenderableComponents;
-	// UUID는 표시 옵션을 순회 전에 한 번 검사하기 위해 별도의 Tick 목록에 둡니다.
 	TActiveTickList<UActorComponent> mTickableComponents;
-	TActiveTickList<UActorComponent> mUUIDTickableComponents;
+
 	// 소멸 중 가상 타입 정보가 바뀌어도 등록 당시 목록에서 제거할 수 있게 보관합니다.
 	struct FComponentRegistration
 	{
 		UPrimitiveComponent* Primitive = nullptr;
 		bool bRenderable = false;
-		bool bUUID = false;
 	};
 	TMap<UActorComponent*, FComponentRegistration> ComponentRegistrations;
 
@@ -80,4 +98,16 @@ private:
 	TArray<FBVHNode*> QueryStack;
 	TArray<FBVHItemRange> VisibleRanges;
 	FVector mLODViewOrigin;
+};
+
+class FWorldContext
+{
+public:
+	UWorld* World()
+	{
+		return mWorld;
+	}
+
+private:
+	UWorld* mWorld = nullptr;
 };

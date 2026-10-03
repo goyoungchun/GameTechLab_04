@@ -244,8 +244,6 @@ public:
     void Tick(float DeltaTime) override
     {
         // 텍스트의 부모 위치 추적은 Tick에서 한 번 처리하고 각 Viewport에서는 결과를 사용합니다.
-        //if (!mOwner || !mOwner->GetRootComponent()) return;
-        //SetRelativeLocation(mOwner->GetTransform().GetLocation() + FVector(0.f, 0.f, 1.f));
 		MarkRenderDirty();
     }
 

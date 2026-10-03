@@ -36,7 +36,6 @@
 #include "ShowFlags.h"
 #include "FFrustum.h"
 #include "FHiZOcclusionManager.h"
-#include "FInstrumentor.h"
 #include <timeapi.h>
 #pragma comment(lib, "winmm.lib")
 
@@ -230,8 +229,7 @@ void FEngineLoop::Tick(bool bPumpMessages)
 		PROFILE_SCOPE("Frame/SceneTick");
 		// 분할 화면은 첫 뷰, 단일 화면은 최대화된 뷰를 모든 메시의 LOD 기준으로 사용합니다.
 		const int32 LODViewportIndex = mEditorLayout.bIsSplitView ? 0 : mEditorLayout.MaximizedViewportIndex;
-		mSceneManager->GetCurrentWorld()->SetLODViewOrigin(
-			mViewports[LODViewportIndex].Client->GetCamera().Transform.GetLocation());
+		mSceneManager->GetCurrentWorld()->SetLODViewOrigin(mViewports[LODViewportIndex].Client->GetCamera().Transform.GetLocation());
 		mSceneManager->Tick(deltaTime);
 	}
 
@@ -249,7 +247,9 @@ void FEngineLoop::Tick(bool bPumpMessages)
 	if (bIsSplit)
 	{
 		for (int32 i = 0;i < 4;++i)
+		{
 			mViewports[i].Window = mEditorLayout.ViewportWindows[i];
+		}
 	}
 	else
 	{

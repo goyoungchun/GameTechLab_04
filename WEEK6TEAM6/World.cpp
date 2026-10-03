@@ -107,11 +107,15 @@ bool UWorld::RemoveActor(uint32 uuid)
 
 void UWorld::RegisterComponent(UActorComponent* Component)
 {
-    if (ComponentRegistrations.Contains(Component)) return;
+	if (ComponentRegistrations.Contains(Component))
+	{
+		return;
+	}
+
 	UPrimitiveComponent* PrimitiveComponent = Component->Cast<UPrimitiveComponent>();
-    const bool bUUID = Component->IsA<UText3DComponent>();
-    ComponentRegistrations.Add(Component, { PrimitiveComponent, Component->IsRenderable(), bUUID });
+    ComponentRegistrations.Add(Component, { PrimitiveComponent, Component->IsRenderable() });
     RefreshComponentTick(Component);
+
 	if (PrimitiveComponent)
 	{
 		mPrimitiveComponents.Add(PrimitiveComponent);
@@ -120,20 +124,24 @@ void UWorld::RegisterComponent(UActorComponent* Component)
 	}
 	else if (Component->IsRenderable())
 	{
-        if (bUUID) mUUIDRenderableComponents.Add(Component);
-        else mNonPrimitiveRenderableComponents.Add(Component);
+        mNonPrimitiveRenderableComponents.Add(Component);
 	}
 }
 
 void UWorld::UnregisterComponent(UActorComponent* Component)
 {
     const auto* Found = ComponentRegistrations.Find(Component);
-    if (!Found) return;
+	if (!Found)
+	{
+		return;
+	}
+
     const FComponentRegistration Registration = *Found;
+
     // 소멸 중 가상 타입에 의존하지 않고 등록 당시의 목록에서 제거합니다.
-    auto& TickList = Registration.bUUID ? mUUIDTickableComponents : mTickableComponents;
-    TickList.Remove(Component);
+    mTickableComponents.Remove(Component);
     ComponentRegistrations.Remove(Component);
+
 	UPrimitiveComponent* PrimitiveComponent = Registration.Primitive;
 	if (PrimitiveComponent)
 	{
@@ -152,11 +160,10 @@ void UWorld::UnregisterComponent(UActorComponent* Component)
 	}
 	else if (Registration.bRenderable)
 	{
-        auto& List = Registration.bUUID ? mUUIDRenderableComponents : mNonPrimitiveRenderableComponents;
-		int32 index = List.Find(Component);
+		int32 index = mNonPrimitiveRenderableComponents.Find(Component);
 		if (index != -1)
 		{
-			List.RemoveAtSwap(index);
+			mNonPrimitiveRenderableComponents.RemoveAtSwap(index);
 		}
 
 		index = mShouldRenderComponents.Find(Component);
@@ -171,10 +178,19 @@ void UWorld::RefreshComponentTick(UActorComponent* Component)
 {
     // Owner만 연결되고 아직 월드에 등록되지 않은 컴포넌트는 실행하지 않습니다.
     const FComponentRegistration* Registration = ComponentRegistrations.Find(Component);
-    if (!Registration) return;
-    auto& TickList = Registration->bUUID ? mUUIDTickableComponents : mTickableComponents;
-    if (Component->IsTickable()) TickList.Add(Component);
-    else TickList.Remove(Component);
+	if (!Registration)
+	{
+		return;
+	}
+    
+	if (Component->IsTickable())
+	{
+		mTickableComponents.Add(Component);
+	}
+	else
+	{
+		mTickableComponents.Remove(Component);
+	}
 }
 
 void UWorld::MarkBoundsDirty(UActorComponent* Component)
@@ -198,12 +214,6 @@ void UWorld::Tick(float deltaTime)
     {
         PROFILE_SCOPE("World/ActiveTick");
         mTickableComponents.Tick(deltaTime);
-        // 숨겨진 UUID는 컴포넌트 수와 관계없이 목록 전체를 건너뜁니다.
-        if (FShowFlags::Get().IsEnabled(EShowFlag::UUIDText))
-        {
-            PROFILE_SCOPE("World/UUIDTick");
-            mUUIDTickableComponents.Tick(deltaTime);
-        }
     }
 
 	if (mbBVHDirty)
@@ -226,16 +236,6 @@ void UWorld::Render(float deltaTime, FRenderCollector& outCollector)
 	{
 		PROFILE_SCOPE("World/CollectNonPrimitive");
 		for (UActorComponent* Component : mNonPrimitiveRenderableComponents)
-		{
-			Component->Render(outCollector);
-		}
-	}
-
-	// 목록 순회 전에 옵션을 검사하여 숨겨진 UUID 개수에 비례하는 비용을 없앱니다.
-	if (FShowFlags::Get().IsEnabled(EShowFlag::UUIDText))
-	{
-		PROFILE_SCOPE("World/CollectUUID");
-		for (UActorComponent* Component : mUUIDRenderableComponents)
 		{
 			Component->Render(outCollector);
 		}

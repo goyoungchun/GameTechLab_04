@@ -22,7 +22,7 @@ void AActor::BeginDestroy()
 		mWorld->RemoveActor(UUID);
 	}
 
-	while (!mComponents.IsEmpty()) // 실제 TArray API에 맞게 사용
+	while (!mComponents.IsEmpty())
 	{
 		FObjectFactory::DestroyObject(mComponents.Last());
 	}
