@@ -2,7 +2,7 @@
 
 #include "ActorComponent.h"
 #include "GraphicsManager.h"
-
+#include "FQuaternion.h"
 #include "Vector.h"
 
 class FTransform;
@@ -12,34 +12,37 @@ class USceneComponent : public UActorComponent
 	REFLECT_CLASS(USceneComponent, UActorComponent)
 public:
 	USceneComponent() = default;
-	virtual ~USceneComponent();
+	virtual ~USceneComponent() = default;
 
 	void Initialize(FVector location, FRotator rotation, FVector scale3D);
+
+	void BeginDestroy() override;
 
 	virtual void SerializeClass(json::JSON& outJson) const override;
 	virtual void DeserializeClass(const json::JSON& inJson) override;
 
 	void SetupAttachment(USceneComponent* ParentComponent, bool KeepWorldTransform = true);
+	void DetachFromParent(bool KeepWorldTransform = true);
 
 	FVector GetRelativeLocation() const;
 	void SetRelativeLocation(FVector location);
 	void SetWorldLocation(FVector WorldLocation);
+	FVector GetWorldLocation();
 
-	FRotator GetRelativeRotation() const;
-	void SetRelativeRotation(FRotator rotation);
-	void SetWorldRotation(FRotator WorldRotation);
+	FQuaternion GetRelativeRotation() const;
+	void SetRelativeRotation(FQuaternion rotation);
+	void SetWorldRotation(FQuaternion WorldRotation);
+	FQuaternion GetWorldRotation();
 
 	FVector GetRelativeScale3D() const;
 	void SetRelativeScale3D(FVector scale);
 
-	FVector GetWorldLocation();
-	FRotator GetWorldRotation();
-
 	const FTransform& GetTransform() const;
 
-	const FMatrix& GetWorldMatrix();
+	const FMatrix& GetWorldMatrix() const;
 
 	inline bool HasParent() const { return mParentComponent != nullptr; }
+	inline USceneComponent* GetParentComponent() const { return mParentComponent; }
 	inline const TArray<USceneComponent*>& GetChildComponents() const { return mChildComponents; }
 
 protected:

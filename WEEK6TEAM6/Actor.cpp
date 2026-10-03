@@ -7,26 +7,27 @@
 #include "World.h"
 #include <format>
 
-AActor::~AActor()
-{
-	if (mWorld)
-	{
-		mWorld->RemoveActor(UUID);
-	}
-
-	for (UActorComponent* removeComponent : mComponents)
-	{
-        removeComponent->mOwner = nullptr;
-		FObjectFactory::DestroyObject(removeComponent);
-	}
-}
-
 void AActor::Initialize()
 {
 	UObject::Initialize();
 
 	mbPressed = false;
 	mbStarted = false;
+}
+
+void AActor::BeginDestroy()
+{
+	if (mWorld)
+	{
+		mWorld->RemoveActor(UUID);
+	}
+
+	while (!mComponents.IsEmpty()) // 실제 TArray API에 맞게 사용
+	{
+		FObjectFactory::DestroyObject(mComponents.Last());
+	}
+
+	Super::BeginDestroy();
 }
 
 void AActor::SerializeClass(json::JSON& outJson) const
@@ -161,7 +162,7 @@ bool AActor::RemoveComponent(UActorComponent* Target)
 
 void AActor::CreateEditorComponents()
 {
-	UText3DComponent* Text3DComponent = CreateDefaultSubobject<UText3DComponent>();
+	UText3DComponent* Text3DComponent = CreateDefaultSubobject<UText3DComponent>(FName("UUIDDisplayer"));
 	Text3DComponent->SetBillboard(true);
 	Text3DComponent->SetText(Utf2Wide(std::format("UUID: {}", UUID)));
 	Text3DComponent->SetFontAtlasAsset(FAssetManager::Get().GetAssetAs<FFontAtlasAsset>(FName("TestFontAtlas")));
@@ -239,7 +240,7 @@ void AActor::SetRotation(FRotator rotation)
 {
 	if (mRootComponent)
 	{
-		mRootComponent->SetRelativeRotation(rotation);
+		mRootComponent->SetRelativeRotation(ToQuaternion(rotation));
 	}
 }
 

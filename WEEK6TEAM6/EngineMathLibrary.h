@@ -5,6 +5,7 @@
 #include "FQuaternion.h"
 #include "MathUtility.h"
 #include "Rotator.h"
+#include "FAABB.h"
 #include <functional>
 
 template <typename T>
@@ -169,6 +170,11 @@ inline FQuaternion ToQuaternion(const FMatrix& Matrix)
 	return Q;
 }
 
+inline FQuaternion ToQuaternion(const FRotator& Rotator)
+{
+	return ToQuaternion(FMatrix::Rotate(Rotator));
+}
+
 inline FVector ExtractTranslationFromMatrix(const FMatrix& Matrix)
 {
 	return FVector(Matrix.M[3][0], Matrix.M[3][1], Matrix.M[3][2]);
@@ -196,27 +202,57 @@ inline FVector ExtractScaleFromMatrix(const FMatrix& Matrix)
 	return Scale;
 }
 
-inline void DecomposeMatrix(const FMatrix& Matrix, FVector& OutTranslation, FRotator& OutRotation, FVector& OutScale)
+inline void DecomposeMatrix(const FMatrix& Matrix, FVector& OutTranslation, FQuaternion& OutRotation, FVector& OutScale)
 {
 	OutTranslation = FVector(Matrix.M[3][0], Matrix.M[3][1], Matrix.M[3][2]);
 
-	float XScale = FVector(Matrix.M[0][0], Matrix.M[0][1], Matrix.M[0][2]).Length();
-	float YScale = FVector(Matrix.M[1][0], Matrix.M[1][1], Matrix.M[1][2]).Length();
-	float ZScale = FVector(Matrix.M[2][0], Matrix.M[2][1], Matrix.M[2][2]).Length();
+	FVector XAxis(Matrix.M[0][0], Matrix.M[0][1], Matrix.M[0][2]);
+	FVector YAxis(Matrix.M[1][0], Matrix.M[1][1], Matrix.M[1][2]);
+	FVector ZAxis(Matrix.M[2][0], Matrix.M[2][1], Matrix.M[2][2]);
 
-	OutScale = FVector(XScale, YScale, ZScale);
+	OutScale = FVector(XAxis.Length(), YAxis.Length(), ZAxis.Length());
 
-	float YRotation = asin(FMath::Clamp(Matrix.M[0][2] / ZScale, -1.f, 1.f));
-	float XRotation = atan2(-Matrix.M[1][2] / ZScale, Matrix.M[2][2] / ZScale);
-	float ZRotation = atan2(Matrix.M[0][1] / YScale, Matrix.M[0][0] / XScale);
+	XAxis /= OutScale.x;
+	YAxis /= OutScale.y;
+	ZAxis /= OutScale.z;
 
-	OutRotation = FRotator(FMath::RadiansToDegrees(YRotation), FMath::RadiansToDegrees(ZRotation), FMath::RadiansToDegrees(XRotation));
+	const FMatrix RotationMatrix(
+		FVector4(XAxis, 0.f),
+		FVector4(YAxis, 0.f),
+		FVector4(ZAxis, 0.f),
+		FVector4(0.f, 0.f, 0.f, 1.f)
+	);
+
+	OutRotation = ToQuaternion(RotationMatrix);
+	OutRotation.Normalize();
 }
 
 inline FRotator ToEulerAngles(const FQuaternion& Q)
 {
-	FMatrix Matrix = ToMatrix(Q);
-	return ExtractRotationFromMatrix(Matrix);
+	const FMatrix M = ToMatrix(Q);
+
+	// cos(Pitch)의 크기: Pitch 범위를 [-90, 90]도로 선택
+	const float CosPitch = std::sqrt(M.M[0][0] * M.M[0][0] + M.M[0][1] * M.M[0][1]);
+
+	const float Pitch = std::atan2(M.M[0][2], CosPitch);
+
+	float Yaw;
+	float Roll;
+
+	if (CosPitch > 1e-6f)
+	{
+		Yaw = std::atan2(M.M[0][1], M.M[0][0]);
+		Roll = std::atan2(-M.M[1][2], M.M[2][2]);
+	}
+	else
+	{
+		// Pitch ±90도에서는 Yaw와 Roll을 유일하게 분리할 수 없음.
+		// Roll을 0으로 정하고 동일한 회전을 나타내는 Yaw를 계산.
+		Roll = 0.0f;
+		Yaw = std::atan2(-M.M[1][0], M.M[1][1]);
+	}
+
+	return FRotator(FMath::RadiansToDegrees(Pitch), FMath::RadiansToDegrees(Yaw), FMath::RadiansToDegrees(Roll));
 }
 
 inline FVector Lerp(const FVector& A, const FVector& B, float T)

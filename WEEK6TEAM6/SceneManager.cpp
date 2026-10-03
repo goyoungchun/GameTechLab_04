@@ -63,7 +63,7 @@ void FSceneManager::NewScene()
 	}
 
 	//UEngineStatics::SetNextUUID(0);
-	ResetSelectedActor();
+	ResetSelectedComponent();
 	mCurrentWorld = FObjectFactory::ConstructObject<UWorld>();
 }
 
@@ -74,7 +74,8 @@ void FSceneManager::DeleteScene()
 		FObjectFactory::DestroyObject(mCurrentWorld);
 		mCurrentWorld = nullptr;
 	}
-	ResetSelectedActor();
+
+	ResetSelectedComponent();
 }
 
 void FSceneManager::SaveScene(FCamera* Camera, const std::filesystem::path& scenePath, const FFileManager& fileManager)
@@ -123,7 +124,7 @@ void FSceneManager::SaveScene(FCamera* Camera, const std::filesystem::path& scen
 
 	json::JSON& PerspectiveCameraJson = sceneJson["PerspectiveCamera"];
 	PerspectiveCameraJson["Location"] = JsonUtils::ToJson(Camera->Transform.GetLocation());
-	PerspectiveCameraJson["Rotation"] = JsonUtils::ToJson(Camera->Transform.GetRotation());
+	PerspectiveCameraJson["Rotation"] = JsonUtils::ToJson(ToEulerAngles(Camera->Transform.GetRotation()));
 	PerspectiveCameraJson["FOV"] = Camera->mFovDegree;
 	PerspectiveCameraJson["Near"] = Camera->mNear;
 	PerspectiveCameraJson["Far"] = Camera->mFar;
@@ -174,25 +175,25 @@ void FSceneManager::LoadScene(FCamera* Camera, const std::filesystem::path& scen
 	FObjectFactory::DestroyObject(mCurrentWorld);
 	mCurrentWorld = newWorld;
 
-	ResetSelectedActor();
+	ResetSelectedComponent();
 }
 
-void  FSceneManager::SetSelectedActor(AActor* actor)
+void  FSceneManager::SetSelectedComponent(UActorComponent* component)
 {
-	if (actor == nullptr)
+	if (component == nullptr)
 	{
-		UE_LOG_WARN("SetSelectedActor: Attempted to set selected actor to nullptr.");
+		UE_LOG_WARN("SetSelectedComponent: Attempted to set selected component to nullptr.");
 		return;
 	}
 
-	if (actor == mSelectedActor)
+	if (component == mSelectedComponent)
 	{
-		UE_LOG_WARN("SetSelectedActor: Actor with UUID %d is already selected.", actor->UUID);
+		UE_LOG_WARN("SetSelectedComponent: Component with UUID %d is already selected.", component->UUID);
 		return; // No change
 	}
 
-	UE_LOG_WARN("SetSelectedActor: Actor with UUID %d is now selected.", actor->UUID);
-	mSelectedActor = actor;
+	UE_LOG_WARN("SetSelectedComponent: Component with UUID %d is now selected.", component->UUID);
+	mSelectedComponent = component;
 }
 
 //

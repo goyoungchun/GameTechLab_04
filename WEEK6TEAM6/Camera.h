@@ -1,12 +1,14 @@
 ﻿#pragma once
+
 #include "Transform.h"
-#include <cmath>
 #include "Vector.h"
+#include <cmath>
 
 class FCamera
 {
 public:
-	FCamera() : Transform(FTransform({ -2.0f, 1.0f, 1.0f }, { 0, 30, 0 }, { 1, 1, 1 }))
+	FCamera() 
+		: Transform(FTransform({ -2.0f, 1.0f, 1.0f }, FQuaternion(0, 0, 0, 1), { 1, 1, 1 }))
 	{
 		LookAt({ 0, 0, 0 });
 	}
@@ -22,8 +24,7 @@ public:
 	// 특정 지점을 바라보도록 회전을 맞춘다.
 	void LookAt(const FVector& Target)
 	{
-		TRotator NewRotation = TRotator::LookAt(Transform.GetLocation(), Target);
-		Transform.SetRotation(NewRotation);
+		Transform.SetRotation(FRotator::LookAt(Transform.GetLocation(), Target));
 	}
 
 	FMatrix GetProjectionMatrix() const
@@ -159,18 +160,41 @@ public:
 
 	void Rotate(long Dx, long Dy)
 	{
-		TRotator NewRotation = Transform.GetRotation();
-		NewRotation.Yaw += FMath::Fmod(Dx * Sensitivity, 360.f);
-		NewRotation.Pitch -= FMath::Fmod(Dy * Sensitivity, 360.f);
-		Transform.SetRotation(NewRotation);
+		const float yawDelta = FMath::DegreesToRadians(Dx * Sensitivity);
+
+		// 기존 동작: Pitch -= Dy * Sensitivity
+		// 프로젝트의 양의 Pitch는 Y축 쿼터니언 회전과 부호가 반대
+		const float localYDelta = FMath::DegreesToRadians(Dy * Sensitivity);
+
+		const FQuaternion yawQ(FVector(0, 0, 1), yawDelta);
+		const FQuaternion pitchQ(FVector(0, 1, 0), localYDelta);
+
+		FQuaternion newRotation = yawQ * Transform.GetRotation() * pitchQ;
+
+		newRotation.Normalize();
+		Transform.SetRotation(newRotation);
 	}
 
 	void Update();
 
 	void SetSensitivity(float _v) { Sensitivity = _v; }
-	FVector GetForwardVector() const { return FMatrix::Rotate(Transform.GetRotation()).GetUnitAxis(EAxis::X); }
-	FVector GetRightVector()   const { return FMatrix::Rotate(Transform.GetRotation()).GetUnitAxis(EAxis::Y); }
-	FVector GetUpVector()      const { return FMatrix::Rotate(Transform.GetRotation()).GetUnitAxis(EAxis::Z); }
+	FVector GetForwardVector() const 
+	{ 
+		FMatrix Rot = ToMatrix(Transform.GetRotation());
+		return Rot.GetUnitAxis(EAxis::X);
+	}
+
+	FVector GetRightVector()   const 
+	{ 
+		FMatrix Rot = ToMatrix(Transform.GetRotation());
+		return Rot.GetUnitAxis(EAxis::Y);
+	}
+
+	FVector GetUpVector()      const 
+	{ 
+		FMatrix Rot = ToMatrix(Transform.GetRotation());
+		return Rot.GetUnitAxis(EAxis::Z);
+	}
 
 	FTransform Transform;
 

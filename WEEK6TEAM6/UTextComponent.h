@@ -11,6 +11,7 @@
 #include "Json/json.hpp"
 #include "JsonUtil.h"
 #include "FTextBuilder.h"
+#include "FQuaternion.h"
 
 class UPlaneComponent : public UPrimitiveComponent
 {
@@ -72,9 +73,9 @@ public:
 			FMatrix TranslationMatrix = FMatrix::ExtractTranslation(PivotMatrix);
 			FVector Translation = FMatrix::GetTranslation(PivotMatrix);
 			FMatrix ScaleMatrix = FMatrix::ExtractScaleMatrix(PivotMatrix);
-			FRotator BillboardRotation = RenderCollector.Camera->Transform.GetRotation();
+			FQuaternion BillboardRotation = RenderCollector.Camera->Transform.GetRotation();
 
-			PivotMatrix = ScaleMatrix * FMatrix::Rotate(BillboardRotation) * FMatrix::Translation(Translation);
+			PivotMatrix = ScaleMatrix * ToMatrix(BillboardRotation) * FMatrix::Translation(Translation);
 		}
 
 		FRenderQuadInfo QuadInfo;
@@ -180,7 +181,7 @@ class ASpotLight : public AActor
 public:
 	ASpotLight()
 	{
-		USpotLightComponent* SpotLightComponent = CreateDefaultSubobject<USpotLightComponent>();
+		USpotLightComponent* SpotLightComponent = CreateDefaultSubobject<USpotLightComponent>(FName("SpotLightComponent"));
 		SetRootComponent(SpotLightComponent);
 	}
 
@@ -209,7 +210,7 @@ public:
 	{
 		Super::CreateEditorComponents();
 
-		UPlaneComponent* PlaneComponent = CreateDefaultSubobject<UPlaneComponent>();
+		UPlaneComponent* PlaneComponent = CreateDefaultSubobject<UPlaneComponent>(FName("SpotLightIcon"));
 		PlaneComponent->SetTexture(FAssetManager::Get().GetAssetAs<FTexture2DAsset>(BuiltInAssetID::SpotLightIcon, true));
 		PlaneComponent->SetBillboard(true);
 		PlaneComponent->SetBlendState(ERenderBlendMode::Transparent);
@@ -217,6 +218,7 @@ public:
 		PlaneComponent->SetDepthState(true, false);
 		PlaneComponent->SetEditorOnly(true);
 		PlaneComponent->SetDoNotSerialize(true);
+		PlaneComponent->SetVisualizeProxy(true);
 
 		USceneComponent* RootComp = GetRootComponent();
 		if (RootComp)
@@ -307,7 +309,7 @@ public:
 			FMatrix TranslationMatrix = FMatrix::ExtractTranslation(PivotMatrix);
 			FVector Translation = FMatrix::GetTranslation(PivotMatrix);
 			FMatrix ScaleMatrix = FMatrix::ExtractScaleMatrix(PivotMatrix);
-			FRotator BillboardRotation = RenderCollector.Camera->Transform.GetRotation();
+			FQuaternion BillboardRotation = RenderCollector.Camera->Transform.GetRotation();
 
 			UPrimitiveComponent* Primitive = mOwner->GetRootComponent()->Cast<UPrimitiveComponent>();
 			if (Primitive)
@@ -316,7 +318,7 @@ public:
 				Translation = FVector(Translation.x, Translation.y, Bounds.Max.z + 0.2f);
 			}
 
-			PivotMatrix = ScaleMatrix * FMatrix::Rotate(BillboardRotation) * FMatrix::Translation(Translation);
+			PivotMatrix = ScaleMatrix * ToMatrix(BillboardRotation) * FMatrix::Translation(Translation);
 		}
 
 		TextBuilder.Build(mText, TotalWidth, TotalHeight, [&](const FRect& Rect, const FRect& UV) {

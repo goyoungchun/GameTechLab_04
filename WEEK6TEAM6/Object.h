@@ -6,6 +6,7 @@
 #include "TArray.h"
 #include "TSparseArray.h"
 #include "ObjectFactory.h"
+#include "FName.h"
 
 namespace json { class JSON; }
 
@@ -36,19 +37,23 @@ public:
 	uint32 InternalIndex;
 	uint32 ObjectMapIndex;
 
+	FName Name;
+
 	virtual ~UObject();
 
 	void Initialize();
 
 	template <typename T>
-	T* CreateDefaultSubobject()
+	T* CreateDefaultSubobject(const FName& SubobjectName)
 	{
 		UObject* Subobject = FObjectFactory::ConstructUnInitializedObject(T::GetStaticClass());
+		Subobject->Name = SubobjectName;
 		Subobject->PostInitProperties();
 		return Subobject->Cast<T>();
 	}
 
 	virtual void PostInitProperties() {}
+	virtual void BeginDestroy() {}
 
 	// StaticClass() in Unreal Engine
 	static const FClassInfo* GetStaticClass();
@@ -69,6 +74,9 @@ public:
 	template<typename TObject>
 		requires std::derived_from<TObject, UObject>
 	TObject* Cast();
+
+	inline const FName& GetName() const { return Name; }
+	inline void Rename(const FName& name) { Name = name; }
 
 	static UObject* GetObjectByUUID(int32 uuid);
 	static UObject* GetObjectByInternalIndex(uint32 internalIndex);

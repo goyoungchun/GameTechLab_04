@@ -51,8 +51,6 @@ void UAtlasAnimationComponent::Reset()
 
 void UAtlasAnimationComponent::Tick(float deltaTime)
 {
-	Super::Tick(deltaTime);
-
 	if (!bPlaying || !Asset)
 	{
 		return;
@@ -63,6 +61,8 @@ void UAtlasAnimationComponent::Tick(float deltaTime)
 	{
 		return;
 	}
+
+	Super::Tick(deltaTime);
 
 	FrameAccumulator += deltaTime * FrameRate;
 

@@ -21,30 +21,24 @@ void FPropertyWindow::Render(const FGuiReference& GuiReference)
 
 	ImGui::Begin("Jungle Property Window", nullptr, flags);
 
-	AActor* TargetActor = GuiReference.SceneManager->GetSelectedActor();
+	UActorComponent* TargetComponent = GuiReference.SceneManager->GetSelectedComponent();
 
-	if (TargetActor)
+	if (TargetComponent)
 	{
 		mAssetManager = GuiReference.AssetManager;
+		mSelectedComponent = TargetComponent;
+		mSelectedActor = mSelectedComponent->GetOwner();
 
-		if (TargetActor != mSelectedActor)
+		const TSet<UActorComponent*>& Components = mSelectedActor->GetComponents();
+		
+		char ActorNameBuffer[256];
+		FString ActorName = mSelectedActor->GetName().ToString();
+		std::strcpy(ActorNameBuffer, ActorName.c_str());
+		if (ImGui::InputText("Actor Name", ActorNameBuffer, sizeof(ActorNameBuffer)))
 		{
-			mSelectedComponent = TargetActor->GetRootComponent();
+			mSelectedActor->Rename(FName(ActorNameBuffer));
 		}
 
-		mSelectedActor = TargetActor;
-
-		const TSet<UActorComponent*>& Components = TargetActor->GetComponents();
-
-		if (mSelectedComponent)
-		{
-			if (!TargetActor || !Components.Contains(mSelectedComponent))
-			{
-				mSelectedComponent = nullptr;
-			}
-		}
-
-		ImGui::Text("Actor: %s", "Unknown");
 		ImGui::SameLine();
 		
 		if (ImGui::Button("+ Add"))
@@ -52,14 +46,25 @@ void FPropertyWindow::Render(const FGuiReference& GuiReference)
 			ImGui::OpenPopup("Add Component");
 		}
 
-		RenderAddComponentPopup(TargetActor);
-		
-		if (ImGui::TreeNode("Actor (Instance)"))
+		bool bDestroyed = false;
+		if (mSelectedComponent && mSelectedComponent != mSelectedActor->GetRootComponent())
 		{
-			USceneComponent* RootComponent = TargetActor->GetRootComponent();
+			ImGui::SameLine();
+
+			if (ImGui::Button("- Remove"))
+			{
+				bDestroyed = true;
+			}
+		}
+
+		RenderAddComponentPopup();
+		
+		if (ImGui::TreeNode(std::format("{} (Instance)", ActorName).c_str()))
+		{
+			USceneComponent* RootComponent = mSelectedActor->GetRootComponent();
 			if (RootComponent)
 			{
-				RenderSceneComponentHierarchy(TargetActor, RootComponent);
+				RenderSceneComponentHierarchy(RootComponent);
 			}
 
 			for (UActorComponent* Component : Components)
@@ -94,8 +99,18 @@ void FPropertyWindow::Render(const FGuiReference& GuiReference)
 		{
 			ImGui::Separator();
 
+			char ComponentNameBuffer[256];
+			FString ComponentName = mSelectedComponent->GetName().ToString();
+			std::strcpy(ComponentNameBuffer, ComponentName.c_str());
+			if (ImGui::InputText("Component Name", ComponentNameBuffer, sizeof(ComponentNameBuffer)))
+			{
+				mSelectedComponent->Rename(FName(ComponentNameBuffer));
+			}
+
 			if (mSelectedComponent->IsA<USceneComponent>())
 			{
+				ImGui::SeparatorText(mSelectedComponent->GetClass()->Name.c_str());
+
 				RenderTransformProperties(mSelectedComponent->Cast<USceneComponent>());
 			}
 
@@ -118,25 +133,73 @@ void FPropertyWindow::Render(const FGuiReference& GuiReference)
 				RenderStaticMeshComponent(mSelectedComponent->Cast<UStaticMeshComponent>());
 			}
 		}
+
+		if (mSelectedComponent != TargetComponent)
+		{
+			GuiReference.SceneManager->SetSelectedComponent(mSelectedComponent);
+		}
+
+		if (bDestroyed)
+		{
+			mSelectedActor->RemoveComponent(mSelectedComponent);
+			mSelectedComponent->DestroyComponent();
+			GuiReference.SceneManager->ResetSelectedComponent();
+			GuiReference.SceneManager->SetSelectedComponent(mSelectedActor->GetRootComponent());
+		}
+	}
+	else
+	{
+		mSelectedActor = nullptr;
+		mSelectedComponent = nullptr;
 	}
 
 	ImGui::End();
 }
 
-void FPropertyWindow::RenderAddComponentPopup(AActor* TargetActor)
+void FPropertyWindow::RenderAddComponentPopup()
 {
+	ImGui::SetNextWindowSizeConstraints(ImVec2(240, 0), ImVec2(240, 300)); // 최대 높이 300
+
+	auto MakeUniqueName = [](const FString& BaseName, const TSet<UActorComponent*>& ExistingComponents) -> FString
+	{
+		int32 Suffix = 1;
+
+		FString UniqueName = BaseName;
+		while (true)
+		{
+			bool bIsUnique = true;
+			for (UActorComponent* Component : ExistingComponents)
+			{
+				if (Component->GetName() == UniqueName)
+				{
+					bIsUnique = false;
+					break;
+				}
+			}
+
+			if (bIsUnique)
+			{
+				break;
+			}
+
+			UniqueName = std::format("{}_{}", BaseName.ToString(), Suffix++);
+		}
+
+		return UniqueName;
+	};
+
 	if (ImGui::BeginPopup("Add Component"))
 	{
 		if (ImGui::MenuItem("StaticMeshComponent"))
 		{
-			UStaticMeshComponent* NewComponent = TargetActor->CreateDefaultSubobject<UStaticMeshComponent>();
+			UStaticMeshComponent* NewComponent = mSelectedActor->CreateDefaultSubobject<UStaticMeshComponent>(FName(MakeUniqueName("StaticMeshComponent", mSelectedActor->GetComponents())));
 
 			if (mSelectedComponent && mSelectedComponent->IsA<USceneComponent>())
 			{
 				NewComponent->SetupAttachment(mSelectedComponent->Cast<USceneComponent>());
 			}
 
-			TargetActor->AddOwnedComponent(NewComponent);
+			mSelectedActor->AddOwnedComponent(NewComponent);
 
 			ImGui::CloseCurrentPopup();
 		}
@@ -145,24 +208,33 @@ void FPropertyWindow::RenderAddComponentPopup(AActor* TargetActor)
 	}
 }
 
-void FPropertyWindow::RenderSceneComponentHierarchy(AActor* TargetActor, USceneComponent* SceneComponent)
+void FPropertyWindow::RenderSceneComponentHierarchy(USceneComponent* SceneComponent)
 {
-	if (TargetActor != SceneComponent->GetOwner())
+	if (mSelectedActor != SceneComponent->GetOwner())
 	{
 		// 서로 다른 owner를 가지거나 EditorOnly인 SceneComponent는 렌더링하지 않습니다.
 		return;
 	}
-
+	
 	const TArray<USceneComponent*> ChildComponents = SceneComponent->GetChildComponents();
+	
+	TArray<USceneComponent*> ValidChildComponents;
+	for (USceneComponent* Component : ChildComponents)
+	{
+		if (!Component->IsEditorOnly())
+		{
+			ValidChildComponents.Add(Component);
+		}
+	}
 
 	bool bIsSelected = mSelectedComponent == SceneComponent;
-	bool bHasChildren = !ChildComponents.IsEmpty();
+	bool bHasChildren = !ValidChildComponents.IsEmpty();
 
 	ImGuiTreeNodeFlags NodeFlags = ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_OpenOnArrow;
 	NodeFlags |= bIsSelected ? ImGuiTreeNodeFlags_Selected : 0;
 	NodeFlags |= bHasChildren ? 0 : ImGuiTreeNodeFlags_Leaf;
 
-	bool Open = ImGui::TreeNodeEx(SceneComponent->GetClass()->Name.c_str(), NodeFlags);
+	bool Open = ImGui::TreeNodeEx(std::format("{}", SceneComponent->GetName().ToString().c_str()).c_str(), NodeFlags);
 
 	if (ImGui::IsItemClicked())
 	{
@@ -171,9 +243,9 @@ void FPropertyWindow::RenderSceneComponentHierarchy(AActor* TargetActor, USceneC
 
 	if (Open)
 	{
-		for (USceneComponent* ChildComponent : ChildComponents)
+		for (USceneComponent* Component : ValidChildComponents)
 		{
-			RenderSceneComponentHierarchy(TargetActor, ChildComponent);
+			RenderSceneComponentHierarchy(Component);
 		}
 
 		ImGui::TreePop();
@@ -183,11 +255,7 @@ void FPropertyWindow::RenderSceneComponentHierarchy(AActor* TargetActor, USceneC
 void FPropertyWindow::RenderTransformProperties(USceneComponent* SceneComponent)
 {
 	FVector translationInput = SceneComponent->GetRelativeLocation();
-	FVector rotationInput = {
-		SceneComponent->GetRelativeRotation().Roll,
-		SceneComponent->GetRelativeRotation().Pitch,
-		SceneComponent->GetRelativeRotation().Yaw
-	};
+	FRotator rotationInput = ToEulerAngles(SceneComponent->GetRelativeRotation());
 	FVector scaleInput = SceneComponent->GetRelativeScale3D();
 
 	if (ImGui::DragFloat3("Translation", &translationInput.x, 0.1f))
@@ -195,13 +263,14 @@ void FPropertyWindow::RenderTransformProperties(USceneComponent* SceneComponent)
 		SceneComponent->SetRelativeLocation(translationInput);
 	}
 
-	if (ImGui::DragFloat3("Rotation", &rotationInput.x, 0.1f))
+	float SwizzleRotationInput[3] = { rotationInput.Roll, rotationInput.Pitch, rotationInput.Yaw };
+	if (ImGui::DragFloat3("Rotation", SwizzleRotationInput, 0.1f))
 	{
-		SceneComponent->SetRelativeRotation({
-			rotationInput.y, // Pitch
-			rotationInput.z, // Yaw
-			rotationInput.x  // Roll
-		});
+		rotationInput.Pitch = SwizzleRotationInput[1];
+		rotationInput.Yaw = SwizzleRotationInput[2];
+		rotationInput.Roll = SwizzleRotationInput[0];
+
+		SceneComponent->SetRelativeRotation(ToQuaternion(rotationInput));
 	}
 
 	if (ImGui::DragFloat3("Scale", &scaleInput.x, 0.1f, MIN_SCALE, FLT_MAX, "%.3f", ImGuiSliderFlags_AlwaysClamp))

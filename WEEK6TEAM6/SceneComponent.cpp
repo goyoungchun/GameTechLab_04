@@ -14,15 +14,22 @@ void USceneComponent::Initialize(FVector location, FRotator rotation, FVector sc
 	mRelativeTransform.SetScale(scale3D);
 }
 
-USceneComponent::~USceneComponent()
+void USceneComponent::BeginDestroy()
 {
+	while (mChildComponents.Num())
+	{
+		mChildComponents.Last()->DetachFromParent(true);
+	}
+	DetachFromParent(false);
+
+	Super::BeginDestroy();
 }
 
 void USceneComponent::SerializeClass(json::JSON& outJson) const
 {
 	UActorComponent::SerializeClass(outJson);
 	outJson["Properties"]["mRelativeLocation"] = JsonUtils::ToJson(mRelativeTransform.GetLocation());
-	outJson["Properties"]["mRelativeRotation"] = JsonUtils::ToJson(mRelativeTransform.GetRotation());
+	outJson["Properties"]["mRelativeRotation"] = JsonUtils::ToJson(ToEulerAngles(mRelativeTransform.GetRotation()));
 	outJson["Properties"]["mRelativeScale3D"] = JsonUtils::ToJson(mRelativeTransform.GetScale());
 }
 
@@ -60,6 +67,12 @@ void USceneComponent::DeserializeClass(const json::JSON& inJson)
 
 void USceneComponent::SetupAttachment(USceneComponent* ParentComponent, bool KeepWorldTransform)
 {
+	if (!ParentComponent)
+	{
+		DetachFromParent(KeepWorldTransform);
+		return;
+	}
+
 	if (mParentComponent == ParentComponent)
 	{
 		return;
@@ -93,7 +106,7 @@ void USceneComponent::SetupAttachment(USceneComponent* ParentComponent, bool Kee
 			FMatrix RelativeMatrix = CurrentWorldMatrix * ParentInverseMatrix;
 
 			FVector RelativeLocation;
-			FRotator RelativeRotation;
+			FQuaternion RelativeRotation;
 			FVector RelativeScale;
 			DecomposeMatrix(RelativeMatrix, RelativeLocation, RelativeRotation, RelativeScale);
 
@@ -101,9 +114,9 @@ void USceneComponent::SetupAttachment(USceneComponent* ParentComponent, bool Kee
 			mRelativeTransform.SetRotation(RelativeRotation);
 			mRelativeTransform.SetScale(RelativeScale);
 		}
-
-		mbWorldMatrixDirty = true;
 	}
+
+	PostWorldMatrixChanged();
 }
 
 bool USceneComponent::CanAttachTo(USceneComponent* ParentComponent) const
@@ -121,6 +134,37 @@ bool USceneComponent::CanAttachTo(USceneComponent* ParentComponent) const
 	}
 
 	return true;
+}
+
+void USceneComponent::DetachFromParent(bool KeepWorldTransform)
+{
+	if (!mParentComponent)
+	{
+		return;
+	}
+	
+	int32 Index = mParentComponent->mChildComponents.Find(this);
+	if (Index != -1)
+	{
+		mParentComponent->mChildComponents.RemoveAtSwap(Index);
+	}
+
+	if (KeepWorldTransform)
+	{
+		FMatrix CurrentWorldMatrix = GetWorldMatrix();
+
+		FVector RelativeLocation;
+		FQuaternion RelativeRotation;
+		FVector RelativeScale;
+		DecomposeMatrix(CurrentWorldMatrix, RelativeLocation, RelativeRotation, RelativeScale);
+
+		mRelativeTransform.SetLocation(RelativeLocation);
+		mRelativeTransform.SetRotation(RelativeRotation);
+		mRelativeTransform.SetScale(RelativeScale);
+	}
+	mParentComponent = nullptr;
+
+	PostWorldMatrixChanged();
 }
 
 FVector USceneComponent::GetRelativeLocation() const
@@ -147,29 +191,48 @@ void USceneComponent::SetWorldLocation(FVector WorldLocation)
 	SetRelativeLocation(RelativeLocation);
 }
 
-FRotator USceneComponent::GetRelativeRotation() const
+FVector USceneComponent::GetWorldLocation()
+{
+	FMatrix WorldMatrix = GetWorldMatrix();
+	return FVector(WorldMatrix.M[3][0], WorldMatrix.M[3][1], WorldMatrix.M[3][2]);
+}
+
+FQuaternion USceneComponent::GetRelativeRotation() const
 {
 	return mRelativeTransform.GetRotation();
 }
 
-void USceneComponent::SetRelativeRotation(FRotator rotation)
+void USceneComponent::SetRelativeRotation(FQuaternion rotation)
 {
 	mRelativeTransform.SetRotation(rotation);
 	PostWorldMatrixChanged();
 }
 
-void USceneComponent::SetWorldRotation(FRotator WorldRotation)
+void USceneComponent::SetWorldRotation(FQuaternion WorldRotation)
 {
-	FRotator RelativeRotation = WorldRotation;
+	FQuaternion RelativeRotation = WorldRotation;
 	if (mParentComponent)
 	{
-		FRotator ParentWorldRotation = mParentComponent->GetWorldRotation();
-		FMatrix ParentInverseMatrix = FMatrix::Rotate(ParentWorldRotation).Transpose();
-		FMatrix LocalMatrix = FMatrix::Rotate(WorldRotation) * ParentInverseMatrix;
-		RelativeRotation = ExtractRotationFromMatrix(LocalMatrix);
+		FQuaternion ParentWorldRotation = mParentComponent->GetWorldRotation();
+		FQuaternion ParentInverseRotation = ParentWorldRotation.Inverse();
+		RelativeRotation = ParentInverseRotation * WorldRotation;
+		RelativeRotation.Normalize();
 	}
 
 	SetRelativeRotation(RelativeRotation);
+}
+
+FQuaternion USceneComponent::GetWorldRotation()
+{
+	FQuaternion Rotation = GetRelativeRotation();
+
+	if (mParentComponent)
+	{
+		Rotation = mParentComponent->GetWorldRotation() * Rotation;
+	}
+	Rotation.Normalize();
+
+	return Rotation;
 }
 
 FVector USceneComponent::GetRelativeScale3D() const
@@ -181,18 +244,6 @@ void USceneComponent::SetRelativeScale3D(FVector scale)
 {
 	mRelativeTransform.SetScale(scale);
 	PostWorldMatrixChanged();
-}
-
-FVector USceneComponent::GetWorldLocation()
-{
-	FMatrix WorldMatrix = GetWorldMatrix();
-	return FVector(WorldMatrix.M[3][0], WorldMatrix.M[3][1], WorldMatrix.M[3][2]);
-}
-
-FRotator USceneComponent::GetWorldRotation()
-{
-	FMatrix WorldMatrix = GetWorldMatrix();
-	return ExtractRotationFromMatrix(WorldMatrix);
 }
 
 const FTransform& USceneComponent::GetTransform() const
@@ -211,7 +262,7 @@ void USceneComponent::PostWorldMatrixChanged()
 	}
 }
 
-const FMatrix& USceneComponent::GetWorldMatrix()
+const FMatrix& USceneComponent::GetWorldMatrix() const
 {
 	if (mbWorldMatrixDirty)
 	{

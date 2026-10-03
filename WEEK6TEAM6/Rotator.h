@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include <cmath>
 #include "Vector.h"
+#include "FQuaternion.h"
 #include "MathUtility.h"
 
 struct TRotator
@@ -22,6 +23,21 @@ struct TRotator
 	bool operator!=(const TRotator& Other) const
 	{
 		return !(*this == Other);
+	}
+
+	FQuaternion Quaternion() const
+	{
+		float CP, SP, CY, SY, CR, SR;
+
+		FMath::sincos<float>(SP, CP, FMath::DegreesToRadians(Pitch));
+		FMath::sincos<float>(SY, CY, FMath::DegreesToRadians(Yaw));
+		FMath::sincos<float>(SR, CR, FMath::DegreesToRadians(Roll));
+
+		return FQuaternion(
+			CP * SY * SR + SP * CY * CR,
+			SP * CY * SR - CP * SY * CR,
+			CP * CY * SR - SP * SY * CR,
+			CP * CY * CR + SP * SY * SR);
 	}
 
 	static TRotator FromDirection(const FVector& Direction)

@@ -62,14 +62,13 @@ void FControlWindow::RenderSpawnActorControl(const FGuiReference& GuiReference)
 			AActor* NewActor = nullptr;
 			if (strcmp(ActorTypeName, "Explosion") == 0)
 			{
-				NewActor = FObjectFactory::ConstructObject<AActor>();
-
 				TSharedPtr<FSpriteAtlasAsset> ExplosionAtlas = FAssetManager::Get().GetAssetAs<FSpriteAtlasAsset>(FName("ExplosionSpriteAtlas"));
 
-				UAtlasAnimationComponent* AnimComponent = FObjectFactory::ConstructObject<UAtlasAnimationComponent>(EPrimitive::EP_Plane, ExplosionAtlas);
-				AnimComponent->SetRelativeLocation(FVector(0, 0, 0));
-				AnimComponent->SetRelativeRotation(FRotator(0, 0, 0));
-				AnimComponent->SetRelativeScale3D(FVector(1, 1, 1));
+				NewActor = FObjectFactory::ConstructObject<AActor>();
+				NewActor->Rename(FName("ExplosionActor"));
+
+				UAtlasAnimationComponent* AnimComponent = NewActor->CreateDefaultSubobject<UAtlasAnimationComponent>(FName("AtlasAnimationComponent"));
+				AnimComponent->SetAtlas(ExplosionAtlas);
 				AnimComponent->SetBillboard(true);
 				AnimComponent->SetDepthState(true, false);
 				AnimComponent->Play();
@@ -79,19 +78,22 @@ void FControlWindow::RenderSpawnActorControl(const FGuiReference& GuiReference)
 			else if (strcmp(ActorTypeName, "Sphere") == 0 || strcmp(ActorTypeName, "Cube") == 0 || strcmp(ActorTypeName, "Triangle") == 0 || strcmp(ActorTypeName, "GizmoArrow") == 0 || strcmp(ActorTypeName, "Circle") == 0)
 			{
 				NewActor = FObjectFactory::ConstructObject<AActor>();
+				NewActor->Rename(FName(std::format("{}Actor", ActorTypeName)));
 
-				UStaticMeshComponent* MeshComponent = NewActor->CreateDefaultSubobject<UStaticMeshComponent>();
+				UStaticMeshComponent* MeshComponent = NewActor->CreateDefaultSubobject<UStaticMeshComponent>(FName("StaticMeshComponent"));
 				MeshComponent->SetMesh(FAssetManager::Get().GetAssetAs<FStaticMeshAsset>(FName(std::format("{}Mesh", ActorTypeName)), true));
 				NewActor->SetRootComponent(MeshComponent);
 			}
 			else if (strcmp(ActorTypeName, "SpotLight") == 0)
 			{
 				NewActor = FObjectFactory::ConstructUnInitializedObject<ASpotLight>();
+				NewActor->Rename(FName("SpotLightActor"));
 			}
 			else if (strcmp(ActorTypeName, "StaticMesh") == 0)
 			{
 				NewActor = FObjectFactory::ConstructObject<AActor>();
-				UStaticMeshComponent* MeshComponent = NewActor->CreateDefaultSubobject<UStaticMeshComponent>();
+				NewActor->Rename(FName("StaticMeshActor"));
+				UStaticMeshComponent* MeshComponent = NewActor->CreateDefaultSubobject<UStaticMeshComponent>(FName("StaticMeshComponent"));
 				NewActor->SetRootComponent(MeshComponent);
 			}
 			else
@@ -324,23 +326,24 @@ void FControlWindow::RenderCameraControl(const FGuiReference& GuiReference)
 		camera.Transform.SetLocation(Location);
 	}
 
-	FRotator Rotation = camera.Transform.GetRotation();
+	FQuaternion Rotation = camera.Transform.GetRotation();
+	FRotator Rotator = ToEulerAngles(Rotation);
 	bool bRotationChanged = false;
 
 	ImGui::Text("Rotation");
 	ImGui::SameLine();
 	ImGui::SetNextItemWidth(itemWidth);
-	bRotationChanged |= ImGui::DragFloat("##CamRotX", &Rotation.Roll, 0.1f, 180.0f);
+	bRotationChanged |= ImGui::DragFloat("##CamRotX", &Rotator.Roll, 0.1f, 180.0f);
 	ImGui::SameLine();
 	ImGui::SetNextItemWidth(itemWidth);
-	bRotationChanged |= ImGui::DragFloat("##CamRotY", &Rotation.Pitch, 0.1f, 180.0f);
+	bRotationChanged |= ImGui::DragFloat("##CamRotY", &Rotator.Pitch, 0.1f, 180.0f);
 	ImGui::SameLine();
 	ImGui::SetNextItemWidth(itemWidth);
-	bRotationChanged |= ImGui::DragFloat("##CamRotZ", &Rotation.Yaw, 0.1f, 180.0f);
+	bRotationChanged |= ImGui::DragFloat("##CamRotZ", &Rotator.Yaw, 0.1f, 180.0f);
 
 	if (bRotationChanged)
 	{
-		camera.Transform.SetRotation(Rotation);
+		camera.Transform.SetRotation(ToQuaternion(Rotator));
 	}
 }
 

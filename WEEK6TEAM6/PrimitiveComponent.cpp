@@ -96,7 +96,7 @@ bool UPrimitiveComponent::RayCastComponent(const FPickingRay& PickingRay, float&
 	const TArray<FVertex>& vertices = GetMeshVertices();
 	const TArray<uint32>& indices = GetMeshIndices();
 
-	const FMatrix& InvWorldMatrix = GetTransform().InverseMatrix();
+	const FMatrix& InvWorldMatrix = GetWorldMatrix().AffineInverse();
 	if (InvWorldMatrix == FMatrix::Zero)
 	{
 		// 역행렬이 존재하지 않으면(스케일이 작아 det이 0에 가까운 경우) RayCast 대상에서 제외

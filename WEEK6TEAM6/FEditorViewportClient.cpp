@@ -20,7 +20,7 @@
 #include "RayCast.h"
 
 FEditorViewportClient::FEditorViewportClient(URenderer& InRenderer)
-	: mCamera(FTransform({ -2.0f, 1.0f, 1.0f }, { 0, 30, 0 }, { 1, 1, 1 }))
+	: mCamera(FTransform({ -2.0f, 1.0f, 1.0f }, FQuaternion(FVector(0, 1, 0), FMath::DegreesToRadians(30.0f)), { 1, 1, 1 }))
 	, mGizmo(InRenderer)
 	, mbActive(true)
 {
@@ -71,7 +71,7 @@ void FEditorViewportClient::SetViewportType(EViewportType InViewportType)
 	}
 }
 
-AActor* FEditorViewportClient::PerformMousePicking(const FRect& ViewportRect, float perspectiveRatio, const FRenderCollector& RenderCollector)
+UActorComponent* FEditorViewportClient::PerformMousePicking(const FRect& ViewportRect, float perspectiveRatio, const FRenderCollector& RenderCollector)
 {
 	// 씬은 ImGui "Viewport" 창의 이미지 위에 그려진다.
 	// 그래서 역투영에 넣을 좌표계 기준은 윈도우 전체가 아니라 그 이미지다.
@@ -96,8 +96,6 @@ AActor* FEditorViewportClient::PerformMousePicking(const FRect& ViewportRect, fl
 	float NearlistT = FLT_MAX;
 	const FPickingRay PickingRay(NearPoint, FarPoint, mCamera.Transform.GetLocation());
 
-	// 충돌 판정은 컴포넌트가 스스로 한다. 여기서는 어느 것이 가장 가까운지만 고른다.
-
 	if (RenderCollector.BVH == nullptr || !RenderCollector.BVH->IsValid())
 	{
 		return nullptr;
@@ -105,7 +103,7 @@ AActor* FEditorViewportClient::PerformMousePicking(const FRect& ViewportRect, fl
 
 	const FRay Ray = PickingRay.ToRay();
 
-	AActor* NearestActor = nullptr;
+	UActorComponent* NearestComponent = nullptr;
 
 	struct FBVHNodeStackEntry
 	{
@@ -128,7 +126,7 @@ AActor* FEditorViewportClient::PerformMousePicking(const FRect& ViewportRect, fl
 		BVHStk.Pop();
 
 		float MaxDistance = PickingRay.Length;
-		if (NearestActor != nullptr)
+		if (NearestComponent != nullptr)
 		{
 			MaxDistance = FMath::Min(MaxDistance, NearlistT * PickingRay.Length);
 		}
@@ -146,6 +144,7 @@ AActor* FEditorViewportClient::PerformMousePicking(const FRect& ViewportRect, fl
 
 				float HitT = FLT_MAX;
                 // 월드에서 찾은 최단 T를 로컬 트리까지 전달합니다. 첫 후보는 전체 구간을 검사합니다.
+				// 충돌 판정은 컴포넌트가 스스로 한다. 여기서는 어느 것이 가장 가까운지만 고른다.
 				if (!Object->RayCastComponent(PickingRay, HitT, FMath::Min(NearlistT, 1.0f)))
 				{
 					continue;
@@ -154,7 +153,20 @@ AActor* FEditorViewportClient::PerformMousePicking(const FRect& ViewportRect, fl
 				if (HitT < NearlistT)
 				{
 					NearlistT = HitT;
-					NearestActor = Object->GetOwner();  // 가장 가까운 액터를 반환
+
+					USceneComponent* Current = Object;
+					while (Current->IsVisualizeProxy())
+					{
+						if (Current->HasParent())
+						{
+							Current = Current->GetParentComponent();
+						}
+						else
+						{
+							break;
+						}
+					}
+					NearestComponent = Current;
 				}
 			}
 		}
@@ -189,7 +201,7 @@ AActor* FEditorViewportClient::PerformMousePicking(const FRect& ViewportRect, fl
 		}
 	}
 
-	return NearestActor;
+	return NearestComponent;
 }
 
 void FEditorViewportClient::Update(float deltaTime, float perspectiveRatio, FRenderCollector& RenderCollector)
@@ -252,7 +264,7 @@ void FEditorViewportClient::Update(float deltaTime, float perspectiveRatio, FRen
 	FVector MoveDir(0.f, 0.f, 0.f);
 	if (bAllowKeyboardInput)
 	{
-		const FMatrix R = FMatrix::Rotate(CameraTransform.GetRotation());
+		const FMatrix R = ToMatrix(CameraTransform.GetRotation());
 		const FVector Forward = R.GetUnitAxis(EAxis::X);
 		const FVector Right = R.GetUnitAxis(EAxis::Y);
 
@@ -331,7 +343,7 @@ void FEditorViewportClient::DeprojectScreenToWorld(int32 MouseX, int32 MouseY, f
 {
 	FTransform& CameraTransform = mCamera.Transform;
 	FVector CameraLocation = CameraTransform.GetLocation();
-	FRotator CameraRotation = CameraTransform.GetRotation();
+	FQuaternion CameraRotation = CameraTransform.GetRotation();
 
 	// 1) 픽셀 -> NDC. 화면 Y 는 아래로 +, NDC Y 는 위로 + 라서 뒤집는다
 	const float ndcX = (2.0f * (MouseX + 0.5f) / ScreenW) - 1.0f;
@@ -343,7 +355,7 @@ void FEditorViewportClient::DeprojectScreenToWorld(int32 MouseX, int32 MouseY, f
 	const float xScale = yScale / Aspect;
 
 	// 3) 카메라 기저로 월드 방향 합성. 전방 성분이 1 이므로 정규화하면 안 된다
-	const FMatrix R = FMatrix::Rotate(CameraRotation);
+	const FMatrix R = ToMatrix(CameraRotation);
 	FVector V = R.GetUnitAxis(EAxis::X);                    // 전방 (성분 1)
 	V += R.GetUnitAxis(EAxis::Y) * (ndcX / xScale);         // 우측
 	V += R.GetUnitAxis(EAxis::Z) * (ndcY / yScale);         // 상방
@@ -357,7 +369,7 @@ void FEditorViewportClient::DeprojectScreenToWorldForOrtho(int32 MouseX, int32 M
 {
 	FTransform& CameraTransform = mCamera.Transform;
 	FVector CameraLocation = CameraTransform.GetLocation();
-	FRotator CameraRotation = CameraTransform.GetRotation();
+	FQuaternion CameraRotation = CameraTransform.GetRotation();
 
 	// 1) 픽셀 -> NDC. 화면 Y 는 아래로 +, NDC Y 는 위로 + 라서 뒤집는다
 	const float ndcX = (2.0f * (MouseX + 0.5f) / ScreenW) - 1.0f;
@@ -369,7 +381,7 @@ void FEditorViewportClient::DeprojectScreenToWorldForOrtho(int32 MouseX, int32 M
 	const float orthoHeight = mCamera.mOrthoHeight;
 	const float orthoWidth = orthoHeight * Aspect;
 
-	const FMatrix R = FMatrix::Rotate(CameraRotation);
+	const FMatrix R = ToMatrix(CameraRotation);
 	const FVector Forward = R.GetUnitAxis(EAxis::X);
 	const FVector Right = R.GetUnitAxis(EAxis::Y);
 	const FVector Up = R.GetUnitAxis(EAxis::Z);

@@ -27,4 +27,6 @@ struct FQuaternion
 
 	FQuaternion operator*(const FQuaternion& Other) const;
 	float& operator[](int Index);
+
+	bool operator==(const FQuaternion& Other) const;
 };

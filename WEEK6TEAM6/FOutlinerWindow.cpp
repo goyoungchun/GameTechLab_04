@@ -15,7 +15,7 @@ void FOutlinerWindow::Render(const FGuiReference& GuiReference)
 
 	ImGuiIO& io = ImGui::GetIO();
 	UWorld* CurrentWorld = GuiReference.SceneManager->GetCurrentWorld();
-	AActor* PrevSelectedActor = GuiReference.SceneManager->GetSelectedActor();
+	UActorComponent* PrevSelectedComponent = GuiReference.SceneManager->GetSelectedComponent();
 
 	ImGuiWindowFlags Flags = ImGuiWindowFlags_NoCollapse;
 
@@ -25,7 +25,7 @@ void FOutlinerWindow::Render(const FGuiReference& GuiReference)
 	
 	ImGui::SeparatorText("Object Lists");
 
-	SelectedActor = PrevSelectedActor;
+	SelectedComponent = PrevSelectedComponent;
 	SelectedActorDeleted = false;
 	HasDragDropRequest = false;
 
@@ -40,24 +40,49 @@ void FOutlinerWindow::Render(const FGuiReference& GuiReference)
 		RenderActorHierarchy(Actor, RootComponent);
 	}
 
+	ImGui::InvisibleButton("##outliner_invisible_button", ImVec2(0, 0));
+	if (ImGui::BeginDragDropTarget())
+	{
+		if (const ImGuiPayload* Payload = ImGui::AcceptDragDropPayload("ACTOR_PTR"))
+		{
+			AActor* DraggedActor = *static_cast<AActor* const*>(Payload->Data);
+			if (DraggedActor)
+			{
+				HasDragDropRequest = true;
+				DragDropRequest.Parent = nullptr;
+				DragDropRequest.Child = DraggedActor->GetRootComponent();
+			}
+		}
+		ImGui::EndDragDropTarget();
+	}
+
 	if (SelectedActorDeleted)
 	{
-		GuiReference.SceneManager->ResetSelectedActor();
+		GuiReference.SceneManager->ResetSelectedComponent();
 		assert(CurrentWorld != nullptr);
-		CurrentWorld->RemoveActor(SelectedActor->UUID);
-		// TODO: DestroyActor
+		CurrentWorld->RemoveActor(SelectedComponent->GetOwner()->UUID);
+		FObjectFactory::DestroyObject(SelectedComponent->GetOwner());
 	}
 	else
 	{
-		if (SelectedActor != PrevSelectedActor)
+		if (SelectedComponent != PrevSelectedComponent)
 		{
-			GuiReference.SceneManager->SetSelectedActor(SelectedActor);
+			GuiReference.SceneManager->SetSelectedComponent(SelectedComponent);
 		}
 
 		if (HasDragDropRequest)
 		{
-			// Reparent the dragged actor to the current actor
-			DragDropRequest.Child->SetupAttachment(DragDropRequest.Parent);
+			if (DragDropRequest.Parent == nullptr)
+			{
+				// If the parent is null, it means the actor is being dropped at the root level
+				DragDropRequest.Child->DetachFromParent();
+			}
+			else
+			{
+				// Reparent the dragged actor to the current actor
+				DragDropRequest.Child->SetupAttachment(DragDropRequest.Parent);
+			}
+
 			HasDragDropRequest = false;
 		}
 	}
@@ -76,7 +101,7 @@ void FOutlinerWindow::RenderActorHierarchy(AActor* Actor, USceneComponent* Scene
 		}
 	}
 
-	bool bSelected = Actor == SelectedActor;
+	bool bSelected = SceneComponent == SelectedComponent;
 
 	ImGuiTreeNodeFlags NodeFlags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
 	NodeFlags |= bSelected ? ImGuiTreeNodeFlags_Selected : 0;
@@ -84,15 +109,15 @@ void FOutlinerWindow::RenderActorHierarchy(AActor* Actor, USceneComponent* Scene
 
 	ImGui::PushID(Actor->UUID); // Ensure unique ID for each child
 
-	bool Open = ImGui::TreeNodeEx(std::format("UUID: {}", Actor->UUID).c_str(), NodeFlags);
+	bool Open = ImGui::TreeNodeEx(std::format("{}", Actor->GetName().ToString().c_str()).c_str(), NodeFlags);
 	if (ImGui::IsItemClicked())
 	{
-		SelectedActor = Actor;
+		SelectedComponent = SceneComponent;
 	}
 
 	if (ImGui::BeginDragDropSource())
 	{
-		ImGui::SetDragDropPayload("ACTOR_PTR", &Actor, sizeof(AActor));
+		ImGui::SetDragDropPayload("ACTOR_PTR", &Actor, sizeof(AActor*));
 		ImGui::Text("Dragging Actor UUID: %d", Actor->UUID);
 		ImGui::EndDragDropSource();
 	}

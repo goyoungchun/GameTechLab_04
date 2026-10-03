@@ -17,6 +17,7 @@
 #include "FStaticMeshBuilder.h"
 #include "FMeshDescription.h"
 #include "ImGui/imgui.h"
+#include "EngineMathLibrary.h"
 
 void FObjViewer::Initialize(FSceneManager& InSceneManager, URenderer& Renderer, FFileManager& InFileManager)
 {
@@ -43,20 +44,16 @@ void FObjViewer::UpdateObjGUI(FGraphicsManager& InGraphicsManager)
 		const FTransform& originalTransform = mViewerActor->GetTransform();
 
 		FVector translationInput = originalTransform.GetLocation();
-		FVector rotationInput = {
-			originalTransform.GetRotation().Roll,
-			originalTransform.GetRotation().Pitch,
-			originalTransform.GetRotation().Yaw
-		};
+		FRotator rotationInput = ToEulerAngles(originalTransform.GetRotation());
 		FVector scaleInput = originalTransform.GetScale();
 
 		if (ImGui::DragFloat3("Translation", &translationInput.x, 0.1f))
 		{
 			mViewerActor->SetLocation(translationInput);
 		}
-		if (ImGui::DragFloat3("Rotation", &rotationInput.x, 0.1f))
+		if (ImGui::DragFloat3("Rotation", &rotationInput.Pitch, 0.1f))
 		{
-			mViewerActor->SetRotation({ rotationInput.y,  rotationInput.z,  rotationInput.x });
+			mViewerActor->SetRotation(rotationInput);
 		}
 		if (ImGui::DragFloat3("Scale", &scaleInput.x, 0.1f, MIN_SCALE, FLT_MAX, "%.3f", ImGuiSliderFlags_AlwaysClamp))
 		{
@@ -73,7 +70,7 @@ void FObjViewer::UpdateObjGUI(FGraphicsManager& InGraphicsManager)
 		ImGui::SeparatorText("Actions");
 		if (ImGui::Button("Clear View") && mViewerActor)
 		{
-			mSceneManager->ResetSelectedActor();
+			mSceneManager->ResetSelectedComponent();
 			mSceneManager->GetCurrentWorld()->RemoveActor(mViewerActor->UUID);
 			mViewerActor = nullptr;
 		}
@@ -218,7 +215,7 @@ void FObjViewer::OpenObj(const std::filesystem::path& FilePath)
 
 	if (mViewerActor)
 	{
-		mSceneManager->ResetSelectedActor();
+		mSceneManager->ResetSelectedComponent();
 
 		mSceneManager->GetCurrentWorld()->RemoveActor(mViewerActor->UUID);
 		mViewerActor = nullptr;
@@ -366,7 +363,7 @@ void FObjViewer::OpenStaticMeshAsset(const std::filesystem::path& FilePath)
 
 	if (mViewerActor)
 	{
-		mSceneManager->ResetSelectedActor();
+		mSceneManager->ResetSelectedComponent();
 		mSceneManager->GetCurrentWorld()->RemoveActor(mViewerActor->UUID);
 		mViewerActor = nullptr;
 	}

@@ -16,9 +16,11 @@ class AActor : public UObject
 
 public:
 	AActor() = default;
-	virtual ~AActor();
+	virtual ~AActor() = default;
 
 	void Initialize();
+
+	void BeginDestroy() override;
 
 	virtual void SerializeClass(json::JSON& outJson) const override;
 	virtual void DeserializeClass(const json::JSON& inJson) override;

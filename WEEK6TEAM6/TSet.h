@@ -2,8 +2,8 @@
 
 #include <cassert>
 #include <unordered_set>
-
 #include "Core.h"
+#include "TArray.h"
 
 template <typename T>
 class TSet
@@ -29,6 +29,27 @@ public:
 
 	std::unordered_set<T>::const_iterator begin() const { return mSet.begin(); }
 	std::unordered_set<T>::const_iterator end() const { return mSet.end(); }
+
+	T& Last()
+	{
+		if (mSet.empty())
+		{
+			throw std::runtime_error("TSet::Last() called on empty set");
+		}
+
+		return const_cast<T&>(*std::prev(mSet.end()));
+	}
+
+	TArray<T> ToArray() const
+	{
+		TArray<T> result;
+		result.Reserve(static_cast<int32>(mSet.size()));
+		for (const T& element : mSet)
+		{
+			result.Add(element);
+		}
+		return result;
+	}
 
 	/*
 	void Empty(int32 ExpectedNumElements = 0)

@@ -2,6 +2,8 @@
 #include "Vector.h"
 #include "Rotator.h"
 #include "Matrix.h"
+#include "FQuaternion.h"
+#include "EngineMathLibrary.h"
 #include <cassert>
 
 // 스케일 하한. 0에 가까워지면 MakeMatrix()의 행렬식(세 축 스케일의 곱)이 무너져
@@ -13,7 +15,7 @@ struct FTransform
 {
 public:
 	FTransform(){ }
-	FTransform(FVector _Location, FRotator _Rotation, FVector _Scale) : Location(_Location), Rotation(_Rotation), Scale(_Scale)
+	FTransform(FVector _Location, FQuaternion _Rotation, FVector _Scale) : Location(_Location), Rotation(_Rotation), Scale(_Scale)
 	{
 	}
 	
@@ -51,7 +53,7 @@ public:
 
 	inline FVector GetLocation() const { return Location; }
 
-	inline void SetRotation(const FRotator& InRotation) 
+	inline void SetRotation(const FQuaternion& InRotation) 
 	{ 
 		if (Rotation == InRotation)
 		{
@@ -64,7 +66,13 @@ public:
 		++TransformVersion;
 	}
 
-	inline FRotator GetRotation() const { return Rotation; }
+	inline void SetRotation(const FRotator& InRotation)
+	{
+		FMatrix RotationMatrix = FMatrix::Rotate(InRotation);
+		SetRotation(ToQuaternion(RotationMatrix));
+	}
+
+	inline FQuaternion GetRotation() const { return Rotation; }
 	
 	inline void SetScale(const FVector& InScale)
 	{ 
@@ -93,13 +101,13 @@ private:
 			return;
 		}
 		
-		mTransformMatrix = FMatrix::Scale(Scale) * FMatrix::Rotate(Rotation) * FMatrix::Translation(Location);
+		mTransformMatrix = FMatrix::Scale(Scale) * ToMatrix(Rotation) * FMatrix::Translation(Location);
 		mbTransformDirty = false;
 	}
 
 private:
 	FVector Location = FVector(0);
-	FRotator Rotation = FRotator(0, 0, 0);
+	FQuaternion Rotation = FQuaternion(0, 0, 0, 1);
 	FVector Scale = FVector(1);
 	uint32 TransformVersion = 1;
 

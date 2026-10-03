@@ -328,19 +328,19 @@ void FEngineLoop::Tick(bool bPumpMessages)
 			{
 				if (RenderCollector.bNeedPickTargets)
 				{
-					AActor* HitActor = nullptr;
+					UActorComponent* HitComponent = nullptr;
 					{
 						PROFILE_SCOPE("MousePicking");
-						HitActor = CurrentViewport->Client->PerformMousePicking(CurrentViewport->Window->Rect, CurrentRatio, RenderCollector);
+						HitComponent = CurrentViewport->Client->PerformMousePicking(CurrentViewport->Window->Rect, CurrentRatio, RenderCollector);
 					}
 
-					if (HitActor)
+					if (HitComponent)
 					{
-						mSceneManager->SetSelectedActor(HitActor);
+						mSceneManager->SetSelectedComponent(HitComponent);
 					}
 					else
 					{
-						mSceneManager->ResetSelectedActor();
+						mSceneManager->ResetSelectedComponent();
 					}
 				}
 			}
@@ -348,14 +348,12 @@ void FEngineLoop::Tick(bool bPumpMessages)
 			// 선택된 액터 처리
 			TArray<UPrimitiveComponent*> HighlightedComponents;
 
-			AActor* SelectedActor = mSceneManager->GetSelectedActor();
+			UActorComponent* SelectedComponent = mSceneManager->GetSelectedComponent();
 			{
 				PROFILE_SCOPE("Viewport/SelectionAndGizmo");
-				if (SelectedActor)
+				if (SelectedComponent)
 				{
-					FTransform Transform = SelectedActor->GetTransform();
-
-					for (UActorComponent* Component : SelectedActor->GetComponents())
+					for (UActorComponent* Component : SelectedComponent->GetOwner()->GetComponents())
 					{
 						UPrimitiveComponent* PrimitiveComponent = Component->Cast<UPrimitiveComponent>();
 						if (PrimitiveComponent)
@@ -387,7 +385,7 @@ void FEngineLoop::Tick(bool bPumpMessages)
 						}
 					}
 
-					CurrentViewport->Client->mGizmo.Tick(SelectedActor, CurrentViewport->Window->Rect, CurrentViewport->Client->IsActive(), InvViewProjection);
+					CurrentViewport->Client->mGizmo.Tick(SelectedComponent, CurrentViewport->Window->Rect, CurrentViewport->Client->IsActive(), InvViewProjection);
 				}
 			}
 
@@ -399,7 +397,7 @@ void FEngineLoop::Tick(bool bPumpMessages)
 				mGraphicsManager->RenderHighLight(HighlightedComponents);
 				mGraphicsManager->Render();
 
-				CurrentViewport->Client->mGizmo.Render(SelectedActor, CurrentViewport->Client->mCamera.Transform.GetLocation(), CurrentViewport->Window->Rect, ViewProjection, CurrentViewport->Client->IsOrtho(), CurrentViewport->Client->GetCamera().mOrthoDistance);
+				CurrentViewport->Client->mGizmo.Render(SelectedComponent, CurrentViewport->Client->mCamera.Transform.GetLocation(), CurrentViewport->Window->Rect, ViewProjection, CurrentViewport->Client->IsOrtho(), CurrentViewport->Client->GetCamera().mOrthoDistance);
 			}
 		}
 	}

@@ -172,7 +172,7 @@ bool UStaticMeshComponent::RayCastComponent(const FPickingRay& PickingRay, float
 {
     if (!mMeshAsset) return false;
 
-    const FMatrix& InvWorld = GetTransform().InverseMatrix();
+    const FMatrix& InvWorld = GetWorldMatrix().AffineInverse();
     if (InvWorld == FMatrix::Zero) return false;
 
     // 에셋의 트리는 로컬 좌표계이므로 월드 Ray의 양 끝점을 역행렬로 변환합니다.

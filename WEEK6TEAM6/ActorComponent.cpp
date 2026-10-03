@@ -11,14 +11,23 @@ UActorComponent::UActorComponent()
 
 UActorComponent::~UActorComponent()
 {
+	delete mRenderProxy;
+}
+
+void UActorComponent::BeginDestroy()
+{
+	Super::BeginDestroy();
+
 	SetTickable(false);
-	
 	if (mOwner)
 	{
 		mOwner->RemoveComponent(this);
 	}
+}
 
-	delete mRenderProxy;
+void UActorComponent::DestroyComponent()
+{
+	FObjectFactory::DestroyObject(this);
 }
 
 void UActorComponent::SetTickable(bool bTickable)

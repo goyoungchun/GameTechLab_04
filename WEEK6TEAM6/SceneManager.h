@@ -23,6 +23,7 @@ struct FViewport;
 struct FEditorLayout;
 struct FEditorViewport;
 class UStaticMesh;
+class UActorComponent;
 
 class FSceneManager
 {
@@ -43,12 +44,12 @@ public:
 
 	UWorld* GetCurrentWorld() const { return mCurrentWorld; }
 
-	AActor* GetSelectedActor() const { return mSelectedActor; }
-	bool IsActorSelected() const { return mSelectedActor != nullptr; }
-	void SetSelectedActor(AActor* actor);
-	void ResetSelectedActor() { mSelectedActor = nullptr; }
+	UActorComponent* GetSelectedComponent() const { return mSelectedComponent; }
+	bool IsComponentSelected() const { return mSelectedComponent != nullptr; }
+	void SetSelectedComponent(UActorComponent* component);
+	void ResetSelectedComponent() { mSelectedComponent = nullptr; }
 
 private:
 	UWorld* mCurrentWorld = nullptr;
-	AActor* mSelectedActor = nullptr;
+	UActorComponent* mSelectedComponent = nullptr;
 };

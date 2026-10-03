@@ -60,6 +60,8 @@ void FObjectFactory::DestroyObject(UObject* Object)
 		return;
 	}
 
+	Object->BeginDestroy();
+
 	const FClassInfo* ClassInfo = Object->GetClass();
 	TArray<uint32>& ObjectIndices = UObject::GUObjectMap[ClassInfo];
 

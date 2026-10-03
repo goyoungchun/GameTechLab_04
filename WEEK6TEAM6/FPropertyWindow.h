@@ -19,9 +19,9 @@ public:
 	void Render(const FGuiReference& GuiReference);
 
 private:
-	void RenderAddComponentPopup(AActor* TargetActor);
+	void RenderAddComponentPopup();
 
-	void RenderSceneComponentHierarchy(AActor* TargetActor, USceneComponent* SceneComponent);
+	void RenderSceneComponentHierarchy(USceneComponent* SceneComponent);
 
 	void RenderTransformProperties(USceneComponent* SceneComponent);
 	void RenderText3DComponent(UText3DComponent* text3DComponent);

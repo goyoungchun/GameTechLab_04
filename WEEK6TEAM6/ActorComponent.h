@@ -12,6 +12,7 @@ enum EActorComponentFlags
 	DoNotSerialize = 1 << 1, // 직렬화하지 않는다. (에디터에서만 존재하는 컴포넌트는 기본적으로 직렬화하지 않는다.)
 	Renderable = 1 << 2, // 렌더링 가능한 컴포넌트. (UPrimitiveComponent 등)
     Tickable = 1 << 3, // 매 프레임 갱신할 컴포넌트. World의 Tick 목록에 직접 등록합니다.
+	VisualizeProxy = 1 << 4, // 에디터에서 기본 상태에서는 보이지 않는 컴포넌트를 표시하기 위한 플래그. 이 플래그가 켜져 있으면 Moouse picking에 의해 선택이 되어도 본인이 아니라 선택할 수 있는 부모 컴포넌트가 선택됩니다. (예: USceneComponent)
 };
 
 class UActorComponent : public UObject
@@ -21,6 +22,10 @@ class UActorComponent : public UObject
 public:
 	UActorComponent();
 	virtual ~UActorComponent();
+
+	virtual void BeginDestroy() override;
+
+	void DestroyComponent();
 
 	void SetOwner(AActor* owner);
 	AActor* GetOwner() const;
@@ -74,6 +79,21 @@ public:
 	}
 
 	inline bool IsRenderable() const { return (mComponentFlags & EActorComponentFlags::Renderable) != 0; }
+
+	inline void SetVisualizeProxy(bool bVisualizeProxy)
+	{
+		if (bVisualizeProxy)
+		{
+			mComponentFlags |= EActorComponentFlags::VisualizeProxy;
+		}
+		else
+		{
+			mComponentFlags &= ~EActorComponentFlags::VisualizeProxy;
+		}
+	}
+
+	inline bool IsVisualizeProxy() const { return (mComponentFlags & EActorComponentFlags::VisualizeProxy) != 0; }
+
 	inline FRenderProxy* GetRenderProxy() { return mRenderProxy; }
 
 protected:

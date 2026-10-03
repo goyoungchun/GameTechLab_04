@@ -7,6 +7,7 @@
 #include "SceneManager.h"
 #include "FInstrumentor.h"
 #include "SceneComponent.h"
+#include "ActorComponent.h"
 #include <cmath>
 
 FGizmo::FGizmo(URenderer& InRenderer) 
@@ -52,18 +53,25 @@ bool FGizmo::IsMouseOverHandle() const
 	return bIsHoveredAxis; 
 }
 
-void FGizmo::Tick(AActor* TargetActor, const FRect& ViewportRect, bool bViewportHovered, const FMatrix& InvViewProjection)
+void FGizmo::Tick(UActorComponent* TargetComponent, const FRect& ViewportRect, bool bViewportHovered, const FMatrix& InvViewProjection)
 {
-    if (!TargetActor)
+    if (!TargetComponent)
     {
         Reset();
         return;
     }
 
-    if (TargetUUID != TargetActor->UUID)
+    USceneComponent* SceneComponent = TargetComponent->Cast<USceneComponent>();
+    if (!SceneComponent)
     {
         Reset();
-        TargetUUID = TargetActor->UUID;
+        return;
+    }
+
+    if (TargetUUID != TargetComponent->UUID)
+    {
+        Reset();
+        TargetUUID = TargetComponent->UUID;
     }
 
     const FInputState& Input = WindowApplication.Input;
@@ -84,8 +92,6 @@ void FGizmo::Tick(AActor* TargetActor, const FRect& ViewportRect, bool bViewport
     bIsHoveredAxis = false;
     HoveredAxis = EAxisNumber::None;
 
-	USceneComponent* RootComponent = TargetActor->GetRootComponent();
-
     if (bAllowMouse)
     {
         for (const FHandleSegment& Segment : HandleScreenSegments)
@@ -104,7 +110,7 @@ void FGizmo::Tick(AActor* TargetActor, const FRect& ViewportRect, bool bViewport
                 HandleScreenStart = Segment.Start;
                 HandleScreenDirection = Segment.End - Segment.Start;
                 HandleScreenDirection.Normalize();
-                DragStartLocation = RootComponent->GetWorldLocation();
+                DragStartLocation = SceneComponent->GetWorldLocation();
                 DragStartMousePosition = MousePosInScreen;
                 bDragStarted = true;
                 bIsSelected = true;
@@ -155,7 +161,7 @@ void FGizmo::Tick(AActor* TargetActor, const FRect& ViewportRect, bool bViewport
         else
         {
             FVector NewLocation = DragStartLocation + AxisDirection * (T - DragStartAxisParameter);
-            RootComponent->SetWorldLocation(NewLocation);
+            SceneComponent->SetWorldLocation(NewLocation);
         }
     }
     else if (CurrentOperation == EGIZMO_TYPE::ROTATE)
@@ -163,50 +169,56 @@ void FGizmo::Tick(AActor* TargetActor, const FRect& ViewportRect, bool bViewport
         const float Sensitivity = 0.01f;
         const float Amount = FVector2::Dot(MousePosInScreen - PrevMousePos, HandleScreenDirection);
 
-        FQuaternion RotationQ = ToQuaternion(FMatrix::Rotate(RootComponent->GetWorldRotation()));
+        FQuaternion RotationQ = SceneComponent->GetWorldRotation();
         FQuaternion DeltaQ(AxisDirection, Amount * Sensitivity);
         FQuaternion FinalQ = DeltaQ * RotationQ;
         FinalQ.Normalize();
 
-        RootComponent->SetWorldRotation(ToEulerAngles(FinalQ));
+        SceneComponent->SetWorldRotation(FinalQ);
     }
     else if (CurrentOperation == EGIZMO_TYPE::SCALE)
     {
         const float Sensitivity = 0.01f;
         const float Amount = FVector2::Dot(MousePosInScreen - PrevMousePos, HandleScreenDirection);
 
-        FVector Scale = RootComponent->GetRelativeScale3D() + AxisDirection * Amount * Sensitivity;
+        FVector Scale = SceneComponent->GetRelativeScale3D() + AxisDirection * Amount * Sensitivity;
         Scale.x = FMath::Max(Scale.x, MIN_SCALE);
         Scale.y = FMath::Max(Scale.y, MIN_SCALE);
         Scale.z = FMath::Max(Scale.z, MIN_SCALE);
 
-        RootComponent->SetRelativeScale3D(Scale);
+        SceneComponent->SetRelativeScale3D(Scale);
     }
 
     PrevMousePos = MousePosInScreen;
 }
 
-void FGizmo::Render(AActor* TargetActor, const FVector& CameraPosition, const FRect& ViewportRect, const FMatrix& ViewProjection, bool bIsOrtho, float OrthoDistance)
+void FGizmo::Render(UActorComponent* TargetComponent, const FVector& CameraPosition, const FRect& ViewportRect, const FMatrix& ViewProjection, bool bIsOrtho, float OrthoDistance)
 {
     HandleScreenSegments.Empty();
 
-    if (!TargetActor) 
+    if (!TargetComponent) 
 	{ 
 		Reset(); 
 		return; 
 	}
 
-    if (TargetUUID != TargetActor->UUID) 
-	{ 
-		Reset(); 
-		TargetUUID = TargetActor->UUID; 
+	USceneComponent* SceneComponent = TargetComponent->Cast<USceneComponent>();
+	if (!SceneComponent)
+	{
+		Reset();
+		return;
 	}
 
-	USceneComponent* RootComponent = TargetActor->GetRootComponent();
-    const FVector CenterToCamera = CameraPosition - RootComponent->GetWorldLocation();
+    if (TargetUUID != TargetComponent->UUID) 
+	{ 
+		Reset(); 
+		TargetUUID = TargetComponent->UUID; 
+	}
+
+    const FVector CenterToCamera = CameraPosition - SceneComponent->GetWorldLocation();
 
 	// 카메라 앞에 있는지, 화면 안에 있는지 확인 아니면 그리지 않는다.
-    const FVector4 Clip = FVector4(RootComponent->GetWorldLocation(), 1.f) * ViewProjection;
+    const FVector4 Clip = FVector4(SceneComponent->GetWorldLocation(), 1.f) * ViewProjection;
     const bool bDrawGizmo = !(Clip.w <= 0.00001f || Clip.z < 0.f || Clip.z > Clip.w || Clip.x < -Clip.w || Clip.x > Clip.w || Clip.y < -Clip.w || Clip.y > Clip.w);
 	
     // 직교 화면이면 직교 상 거리에 비례한 크기 조절
@@ -225,7 +237,7 @@ void FGizmo::Render(AActor* TargetActor, const FVector& CameraPosition, const FR
         Circle 
     };
 
-    const FVector2 Center = WorldToScreen(RootComponent->GetWorldLocation(), ViewProjection, ScreenWidth, ScreenHeight);
+    const FVector2 Center = WorldToScreen(SceneComponent->GetWorldLocation(), ViewProjection, ScreenWidth, ScreenHeight);
     auto AxisColor = [&](EAxisNumber Axis, const FVector4& Color)
     {
         return Axis == (bIsSelected ? SelectedAxis : HoveredAxis) ? FVector4(1,1,0,1) : Color;
@@ -233,7 +245,7 @@ void FGizmo::Render(AActor* TargetActor, const FVector& CameraPosition, const FR
 
     auto DrawLineAxis = [&](const FVector& DrawAxis, const FVector& ApplyAxis, const FVector4& Color, EAxisEndPointStyle Style, EAxisNumber Axis)
     {
-        const FVector2 End = WorldToScreen(RootComponent->GetWorldLocation() + DrawAxis * AxisLength, ViewProjection, ScreenWidth, ScreenHeight);
+        const FVector2 End = WorldToScreen(SceneComponent->GetWorldLocation() + DrawAxis * AxisLength, ViewProjection, ScreenWidth, ScreenHeight);
 
         FVector2 ScreenAxis = End - Center;
 		if (ScreenAxis.LengthSquared() < 0.01f)
@@ -262,14 +274,14 @@ void FGizmo::Render(AActor* TargetActor, const FVector& CameraPosition, const FR
         FVector Points[NumSegments];
         GenerateCircleVertices([&](int32 Index, const FVector2& Point)
         {
-            Points[Index] = RootComponent->GetWorldLocation() + U * Point.X + V * Point.Y;
+            Points[Index] = SceneComponent->GetWorldLocation() + U * Point.X + V * Point.Y;
         }, AxisLength, NumSegments);
 
         for (int32 I = 0; I < NumSegments; ++I)
         {
             const FVector& StartWorld = Points[I];
             const FVector& EndWorld = Points[(I + 1) % NumSegments];
-			if (!bNoClipping && FVector::dot(Lerp(StartWorld, EndWorld, 0.5f) - RootComponent->GetWorldLocation(), CenterToCamera) < 0.f)
+			if (!bNoClipping && FVector::dot(Lerp(StartWorld, EndWorld, 0.5f) - SceneComponent->GetWorldLocation(), CenterToCamera) < 0.f)
 			{
 				continue;
 			}
@@ -286,7 +298,7 @@ void FGizmo::Render(AActor* TargetActor, const FVector& CameraPosition, const FR
         }
     };
 
-    const FMatrix Rotation = FMatrix::Rotate(RootComponent->GetWorldRotation());
+    const FMatrix Rotation = ToMatrix(SceneComponent->GetWorldRotation());
     const bool bLocal = !bWorldMode || CurrentOperation == EGIZMO_TYPE::SCALE;
     const FVector ForwardAxis = bLocal ? Rotation.GetUnitAxis(EAxis::X) : Front;
     const FVector RightAxis = bLocal ? Rotation.GetUnitAxis(EAxis::Y) : Right;

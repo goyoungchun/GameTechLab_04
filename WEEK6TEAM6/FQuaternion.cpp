@@ -54,3 +54,8 @@ float& FQuaternion::operator[](int Index)
 {
 	return Data[Index];
 }
+
+bool FQuaternion::operator==(const FQuaternion& Other) const
+{
+	return X == Other.X && Y == Other.Y && Z == Other.Z && W == Other.W;
+}

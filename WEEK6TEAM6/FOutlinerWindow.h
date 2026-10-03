@@ -9,6 +9,7 @@ class FSceneManager;
 class UObject;
 class AActor;
 class USceneComponent;
+class UActorComponent;
 
 class FOutlinerWindow
 {
@@ -25,7 +26,7 @@ private:
 		USceneComponent* Child;
 	};
 
-	AActor* SelectedActor;
+	UActorComponent* SelectedComponent;
 	bool SelectedActorDeleted;
 	bool HasDragDropRequest;
 	FDragDropRequst DragDropRequest;
