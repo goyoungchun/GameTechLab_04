@@ -1,7 +1,4 @@
 #include "World.h"
-
-#include <format>
-
 #include "RenderInfo.h"
 #include "JsonUtil.h"
 #include "Console.h"
@@ -12,6 +9,8 @@
 #include "UTextComponent.h"
 #include "ShowFlags.h"
 #include "FHiZOcclusionManager.h"
+#include "FDuplicatedDataRW.h"
+#include <format>
 
 UWorld::~UWorld()
 {
@@ -81,8 +80,10 @@ void UWorld::AddActor(AActor* actor)
 
 	mActors.Add(actor);
 
-	// TODO: 전처리를 통해 에디터 모드가 아니면 아래 코드를 컴파일하지 않게 막아야함.
-	actor->CreateEditorComponents();
+	if (mWorldType == EWorldType::Editor)
+	{
+		actor->CreateEditorComponents();
+	}
 }
 
 bool UWorld::RemoveActor(uint32 uuid)
@@ -310,4 +311,41 @@ int32 UWorld::getActorIndex(uint32 actorUUID) const
 	}
 
 	return -1;
+}
+
+UWorld* UWorld::DuplicateWorldForPIE(UWorld* SourceWorld)
+{
+	TMap<UObject*, UObject*> ObjectMap;
+	for (AActor* Actor : SourceWorld->GetActors())
+	{
+		if (ObjectMap.Contains(Actor))
+		{
+			continue;
+		}
+
+		UObject* Duplicated = FObjectFactory::ConstructUnInitializedObject(Actor->GetClass());
+		ObjectMap.Add(Actor, Duplicated);
+
+		FDuplicatedDataWriter DuplicatedDataWriter(ObjectMap);
+		Actor->Serialize(DuplicatedDataWriter);
+		DuplicatedDataWriter.Commit();
+
+		FDuplicatedDataReader DuplicatedDataReader(ObjectMap, DuplicatedDataWriter.GetSerializedObjects(), DuplicatedDataWriter.GetData());
+		Duplicated->Deserialize(DuplicatedDataReader);
+		DuplicatedDataReader.Commit();
+	}
+
+	UWorld* DuplicatedWorld = FObjectFactory::ConstructUnInitializedObject<UWorld>();
+	DuplicatedWorld->mWorldType = EWorldType::PIE;
+
+	for (const auto& [Original, Duplicated] : ObjectMap)
+	{
+		AActor* DuplicatedActor = Duplicated->Cast<AActor>();
+		if (DuplicatedActor)
+		{
+			DuplicatedWorld->AddActor(DuplicatedActor);
+		}
+	}
+
+	return DuplicatedWorld;
 }

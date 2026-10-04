@@ -265,8 +265,8 @@ void FEditorUIManager::Render(FGuiReference& GuiReference)
 			}
 
 			ImGui::TextColored(ImVec4(0.35f, 1.0f, 0.35f, 1.0f), "FPS");
-			ImGui::Text("FPS: %.1f", GuiReference.FrameTimer->GetFPS());
-			ImGui::Text("Frame: %.2f ms", GuiReference.FrameTimer->GetDeltaTime() * 1000.0f);
+			ImGui::Text("FPS: %.1f", GEngineLoop.GetFrameTimer()->GetFPS());
+			ImGui::Text("Frame: %.2f ms", GEngineLoop.GetFrameTimer()->GetDeltaTime() * 1000.0f);
 		}
 
 		if (console.bShowStatMemory)

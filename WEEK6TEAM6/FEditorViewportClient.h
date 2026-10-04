@@ -9,7 +9,7 @@
 #include "Enum.h"
 
 class AActor;
-class FSceneManager;
+class FEditorEngine;
 class URenderer;
 struct FRenderTarget2D;
 struct FDepthStencil;
@@ -93,8 +93,10 @@ public:
 
 	inline void SetActive(bool bActive) { mbActive = bActive; }
 	inline bool IsActive() const { return mbActive; }
+	inline void SetWorld(UWorld* InWorld) { mWorld = InWorld; }
 
 	FCamera& GetCamera() { return mCamera; }
+	UWorld* GetWorld() const { return mWorld; }
 
 	FCamera mCamera;
 	FGizmo mGizmo;
@@ -129,6 +131,8 @@ private:
 
 	EViewModeIndex mViewModeIndex = EViewModeIndex::VMI_Lit;
 	EViewportType mViewportType = EViewportType::Perspective;
+
+	UWorld* mWorld = nullptr;
 };
 
 struct FViewport

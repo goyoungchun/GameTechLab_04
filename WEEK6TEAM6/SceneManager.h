@@ -1,7 +1,4 @@
 ﻿#pragma once
-
-#include <string_view>
-#include <filesystem>
 #include "SceneData.h"
 #include "TArray.h"
 #include "RenderInfo.h"
@@ -9,6 +6,10 @@
 #include "FAssetManager.h"
 #include "FObjViewer.h"
 #include "FFrustum.h"
+#include "FEditorViewportClient.h"
+#include <string_view>
+#include <filesystem>
+#include <ImGui/imgui.h>
 
 inline constexpr std::string_view kSceneDataDir = "SceneData\\";
 inline constexpr std::string_view kSceneDataSuffix = ".Scene";
@@ -24,34 +25,199 @@ struct FEditorLayout;
 struct FEditorViewport;
 class UStaticMesh;
 class UActorComponent;
+class FEditorUIManager;
+class FComponentVisualizerManager;
 
-class FSceneManager
+struct FEditorLayout
+{
+	bool bIsSplitView = false;
+	int32 MaximizedViewportIndex = 0;
+
+	TSharedPtr<SWindow> RootWindow;
+	TSharedPtr<SSplitterH> HSplitter;
+	TSharedPtr<SSplitterV> VSplitter[2];
+	TSharedPtr<SWindow> ViewportWindows[4];
+
+	void Initialize(const FRect& InRect)
+	{
+		// Build viewport layout tree
+		TSharedPtr<SSplitterH> HRoot = MakeShared<SSplitterH>();
+		TSharedPtr<SSplitterV> VSplitter0 = MakeShared<SSplitterV>();
+		TSharedPtr<SSplitterV> VSplitter1 = MakeShared<SSplitterV>();
+
+		for (int32 i = 0; i < 4; ++i)
+		{
+			ViewportWindows[i] = MakeShared<SWindow>();
+		}
+
+		VSplitter0->SideLT = ViewportWindows[0];
+		VSplitter0->SideRB = ViewportWindows[1];
+
+		VSplitter1->SideLT = ViewportWindows[2];
+		VSplitter1->SideRB = ViewportWindows[3];
+
+		HRoot->SideLT = VSplitter0;
+		HRoot->SideRB = VSplitter1;
+
+		HRoot->SetRect(InRect);
+
+		RootWindow = HRoot;
+		HSplitter = HRoot;
+		VSplitter[0] = VSplitter0;
+		VSplitter[1] = VSplitter1;
+	}
+
+	void Resize(const FRect& InRect)
+	{
+		RootWindow->SetRect(InRect);
+	}
+
+	void SetSplitRatios(float HorizontalRatio, float VerticalRatio)
+	{
+		HSplitter->SplitterRatio = HorizontalRatio;
+		VSplitter[0]->SplitterRatio = VerticalRatio;
+		VSplitter[1]->SplitterRatio = VerticalRatio;
+	}
+
+	void GetSplitRatios(float& HorizontalRatio, float& VerticalRatio)
+	{
+		HorizontalRatio = HSplitter->SplitterRatio;
+		VerticalRatio = VSplitter[0]->SplitterRatio;
+	}
+};
+
+struct FEditorViewport
+{
+	TSharedPtr<SWindow> Window;
+	TSharedPtr<FViewport> Viewport;
+	TSharedPtr<FEditorViewportClient> Client;
+
+	void Release()
+	{
+		Viewport.reset();
+		Client.reset();
+		Window.reset();
+	}
+};
+
+struct FWorldContext
 {
 public:
-	FSceneManager();
-	~FSceneManager();
+	void SetCurrentWorld(UWorld* InWorld);
 
-	void Tick(float deltaTime);
-	void Render(float deltaTime, FRenderCollector& outCollector);
+	inline UWorld* World() const { return mWorld; }
 
-	void DuplicateScene();
+private:
+	friend class FEngine;
+	friend class FEditorEngine;
 
-	// Clear world
-	void NewScene();
-	void DeleteScene();
+	UWorld* mWorld = nullptr;
+	EWorldType mWorldType = EWorldType::Game;
+};
 
-	// 파일 탐색기용 오버로드
-	void SaveScene(FCamera* Camera, const std::filesystem::path& scenePath, const FFileManager& fileManager);
-	void LoadScene(FCamera* Camera, const std::filesystem::path& scenePath, const FFileManager& fileManager);
+class FEngine
+{
+public:
+	using FPendingTask = std::function<void()>;
 
-	UWorld* GetCurrentWorld() const { return mCurrentWorld; }
+	virtual void Initialize(HINSTANCE hInstance, WNDPROC WndProc);
+	virtual void Cleanup();
+
+	virtual void Tick(float DeltaTime) = 0;
+	virtual void Render(float DeltaTime) = 0;
+
+	FWorldContext& CreateNewWorldContext(EWorldType WorldType);
+	void DestroyWorldContext(FWorldContext* Context);
+	void DestroyWorldContext(UWorld* InWorld);
+
+	void EnqueuePendingTask(const FPendingTask& Task)
+	{
+		mPendingTasks.Emplace(Task);
+	}
+
+	FGraphicsManager& GetGraphicsManager() { return *mGraphicsManager; }
+	FFileManager& GetFileManager() { return *mFileManager; }
+	FAssetManager& GetAssetManager() { return *mAssetManager; }
+	FFontManager& GetFontManager() { return *mFontManager; }
+
+protected:
+	inline void ProcessPendingTasks()
+	{
+		for (FPendingTask& Task : mPendingTasks)
+		{
+			Task();
+		}
+		mPendingTasks.Empty();
+	}
+
+	virtual void OnCreateWorldContext(FWorldContext& NewContext) {}
+	virtual void OnDestroyWorldContext(FWorldContext& Context) {}
+
+protected:
+	HWND mHWnd;
+
+	FGraphicsManager* mGraphicsManager;
+	FFileManager* mFileManager;
+	FAssetManager* mAssetManager;
+	FFontManager* mFontManager;
+
+	TArray<FWorldContext> mWorldContexts;
+	TArray<FPendingTask> mPendingTasks;
+};
+
+class FEditorEngine : public FEngine
+{
+public:
+	virtual void Initialize(HINSTANCE hInstance, WNDPROC WndProc) override;
+	virtual void Cleanup() override;
+
+	FWorldContext& GetEditorWorldContext();
+	FWorldContext* GetPIEWorldContext();
+
+	virtual void Tick(float DeltaTime) override;
+	virtual void Render(float DeltaTime) override;
 
 	UActorComponent* GetSelectedComponent() const { return mSelectedComponent; }
 	bool IsComponentSelected() const { return mSelectedComponent != nullptr; }
 	void SetSelectedComponent(UActorComponent* component);
 	void ResetSelectedComponent() { mSelectedComponent = nullptr; }
 
+	static constexpr int32 MaxViewportCount = 4;
+	static constexpr int32 MainViewportIndex = 0;
+
+	FEditorViewport& GetMainViewport() { return mViewports[MainViewportIndex]; }
+	const FEditorViewport& GetMainViewport() const { return mViewports[MainViewportIndex]; }
+
+	void SetMouseCursor(ImGuiMouseCursor InMouseCursor) { mMouseCursor = InMouseCursor; }
+
+	void SaveEditorSettings();
+	void LoadEditorSettings();
+
+	void StartPIE();
+	void EndPIE();
+
 private:
-	UWorld* mCurrentWorld = nullptr;
+	void InitAssetManager();
+
+	void OnCreateWorldContext(FWorldContext& NewContext) override;
+	void OnDestroyWorldContext(FWorldContext& Context) override;
+
+private:
+	FEditorLayout mEditorLayout;
+	FEditorViewport mViewports[4]; // 0 : MainView 1, 2, 3 : Other
+
+	FEditorUIManager* mEditorUIManager;
+	FComponentVisualizerManager* mComponentVisualizerManager;
+
+	int32  mEditorWorldContextIndex = -1;
 	UActorComponent* mSelectedComponent = nullptr;
+	ImGuiMouseCursor mMouseCursor = ImGuiMouseCursor_Arrow;
+	bool mbIsPlayingInEditor = false;
 };
+
+extern FEngine* GEngine;
+extern FEditorEngine GEditor;
+
+UWorld* NewBlankMap();
+void SaveMap(UWorld* World, FCamera* Camera, const std::filesystem::path& scenePath, const FFileManager& fileManager);
+void LoadMap(FWorldContext& WorldContext, FCamera* Camera, const std::filesystem::path& scenePath, const FFileManager& fileManager);

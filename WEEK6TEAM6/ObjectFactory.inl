@@ -23,15 +23,3 @@ TObject* FObjectFactory::ConstructObject(Args&& ...args)
 	return instance;
 }
 
-template<typename TObject>
-	requires std::derived_from<TObject, UObject>
-TObject* FObjectFactory::LoadObject(const json::JSON& inJson)
-{
-	TObject* instance = ConstructUnInitializedObject<TObject>();
-	if (instance)
-	{
-		instance->DeserializeClass(inJson);
-	}
-
-	return instance;
-}

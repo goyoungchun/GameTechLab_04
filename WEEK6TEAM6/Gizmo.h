@@ -8,7 +8,7 @@
 
 class AActor;
 class URenderer;
-class FSceneManager;
+class FEditorEngine;
 class UActorComponent;
 
 enum class EAxisNumber 

@@ -5,7 +5,7 @@
 #include "ImGui/imgui.h"
 
 struct FGuiReference;
-class FSceneManager;
+class FEditorEngine;
 class UObject;
 class AActor;
 class USceneComponent;

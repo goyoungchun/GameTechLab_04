@@ -19,7 +19,8 @@
 #include "ImGui/imgui.h"
 #include "EngineMathLibrary.h"
 
-void FObjViewer::Initialize(FSceneManager& InSceneManager, URenderer& Renderer, FFileManager& InFileManager)
+#if IS_OBJ_VIEWER
+void FObjViewer::Initialize(FEditorEngine& InSceneManager, URenderer& Renderer, FFileManager& InFileManager)
 {
 	mSceneManager = &InSceneManager;
 	FShowFlags::Get().SetEnabled(EShowFlag::UUIDText, false); 
@@ -382,3 +383,4 @@ void FObjViewer::OpenStaticMeshAsset(const std::filesystem::path& FilePath)
 	mViewerComponent = Component;
 	mLoadedFilePath = FString(FilePath.string());
 }
+#endif

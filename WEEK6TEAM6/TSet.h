@@ -24,6 +24,11 @@ public:
 	bool IsEmpty() const;
 	void Reserve(int32 capacity);
 
+	inline void Empty()
+	{
+		mSet.clear();
+	}
+
 	std::unordered_set<T>::iterator begin() { return mSet.begin(); }
 	std::unordered_set<T>::iterator end() { return mSet.end(); }
 

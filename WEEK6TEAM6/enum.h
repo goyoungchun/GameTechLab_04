@@ -55,3 +55,11 @@ enum class EViewportType
 	Max
 };
 
+enum class EWorldType
+{
+	Editor,
+	EditorPreview,
+	PIE,
+	Game,
+};
+

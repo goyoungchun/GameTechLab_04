@@ -6,7 +6,7 @@
 
 FAssetManager& FAssetManager::Get()
 {
-	return *GEngineLoop.GetAssetManager();
+	return GEngine->GetAssetManager();
 }
 
 void FAssetManager::RegisterAsset(const FName& AssetName, const TSharedPtr<FAssetLoader>& AssetLoader, const TSharedPtr<FAssetSource>& AssetSource)

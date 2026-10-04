@@ -62,6 +62,11 @@ void AActor::Deserialize(FArchive& Ar)
 {
 	Super::Deserialize(Ar);
 
+	while (!mComponents.IsEmpty())
+	{
+		FObjectFactory::DestroyObject(mComponents.Last());
+	}
+
 	int32 RootComponentIndex = -1;
 	Ar << RootComponentIndex;
 

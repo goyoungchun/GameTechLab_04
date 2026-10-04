@@ -14,7 +14,7 @@ void FOutlinerWindow::Render(const FGuiReference& GuiReference)
 	PROFILE_FUNCTION();
 
 	ImGuiIO& io = ImGui::GetIO();
-	UWorld* CurrentWorld = GuiReference.SceneManager->GetCurrentWorld();
+	UWorld* CurrentWorld = GuiReference.WorldContext->World();
 	UActorComponent* PrevSelectedComponent = GuiReference.SceneManager->GetSelectedComponent();
 
 	ImGuiWindowFlags Flags = ImGuiWindowFlags_NoCollapse;

@@ -3,7 +3,9 @@
 #include "Object.h"
 #include <filesystem>
 
-class FSceneManager;
+#if IS_OBJ_VIEWER
+
+class FEditorEngine;
 class FGraphicsManager;
 class AActor;
 class UStaticMeshComponent;
@@ -20,14 +22,14 @@ inline constexpr std::string_view kDefaultOBJPath = ".\\Assets\\Meshes\\";
 class FObjViewer
 {
 public:
-    void Initialize(FSceneManager& InSceneManager, URenderer& Renderer, FFileManager& InFileManager);
+    void Initialize(FEditorEngine& InSceneManager, URenderer& Renderer, FFileManager& InFileManager);
     void UpdateObjGUI(FGraphicsManager& InGraphicsManager);
     void OpenObj(const std::filesystem::path& FilePath);
     void OpenStaticMeshAsset(const std::filesystem::path& FilePath);
 
 private:
     AActor* mViewerActor = nullptr;
-    FSceneManager* mSceneManager = nullptr;
+    FEditorEngine* mSceneManager = nullptr;
     FString mLoadedFilePath;
     FRect mViewportRcet;
     UStaticMeshComponent* mViewerComponent = nullptr;  
@@ -38,3 +40,5 @@ private:
     bool BuildRuntimeMaterials(const std::filesystem::path& ObjPath,
         const FStaticMeshPayload& Payload, FStaticMeshBuildData& InOutBuildData);
 };
+
+#endif

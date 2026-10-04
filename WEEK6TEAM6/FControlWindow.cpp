@@ -29,14 +29,13 @@ void FControlWindow::Render(const FGuiReference& GuiReference)
 	RenderSceneControl(GuiReference);
 	RenderCameraControl(GuiReference);
 	RenderGizmoControl(GuiReference);
+	RenderPIEControl(GuiReference);
 
 	ImGui::End();
 }
 
 void FControlWindow::RenderSpawnActorControl(const FGuiReference& GuiReference)
 {
-	UWorld* CurrentWorld = GuiReference.SceneManager->GetCurrentWorld();
-
 	/* Spawn Actor */
 	// NOTE: This name array must be edited when adding new primitive types to EPrimitive enum.
 	ImGui::SeparatorText("Spawn Actor");
@@ -103,7 +102,7 @@ void FControlWindow::RenderSpawnActorControl(const FGuiReference& GuiReference)
 
 			if (NewActor)
 			{
-				CurrentWorld->AddActor(NewActor);
+				GuiReference.WorldContext->World()->AddActor(NewActor);
 			}
 		}
 	}
@@ -133,8 +132,10 @@ void FControlWindow::RenderSceneControl(const FGuiReference& GuiReference)
 
 	if (ImGui::Button("New scene"))
 	{
+		UWorld* NewWorld = NewBlankMap();
+		GEditor.GetEditorWorldContext().SetCurrentWorld(NewWorld);
+		GEditor.ResetSelectedComponent();
 		GuiReference.ViewportClient->Reset();
-		GuiReference.SceneManager->NewScene();
 	}
 
 	ImGui::SameLine();
@@ -151,7 +152,7 @@ void FControlWindow::RenderSceneControl(const FGuiReference& GuiReference)
 			// 취소 버튼을 누른 경우에는 아무 작업도 하지 않는다.
 			if (selectedPath.has_value())
 			{
-				GuiReference.SceneManager->SaveScene(GuiReference.EditorCamera, selectedPath.value(), *GuiReference.FileManager);
+				SaveMap(GuiReference.WorldContext->World(), GuiReference.EditorCamera, selectedPath.value(), *GuiReference.FileManager);
 
 				UE_LOG("Scene saved: %s", selectedPath->string().c_str());
 			}
@@ -178,7 +179,7 @@ void FControlWindow::RenderSceneControl(const FGuiReference& GuiReference)
 			// 취소한 경우에는 현재 씬과 카메라 상태를 건드리지 않는다.
 			if (selectedPath.has_value())
 			{
-				GuiReference.SceneManager->LoadScene(GuiReference.EditorCamera, selectedPath.value(), *GuiReference.FileManager);
+				LoadMap(*GuiReference.WorldContext, GuiReference.EditorCamera, selectedPath.value(), *GuiReference.FileManager);
 
 				// 파일 로드가 실행된 뒤에만 카메라를 초기화한다.
 				GuiReference.ViewportClient->Reset();
@@ -375,5 +376,23 @@ void FControlWindow::RenderGizmoControl(const FGuiReference& GuiReference)
 	if (ImGui::Button("Next Gizmo Mode"))
 	{
 		GuiReference.ViewportClient->mGizmo.SetOperation(static_cast<EGIZMO_TYPE>((currentGizmoIndex + 1) % 3));
+	}
+}
+
+void FControlWindow::RenderPIEControl(const FGuiReference& GuiReference)
+{
+	/* Play In Editor Control */
+	ImGui::SeparatorText("Play In Editor");
+	if (ImGui::Button("Play"))
+	{
+		GEditor.StartPIE();
+		GEditor.ResetSelectedComponent();
+	}
+
+	ImGui::SameLine();
+	if (ImGui::Button("Stop"))
+	{
+		GEditor.EndPIE();
+		GEditor.ResetSelectedComponent();
 	}
 }

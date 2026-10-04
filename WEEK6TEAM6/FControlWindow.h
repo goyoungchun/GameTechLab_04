@@ -2,7 +2,7 @@
 
 #include "Core.h"
 
-class FSceneManager;
+class FEditorEngine;
 struct FGuiReference;
 
 class FControlWindow
@@ -15,6 +15,7 @@ private:
 	void RenderSceneControl(const FGuiReference& GuiReference);
 	void RenderCameraControl(const FGuiReference& GuiReference);
 	void RenderGizmoControl(const FGuiReference& GuiReference);
+	void RenderPIEControl(const FGuiReference& GuiReference);
 
 private:
 	int32 mSelectedTargetSpawnIndex = 1;

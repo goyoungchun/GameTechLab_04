@@ -5,14 +5,7 @@
 #include "RenderInfo.h"
 #include "FFrustum.h"
 #include "TActiveTickList.h"
-
-enum class EWorldType
-{
-	Editor,
-	EditorPreview,
-	PIE,
-	Game,
-};
+#include "enum.h"
 
 class ULevel : public UObject
 {
@@ -63,7 +56,10 @@ public:
 	bool IsAABBsDirty() const { return mbAABBsDirty; }
 	void SetAABBsClean() { mbAABBsDirty = false; }
 	const TArray<FAABB>& GetCachedEntryAABBs() const { return mCachedEntryAABBs; }
+
 	inline EWorldType GetWorldType() const { return mWorldType; }
+
+	static UWorld* DuplicateWorldForPIE(UWorld* SourceWorld);
 
 private:
 	int32 getActorIndex(uint32 actorUUID) const;
@@ -100,4 +96,3 @@ private:
 	TArray<FBVHItemRange> VisibleRanges;
 	FVector mLODViewOrigin;
 };
-
