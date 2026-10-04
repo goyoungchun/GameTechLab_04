@@ -13,6 +13,8 @@ public:
 
 	using UPrimitiveComponent::Initialize;
 
+	virtual void Serialize(FArchive& Ar) override;
+	virtual void Deserialize(FArchive& Ar) override;
 	virtual void SerializeClass(json::JSON& outJson) const override;
 	virtual void DeserializeClass(const json::JSON& inJson) override;
 
@@ -91,7 +93,6 @@ private:
 	uint32 mRenderedLODIndex = 0;
 	uint32 mLODMeshID = 0;
 	TArray<TSharedPtr<FMaterialAsset>> mMaterialAssets;
-	TSharedPtr<FTexture2DAsset> mTextureAsset;
 	TArray<FVector2> mUVOffsets;
 
 	mutable FAABB mCachedWorldAABB;

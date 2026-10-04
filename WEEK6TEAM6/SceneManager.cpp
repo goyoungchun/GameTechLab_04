@@ -35,6 +35,7 @@
 #include "LaunchEngineLoop.h"
 #include "FAssetManager.h"
 #include "FTextBuilder.h"
+#include "FDuplicatedDataRW.h"
 
 FSceneManager::FSceneManager()
 {
@@ -53,6 +54,48 @@ void FSceneManager::Tick(float deltaTime)
 void FSceneManager::Render(float deltaTime, FRenderCollector& outCollector)
 {
 	mCurrentWorld->Render(deltaTime, outCollector);
+}
+
+void FSceneManager::DuplicateScene()
+{
+	if (mCurrentWorld == nullptr)
+	{
+		throw std::runtime_error("Cannot duplicate scene because current world is null.");
+	}
+	
+	TMap<UObject*, UObject*> ObjectMap;
+	for (AActor* Actor : mCurrentWorld->GetActors())
+	{
+		if (ObjectMap.Contains(Actor))
+		{
+			continue; // 이미 복제된 경우 건너뜀
+		}
+
+		UObject* Duplicated = FObjectFactory::ConstructUnInitializedObject(Actor->GetClass());
+		ObjectMap.Add(Actor, Duplicated);
+
+		FDuplicatedDataWriter DuplicatedDataWriter(ObjectMap);
+		Actor->Serialize(DuplicatedDataWriter);
+		DuplicatedDataWriter.Commit();
+
+		FDuplicatedDataReader DuplicatedDataReader(ObjectMap, DuplicatedDataWriter.GetSerializedObjects(), DuplicatedDataWriter.GetData());
+		Duplicated->Deserialize(DuplicatedDataReader);
+		DuplicatedDataReader.Commit();
+	}
+
+	UWorld* DuplicatedWorld = FObjectFactory::ConstructUnInitializedObject<UWorld>();
+
+	for (const auto& [Original, Duplicated] : ObjectMap)
+	{
+		AActor* DuplicatedActor = Duplicated->Cast<AActor>();
+		if (DuplicatedActor)
+		{
+			DuplicatedWorld->AddActor(DuplicatedActor);
+		}
+	}
+
+	DeleteScene();
+	mCurrentWorld = DuplicatedWorld;
 }
 
 void FSceneManager::NewScene()
@@ -196,33 +239,3 @@ void  FSceneManager::SetSelectedComponent(UActorComponent* component)
 	mSelectedComponent = component;
 }
 
-//
-//FSceneData FSceneManager::ReadSceneData(
-//	std::string_view sceneName,
-//	const FFileManager& fileManager)
-//{
-//	FString fileName = sceneName;
-//	fileName += kSceneDataSuffix;
-//
-//	json::JSON jsonData = json::JSON::Load(fileManager.ReadFileToString(fileName));
-//	FSceneData sceneData = FSceneData(jsonData);
-//	return sceneData;
-//}
-//
-//UWorld* FSceneManager::BuildWorldFromSceneData(const FSceneData& sceneData)
-//{
-//	//UWorld* newWorld = FObjectFactory::ConstructObject<UWorld>();
-//
-//	//for (const auto& [UUID, primitiveData] : sceneData.Primitives) 
-//	//{
-//	//	// TODO: Replace AActor creation logic later
-//	//	AActor* newActor = FObjectFactory::ConstructObject<AActor>();
-//	//	UPrimitiveComponent* newPrimitiveComponent =
-//	//		FObjectFactory::ConstructObject<UPrimitiveComponent>(
-//	//			);
-//	//}
-//
-//	//UEngineStatics::SetNextUUID(sceneData.NextUUID);
-//	throw std::logic_error("BuildWorldFromSceneData is not implemented yet.");
-//	return nullptr;
-//}

@@ -11,6 +11,7 @@
 namespace json { class JSON; }
 
 class UObject;
+class FArchive;
 
 struct FClassInfo
 {
@@ -25,8 +26,6 @@ struct FClassInfo
 	UObject* CreateInstance() const;
 
 	bool IsChildOf(const FClassInfo* other) const;
-
-private:
 };
 
 class UObject
@@ -61,7 +60,8 @@ public:
 	// GetClass() in Unreal Engine
 	virtual const FClassInfo* GetClass() const { return GetStaticClass(); }
 
-	// TODO?: Replace json type with a more generic type, such as a variant or a map
+	virtual void Serialize(FArchive& Ar);
+	virtual void Deserialize(FArchive& Ar);
 	virtual void SerializeClass(json::JSON& outJson) const;
 	virtual void DeserializeClass(const json::JSON& inJson);
 

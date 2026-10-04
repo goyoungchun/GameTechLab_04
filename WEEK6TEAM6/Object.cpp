@@ -1,7 +1,9 @@
-﻿
-#include "Object.h"
+﻿#include "Object.h"
 #include "EngineStatics.h"
 #include "Json/json.hpp"
+#include "FDuplicatedDataRW.h"
+#include "Serializers.h"
+#include "FArchive.h"
 
 TSparseArray<UObject*> UObject::GUObjectArray;
 TMap<const FClassInfo*, TArray<uint32>> UObject::GUObjectMap;
@@ -54,6 +56,16 @@ const FClassInfo* UObject::GetStaticClass()
 		[]() -> UObject* { return new UObject(); }
 	);
 	return &classInstance;
+}
+
+void UObject::Serialize(FArchive& Ar)
+{
+	Ar << Name;
+}
+
+void UObject::Deserialize(FArchive& Ar)
+{
+	Ar << Name;
 }
 
 void UObject::SerializeClass(json::JSON& outJson) const

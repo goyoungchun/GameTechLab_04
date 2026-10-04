@@ -6,7 +6,10 @@
 #include "FName.h"
 #include "FGuid.h"
 #include "FAsset.h"
+#include "Transform.h"
 #include "FObjImporter.h"
+#include "FQuaternion.h"
+#include "Object.h"
 
 // FVector Serializers (x, y, z)
 template <>
@@ -40,7 +43,6 @@ struct FArchiveSerializer<FVector4>
 		Ar << Value.y;
 		Ar << Value.z;
 		Ar << Value.w;
-		
 	}
 };
 
@@ -53,7 +55,6 @@ struct FArchiveSerializer<FVertex>
 		Ar << Value.Normal;
 		Ar << Value.Color;
 		Ar << Value.Tex;
-		
 	}
 };
 
@@ -135,6 +136,74 @@ struct FArchiveSerializer<FAssetFileHeader>
 		Ar << Value.Version;
 		Ar << Value.AssetType;
 		Ar << Value.AssetID;
+	}
+};
+
+template <>
+struct FArchiveSerializer<FQuaternion>
+{
+	static void Serialize(FArchive& Ar, FQuaternion& Value)
+	{
+		Ar << Value.X;
+		Ar << Value.Y;
+		Ar << Value.Z;
+		Ar << Value.W;
+	}
+};
+
+template <>
+struct FArchiveSerializer<FTransform>
+{
+	static void Serialize(FArchive& Ar, FTransform& Value)
+	{
+		if (Ar.GetMode() == EArchiveMode::Write)
+		{
+			FVector Location = Value.GetLocation();
+			FQuaternion Rotation = Value.GetRotation();
+			FVector Scale = Value.GetScale();
+
+			Ar << Location;
+			Ar << Rotation;
+			Ar << Scale;
+		}
+		else if (Ar.GetMode() == EArchiveMode::Read)
+		{
+			FVector Location;
+			FQuaternion Rotation;
+			FVector Scale;
+
+			Ar << Location;
+			Ar << Rotation;
+			Ar << Scale;
+
+			Value.SetLocation(Location);
+			Value.SetRotation(Rotation);
+			Value.SetScale(Scale);
+		}
+	}
+};
+
+template <typename T>
+requires std::derived_from<T, UObject>
+struct FArchiveSerializer<T*>
+{
+	static void Serialize(FArchive& Ar, T*& Value)
+	{
+		UObject* ObjectPtr = Value;
+		Ar.SerializeObject(ObjectPtr);
+
+		if (!ObjectPtr)
+		{
+			Value = nullptr;
+			return;
+		}
+
+		if (!ObjectPtr->IsA<T>())
+		{
+			throw std::runtime_error("Serialized object is not of the expected type.");
+		}
+
+		Value = ObjectPtr->Cast<T>();
 	}
 };
 

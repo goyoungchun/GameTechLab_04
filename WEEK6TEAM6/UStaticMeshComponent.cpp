@@ -8,6 +8,7 @@
 #include "EngineMathLibrary.h"
 #include "FLogManager.h"
 #include "World.h"
+#include "Serializers.h"
 
 UStaticMeshComponent::UStaticMeshComponent()
 {
@@ -24,6 +25,44 @@ void UStaticMeshComponent::Tick(float DeltaTime)
     // LOD가 달라진 경우에만 프록시 갱신을 요청합니다.
     if (mLODIndex != LOD || mLODMeshID != mMeshAsset->GetMeshID(LOD))
         SetMesh(mMeshAsset, LOD);
+}
+
+void UStaticMeshComponent::Serialize(FArchive& Ar)
+{
+	Super::Serialize(Ar);
+
+	FGuid MeshAssetID = mMeshAsset ? mMeshAsset->GetAssetID() : FGuid();
+	Ar << MeshAssetID;
+
+	TArray<FGuid> MaterialAssetIDs;
+	for (const TSharedPtr<FMaterialAsset>& MaterialAsset : mMaterialAssets)
+	{
+		FGuid MaterialAssetID = MaterialAsset ? MaterialAsset->GetAssetID() : FGuid();
+		MaterialAssetIDs.Add(MaterialAssetID);
+	}
+	Ar << MaterialAssetIDs;
+
+	Ar << mUVOffsets;
+}
+
+void UStaticMeshComponent::Deserialize(FArchive& Ar)
+{
+    Super::Deserialize(Ar);
+ 
+    FGuid AssetID;
+    Ar << AssetID;
+    mMeshAsset = FAssetManager::Get().GetAssetAs<FStaticMeshAsset>(AssetID, true);
+
+	TArray<FGuid> MaterialAssetIDs;
+	Ar << MaterialAssetIDs;
+
+	mMaterialAssets.SetNum(MaterialAssetIDs.Num());
+	for (int32 i = 0; i < MaterialAssetIDs.Num(); ++i)
+	{
+		mMaterialAssets[i] = FAssetManager::Get().GetAssetAs<FMaterialAsset>(MaterialAssetIDs[i], true);
+	}
+
+    Ar << mUVOffsets;
 }
 
 void UStaticMeshComponent::SerializeClass(json::JSON& outJson) const

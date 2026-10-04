@@ -1,9 +1,8 @@
 ﻿#include "SceneComponent.h"
-
-#include <format>
-
 #include "Transform.h"
 #include "JsonUtil.h"
+#include "Serializers.h"
+#include <format>
 
 void USceneComponent::Initialize(FVector location, FRotator rotation, FVector scale3D)
 {
@@ -23,6 +22,36 @@ void USceneComponent::BeginDestroy()
 	DetachFromParent(false);
 
 	Super::BeginDestroy();
+}
+
+void USceneComponent::Serialize(FArchive& Ar)
+{
+	Super::Serialize(Ar);
+
+	Ar << mRelativeTransform;
+	Ar << mParentComponent;
+
+	TArray<USceneComponent*> ChildComponents;
+	for (USceneComponent* Child : mChildComponents)
+	{
+		if (!Child->ShouldSerialize())
+		{
+			continue;
+		}
+
+		ChildComponents.Add(Child);
+	}
+
+	Ar << ChildComponents;
+}
+
+void USceneComponent::Deserialize(FArchive& Ar)
+{
+	Super::Serialize(Ar);
+
+	Ar << mRelativeTransform;
+	Ar << mParentComponent;
+	Ar << mChildComponents;
 }
 
 void USceneComponent::SerializeClass(json::JSON& outJson) const
@@ -258,6 +287,11 @@ void USceneComponent::PostWorldMatrixChanged()
 
 	for (USceneComponent* Child : mChildComponents)
 	{
+		if (Child->mbWorldMatrixDirty)
+		{
+			continue;
+		}
+
 		Child->PostWorldMatrixChanged();
 	}
 }

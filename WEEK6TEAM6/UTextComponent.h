@@ -12,6 +12,7 @@
 #include "JsonUtil.h"
 #include "FTextBuilder.h"
 #include "FQuaternion.h"
+#include "FArchive.h"
 
 class UPlaneComponent : public UPrimitiveComponent
 {

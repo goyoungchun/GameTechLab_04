@@ -8,7 +8,7 @@
 
 enum class EWorldType
 {
-	Eidtor,
+	Editor,
 	EditorPreview,
 	PIE,
 	Game,
@@ -63,6 +63,7 @@ public:
 	bool IsAABBsDirty() const { return mbAABBsDirty; }
 	void SetAABBsClean() { mbAABBsDirty = false; }
 	const TArray<FAABB>& GetCachedEntryAABBs() const { return mCachedEntryAABBs; }
+	inline EWorldType GetWorldType() const { return mWorldType; }
 
 private:
 	int32 getActorIndex(uint32 actorUUID) const;
@@ -100,14 +101,3 @@ private:
 	FVector mLODViewOrigin;
 };
 
-class FWorldContext
-{
-public:
-	UWorld* World()
-	{
-		return mWorld;
-	}
-
-private:
-	UWorld* mWorld = nullptr;
-};

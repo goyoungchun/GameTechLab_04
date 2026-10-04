@@ -2,8 +2,10 @@
 
 #include "Core.h"
 #include "TArray.h"
+#include "Object.h"
 #include <Windows.h>
 #include <filesystem>
+#include <sstream>
 
 template <typename T>
 concept CArchiveArithmetic = std::is_arithmetic_v<T> && !std::is_pointer_v<T>;
@@ -54,12 +56,15 @@ public:
 
 	// 그 외 사용자 정의 타입
 	template<typename T>
-	requires (!CArchiveArithmetic<T> && !std::is_enum_v<T>)
+	requires (!std::is_arithmetic_v<T> && !std::is_enum_v<T>)
 	FArchive& operator<<(T& Value)
 	{
 		FArchiveSerializer<T>::Serialize(*this, Value);
 		return *this;
 	}
+
+	// TODO: 나중에 추상 가상 함수로 승격시켜서 모든 Archive들이 직렬화/역직렬화가 가능하도록 구현. 현재는 필요한 경우에만 SerializeObject를 오버라이드해서 사용.
+	virtual void SerializeObject(UObject*& Object) {};
 
 	inline EArchiveMode GetMode() const { return Mode; }
 
@@ -87,7 +92,7 @@ inline  FArchive& operator<<(FArchive& Ar, TArray<T>& Array)
 		Ar << Count;
 		if (Count > 0)
 		{
-			if constexpr (std::is_trivially_copyable_v<T>)
+			if constexpr (std::is_trivially_copyable_v<T> && !std::is_pointer_v<T>)
 			{
 				Ar.Serialize(Array.Data(), Count * sizeof(T));
 			}
@@ -107,7 +112,7 @@ inline  FArchive& operator<<(FArchive& Ar, TArray<T>& Array)
 		{
 			Array.SetNum(static_cast<int32>(Count));
 
-			if constexpr (std::is_trivially_copyable_v<T>)
+			if constexpr (std::is_trivially_copyable_v<T> && !std::is_pointer_v<T>)
 			{
 				Ar.Serialize(Array.Data(), Count * sizeof(T));
 			}
@@ -278,6 +283,101 @@ public:
 
 private:
 	HANDLE FileHandle = INVALID_HANDLE_VALUE;
+};
+
+class FMemoryWriter : public FArchive
+{
+public:
+	FMemoryWriter()
+		: FArchive(EArchiveMode::Write)
+		, MemoryStream(std::ios::binary)
+	{
+	}
+
+	~FMemoryWriter() = default;
+
+	uint64 Tell() const override
+	{
+		auto Pos = MemoryStream.tellp();
+		return static_cast<uint64>(Pos);
+	}
+
+	uint64 TotalSize() const override
+	{
+		auto CurrentPos = MemoryStream.tellp();
+		MemoryStream.seekp(0, std::ios::end);
+		auto TotalSize = MemoryStream.tellp();
+		MemoryStream.seekp(CurrentPos, std::ios::beg);
+		return static_cast<uint64>(TotalSize);
+	}
+
+	bool Seek(uint64 NewPosition) override
+	{
+		MemoryStream.seekp(static_cast<std::streamoff>(NewPosition), std::ios::beg);
+		return true;
+	}
+
+	bool Serialize(void* Data, uint64 Size) override
+	{
+		MemoryStream.write(static_cast<const char*>(Data), static_cast<std::streamsize>(Size));
+		return true;
+	}
+
+	TArray<int8> GetData() const
+	{
+		std::string str = MemoryStream.str();
+
+		TArray<int8> Data;
+		Data.SetNum(static_cast<int32>(str.size()));
+		std::memcpy(Data.Data(), str.data(), str.size());
+
+		return Data;
+	}
+
+private:
+	mutable std::ostringstream MemoryStream;
+};
+
+class FMemoryReader : public FArchive
+{
+public:
+	FMemoryReader(const TArray<int8>& InData)
+		: FArchive(EArchiveMode::Read)
+		, MemoryStream(std::string(reinterpret_cast<const char*>(InData.Data()), InData.Num()), std::ios::binary)
+	{
+	}
+
+	~FMemoryReader() = default;
+
+	uint64 Tell() const override
+	{
+		auto Pos = MemoryStream.tellg();
+		return static_cast<uint64>(Pos);
+	}
+
+	uint64 TotalSize() const override
+	{
+		auto CurrentPos = MemoryStream.tellg();
+		MemoryStream.seekg(0, std::ios::end);
+		auto TotalSize = MemoryStream.tellg();
+		MemoryStream.seekg(CurrentPos, std::ios::beg);
+		return static_cast<uint64>(TotalSize);
+	}
+
+	bool Seek(uint64 NewPosition) override
+	{
+		MemoryStream.seekg(static_cast<std::streamoff>(NewPosition), std::ios::beg);
+		return true;
+	}
+
+	bool Serialize(void* Data, uint64 Size) override
+	{
+		MemoryStream.read(static_cast<char*>(Data), static_cast<std::streamsize>(Size));
+		return true;
+	}
+
+private:
+	mutable std::istringstream MemoryStream;
 };
 
 inline bool TryReadToBytes(FArchive& Ar, TArray<int8>& OutBytes)

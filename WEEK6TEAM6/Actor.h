@@ -22,6 +22,8 @@ public:
 
 	void BeginDestroy() override;
 
+	virtual void Serialize(FArchive& Ar) override;
+	virtual void Deserialize(FArchive& Ar) override;
 	virtual void SerializeClass(json::JSON& outJson) const override;
 	virtual void DeserializeClass(const json::JSON& inJson) override;
 
@@ -60,9 +62,6 @@ private:
 
 	USceneComponent* mRootComponent = nullptr;
 	TSet<UActorComponent*> mComponents;
-
-	bool mbPressed = false;
-	bool mbStarted = false;
 };
 
 inline const FVector Up = FVector(0, 0, 1);

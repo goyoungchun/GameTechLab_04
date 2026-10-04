@@ -34,6 +34,8 @@ public:
 	void Tick(float deltaTime);
 	void Render(float deltaTime, FRenderCollector& outCollector);
 
+	void DuplicateScene();
+
 	// Clear world
 	void NewScene();
 	void DeleteScene();

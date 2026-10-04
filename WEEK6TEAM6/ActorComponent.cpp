@@ -2,6 +2,7 @@
 #include "RenderInfo.h"
 #include "Actor.h"
 #include "World.h"
+#include "Serializers.h"
 
 UActorComponent::UActorComponent()
 	: mOwner(nullptr)
@@ -12,6 +13,22 @@ UActorComponent::UActorComponent()
 UActorComponent::~UActorComponent()
 {
 	delete mRenderProxy;
+}
+
+void UActorComponent::Serialize(FArchive& Ar)
+{
+	Super::Serialize(Ar);
+
+	Ar << mOwner;
+	Ar << mComponentFlags;
+}
+
+void UActorComponent::Deserialize(FArchive& Ar)
+{
+	Super::Deserialize(Ar);
+
+	Ar << mOwner;
+	Ar << mComponentFlags;
 }
 
 void UActorComponent::BeginDestroy()

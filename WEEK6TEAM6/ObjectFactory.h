@@ -16,6 +16,7 @@ class FClassInfo;
 struct FObjectFactory
 {
 	static UObject* ConstructUnInitializedObject(const FClassInfo* classInfo);
+
 	static UObject* LoadObject(const FClassInfo* classInfo, const json::JSON& inJson);
 
 	template<typename TObject, typename... Args>

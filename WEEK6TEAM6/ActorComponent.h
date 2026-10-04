@@ -23,6 +23,9 @@ public:
 	UActorComponent();
 	virtual ~UActorComponent();
 
+	virtual void Serialize(FArchive& Ar) override;
+	virtual void Deserialize(FArchive& Ar) override;
+
 	virtual void BeginDestroy() override;
 
 	void DestroyComponent();

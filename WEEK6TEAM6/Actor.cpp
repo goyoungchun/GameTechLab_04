@@ -5,14 +5,12 @@
 #include "UTextComponent.h"
 #include "ObjectFactory.h"
 #include "World.h"
+#include "Serializers.h"
 #include <format>
 
 void AActor::Initialize()
 {
 	UObject::Initialize();
-
-	mbPressed = false;
-	mbStarted = false;
 }
 
 void AActor::BeginDestroy()
@@ -28,6 +26,59 @@ void AActor::BeginDestroy()
 	}
 
 	Super::BeginDestroy();
+}
+
+void AActor::Serialize(FArchive& Ar)
+{
+	Super::Serialize(Ar);
+	
+	int32 ComponentsCount = 0;
+	int32 RootComponentIndex = -1;
+
+	TArray<UActorComponent*> ComponentsArray;
+	for (UActorComponent* Component : mComponents)
+	{
+		if (!Component->ShouldSerialize())
+		{
+			continue;
+		}
+
+		ComponentsArray.Add(Component);
+		
+		if (mRootComponent == Component)
+		{
+			RootComponentIndex = ComponentsCount;
+		}
+
+		++ComponentsCount;
+	}
+
+	Ar << RootComponentIndex;
+	Ar << ComponentsArray;
+	Ar << Name;
+}
+
+void AActor::Deserialize(FArchive& Ar)
+{
+	Super::Deserialize(Ar);
+
+	int32 RootComponentIndex = -1;
+	Ar << RootComponentIndex;
+
+	TArray<UActorComponent*> ComponentsArray;
+	Ar << ComponentsArray;
+
+	for (int32 i = 0; i < ComponentsArray.Num(); ++i)
+	{
+		UActorComponent* Component = ComponentsArray[i];
+		if (i == RootComponentIndex)
+		{
+			mRootComponent = Component->Cast<USceneComponent>();
+		}
+		mComponents.Add(Component);
+	}
+
+	Ar << Name;
 }
 
 void AActor::SerializeClass(json::JSON& outJson) const
@@ -172,7 +223,7 @@ void AActor::CreateEditorComponents()
 
 	if (mRootComponent)
 	{
-		Text3DComponent->SetupAttachment(mRootComponent);
+		Text3DComponent->SetupAttachment(mRootComponent, false);
 	}
 	
 	AddOwnedComponent(Text3DComponent);
