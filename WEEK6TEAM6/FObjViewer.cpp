@@ -3,7 +3,7 @@
 #include "AssetFileIOs.h"
 #include "ObjectFactory.h"
 #include "Actor.h"
-#include "SceneManager.h"
+#include "FEditorEngine.h"
 #include "World.h"
 #include "UStaticMeshComponent.h"
 #include "NativeFileDialog.h"

@@ -4,7 +4,7 @@
 #include "ImGui/imgui.h"
 #include "WindowApplication.h"
 #include "EngineMathLibrary.h"
-#include "SceneManager.h"
+#include "FEditorEngine.h"
 #include "FInstrumentor.h"
 #include "SceneComponent.h"
 #include "ActorComponent.h"

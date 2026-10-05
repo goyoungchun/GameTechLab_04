@@ -12,7 +12,7 @@
 #include "UAtlasAnimationComponent.h"
 #include "UStaticMeshComponent.h"
 #include "World.h"
-#include "SceneManager.h"
+#include "FEditorEngine.h"
 #include "FEditorViewportClient.h"
 #include "FEditorUIManager.h"
 #include "enum.h"

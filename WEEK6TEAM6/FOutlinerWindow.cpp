@@ -1,7 +1,7 @@
 #include "FOutlinerWindow.h"
 #include "ObjectFactory.h"
 #include "Actor.h"
-#include "SceneManager.h"
+#include "FEditorEngine.h"
 #include "Object.h"
 #include "World.h"
 #include "FEditorUIManager.h"

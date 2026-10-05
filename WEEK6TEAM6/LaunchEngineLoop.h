@@ -4,7 +4,7 @@
 #include "FrameTimer.h"
 #include "FEditorViewportClient.h"
 #include "Camera.h"
-#include "SceneManager.h"
+#include "FEditorEngine.h"
 #include "FileManager.h"
 #include "Renderer.h"
 #include "World.h"
