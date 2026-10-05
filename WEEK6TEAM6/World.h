@@ -12,9 +12,23 @@ class ULevel : public UObject
 	REFLECT_CLASS(ULevel, UObject)
 
 public:
+	ULevel() = default;
+	virtual ~ULevel();
+
+	void AddActor(AActor* actor);
+	bool RemoveActor(uint32 uuid);
+
+	inline UWorld* GetWorld() const { return mWorld; }
+	inline const TArray<AActor*>& GetActors() const { return mActors; }
 
 private:
-	TArray<AActor*> Actors;
+	int32 GetActorIndex(uint32 actorUUID) const;
+
+private:
+	friend class UWorld;
+
+	UWorld* mWorld = nullptr;
+	TArray<AActor*> mActors;
 };
 
 class UWorld final : public UObject
@@ -22,14 +36,11 @@ class UWorld final : public UObject
 	REFLECT_CLASS(UWorld, UObject)
 
 public:
-	UWorld() = default;
+	UWorld();
 	virtual ~UWorld();
 
 	virtual void SerializeClass(json::JSON& outJson) const override;
 	virtual void DeserializeClass(const json::JSON& inJson) override;
-
-	void AddActor(AActor* actor);
-	bool RemoveActor(uint32 uuid);
 
 	void RegisterComponent(UActorComponent* Component);
 	void UnregisterComponent(UActorComponent* component);
@@ -44,8 +55,6 @@ public:
 	void RegisterActorComponents(AActor* actor);
 	void UnregisterActorComponents(AActor* actor);
 
-	TArray<AActor*>& GetActors() { return mActors; }
-
 	void Tick(float deltaTime);
 	void Render(float deltaTime, FRenderCollector& outCollector);
 
@@ -58,11 +67,10 @@ public:
 	const TArray<FAABB>& GetCachedEntryAABBs() const { return mCachedEntryAABBs; }
 
 	inline EWorldType GetWorldType() const { return mWorldType; }
+	inline ULevel* GetLevel() const { return mLevel; }
 
+	static UWorld* CreateWorld(EWorldType WorldType);
 	static UWorld* DuplicateWorldForPIE(UWorld* SourceWorld);
-
-private:
-	int32 getActorIndex(uint32 actorUUID) const;
 
 private:
 	enum
@@ -73,7 +81,6 @@ private:
 	EWorldType mWorldType;
 	ULevel* mLevel;
 	
-	TArray<AActor*> mActors;
 	TArray<UPrimitiveComponent*> mPrimitiveComponents;
 	TArray<UActorComponent*> mNonPrimitiveRenderableComponents; // Primitive는 아닌데 렌더링 기능이 있는 컴포넌트.
 	TActiveTickList<UActorComponent> mTickableComponents;

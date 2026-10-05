@@ -44,11 +44,13 @@
 #include "FHiZOcclusionManager.h"
 #include "FInstrumentor.h"
 #include "FEditorUIManager.h"
-#include <format>
 
 #if IS_OBJ_VIEWER
 #include "FObjViewer.h"
 #endif
+
+// NOTE: 현재 Occlusion이 제대로 동작하지 않을 확률이 높아서 임시로 비활성화. (어떻게 만든거야...)
+#define ENABLE_OCCULSION_CULLING 0
 
 FEditorEngine GEditor;
 FEngine* GEngine = nullptr;
@@ -214,14 +216,7 @@ void FEditorEngine::Initialize(HINSTANCE hInstance, WNDPROC WndProc)
 	ConsoleWindow& console = ConsoleWindow::Get();
 	console.Init(Renderer->GetWidth());
 
-	FWorldContext& EditorWorldContext = CreateNewWorldContext(EWorldType::Editor);
-	UWorld* EditorWorld = NewBlankMap();
-	EditorWorldContext.SetCurrentWorld(EditorWorld);
-
-	for (FEditorViewport& Viewport : mViewports)
-	{
-		Viewport.Client->SetWorld(EditorWorld);
-	}
+	CreateNewMapForEditing();
 
 #ifdef IS_OBJ_VIEWER
 	mObjViewer.Initialize(GEditor, *mGraphicsManager->GetRenderer(), *mFileManager);
@@ -379,6 +374,7 @@ void FEditorEngine::Tick(float DeltaTime)
 			const int32 LODViewportIndex = mEditorLayout.bIsSplitView ? 0 : mEditorLayout.MaximizedViewportIndex;
 			World->SetLODViewOrigin(mViewports[LODViewportIndex].Client->GetCamera().Transform.GetLocation());
 
+#if ENABLE_OCCULSION_CULLING
 			// Check if World AABBs are dirty and update GPU StructuredBuffer
 			if (World->IsAABBsDirty())
 			{
@@ -389,6 +385,7 @@ void FEditorEngine::Tick(float DeltaTime)
 				);
 				World->SetAABBsClean();
 			}
+#endif
 
 			// TODO: 에디터 안에서 돌아야할 Tick만 호출할것. 현재는 별 다른 차이없음.
 			World->Tick(DeltaTime);
@@ -440,8 +437,10 @@ void FEditorEngine::Render(float DeltaTime)
 
 	mGraphicsManager->GetRenderer()->ResetDrawCallCount();
 
+#if ENABLE_OCCULSION_CULLING
 	// Begin frame: read back previous frame's GPU culling results (zero-stall)
 	FHiZOcclusionManager::Get().BeginFrame(mGraphicsManager->GetRenderer()->GetDeviceContext());
+#endif
 
 	{
 		PROFILE_SCOPE("Frame/Viewports");
@@ -745,6 +744,26 @@ void FEditorEngine::LoadEditorSettings()
 	}
 }
 
+void FEditorEngine::CreateNewMapForEditing()
+{
+	if (mbIsPlayingInEditor)
+	{
+		UE_LOG_WARN("CreateNewMapForEditing: Cannot create a new map while in Play-In-Editor mode.");
+		return;
+	}
+
+	EnqueuePendingTask([this] {
+		FWorldContext& EditorWorldContext = CreateNewWorldContext(EWorldType::Editor);
+		UWorld* EditorWorld = UWorld::CreateWorld(EWorldType::Editor);
+		EditorWorldContext.SetCurrentWorld(EditorWorld);
+
+		for (FEditorViewport& Viewport : mViewports)
+		{
+			Viewport.Client->SetWorld(EditorWorld);
+		}
+	});
+}
+
 void FEditorEngine::StartPIE()
 {
 	if (mbIsPlayingInEditor)
@@ -799,15 +818,6 @@ void FEditorEngine::EndPIE()
 
 		mbIsPlayingInEditor = false;
 	});
-}
-
-UWorld* NewBlankMap()
-{
-	UWorld* NewWorld = FObjectFactory::ConstructUnInitializedObject<UWorld>();
-
-	// TODO: NewWorld에 필요한 초기화 작업을 수행합니다.
-
-	return NewWorld;
 }
 
 void SaveMap(UWorld* World, FCamera* Camera, const std::filesystem::path& scenePath, const FFileManager& fileManager)

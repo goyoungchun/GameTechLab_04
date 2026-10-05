@@ -13,6 +13,7 @@
 #include "FTextBuilder.h"
 #include "FQuaternion.h"
 #include "FArchive.h"
+#include "Serializers.h"
 
 class UPlaneComponent : public UPrimitiveComponent
 {
@@ -23,6 +24,44 @@ public:
 	{
         SetTickable(true);
 		mMeshAsset = FAssetManager::Get().GetAssetAs<FStaticMeshAsset>(FName("PlaneMesh"), true);
+	}
+
+	virtual void Serialize(FArchive& Ar) override
+	{
+		Super::Serialize(Ar);
+
+		FGuid MeshAssetID = mMeshAsset ? mMeshAsset->GetAssetID() : FGuid();
+		Ar << MeshAssetID;
+
+		FGuid TextureAssetID = mTextureAsset ? mTextureAsset->GetAssetID() : FGuid();
+		Ar << TextureAssetID;
+
+		Ar << mSubUV;
+		Ar << mSubUVOffset;
+		Ar << mBlendMode;
+		Ar << mbBillboard;
+		Ar << mEnableDepthTest;
+		Ar << mEnableDepthWrite;
+	}
+
+	virtual void Deserialize(FArchive& Ar) override
+	{
+		Super::Deserialize(Ar);
+
+		FGuid MeshAssetID;
+		Ar << MeshAssetID;
+		mMeshAsset = FAssetManager::Get().GetAssetAs<FStaticMeshAsset>(MeshAssetID, true);
+
+		FGuid TextureAssetID;
+		Ar << TextureAssetID;
+		mTextureAsset = FAssetManager::Get().GetAssetAs<FTexture2DAsset>(TextureAssetID, true);
+
+		Ar << mSubUV;
+		Ar << mSubUVOffset;
+		Ar << mBlendMode;
+		Ar << mbBillboard;
+		Ar << mEnableDepthTest;
+		Ar << mEnableDepthWrite;
 	}
 
 	void SerializeClass(json::JSON& outJson) const override
@@ -148,6 +187,26 @@ class USpotLightComponent : public USceneComponent
 public:
     USpotLightComponent() { SetTickable(true); }
 
+	virtual void Serialize(FArchive& Ar) override
+	{
+		Super::Serialize(Ar);
+
+		Ar << Range;
+		Ar << mInnerConeAngle;
+		Ar << mOuterConeAngle;
+		Ar << mColor;
+	}
+
+	virtual void Deserialize(FArchive& Ar) override
+	{
+		Super::Deserialize(Ar);
+
+		Ar << Range;
+		Ar << mInnerConeAngle;
+		Ar << mOuterConeAngle;
+		Ar << mColor;
+	}
+
 	inline float GetRange() const { return Range; }
 	inline float GetInnerConeAngle() const { return mInnerConeAngle; }
 	inline float GetOuterConeAngle() const { return mOuterConeAngle; }
@@ -175,62 +234,6 @@ private:
 	float mOuterConeAngle = 45.0f;
 };
 
-class ASpotLight : public AActor
-{
-	REFLECT_CLASS(ASpotLight, AActor)
-
-public:
-	ASpotLight()
-	{
-		USpotLightComponent* SpotLightComponent = CreateDefaultSubobject<USpotLightComponent>(FName("SpotLightComponent"));
-		SetRootComponent(SpotLightComponent);
-	}
-
-	void DeserializeClass(const json::JSON& inJson) override
-	{
-		Super::DeserializeClass(inJson);
-
-		for (UActorComponent* Component : GetComponents())
-		{
-			UPlaneComponent* PlaneComponent = Component->Cast<UPlaneComponent>();
-
-			if (!PlaneComponent)
-			{
-				continue;
-			}
-
-			// SetTexture는 필요 없음
-
-			PlaneComponent->SetBlendState(ERenderBlendMode::Transparent);
-			PlaneComponent->SetBillboard(true);
-			PlaneComponent->SetDepthState(true, false);
-		}
-	}
-
-	void CreateEditorComponents() override
-	{
-		Super::CreateEditorComponents();
-
-		UPlaneComponent* PlaneComponent = CreateDefaultSubobject<UPlaneComponent>(FName("SpotLightIcon"));
-		PlaneComponent->SetTexture(FAssetManager::Get().GetAssetAs<FTexture2DAsset>(BuiltInAssetID::SpotLightIcon, true));
-		PlaneComponent->SetBillboard(true);
-		PlaneComponent->SetBlendState(ERenderBlendMode::Transparent);
-		PlaneComponent->SetBillboard(true);
-		PlaneComponent->SetDepthState(true, false);
-		PlaneComponent->SetEditorOnly(true);
-		PlaneComponent->SetDoNotSerialize(true);
-		PlaneComponent->SetVisualizeProxy(true);
-
-		USceneComponent* RootComp = GetRootComponent();
-		if (RootComp)
-		{
-			PlaneComponent->SetupAttachment(RootComp);
-		}
-
-		AddOwnedComponent(PlaneComponent);
-	}
-};
-
 class UText3DComponent : public USceneComponent
 {
 	REFLECT_CLASS(UText3DComponent, USceneComponent)
@@ -244,9 +247,40 @@ public:
 
     void Tick(float DeltaTime) override
     {
-        // 텍스트의 부모 위치 추적은 Tick에서 한 번 처리하고 각 Viewport에서는 결과를 사용합니다.
 		MarkRenderDirty();
     }
+
+	virtual void Serialize(FArchive& Ar) override
+	{
+		Super::Serialize(Ar);
+
+		Ar << mbBillboard;
+		Ar << mText;
+		
+		FGuid FontAtlasAssetID = mFontAtlasAsset ? mFontAtlasAsset->GetAssetID() : FGuid();
+		Ar << FontAtlasAssetID;
+
+		Ar << mColor;
+		Ar << mEnableDepthTest;
+		Ar << mEnableDepthWrite;
+	}
+
+	virtual void Deserialize(FArchive& Ar) override
+	{
+		Super::Deserialize(Ar);
+		
+		Ar << mbBillboard;
+		Ar << mText;
+
+		FGuid FontAtlasAssetID;
+		Ar << FontAtlasAssetID;
+
+		mFontAtlasAsset = FAssetManager::Get().GetAssetAs<FFontAtlasAsset>(FontAtlasAssetID, true);
+
+		Ar << mColor;
+		Ar << mEnableDepthTest;
+		Ar << mEnableDepthWrite;
+	}
 
 	void SerializeClass(json::JSON& outJson) const override
 	{
@@ -310,7 +344,7 @@ public:
 			FMatrix ScaleMatrix = FMatrix::ExtractScaleMatrix(PivotMatrix);
 			FQuaternion BillboardRotation = RenderCollector.Camera->Transform.GetRotation();
 
-			UPrimitiveComponent* Primitive = mOwner->GetRootComponent()->Cast<UPrimitiveComponent>();
+			UPrimitiveComponent* Primitive = HasParent() ? GetParentComponent()->Cast<UPrimitiveComponent>() : nullptr;
 			if (Primitive)
 			{
 				const FAABB Bounds = Primitive->GetBoundingBox();
@@ -360,4 +394,68 @@ private:
 	FVector4 mColor = FVector4(1, 1, 1, 1);
 	bool mEnableDepthTest = true;
 	bool mEnableDepthWrite = true;
+};
+
+class ASpotLight : public AActor
+{
+	REFLECT_CLASS(ASpotLight, AActor)
+
+public:
+	ASpotLight()
+	{
+		USpotLightComponent* SpotLightComponent = CreateDefaultSubobject<USpotLightComponent>(FName("SpotLightComponent"));
+		SetRootComponent(SpotLightComponent);
+	}
+
+	void DeserializeClass(const json::JSON& inJson) override
+	{
+		Super::DeserializeClass(inJson);
+
+		for (UActorComponent* Component : GetComponents())
+		{
+			UPlaneComponent* PlaneComponent = Component->Cast<UPlaneComponent>();
+
+			if (!PlaneComponent)
+			{
+				continue;
+			}
+
+			PlaneComponent->SetBlendState(ERenderBlendMode::Transparent);
+			PlaneComponent->SetBillboard(true);
+			PlaneComponent->SetDepthState(true, false);
+		}
+	}
+
+	void CreateEditorComponents() override
+	{
+		UPlaneComponent* PlaneComponent = CreateDefaultSubobject<UPlaneComponent>(FName("SpotLightIcon"));
+		PlaneComponent->SetTexture(FAssetManager::Get().GetAssetAs<FTexture2DAsset>(BuiltInAssetID::SpotLightIcon, true));
+		PlaneComponent->SetBillboard(true);
+		PlaneComponent->SetBlendState(ERenderBlendMode::Transparent);
+		PlaneComponent->SetBillboard(true);
+		PlaneComponent->SetDepthState(true, false);
+		PlaneComponent->SetEditorOnly(true);
+		PlaneComponent->SetDoNotSerialize(true);
+		PlaneComponent->SetVisualizeProxy(true);
+
+		USceneComponent* RootComp = GetRootComponent();
+		if (RootComp)
+		{
+			PlaneComponent->SetupAttachment(RootComp);
+		}
+
+		AddOwnedComponent(PlaneComponent);
+
+		UText3DComponent* Text3DComponent = CreateDefaultSubobject<UText3DComponent>(FName("UUIDDisplayer"));
+		Text3DComponent->SetBillboard(true);
+		Text3DComponent->SetText(Utf2Wide(std::format("UUID: {}", UUID)));
+		Text3DComponent->SetFontAtlasAsset(FAssetManager::Get().GetAssetAs<FFontAtlasAsset>(FName("TestFontAtlas")));
+		Text3DComponent->SetDepthState(false, false);
+		Text3DComponent->SetEditorOnly(true);
+		Text3DComponent->SetDoNotSerialize(true);
+
+		Text3DComponent->SetupAttachment(PlaneComponent, false);
+
+		AddOwnedComponent(Text3DComponent);
+	}
 };

@@ -14,6 +14,9 @@ public:
 	using UPrimitiveComponent::Initialize;
 	void Initialize(EPrimitive PrimitiveType, const TSharedPtr<FSpriteAtlasAsset>& textureAsset);
 
+	virtual void Serialize(FArchive& Ar) override;
+	virtual void Deserialize(FArchive& Ar) override;
+
 	void DeserializeClass(const json::JSON& inJson) override
 	{
 		Super::DeserializeClass(inJson);
@@ -53,9 +56,10 @@ public:
 
 private:
 	TSharedPtr<FSpriteAtlasAsset> Asset;
-	bool bPlaying = false;
 	bool bLooping = true;
 	bool bBackward = false;
+
+	bool bPlaying = true;
 	int32 Frame = 0;
 	int32 FrameRate = 36;
 	float FrameAccumulator = 0.f;

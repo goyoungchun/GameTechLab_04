@@ -47,7 +47,7 @@ void USceneComponent::Serialize(FArchive& Ar)
 
 void USceneComponent::Deserialize(FArchive& Ar)
 {
-	Super::Serialize(Ar);
+	Super::Deserialize(Ar);
 
 	Ar << mRelativeTransform;
 	Ar << mParentComponent;

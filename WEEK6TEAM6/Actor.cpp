@@ -15,9 +15,9 @@ void AActor::Initialize()
 
 void AActor::BeginDestroy()
 {
-	if (mWorld)
+	if (mLevel)
 	{
-		mWorld->RemoveActor(UUID);
+		mLevel->RemoveActor(UUID);
 	}
 
 	while (!mComponents.IsEmpty())
@@ -168,9 +168,9 @@ void AActor::AddOwnedComponent(UActorComponent* actorComponent)
 
 	actorComponent->SetOwner(this);
 
-	if (mWorld)
+	if (mLevel)
 	{
-		mWorld->RegisterComponent(actorComponent);
+		mLevel->GetWorld()->RegisterComponent(actorComponent);
 	}
 }
 
@@ -200,9 +200,9 @@ bool AActor::RemoveComponent(UActorComponent* Target)
 		return false;
 	}
 
-	if (mWorld)
+	if (mLevel)
 	{
-		mWorld->UnregisterComponent(Target);
+		mLevel->GetWorld()->UnregisterComponent(Target);
 	}
 
 	if (Target == mRootComponent)
@@ -308,3 +308,12 @@ void AActor::SetScale(FVector scale)
 	}
 }
 
+ULevel* AActor::GetLevel() const
+{
+	return mLevel;
+}
+
+UWorld* AActor::GetWorld() const
+{
+	return mLevel ? mLevel->GetWorld() : nullptr;
+}	

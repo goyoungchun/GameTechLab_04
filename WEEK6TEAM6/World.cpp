@@ -12,13 +12,79 @@
 #include "FDuplicatedDataRW.h"
 #include <format>
 
+ULevel::~ULevel()
+{
+	for (AActor* Actor : mActors)
+	{
+		Actor->mLevel = nullptr;
+		FObjectFactory::DestroyObject(Actor);
+	}
+}
+
+void ULevel::AddActor(AActor* actor)
+{
+	assert(mWorld != nullptr);
+	assert(GetActorIndex(actor->UUID) == -1);
+
+	actor->mLevel = this;
+	for (UActorComponent* component : actor->GetComponents())
+	{
+		mWorld->RegisterComponent(component);
+	}
+
+	mActors.Add(actor);
+
+	if (mWorld->GetWorldType() == EWorldType::Editor)
+	{
+		actor->CreateEditorComponents();
+	}
+}
+
+bool ULevel::RemoveActor(uint32 uuid)
+{
+	assert(mWorld != nullptr);
+
+	int32 ActorIndex = GetActorIndex(uuid);
+	if (ActorIndex == -1)
+	{
+		return false;
+	}
+
+	AActor* ActorToRemove = mActors[ActorIndex];
+	for (UActorComponent* component : ActorToRemove->GetComponents())
+	{
+		mWorld->UnregisterComponent(component);
+	}
+	ActorToRemove->mLevel = nullptr;
+
+	mActors.RemoveAtSwap(ActorIndex);
+
+	return true;
+}
+
+int32 ULevel::GetActorIndex(uint32 actorUUID) const
+{
+	for (uint32 i = 0; i < mActors.Num(); ++i)
+	{
+		if (mActors[i]->UUID == actorUUID)
+		{
+			return i;
+		}
+	}
+
+	return -1;
+}
+
+UWorld::UWorld()
+	: mWorldType(EWorldType::Game)
+{
+	mLevel = CreateDefaultSubobject<ULevel>(FName("PersistentLevel"));
+	mLevel->mWorld = this;
+}
+
 UWorld::~UWorld()
 {
-	for (AActor* removeActor : mActors)
-	{
-        removeActor->mWorld = nullptr;
-		FObjectFactory::DestroyObject(removeActor);
-	}
+	FObjectFactory::DestroyObject(mLevel);
 }
 
 void UWorld::SerializeClass(json::JSON& outJson) const
@@ -26,7 +92,7 @@ void UWorld::SerializeClass(json::JSON& outJson) const
 	UObject::SerializeClass(outJson);
 	json::JSON actorsJson = json::JSON::Make(json::JSON::Class::Array);
 
-	for (const AActor* actor : mActors)
+	for (const AActor* actor : mLevel->GetActors())
 	{
 		json::JSON actorJson;
 		actor->SerializeClass(actorJson);
@@ -63,47 +129,8 @@ void UWorld::DeserializeClass(const json::JSON& inJson)
 			throw std::runtime_error(std::format("{}: Unknown class name: {}", GetClass()->Name, className));
 		}
 		AActor* actor = static_cast<AActor*>(FObjectFactory::LoadObject(classInfo, actorJson));
-		AddActor(actor);
+		mLevel->AddActor(actor);
 	}
-}
-
-void UWorld::AddActor(AActor* actor)
-{
-	assert(actor != nullptr);
-	assert(getActorIndex(actor->UUID) == -1);
-
-	actor->mWorld = this;
-	for (UActorComponent* component : actor->GetComponents())
-	{
-		RegisterComponent(component);
-	}
-
-	mActors.Add(actor);
-
-	if (mWorldType == EWorldType::Editor)
-	{
-		actor->CreateEditorComponents();
-	}
-}
-
-bool UWorld::RemoveActor(uint32 uuid)
-{
-	int32 ActorIndex = getActorIndex(uuid);
-	if (ActorIndex == -1)
-	{
-		return false;
-	}
-	
-	AActor* ActorToRemove = mActors[ActorIndex];
-	for (UActorComponent* component : ActorToRemove->GetComponents())
-	{
-		UnregisterComponent(component);
-	}
-	ActorToRemove->mWorld = nullptr;
-
-	mActors.RemoveAtSwap(ActorIndex);
-
-	return true;
 }
 
 void UWorld::RegisterComponent(UActorComponent* Component)
@@ -300,23 +327,17 @@ void UWorld::Render(float deltaTime, FRenderCollector& outCollector)
 	outCollector.BVH = &mBVH;
 }
 
-int32 UWorld::getActorIndex(uint32 actorUUID) const
+UWorld* UWorld::CreateWorld(EWorldType WorldType)
 {
-	for (uint32 i = 0; i < mActors.Num(); ++i)
-	{
-		if (mActors[i]->UUID == actorUUID)
-		{
-			return i;
-		}
-	}
-
-	return -1;
+	UWorld* NewWorld = FObjectFactory::ConstructUnInitializedObject<UWorld>();
+	NewWorld->mWorldType = WorldType;
+	return NewWorld;
 }
 
 UWorld* UWorld::DuplicateWorldForPIE(UWorld* SourceWorld)
 {
 	TMap<UObject*, UObject*> ObjectMap;
-	for (AActor* Actor : SourceWorld->GetActors())
+	for (AActor* Actor : SourceWorld->mLevel->GetActors())
 	{
 		if (ObjectMap.Contains(Actor))
 		{
@@ -343,7 +364,7 @@ UWorld* UWorld::DuplicateWorldForPIE(UWorld* SourceWorld)
 		AActor* DuplicatedActor = Duplicated->Cast<AActor>();
 		if (DuplicatedActor)
 		{
-			DuplicatedWorld->AddActor(DuplicatedActor);
+			DuplicatedWorld->mLevel->AddActor(DuplicatedActor);
 		}
 	}
 

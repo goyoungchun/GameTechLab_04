@@ -76,8 +76,7 @@ struct FArchiveSerializer<FString>
 {
 	static void Serialize(FArchive& Ar, FString& Value)
 	{
-		uint64 Length = Ar.GetMode() == EArchiveMode::Write ? Value.Len() : 0;
-		
+		uint64 Length = Ar.GetMode() == EArchiveMode::Write ? Value.Len() : 0;		
 		Ar << Length;
 
 		if (Ar.GetMode() == EArchiveMode::Read)
@@ -88,6 +87,26 @@ struct FArchiveSerializer<FString>
 		if (Length > 0)
 		{
 			Ar.Serialize(Value.CStr(), Length);
+		}
+	}
+};
+
+template<>
+struct FArchiveSerializer<std::wstring>
+{
+	static void Serialize(FArchive& Ar, std::wstring& Value)
+	{
+		uint64 Length = Ar.GetMode() == EArchiveMode::Write ? Value.length() : 0;
+		Ar << Length;
+
+		if (Ar.GetMode() == EArchiveMode::Read)
+		{
+			Value.resize(static_cast<size_t>(Length));
+		}
+
+		if (Length > 0)
+		{
+			Ar.Serialize(Value.data(), Length * sizeof(wchar_t));
 		}
 	}
 };

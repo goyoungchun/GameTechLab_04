@@ -29,7 +29,7 @@ void FOutlinerWindow::Render(const FGuiReference& GuiReference)
 	SelectedActorDeleted = false;
 	HasDragDropRequest = false;
 
-	for (AActor* Actor : CurrentWorld->GetActors())
+	for (AActor* Actor : CurrentWorld->GetLevel()->GetActors())
 	{
 		USceneComponent* RootComponent = Actor->GetRootComponent();
 		if (!RootComponent || RootComponent->HasParent())
@@ -60,7 +60,7 @@ void FOutlinerWindow::Render(const FGuiReference& GuiReference)
 	{
 		GuiReference.SceneManager->ResetSelectedComponent();
 		assert(CurrentWorld != nullptr);
-		CurrentWorld->RemoveActor(SelectedComponent->GetOwner()->UUID);
+		CurrentWorld->GetLevel()->RemoveActor(SelectedComponent->GetOwner()->UUID);
 		FObjectFactory::DestroyObject(SelectedComponent->GetOwner());
 	}
 	else

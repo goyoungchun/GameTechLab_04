@@ -13,6 +13,32 @@ void UAtlasAnimationComponent::Initialize(EPrimitive PrimitiveType, const TShare
 	SetAtlas(textureAsset);
 }
 
+void UAtlasAnimationComponent::Serialize(FArchive& Ar)
+{
+	Super::Serialize(Ar);
+
+	FGuid AssetID = Asset ? Asset->GetAssetID() : FGuid();
+	Ar << AssetID;
+
+	Ar << bLooping;
+	Ar << bBackward;
+	Ar << FrameRate;
+}
+
+void UAtlasAnimationComponent::Deserialize(FArchive& Ar)
+{
+	Super::Deserialize(Ar);
+
+	FGuid AssetID;
+	Ar << AssetID;
+
+	Asset = FAssetManager::Get().GetAssetAs<FSpriteAtlasAsset>(AssetID, true);
+
+	Ar << bLooping;
+	Ar << bBackward;
+	Ar << FrameRate;
+}
+
 void UAtlasAnimationComponent::SetAtlas(const TSharedPtr<FSpriteAtlasAsset>& InAtlas)
 {
 	Asset = InAtlas;

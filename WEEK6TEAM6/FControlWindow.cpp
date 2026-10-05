@@ -102,7 +102,7 @@ void FControlWindow::RenderSpawnActorControl(const FGuiReference& GuiReference)
 
 			if (NewActor)
 			{
-				GuiReference.WorldContext->World()->AddActor(NewActor);
+				GuiReference.WorldContext->World()->GetLevel()->AddActor(NewActor);
 			}
 		}
 	}
@@ -132,8 +132,7 @@ void FControlWindow::RenderSceneControl(const FGuiReference& GuiReference)
 
 	if (ImGui::Button("New scene"))
 	{
-		UWorld* NewWorld = NewBlankMap();
-		GEditor.GetEditorWorldContext().SetCurrentWorld(NewWorld);
+		GEditor.CreateNewMapForEditing();
 		GEditor.ResetSelectedComponent();
 		GuiReference.ViewportClient->Reset();
 	}

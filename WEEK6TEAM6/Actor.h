@@ -5,6 +5,7 @@
 #include "TSet.h"
 
 class UWorld;
+class ULevel;
 struct FRenderInfo;
 struct FTransform;
 class USceneComponent;
@@ -53,12 +54,14 @@ public:
 	void SetRotation(FRotator rotation);
 	void SetScale(FVector scale);
 
-	inline UWorld* GetWorld() const { return mWorld; }
+	ULevel* GetLevel() const;
+	UWorld* GetWorld() const;
 
 private:
+	friend class ULevel;
 	friend class UWorld;
 
-	UWorld* mWorld = nullptr;
+	ULevel* mLevel = nullptr;
 
 	USceneComponent* mRootComponent = nullptr;
 	TSet<UActorComponent*> mComponents;

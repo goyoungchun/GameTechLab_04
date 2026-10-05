@@ -193,6 +193,8 @@ public:
 	void SaveEditorSettings();
 	void LoadEditorSettings();
 
+	void CreateNewMapForEditing();
+
 	void StartPIE();
 	void EndPIE();
 
@@ -218,6 +220,5 @@ private:
 extern FEngine* GEngine;
 extern FEditorEngine GEditor;
 
-UWorld* NewBlankMap();
 void SaveMap(UWorld* World, FCamera* Camera, const std::filesystem::path& scenePath, const FFileManager& fileManager);
 void LoadMap(FWorldContext& WorldContext, FCamera* Camera, const std::filesystem::path& scenePath, const FFileManager& fileManager);
