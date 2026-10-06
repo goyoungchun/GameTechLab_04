@@ -56,7 +56,7 @@ public:
 	void RegisterActorComponents(AActor* actor);
 	void UnregisterActorComponents(AActor* actor);
 
-	void Tick(float deltaTime);
+	void Tick(ELevelTick LevelTick, float DeltaTime);
 	void Render(float deltaTime, FRenderCollector& outCollector);
 
 	// 모든 메시가 공유할 LOD 기준 카메라 위치를 Tick 시작 전에 전달합니다.

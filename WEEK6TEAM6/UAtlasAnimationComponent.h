@@ -4,9 +4,9 @@
 #include <wrl/client.h>
 #include "Assets.h"
 
-class UAtlasAnimationComponent : public UPlaneComponent
+class UAtlasAnimationComponent : public UBillboardComponent
 {
-	REFLECT_CLASS(UAtlasAnimationComponent, UPlaneComponent)
+	REFLECT_CLASS(UAtlasAnimationComponent, UBillboardComponent)
 
 public:
 	UAtlasAnimationComponent();
@@ -24,7 +24,6 @@ public:
 		Frame = 0;
 		FrameAccumulator = 0.f;
 
-		SetBillboard(true);
 		SetDepthState(true, false);
 		Play();
 

@@ -76,7 +76,8 @@ void FPropertyWindow::Render(const FGuiReference& GuiReference)
 
 				bool bSelected = mSelectedComponent == Component;
 
-				ImGuiTreeNodeFlags NodeFlags = bSelected ? ImGuiTreeNodeFlags_Selected : 0;
+				ImGuiTreeNodeFlags NodeFlags = ImGuiTreeNodeFlags_Leaf;
+				NodeFlags |= bSelected ? ImGuiTreeNodeFlags_Selected : 0;
 
 				bool Open = ImGui::TreeNodeEx(Component->GetClass()->Name.c_str(), NodeFlags);
 
@@ -87,7 +88,6 @@ void FPropertyWindow::Render(const FGuiReference& GuiReference)
 
 				if (Open)
 				{
-					ImGui::Text("Component: %s", Component->GetClass()->Name.c_str());
 					ImGui::TreePop();
 				}
 			}
@@ -124,7 +124,7 @@ void FPropertyWindow::Render(const FGuiReference& GuiReference)
 			{
 				RenderSpotLightComponent(mSelectedComponent->Cast<USpotLightComponent>());
 			}
-			else if (mSelectedComponent->IsA< UAtlasAnimationComponent>())
+			else if (mSelectedComponent->IsA<UAtlasAnimationComponent>())
 			{
 				RenderAtlasAnimationComponent(mSelectedComponent->Cast<UAtlasAnimationComponent>());
 			}
@@ -135,6 +135,22 @@ void FPropertyWindow::Render(const FGuiReference& GuiReference)
 			else if (mSelectedComponent->IsA<UHeightFogComponent>())
 			{
 				RenderHeightFogComponent(mSelectedComponent->Cast<UHeightFogComponent>());
+			}
+			else if (mSelectedComponent->IsA<UPointLightComponent>())
+			{
+				RenderPointLightComponent(mSelectedComponent->Cast<UPointLightComponent>());
+			}
+			else if (mSelectedComponent->IsA<UTextRenderComponent>())
+			{
+				RenderTextRenderComponent(mSelectedComponent->Cast<UTextRenderComponent>());
+			}
+			else if (mSelectedComponent->IsA<UProjectileMovementComponent>())
+			{
+				RenderProjectileMovementComponent(mSelectedComponent->Cast<UProjectileMovementComponent>());
+			}
+			else if (mSelectedComponent->IsA<URotationMovementComponent>())
+			{
+				RenderRotationMovementComponent(mSelectedComponent->Cast<URotationMovementComponent>());
 			}
 		}
 
@@ -530,5 +546,68 @@ void FPropertyWindow::RenderHeightFogComponent(UHeightFogComponent* HeightFogCom
 	if (ImGui::ColorPicker3("Fog Inscattering Color", &FogInscatteringColor.R, ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_DisplayHSV | ImGuiColorEditFlags_DisplayHex))
 	{
 		HeightFogComponent->SetFogInscatteringColor(FogInscatteringColor);
+	}
+}
+
+void FPropertyWindow::RenderPointLightComponent(UPointLightComponent* PointLightComponent)
+{
+	FLinearColor ColorInput = PointLightComponent->GetColor();
+	if (ImGui::ColorPicker3("Color", ColorInput.V, ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_DisplayHSV | ImGuiColorEditFlags_DisplayHex))
+	{
+		PointLightComponent->SetColor(ColorInput);
+	}
+
+	float IntensityInput = PointLightComponent->GetIntensity();
+	if (ImGui::DragFloat("Intensity", &IntensityInput, 0.1f, 0.f, FLT_MAX, "%.3f", ImGuiSliderFlags_AlwaysClamp))
+	{
+		PointLightComponent->SetIntensity(IntensityInput);
+	}
+
+	float RadiusInput = PointLightComponent->GetRadius();
+	if (ImGui::DragFloat("Radius", &RadiusInput, 0.1f, 0.f, FLT_MAX, "%.3f", ImGuiSliderFlags_AlwaysClamp))
+	{
+		PointLightComponent->SetRadius(RadiusInput);
+	}
+
+	float RadiusFallOffInput = PointLightComponent->GetRadiusFallOff();
+	if (ImGui::DragFloat("Radius Falloff", &RadiusFallOffInput, 0.1f, 0.f, FLT_MAX, "%.3f", ImGuiSliderFlags_AlwaysClamp))
+	{
+		PointLightComponent->SetRadiusFallOff(RadiusFallOffInput);
+	}
+}
+
+void FPropertyWindow::RenderTextRenderComponent(UTextRenderComponent* TextRenderComponent)
+{
+	char textBuffer[256] = {};
+	const FString currentText = Wide2Utf(TextRenderComponent->GetText());
+	strncpy_s(textBuffer, currentText.CStr(), sizeof(textBuffer) - 1);
+
+	if (ImGui::InputText("Display Text", textBuffer, sizeof(textBuffer)))
+	{
+		TextRenderComponent->SetText(Utf2Wide(FString(textBuffer)));
+	}
+}
+
+void FPropertyWindow::RenderProjectileMovementComponent(UProjectileMovementComponent* ProjectileMovementComponent)
+{
+	FVector VelocityInput = ProjectileMovementComponent->GetVelocity();
+	if (ImGui::DragFloat3("Velocity", &VelocityInput.x, 0.1f))
+	{
+		ProjectileMovementComponent->SetVelocity(VelocityInput);
+	}
+}
+
+void FPropertyWindow::RenderRotationMovementComponent(URotationMovementComponent* RotationMovementComponent)
+{
+	FVector RotationAxisInput = RotationMovementComponent->GetRotationAxis();
+	if (ImGui::DragFloat3("Rotation Axis", &RotationAxisInput.x, 0.1f))
+	{
+		RotationMovementComponent->SetRotationAxis(RotationAxisInput);
+	}
+
+	float RotationSpeedInput = RotationMovementComponent->GetRotationSpeed();
+	if (ImGui::DragFloat("Rotation Speed", &RotationSpeedInput, 0.1f))
+	{
+		RotationMovementComponent->SetRotationSpeed(RotationSpeedInput);
 	}
 }

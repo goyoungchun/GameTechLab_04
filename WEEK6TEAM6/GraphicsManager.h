@@ -16,6 +16,7 @@
 
 class FAssetManager;
 struct FViewport;
+class UWorld;
 
 struct FBuffer
 {
@@ -29,7 +30,7 @@ public:
 	FGraphicsManager(HWND hWindow);
 	~FGraphicsManager();
 
-	void Prepare(const FCamera* mCamera, float Aspect, const FMatrix& ViewProjection, const FMatrix& InvViewProjection, FViewport& Viewport, const EViewModeIndex InViewMode, const EViewportType InViewportType);
+	void Prepare(const FCamera* mCamera, float Aspect, const FMatrix& ViewProjection, const FMatrix& InvViewProjection, FViewport& Viewport, UWorld* World, const EViewModeIndex InViewMode, const EViewportType InViewportType);
 
 	void RenderHighLight(const TArray<UPrimitiveComponent*>& Primitives);
 	void Render();
@@ -93,6 +94,27 @@ private:
 		int32 Padding;
 	};
 
+	struct FLightInfo
+	{
+		FVector Position;
+		ELightType Type;
+		FLinearColor Color;
+		float Range;
+		float Intensity;
+		float FallOf;
+	};
+
+	struct FMeshContants
+	{
+		FMatrix Matrix;
+		FVector4 Color;
+		FVector2 UVOffset;
+		int32 UseVertexColor;
+		int32 HasTexture;
+		int32 LightCount;
+		int32 Padding[3];
+	};
+
 	URenderer* mRenderer;
 	FMatrix mViewMatrix;
 	FMatrix mProjectionMatrix;
@@ -122,6 +144,9 @@ private:
 	float mProjectionElapsed = 0.0f;
 	float mProjectionDuration = 1.0f;
 	bool mbProjectionTransitioning = false;
+
+	TArray<FLightInfo> mLightInfos;
+	TSharedPtr<FStructuredBuffer> mLightInfoBuffer;
 
 	TSharedPtr<FRenderPipeline> mMeshPipeline;
 

@@ -273,12 +273,11 @@ void FEditorEngine::Tick(float DeltaTime)
 			}
 #endif
 
-			// TODO: 에디터 안에서 돌아야할 Tick만 호출할것. 현재는 별 다른 차이없음.
-			World->Tick(DeltaTime);
+			World->Tick(ELevelTick::ViewportsOnly, DeltaTime);
 		}
 		else if (Context.mWorldType == EWorldType::PIE)
 		{
-			World->Tick(DeltaTime);
+			World->Tick(ELevelTick::All, DeltaTime);
 		}
 	}
 }
@@ -447,7 +446,7 @@ void FEditorEngine::Render(float DeltaTime)
 			{
 				PROFILE_SCOPE("Viewport/Render");
 				CurrentViewport->Viewport->Resize(*mGraphicsManager->GetRenderer(), ViewportRect.Width, ViewportRect.Height);
-				mGraphicsManager->Prepare(&CurrentViewport->Client->mCamera, CurrentRatio, ViewProjection, InvViewProjection, *CurrentViewport->Viewport, CurrentViewport->Client->GetViewMode(), CurrentViewport->Client->GetViewportType());
+				mGraphicsManager->Prepare(&CurrentViewport->Client->mCamera, CurrentRatio, ViewProjection, InvViewProjection, *CurrentViewport->Viewport, World, CurrentViewport->Client->GetViewMode(), CurrentViewport->Client->GetViewportType());
 				mGraphicsManager->RenderHighLight(HighlightedComponents);
 				mGraphicsManager->Render();
 

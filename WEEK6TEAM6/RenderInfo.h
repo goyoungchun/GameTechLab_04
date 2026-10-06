@@ -104,25 +104,6 @@ public:
 	TArray<FRenderLineInfo> LineInfos; // 라인 패스
 	FBVH<UPrimitiveComponent*>* BVH = nullptr;
 
-	inline void AddQuadInfo(const FRenderQuadInfo& QuadInfo)
-	{
-		if (QuadInfo.EnableDepthTest)
-		{
-			if (QuadInfo.EnableDepthWrite)
-			{
-				OpaqueQuadInfos.Add(QuadInfo);
-			}
-			else
-			{
-				TransparentQuadInfos.Add(QuadInfo);
-			}
-		}
-		else
-		{
-			OverlayQuadInfos.Add(QuadInfo);
-		}
-	}
-
 	inline void AddQuad2DInfo(const FRenderQuad2DInfo& Quad2DInfo)
 	{
 		Quad2DInfos.Add(Quad2DInfo);
@@ -132,21 +113,27 @@ public:
 	{
 		BVH = nullptr;
 		bNeedPickTargets = false;
+		VisibleRenderOverlayQuadInfoIndices.Reset(DEFAULT_RESERVE_MEM);
+		VisibleRenderTransparentQuadInfoIndices.Reset(DEFAULT_RESERVE_MEM);
+		VisibleRenderQuadInfoIndices.Reset(DEFAULT_RESERVE_MEM);
 		VisibleRenderInfoIndices.Reset(DEFAULT_RESERVE_MEM);
 		LineInfos.Reset(DEFAULT_RESERVE_MEM);
-		OpaqueQuadInfos.Reset(DEFAULT_RESERVE_MEM);
-		TransparentQuadInfos.Reset(DEFAULT_RESERVE_MEM);
-		OverlayQuadInfos.Reset(DEFAULT_RESERVE_MEM);
 		Quad2DInfos.Reset(DEFAULT_RESERVE_MEM);
 	}
 
-	inline const TArray<FRenderQuadInfo>& GetOpaqueQuadInfos() const { return OpaqueQuadInfos; }
-	inline const TArray<FRenderQuadInfo>& GetTransparentQuadInfos() const { return TransparentQuadInfos; }
-	inline const TArray<FRenderQuadInfo>& GetOverlayQuadInfos() const { return OverlayQuadInfos; }
-	inline const TArray<FRenderQuad2DInfo>& GetQuad2DInfos() const { return Quad2DInfos; }
-	
 	inline const TRangePool<FRenderInfo>& GetRenderInfoPool() const { return RenderInfoPool; }
 	inline TArray<int32>& GetVisibleRenderInfoIndices() { return VisibleRenderInfoIndices; }
+
+	inline const TRangePool<FRenderQuadInfo>& GetRenderQuadInfoPool() const { return RenderQuadInfoPool; }
+	inline TArray<int32>& GetVisibleRenderQuadInfoIndices() { return VisibleRenderQuadInfoIndices; }
+
+	inline const TRangePool<FRenderQuadInfo>& GetRenderTransparentQuadInfoPool() const { return RenderTransparentQuadInfoPool; }
+	inline TArray<int32>& GetVisibleRenderTransparentQuadInfoIndices() { return VisibleRenderTransparentQuadInfoIndices; }
+
+	inline const TRangePool<FRenderQuadInfo>& GetRenderOverlayQuadInfoPool() const { return RenderOverlayQuadInfoPool; }
+	inline TArray<int32>& GetVisibleRenderOverlayQuadInfoIndices() { return VisibleRenderOverlayQuadInfoIndices; }
+
+	inline const TArray<FRenderQuad2DInfo>& GetQuad2DInfos() const { return Quad2DInfos; }
 
 private:
 	friend class FRenderProxy;
@@ -154,9 +141,14 @@ private:
 	TRangePool<FRenderInfo> RenderInfoPool;
 	TArray<int32> VisibleRenderInfoIndices;
 
-	TArray<FRenderQuadInfo> OpaqueQuadInfos;
-	TArray<FRenderQuadInfo> TransparentQuadInfos;
-	TArray<FRenderQuadInfo> OverlayQuadInfos;
+	TRangePool<FRenderQuadInfo> RenderQuadInfoPool;
+	TArray<int32> VisibleRenderQuadInfoIndices;
+
+	TRangePool<FRenderQuadInfo> RenderTransparentQuadInfoPool;
+	TArray<int32> VisibleRenderTransparentQuadInfoIndices;
+
+	TRangePool<FRenderQuadInfo> RenderOverlayQuadInfoPool;
+	TArray<int32> VisibleRenderOverlayQuadInfoIndices;
 
 	TArray<FRenderQuad2DInfo> Quad2DInfos;
 };
@@ -168,6 +160,9 @@ public:
 	~FRenderProxy()
 	{
 		ReleaseRenderInfos();
+		ReleaseRenderQuadInfos();
+		ReleaseRenderTransparentQuadInfos();
+		ReleaseRenderOverlayQuadInfos();
 	}
 
 	inline void SetCollector(FRenderCollector& InCollector)
@@ -178,6 +173,10 @@ public:
 		}
 
 		ReleaseRenderInfos();
+		ReleaseRenderQuadInfos();
+		ReleaseRenderTransparentQuadInfos();
+		ReleaseRenderOverlayQuadInfos();
+
 		Collector = &InCollector;
 	}
 
@@ -197,6 +196,51 @@ public:
 		ActiveRenderInfoNum = 0;
 	}
 
+	inline void ReserveRenderQuadInfos(int32 Count)
+	{
+		if (RenderQuadInfoBlock.IsValid())
+		{
+			if (RenderQuadInfoBlock.Size >= Count)
+			{
+				return;
+			}
+			Collector->RenderQuadInfoPool.Release(RenderQuadInfoBlock);
+		}
+
+		RenderQuadInfoBlock = Collector->RenderQuadInfoPool.Allocate(Count);
+		ActiveRenderQuadInfoNum = 0;
+	}
+
+	inline void ReserveRenderTransparentQuadInfos(int32 Count)
+	{
+		if (RenderTransparentQuadInfoBlock.IsValid())
+		{
+			if (RenderTransparentQuadInfoBlock.Size >= Count)
+			{
+				return;
+			}
+			Collector->RenderTransparentQuadInfoPool.Release(RenderTransparentQuadInfoBlock);
+		}
+
+		RenderTransparentQuadInfoBlock = Collector->RenderTransparentQuadInfoPool.Allocate(Count);
+		ActiveRenderTransparentQuadInfoNum = 0;
+	}
+
+	inline void ReserveRenderOverlayQuadInfos(int32 Count)
+	{
+		if (RenderOverlayQuadInfoBlock.IsValid())
+		{
+			if (RenderOverlayQuadInfoBlock.Size >= Count)
+			{
+				return;
+			}
+			Collector->RenderOverlayQuadInfoPool.Release(RenderOverlayQuadInfoBlock);
+		}
+
+		RenderOverlayQuadInfoBlock = Collector->RenderOverlayQuadInfoPool.Allocate(Count);
+		ActiveRenderOverlayQuadInfoNum = 0;
+	}
+
 	inline void ReleaseRenderInfos()
 	{
 		if (!RenderInfoBlock.IsValid())
@@ -209,9 +253,60 @@ public:
 		ActiveRenderInfoNum = 0;
 	}
 
+	inline void ReleaseRenderQuadInfos()
+	{
+		if (!RenderQuadInfoBlock.IsValid())
+		{
+			return;
+		}
+
+		Collector->RenderQuadInfoPool.Release(RenderQuadInfoBlock);
+		RenderQuadInfoBlock = {};
+		ActiveRenderQuadInfoNum = 0;
+	}
+
+	inline void ReleaseRenderTransparentQuadInfos()
+	{
+		if (!RenderTransparentQuadInfoBlock.IsValid())
+		{
+			return;
+		}
+
+		Collector->RenderTransparentQuadInfoPool.Release(RenderTransparentQuadInfoBlock);
+		RenderTransparentQuadInfoBlock = {};
+		ActiveRenderTransparentQuadInfoNum = 0;
+	}
+
+	inline void ReleaseRenderOverlayQuadInfos()
+	{
+		if (!RenderOverlayQuadInfoBlock.IsValid())
+		{
+			return;
+		}
+
+		Collector->RenderOverlayQuadInfoPool.Release(RenderOverlayQuadInfoBlock);
+		RenderOverlayQuadInfoBlock = {};
+		ActiveRenderOverlayQuadInfoNum = 0;
+	}
+
 	inline void SetActiveRenderInfoNum(int32 Count)
 	{
 		ActiveRenderInfoNum = Count;
+	}
+
+	inline void SetActiveRenderQuadInfoNum(int32 Count)
+	{
+		ActiveRenderQuadInfoNum = Count;
+	}
+
+	inline void SetActiveRenderTransparentQuadInfoNum(int32 Count)
+	{
+		ActiveRenderTransparentQuadInfoNum = Count;
+	}
+
+	inline void SetActiveRenderOverlayQuadInfoNum(int32 Count)
+	{
+		ActiveRenderOverlayQuadInfoNum = Count;
 	}
 
 	inline FRenderInfo& GetRenderInfo(uint32 Index)
@@ -219,16 +314,53 @@ public:
 		return Collector->RenderInfoPool.Get(RenderInfoBlock, Index);
 	}
 
+	inline FRenderQuadInfo& GetRenderQuadInfo(uint32 Index)
+	{
+		return Collector->RenderQuadInfoPool.Get(RenderQuadInfoBlock, Index);
+	}
+
+	inline FRenderQuadInfo& GetRenderTransparentQuadInfo(uint32 Index)
+	{
+		return Collector->RenderTransparentQuadInfoPool.Get(RenderTransparentQuadInfoBlock, Index);
+	}
+
+	inline FRenderQuadInfo& GetRenderOverlayQuadInfo(uint32 Index)
+	{
+		return Collector->RenderOverlayQuadInfoPool.Get(RenderOverlayQuadInfoBlock, Index);
+	}
+
 	inline void Submit()
 	{
-		if (!RenderInfoBlock.IsValid())
+		if (RenderInfoBlock.IsValid())
 		{
-			return;
+			for (uint32 i = 0; i < ActiveRenderInfoNum; ++i)
+			{
+				Collector->VisibleRenderInfoIndices.Emplace(RenderInfoBlock.Index + i);
+			}
 		}
 
-		for (uint32 i = 0; i < ActiveRenderInfoNum; ++i)
+		if (RenderQuadInfoBlock.IsValid())
 		{
-			Collector->VisibleRenderInfoIndices.Emplace(RenderInfoBlock.Index + i);
+			for (uint32 i = 0; i < ActiveRenderQuadInfoNum; ++i)
+			{
+				Collector->VisibleRenderQuadInfoIndices.Emplace(RenderQuadInfoBlock.Index + i);
+			}
+		}
+		
+		if (RenderTransparentQuadInfoBlock.IsValid())
+		{
+			for (uint32 i = 0; i < ActiveRenderTransparentQuadInfoNum; ++i)
+			{
+				Collector->VisibleRenderTransparentQuadInfoIndices.Emplace(RenderTransparentQuadInfoBlock.Index + i);
+			}
+		}
+
+		if (RenderOverlayQuadInfoBlock.IsValid())
+		{
+			for (uint32 i = 0; i < ActiveRenderOverlayQuadInfoNum; ++i)
+			{
+				Collector->VisibleRenderOverlayQuadInfoIndices.Emplace(RenderOverlayQuadInfoBlock.Index + i);
+			}
 		}
 	}
 
@@ -237,4 +369,13 @@ private:
 
 	FRangePoolBlock RenderInfoBlock;
 	uint32 ActiveRenderInfoNum = 0;
+
+	FRangePoolBlock RenderQuadInfoBlock;
+	uint32 ActiveRenderQuadInfoNum = 0;
+
+	FRangePoolBlock RenderTransparentQuadInfoBlock;
+	uint32 ActiveRenderTransparentQuadInfoNum = 0;
+
+	FRangePoolBlock RenderOverlayQuadInfoBlock;
+	uint32 ActiveRenderOverlayQuadInfoNum = 0;
 };

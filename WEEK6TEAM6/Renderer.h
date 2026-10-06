@@ -382,8 +382,8 @@ struct FStructuredBuffer
 
 	Microsoft::WRL::ComPtr<ID3D11Buffer> Buffer;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> SRV;
-	UINT ElementSize;
-	UINT ElementCount;
+	UINT ElementSize = 0;
+	UINT ElementCount = 0;
 
 	void UpdateBuffer(const void* Data, uint32 DataCount)
 	{
@@ -396,6 +396,11 @@ struct FStructuredBuffer
 		Box.back = 1;
 
 		DeviceContext->UpdateSubresource(Buffer.Get(), 0, &Box, Data, 0, 0);
+	}
+
+	inline UINT GetBufferSize() const
+	{
+		return ElementSize * ElementCount;
 	}
 };
 

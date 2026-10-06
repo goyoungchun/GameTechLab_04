@@ -171,6 +171,18 @@ struct FArchiveSerializer<FQuaternion>
 };
 
 template <>
+struct FArchiveSerializer<FLinearColor>
+{
+	static void Serialize(FArchive& Ar, FLinearColor& Value)
+	{
+		Ar << Value.R;
+		Ar << Value.G;
+		Ar << Value.B;
+		Ar << Value.A;
+	}
+};
+
+template <>
 struct FArchiveSerializer<FTransform>
 {
 	static void Serialize(FArchive& Ar, FTransform& Value)

@@ -102,12 +102,16 @@ public:
 protected:
 	void MarkRenderDirty();
 
+public:
+	uint8 bTickInEditor = false;
+
 protected:
 	AActor* mOwner;
 	FRenderProxy* mRenderProxy = nullptr;
 
 private:
     friend class AActor;
+
 	uint32 mComponentFlags = 0;
 	bool mRenderDirty = true;
 };

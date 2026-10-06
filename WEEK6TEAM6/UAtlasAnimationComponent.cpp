@@ -3,6 +3,9 @@
 
 UAtlasAnimationComponent::UAtlasAnimationComponent()
 {
+	SetTickable(true);
+	bTickInEditor = true;
+
 	mBlendMode = ERenderBlendMode::Additive;
 }
 
@@ -89,6 +92,8 @@ void UAtlasAnimationComponent::Tick(float deltaTime)
 	}
 
 	Super::Tick(deltaTime);
+
+	MarkRenderDirty();
 
 	FrameAccumulator += deltaTime * FrameRate;
 

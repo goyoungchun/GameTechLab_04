@@ -63,3 +63,15 @@ enum class EWorldType
 	Game,
 };
 
+enum ELightType
+{
+	Directional,
+	Point,
+	Spot,
+};
+
+enum class ELevelTick
+{
+	ViewportsOnly,
+	All,
+};

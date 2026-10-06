@@ -216,6 +216,7 @@ bool AActor::RemoveComponent(UActorComponent* Target)
 void AActor::CreateEditorComponents()
 {
 	UText3DComponent* Text3DComponent = CreateDefaultSubobject<UText3DComponent>(FName("UUIDDisplayer"));
+	Text3DComponent->SetRelativeScale3D(FVector(0.01f, 0.01f, 0.01f));
 	Text3DComponent->SetBillboard(true);
 	Text3DComponent->SetText(Utf2Wide(std::format("UUID: {}", UUID)));
 	Text3DComponent->SetFontAtlasAsset(FAssetManager::Get().GetAssetAs<FFontAtlasAsset>(FName("TestFontAtlas")));

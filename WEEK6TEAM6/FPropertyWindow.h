@@ -13,6 +13,10 @@ class FAssetManager;
 class USceneComponent;
 class UActorComponent;
 class UHeightFogComponent;
+class UPointLightComponent;
+class UTextRenderComponent;
+class UProjectileMovementComponent;
+class URotationMovementComponent;
 
 class FPropertyWindow
 {
@@ -30,6 +34,10 @@ private:
 	void RenderAtlasAnimationComponent(UAtlasAnimationComponent* atlasAnimationComponent);
 	void RenderStaticMeshComponent(UStaticMeshComponent* StaticMeshComponent);
 	void RenderHeightFogComponent(UHeightFogComponent* HeightFogComponent);
+	void RenderPointLightComponent(UPointLightComponent* PointLightComponent);
+	void RenderTextRenderComponent(UTextRenderComponent* TextRenderComponent);
+	void RenderProjectileMovementComponent(UProjectileMovementComponent* ProjectileMovementComponent);
+	void RenderRotationMovementComponent(URotationMovementComponent* RotationMovementComponent);
 
 private:
 	FAssetManager* mAssetManager;

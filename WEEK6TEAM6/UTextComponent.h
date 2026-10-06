@@ -42,7 +42,6 @@ public:
 		Ar << mSubUV;
 		Ar << mSubUVOffset;
 		Ar << mBlendMode;
-		Ar << mbBillboard;
 		Ar << mEnableDepthTest;
 		Ar << mEnableDepthWrite;
 	}
@@ -62,7 +61,6 @@ public:
 		Ar << mSubUV;
 		Ar << mSubUVOffset;
 		Ar << mBlendMode;
-		Ar << mbBillboard;
 		Ar << mEnableDepthTest;
 		Ar << mEnableDepthWrite;
 	}
@@ -100,28 +98,16 @@ public:
 		}
 	}
 
-	void Tick(float DeltaTime) override
-	{
-		MarkRenderDirty();
-	}
-
 	void Render(FRenderCollector& RenderCollector) override
 	{
 		Super::Render(RenderCollector);
 
+		mRenderProxy->SetCollector(RenderCollector);
+		mRenderProxy->ReserveRenderTransparentQuadInfos(1);
+
 		FMatrix PivotMatrix = GetWorldMatrix();
 
-		if (mbBillboard && RenderCollector.Camera)
-		{
-			FMatrix TranslationMatrix = FMatrix::ExtractTranslation(PivotMatrix);
-			FVector Translation = FMatrix::GetTranslation(PivotMatrix);
-			FMatrix ScaleMatrix = FMatrix::ExtractScaleMatrix(PivotMatrix);
-			FQuaternion BillboardRotation = RenderCollector.Camera->Transform.GetRotation();
-
-			PivotMatrix = ScaleMatrix * ToMatrix(BillboardRotation) * FMatrix::Translation(Translation);
-		}
-
-		FRenderQuadInfo QuadInfo;
+		FRenderQuadInfo& QuadInfo = mRenderProxy->GetRenderTransparentQuadInfo(0);
 		QuadInfo.Model = PivotMatrix;
 		QuadInfo.Color = FVector4(1.f, 1.f, 1.f, 1.f);
 		QuadInfo.TextureSRV = mTextureAsset ? mTextureAsset->GetSRV() : nullptr;
@@ -131,7 +117,184 @@ public:
 		QuadInfo.EnableDepthTest = mEnableDepthTest;
 		QuadInfo.EnableDepthWrite = mEnableDepthWrite;
 
-		RenderCollector.AddQuadInfo(QuadInfo);
+		mRenderProxy->SetActiveRenderTransparentQuadInfoNum(1);
+	}
+
+	FAABB GetBoundingBox() override
+	{
+		if (!mMeshAsset)
+		{
+			return FAABB();
+		}
+
+		const FMatrix& WorldMatrix = GetWorldMatrix();
+		return mMeshAsset->GetLocalBoundingBox().ToWorld(WorldMatrix);
+	}
+
+	const TArray<FVertex>& GetMeshVertices() const override
+	{
+		if (!mMeshAsset)
+		{
+			return UPrimitiveComponent::GetMeshVertices();
+		}
+		return mMeshAsset->GetVertices();
+	}
+
+	const TArray<uint32>& GetMeshIndices() const override
+	{
+		if (!mMeshAsset)
+		{
+			return UPrimitiveComponent::GetMeshIndices();
+		}
+
+		return mMeshAsset->GetIndices();
+	}
+
+	inline void SetTexture(const TSharedPtr<FTexture2DAsset>& textureAsset) 
+	{ 
+		mTextureAsset = textureAsset; 
+		MarkRenderDirty();
+	}
+
+	inline const TSharedPtr<FTexture2DAsset>& GetTexture() const { return mTextureAsset; }
+
+	inline void SetDepthState(bool enableDepthTest, bool enableDepthWrite)
+	{ 
+		mEnableDepthTest = enableDepthTest; 
+		mEnableDepthWrite = enableDepthWrite; 
+		MarkRenderDirty();
+	}
+
+	inline void SetBlendState(ERenderBlendMode InBlendMode) 
+	{ 
+		mBlendMode = InBlendMode; 
+		MarkRenderDirty();
+	}
+
+protected:
+	TSharedPtr<FStaticMeshAsset> mMeshAsset;
+	TSharedPtr<FTexture2DAsset> mTextureAsset;
+	FVector4 mSubUV = { 0.f, 0.f, 1.f, 1.f };
+	FVector2 mSubUVOffset = { 0.f, 0.f };
+
+	ERenderBlendMode mBlendMode = ERenderBlendMode::Opaque;
+	bool mEnableDepthTest = true;
+	bool mEnableDepthWrite = true;
+};
+
+class UBillboardComponent : public UPrimitiveComponent
+{
+	REFLECT_CLASS(UBillboardComponent, UPrimitiveComponent)
+
+public:
+	UBillboardComponent()
+	{
+		SetTickable(true);
+		bTickInEditor = true;
+
+		mMeshAsset = FAssetManager::Get().GetAssetAs<FStaticMeshAsset>(FName("PlaneMesh"), true);
+	}
+
+	virtual void Serialize(FArchive& Ar) override
+	{
+		Super::Serialize(Ar);
+
+		FGuid MeshAssetID = mMeshAsset ? mMeshAsset->GetAssetID() : FGuid();
+		Ar << MeshAssetID;
+
+		FGuid TextureAssetID = mTextureAsset ? mTextureAsset->GetAssetID() : FGuid();
+		Ar << TextureAssetID;
+
+		Ar << mSubUV;
+		Ar << mSubUVOffset;
+		Ar << mBlendMode;
+		Ar << mEnableDepthTest;
+		Ar << mEnableDepthWrite;
+	}
+
+	virtual void Deserialize(FArchive& Ar) override
+	{
+		Super::Deserialize(Ar);
+
+		FGuid MeshAssetID;
+		Ar << MeshAssetID;
+		mMeshAsset = FAssetManager::Get().GetAssetAs<FStaticMeshAsset>(MeshAssetID, true);
+
+		FGuid TextureAssetID;
+		Ar << TextureAssetID;
+		mTextureAsset = FAssetManager::Get().GetAssetAs<FTexture2DAsset>(TextureAssetID, true);
+
+		Ar << mSubUV;
+		Ar << mSubUVOffset;
+		Ar << mBlendMode;
+		Ar << mEnableDepthTest;
+		Ar << mEnableDepthWrite;
+	}
+
+	void SerializeClass(json::JSON& outJson) const override
+	{
+		UPrimitiveComponent::SerializeClass(outJson);
+
+		if (mTextureAsset)
+		{
+			FGuid AssetID = mTextureAsset->GetAssetID();
+			outJson["Properties"]["ObjTextureAsset"] = JsonUtils::ToJson(AssetID);
+		}
+	}
+
+	void DeserializeClass(const json::JSON& inJson) override
+	{
+		UPrimitiveComponent::DeserializeClass(inJson);
+
+		const json::JSON& PropertiesJson = inJson.at("Properties");
+		if (!PropertiesJson.hasKey("ObjTextureAsset"))
+		{
+			throw std::runtime_error("UBillboardComponent: ObjTextureAsset property is required");
+		}
+
+		if (PropertiesJson.at("ObjTextureAsset").JSONType() != json::JSON::Class::Object)
+		{
+			throw std::runtime_error("UBillboardComponent: ObjTextureAsset property requires an object");
+		}
+
+		FGuid AssetID = JsonUtils::FromJson<FGuid>(PropertiesJson.at("ObjTextureAsset"));
+		if (AssetID.IsValid())
+		{
+			mTextureAsset = FAssetManager::Get().GetAssetAs<FTexture2DAsset>(AssetID, true);
+		}
+	}
+
+	void Tick(float DeltaTime) override
+	{
+		MarkRenderDirty();
+	}
+
+	void Render(FRenderCollector& RenderCollector) override
+	{
+		Super::Render(RenderCollector);
+
+		mRenderProxy->SetCollector(RenderCollector);
+		mRenderProxy->ReserveRenderTransparentQuadInfos(1);
+
+		FMatrix PivotMatrix = GetWorldMatrix();
+
+		FMatrix TranslationMatrix = FMatrix::ExtractTranslation(PivotMatrix);
+		FVector Translation = FMatrix::GetTranslation(PivotMatrix);
+		FQuaternion BillboardRotation = RenderCollector.Camera->Transform.GetRotation();
+
+		PivotMatrix = ToMatrix(BillboardRotation) * FMatrix::Translation(Translation);
+
+		FRenderQuadInfo& QuadInfo = mRenderProxy->GetRenderTransparentQuadInfo(0);
+		QuadInfo.Model = PivotMatrix;
+		QuadInfo.Color = FVector4(1.f, 1.f, 1.f, 1.f);
+		QuadInfo.TextureSRV = mTextureAsset ? mTextureAsset->GetSRV() : nullptr;
+		QuadInfo.TextureFormat = mTextureAsset ? mTextureAsset->GetFormat() : DXGI_FORMAT_UNKNOWN;
+		QuadInfo.SubUV = mSubUV + FVector4(mSubUVOffset.X, mSubUVOffset.Y, 0.f, 0.f);
+		QuadInfo.BlendMode = mBlendMode;
+		QuadInfo.EnableDepthTest = mEnableDepthTest;
+		QuadInfo.EnableDepthWrite = mEnableDepthWrite;
+
+		mRenderProxy->SetActiveRenderTransparentQuadInfoNum(1);
 	}
 
 	FAABB GetBoundingBox() override
@@ -167,7 +330,6 @@ public:
 	inline void SetTexture(const TSharedPtr<FTexture2DAsset>& textureAsset) { mTextureAsset = textureAsset; }
 	inline const TSharedPtr<FTexture2DAsset>& GetTexture() const { return mTextureAsset; }
 
-	inline void SetBillboard(bool billboard) { mbBillboard = billboard; }
 	inline void SetDepthState(bool enableDepthTest, bool enableDepthWrite) { mEnableDepthTest = enableDepthTest; mEnableDepthWrite = enableDepthWrite; }
 	void SetBlendState(ERenderBlendMode InBlendMode) { mBlendMode = InBlendMode; }
 
@@ -178,7 +340,6 @@ protected:
 	FVector2 mSubUVOffset = { 0.f, 0.f };
 
 	ERenderBlendMode mBlendMode = ERenderBlendMode::Opaque;
-	bool mbBillboard = false;
 	bool mEnableDepthTest = true;
 	bool mEnableDepthWrite = true;
 };
@@ -245,13 +406,7 @@ public:
 	UText3DComponent()
 	{
 		SetRenderable(true);
-        SetTickable(true);
 	}
-
-    void Tick(float DeltaTime) override
-    {
-		MarkRenderDirty();
-    }
 
 	virtual void Serialize(FArchive& Ar) override
 	{
@@ -312,6 +467,11 @@ public:
 
 	void Render(FRenderCollector& RenderCollector) override
 	{
+		Super::Render(RenderCollector);
+
+		mRenderProxy->SetCollector(RenderCollector);
+		mRenderProxy->SetActiveRenderOverlayQuadInfoNum(0);
+
 		// Show Flags에서 끄면 쿼드를 아예 만들지 않는다.
 		// 만들고 거르는 게 아니라 글자 수만큼의 계산 자체가 사라진다.
 		if (!FShowFlags::Get().IsEnabled(EShowFlag::UUIDText))
@@ -327,10 +487,12 @@ public:
 		}
 
 		const TSharedPtr<FFontAtlas>& FontAtlas = mFontAtlasAsset->GetFontAtlas();
-		if (!FontAtlas)
+		if (!FontAtlas || mText.empty())
 		{
 			return;
 		}
+
+		mRenderProxy->ReserveRenderOverlayQuadInfos(mText.length());
 
 		FTextBuilder TextBuilder(FontAtlas, WorldUnitPerPixel);
 
@@ -344,7 +506,6 @@ public:
 		{
 			FMatrix TranslationMatrix = FMatrix::ExtractTranslation(PivotMatrix);
 			FVector Translation = FMatrix::GetTranslation(PivotMatrix);
-			FMatrix ScaleMatrix = FMatrix::ExtractScaleMatrix(PivotMatrix);
 			FQuaternion BillboardRotation = RenderCollector.Camera->Transform.GetRotation();
 
 			UPrimitiveComponent* Primitive = HasParent() ? GetParentComponent()->Cast<UPrimitiveComponent>() : nullptr;
@@ -354,10 +515,10 @@ public:
 				Translation = FVector(Translation.x, Translation.y, Bounds.Max.z + 0.2f);
 			}
 
-			// PivotMatrix = ScaleMatrix * ToMatrix(BillboardRotation) * FMatrix::Translation(Translation);
 			PivotMatrix = ToMatrix(BillboardRotation) * FMatrix::Translation(Translation);
 		}
 
+		int32 GlyphCount = 0;
 		TextBuilder.Build(mText, TotalWidth, TotalHeight, [&](const FRect& Rect, const FRect& UV) {
 			// 공백 등은 Builder에서 advance만 적용하고, 쿼드는 생략한다.
 			if (Rect.Width <= 0.f || Rect.Height <= 0.f)
@@ -367,7 +528,7 @@ public:
 
 			const FVector GlyphCenter(0.f, Rect.X, Rect.Y);
 
-			FRenderQuadInfo QuadInfo;
+			FRenderQuadInfo& QuadInfo = mRenderProxy->GetRenderOverlayQuadInfo(GlyphCount);
 			QuadInfo.Model = FMatrix::Scale(FVector3(1.f, Rect.Width, Rect.Height)) * FMatrix::Translation(GlyphCenter) * PivotMatrix;
 			QuadInfo.Color = mColor;
 			QuadInfo.TextureSRV = mFontAtlasAsset->GetSRV();
@@ -377,8 +538,10 @@ public:
 			QuadInfo.EnableDepthTest = mEnableDepthTest;
 			QuadInfo.EnableDepthWrite = mEnableDepthWrite;
 
-			RenderCollector.AddQuadInfo(QuadInfo);
+			GlyphCount++;
 		});
+
+		mRenderProxy->SetActiveRenderOverlayQuadInfoNum(GlyphCount);
 	}
 
 	inline void SetBillboard(bool billboard) { mbBillboard = billboard; }
@@ -417,40 +580,38 @@ public:
 
 		for (UActorComponent* Component : GetComponents())
 		{
-			UPlaneComponent* PlaneComponent = Component->Cast<UPlaneComponent>();
+			UBillboardComponent* BillboardComponent = Component->Cast<UBillboardComponent>();
 
-			if (!PlaneComponent)
+			if (!BillboardComponent)
 			{
 				continue;
 			}
 
-			PlaneComponent->SetBlendState(ERenderBlendMode::Transparent);
-			PlaneComponent->SetBillboard(true);
-			PlaneComponent->SetDepthState(true, false);
+			BillboardComponent->SetBlendState(ERenderBlendMode::Transparent);
+			BillboardComponent->SetDepthState(true, false);
 		}
 	}
 
 	void CreateEditorComponents() override
 	{
-		UPlaneComponent* PlaneComponent = CreateDefaultSubobject<UPlaneComponent>(FName("SpotLightIcon"));
-		PlaneComponent->SetTexture(FAssetManager::Get().GetAssetAs<FTexture2DAsset>(BuiltInAssetID::SpotLightIcon, true));
-		PlaneComponent->SetBillboard(true);
-		PlaneComponent->SetBlendState(ERenderBlendMode::Transparent);
-		PlaneComponent->SetBillboard(true);
-		PlaneComponent->SetDepthState(true, false);
-		PlaneComponent->SetEditorOnly(true);
-		PlaneComponent->SetDoNotSerialize(true);
-		PlaneComponent->SetVisualizeProxy(true);
+		UBillboardComponent* BillboardComponent = CreateDefaultSubobject<UBillboardComponent>(FName("SpotLightIcon"));
+		BillboardComponent->SetTexture(FAssetManager::Get().GetAssetAs<FTexture2DAsset>(BuiltInAssetID::SpotLightIcon, true));
+		BillboardComponent->SetBlendState(ERenderBlendMode::Transparent);
+		BillboardComponent->SetDepthState(true, false);
+		BillboardComponent->SetEditorOnly(true);
+		BillboardComponent->SetDoNotSerialize(true);
+		BillboardComponent->SetVisualizeProxy(true);
 
 		USceneComponent* RootComp = GetRootComponent();
 		if (RootComp)
 		{
-			PlaneComponent->SetupAttachment(RootComp);
+			BillboardComponent->SetupAttachment(RootComp);
 		}
 
-		AddOwnedComponent(PlaneComponent);
+		AddOwnedComponent(BillboardComponent);
 
 		UText3DComponent* Text3DComponent = CreateDefaultSubobject<UText3DComponent>(FName("UUIDDisplayer"));
+		Text3DComponent->SetRelativeScale3D(FVector(0.01f, 0.01f, 0.01f));
 		Text3DComponent->SetBillboard(true);
 		Text3DComponent->SetText(Utf2Wide(std::format("UUID: {}", UUID)));
 		Text3DComponent->SetFontAtlasAsset(FAssetManager::Get().GetAssetAs<FFontAtlasAsset>(FName("TestFontAtlas")));
@@ -458,7 +619,7 @@ public:
 		Text3DComponent->SetEditorOnly(true);
 		Text3DComponent->SetDoNotSerialize(true);
 
-		Text3DComponent->SetupAttachment(PlaneComponent, false);
+		Text3DComponent->SetupAttachment(BillboardComponent, false);
 
 		AddOwnedComponent(Text3DComponent);
 	}
@@ -508,3 +669,362 @@ private:
 
 	FFogProcess* FogProcess;
 };
+
+class UPointLightComponent : public USceneComponent
+{
+	REFLECT_CLASS(UPointLightComponent, USceneComponent)
+
+public:
+	UPointLightComponent() = default;
+
+	virtual void Serialize(FArchive& Ar) override
+	{
+		Super::Serialize(Ar);
+		
+		Ar << Intensity;
+		Ar << Radius;
+		Ar << RadiusFallOff;
+		Ar << Color;
+	}
+
+	virtual void Deserialize(FArchive& Ar) override
+	{
+		Super::Deserialize(Ar);
+
+		Ar << Intensity;
+		Ar << Radius;
+		Ar << RadiusFallOff;
+		Ar << Color;
+	}
+
+	inline void SetIntensity(float InIntensity) { Intensity = InIntensity; }
+	inline float GetIntensity() const { return Intensity; }
+
+	inline void SetRadius(float InRadius) { Radius = InRadius; }
+	inline float GetRadius() const { return Radius; }
+
+	inline void SetRadiusFallOff(float InRadiusFallOff) { RadiusFallOff = InRadiusFallOff; }
+	inline float GetRadiusFallOff() const { return RadiusFallOff; }
+
+	inline void SetColor(const FLinearColor& InColor) { Color = InColor; }
+	inline FLinearColor GetColor() const { return Color; }
+
+private:
+	float Intensity = 3.f;
+	float Radius = 5.f;
+	float RadiusFallOff = 1.f;
+	FLinearColor Color = FLinearColor(1.f, 1.f, 1.f, 1.f);
+};
+
+class UProjectileMovementComponent : public UActorComponent
+{
+	REFLECT_CLASS(UProjectileMovementComponent, UActorComponent)
+
+public:
+	UProjectileMovementComponent()
+	{
+		SetTickable(true);
+	}
+
+	virtual void Serialize(FArchive& Ar) override
+	{
+		Super::Serialize(Ar);
+		Ar << Velocity;
+	}
+
+	virtual void Deserialize(FArchive& Ar) override
+	{
+		Super::Deserialize(Ar);
+		Ar << Velocity;
+	}
+
+	void Tick(float DeltaTime) override
+	{
+		if (!mOwner)
+		{
+			return;
+		}
+
+		USceneComponent* RootComp = mOwner->GetRootComponent();
+		if (!RootComp)
+		{
+			return;
+		}
+
+		FVector CurrentLocation = RootComp->GetWorldLocation();
+		FVector NewLocation = CurrentLocation + Velocity * DeltaTime;
+		RootComp->SetWorldLocation(NewLocation);
+	}
+
+	inline void SetVelocity(const FVector& InVelocity) { Velocity = InVelocity; }
+	inline FVector GetVelocity() const { return Velocity; }
+
+private:
+	FVector Velocity = FVector(1.f, 0.f, 0.f);
+};
+
+class URotationMovementComponent : public UActorComponent
+{
+	REFLECT_CLASS(URotationMovementComponent, UActorComponent)
+
+public:
+	URotationMovementComponent()
+	{
+		SetTickable(true);
+	}
+
+	virtual void Serialize(FArchive& Ar) override
+	{
+		Super::Serialize(Ar);
+		
+		Ar << RotationAxis;
+		Ar << RotationSpeed;
+	}
+
+	virtual void Deserialize(FArchive& Ar) override
+	{
+		Super::Deserialize(Ar);
+
+		Ar << RotationAxis;
+		Ar << RotationSpeed;
+	}
+
+	void Tick(float DeltaTime) override
+	{
+		if (!mOwner)
+		{
+			return;
+		}
+
+		USceneComponent* RootComp = mOwner->GetRootComponent();
+		if (!RootComp)
+		{
+			return;
+		}
+
+		FQuaternion CurrentRotation = RootComp->GetWorldRotation();
+		FQuaternion DeltaRotation = FQuaternion(RotationAxis, RotationSpeed * DeltaTime);
+		FQuaternion NewRotation = DeltaRotation * CurrentRotation;
+		NewRotation.Normalize();
+		RootComp->SetWorldRotation(NewRotation);
+	}
+
+	inline void SetRotationAxis(const FVector& InRotationAxis)
+	{
+		RotationAxis = InRotationAxis;
+		RotationAxis.Normalize();
+	}
+
+	inline FVector GetRotationAxis() const { return RotationAxis; }
+
+	inline void SetRotationSpeed(float InRotationSpeed) { RotationSpeed = InRotationSpeed; }
+	inline float GetRotationSpeed() const { return RotationSpeed; }
+
+private:
+	FVector RotationAxis = FVector(0.f, 0.f, 1.f);
+	float RotationSpeed = 1.f;
+};
+
+class UTextRenderComponent : public UPrimitiveComponent
+{
+	REFLECT_CLASS(UTextRenderComponent, UPrimitiveComponent)
+
+public:
+	UTextRenderComponent()
+	{
+		SetRenderable(true);
+	}
+
+	virtual void Serialize(FArchive& Ar) override
+	{
+		Super::Serialize(Ar);
+
+		Ar << mText;
+
+		FGuid FontAtlasAssetID = mFontAtlasAsset ? mFontAtlasAsset->GetAssetID() : FGuid();
+		Ar << FontAtlasAssetID;
+
+		Ar << mColor;
+		Ar << mEnableDepthTest;
+		Ar << mEnableDepthWrite;
+	}
+
+	virtual void Deserialize(FArchive& Ar) override
+	{
+		Super::Deserialize(Ar);
+
+		Ar << mText;
+
+		FGuid FontAtlasAssetID;
+		Ar << FontAtlasAssetID;
+
+		mFontAtlasAsset = FAssetManager::Get().GetAssetAs<FFontAtlasAsset>(FontAtlasAssetID, true);
+
+		Ar << mColor;
+		Ar << mEnableDepthTest;
+		Ar << mEnableDepthWrite;
+	}
+
+	void Render(FRenderCollector& RenderCollector) override
+	{
+		Super::Render(RenderCollector);
+
+		mRenderProxy->SetCollector(RenderCollector);
+		mRenderProxy->SetActiveRenderTransparentQuadInfoNum(0);
+
+		if (!mOwner || !mOwner->GetRootComponent())
+		{
+			return;
+		}
+
+		if (!mFontAtlasAsset)
+		{
+			return;
+		}
+
+		const TSharedPtr<FFontAtlas>& FontAtlas = mFontAtlasAsset->GetFontAtlas();
+		if (!FontAtlas || mText.empty())
+		{
+			return;
+		}
+
+		mRenderProxy->ReserveRenderTransparentQuadInfos(mText.length());
+
+		FTextBuilder TextBuilder(FontAtlas, WorldUnitPerPixel);
+
+		float TotalWidth = 0.0f;
+		float TotalHeight = 0.0f;
+		TextBuilder.CalculateSize(mText, TotalWidth, TotalHeight);
+
+		FMatrix PivotMatrix = GetWorldMatrix();
+
+		int32 GlyphCount = 0;
+		TextBuilder.Build(mText, TotalWidth, TotalHeight, [&](const FRect& Rect, const FRect& UV) {
+			// 공백 등은 Builder에서 advance만 적용하고, 쿼드는 생략한다.
+			if (Rect.Width <= 0.f || Rect.Height <= 0.f)
+			{
+				return;
+			}
+
+			const FVector GlyphCenter(0.f, Rect.X, Rect.Y);
+
+			FRenderQuadInfo& QuadInfo = mRenderProxy->GetRenderTransparentQuadInfo(GlyphCount);
+			QuadInfo.Model = FMatrix::Scale(FVector3(1.f, Rect.Width, Rect.Height)) * FMatrix::Translation(GlyphCenter) * PivotMatrix;
+			QuadInfo.Color = mColor;
+			QuadInfo.TextureSRV = mFontAtlasAsset->GetSRV();
+			QuadInfo.TextureFormat = mFontAtlasAsset->GetFormat();
+			QuadInfo.SubUV = FVector4(UV.X, UV.Y, UV.Width, UV.Height);
+			QuadInfo.BlendMode = ERenderBlendMode::Transparent;
+			QuadInfo.EnableDepthTest = mEnableDepthTest;
+			QuadInfo.EnableDepthWrite = mEnableDepthWrite;
+
+			GlyphCount++;
+		});
+
+		mRenderProxy->SetActiveRenderTransparentQuadInfoNum(GlyphCount);
+	}
+
+	inline void SetText(const std::wstring& text)
+	{
+		mText = text;
+		mbBoundingBoxDirty = true;
+		MarkBoundsDirty();
+		MarkRenderDirty();
+	}
+
+	inline const std::wstring& GetText() const { return mText; }
+
+	inline void SetFontAtlasAsset(const TSharedPtr<FFontAtlasAsset>& fontAtlasAsset) 
+	{ 
+		mFontAtlasAsset = fontAtlasAsset; 
+		mbBoundingBoxDirty = true;
+		MarkBoundsDirty();
+		MarkRenderDirty();
+	}
+
+	inline void SetColor(const FVector4& color)
+	{
+		mColor = color;
+		MarkRenderDirty();
+	}
+
+	inline void SetDepthState(bool enableDepthTest, bool enableDepthWrite)
+	{
+		mEnableDepthTest = enableDepthTest;
+		mEnableDepthWrite = enableDepthWrite;
+		MarkRenderDirty();
+	}
+
+protected:
+	virtual FAABB GetBoundingBox() override
+	{
+		if (mbBoundingBoxDirty)
+		{
+			mbBoundingBoxDirty = false;
+
+			if (!mFontAtlasAsset)
+			{
+				mBoundingBox = FAABB();
+				return mBoundingBox;
+			}
+
+			const TSharedPtr<FFontAtlas>& FontAtlas = mFontAtlasAsset->GetFontAtlas();
+			if (!FontAtlas)
+			{
+				mBoundingBox = FAABB();
+				return mBoundingBox;
+			}
+
+			FTextBuilder TextBuilder(FontAtlas, WorldUnitPerPixel);
+
+			float TotalWidth = 0.0f;
+			float TotalHeight = 0.0f;
+			TextBuilder.CalculateSize(mText, TotalWidth, TotalHeight);
+
+			mBoundingBox.Min = FVector(-0.5f, -TotalWidth * 0.5f, -TotalHeight * 0.5f);
+			mBoundingBox.Max = FVector(0.5f, TotalWidth * 0.5f, TotalHeight * 0.5f);
+			mBoundingBox = mBoundingBox.ToWorld(GetWorldMatrix());
+		}
+
+		return mBoundingBox;
+	}
+
+	virtual const TArray<FVertex>& GetMeshVertices() const override
+	{
+		static TArray<FVertex> Vertices = {
+			FVertex{ FVector(0.f, -0.5f, 0.5f), FVector(0.f, 0.f, 1.f), mColor, FVector2(0.f, 0.f) },
+			FVertex{ FVector(0.f, 0.5f, 0.5f), FVector(0.f, 0.f, 1.f), mColor, FVector2(1.f, 0.f) },
+			FVertex{ FVector(0.f, 0.5f, -0.5f), FVector(0.f, 0.f, 1.f), mColor, FVector2(1.f, 1.f) },
+			FVertex{ FVector(0.f, -0.5f, -0.5f), FVector(0.f, 0.f, 1.f), mColor, FVector2(0.f, 1.f) },
+		};
+
+		return Vertices;
+	}
+
+	virtual const TArray<uint32>& GetMeshIndices() const override
+	{
+		static TArray<uint32> Indices = {
+			0, 1, 2,
+			0, 2, 3
+		};
+
+		return Indices;
+	}
+
+	virtual void OnTransformChanged() override
+	{
+		mbBoundingBoxDirty = true;
+		Super::OnTransformChanged();
+	}
+
+private:
+	std::wstring mText;
+	TSharedPtr<FFontAtlasAsset> mFontAtlasAsset;
+	FVector4 mColor = FVector4(1, 1, 1, 1);
+	bool mEnableDepthTest = true;
+	bool mEnableDepthWrite = true;
+
+	bool mbBoundingBoxDirty = true;
+	FAABB mBoundingBox;
+};
+

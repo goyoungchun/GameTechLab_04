@@ -237,11 +237,19 @@ void UWorld::RequestRenderUpdate(UActorComponent* Component)
 	mShouldRenderComponents.Add(Component);
 }
 
-void UWorld::Tick(float deltaTime)
+void UWorld::Tick(ELevelTick LevelTick, float DeltaTime)
 {
     {
         PROFILE_SCOPE("World/ActiveTick");
-        mTickableComponents.Tick(deltaTime);
+        mTickableComponents.Tick([LevelTick, DeltaTime](UActorComponent* Component)
+        {
+			if (LevelTick == ELevelTick::ViewportsOnly && !Component->bTickInEditor)
+            {
+                return;
+            }
+
+            Component->Tick(DeltaTime);
+        });
     }
 
 	if (mbBVHDirty)
@@ -266,6 +274,11 @@ void UWorld::Render(float deltaTime, FRenderCollector& outCollector)
 		for (UActorComponent* Component : mNonPrimitiveRenderableComponents)
 		{
 			Component->Render(outCollector);
+
+			if (FRenderProxy* Proxy = Component->GetRenderProxy())
+			{
+				Proxy->Submit();
+			}
 		}
 	}
 

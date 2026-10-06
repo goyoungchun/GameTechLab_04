@@ -48,7 +48,9 @@ void FControlWindow::RenderSpawnActorControl(const FGuiReference& GuiReference)
 		"Circle",
 		"SpotLight",
 		"Explosion",
-		"HeightFog"
+		"HeightFog",
+		"FireBall",
+		"Text",
 	};
 
 	ImGui::Combo("Actor Type", &mSelectedTargetSpawnIndex, ActorTypeNames, IM_ARRAYSIZE(ActorTypeNames));
@@ -69,7 +71,6 @@ void FControlWindow::RenderSpawnActorControl(const FGuiReference& GuiReference)
 
 				UAtlasAnimationComponent* AnimComponent = NewActor->CreateDefaultSubobject<UAtlasAnimationComponent>(FName("AtlasAnimationComponent"));
 				AnimComponent->SetAtlas(ExplosionAtlas);
-				AnimComponent->SetBillboard(true);
 				AnimComponent->SetDepthState(true, false);
 				AnimComponent->Play();
 
@@ -103,6 +104,37 @@ void FControlWindow::RenderSpawnActorControl(const FGuiReference& GuiReference)
 
 				UHeightFogComponent* HeightFogComponent = NewActor->CreateDefaultSubobject<UHeightFogComponent>(FName("HeightFogComponent"));
 				NewActor->SetRootComponent(HeightFogComponent);
+			}
+			else if (strcmp(ActorTypeName, "FireBall") == 0)
+			{
+				NewActor = FObjectFactory::ConstructObject<AActor>();
+				NewActor->Rename(FName("FireBallActor"));
+
+				UStaticMeshComponent* MeshComponent = NewActor->CreateDefaultSubobject<UStaticMeshComponent>(FName("StaticMeshComponent"));
+				MeshComponent->SetMesh(FAssetManager::Get().GetAssetAs<FStaticMeshAsset>(BuiltInAssetID::SphereMesh, true));
+				NewActor->SetRootComponent(MeshComponent);
+
+				UPointLightComponent* PointLightComponent = NewActor->CreateDefaultSubobject<UPointLightComponent>(FName("PointLightComponent"));
+				PointLightComponent->SetupAttachment(MeshComponent);
+				NewActor->AddOwnedComponent(PointLightComponent);
+
+				UProjectileMovementComponent* ProjectileMovementComponent = NewActor->CreateDefaultSubobject<UProjectileMovementComponent>(FName("ProjectileMovementComponent"));
+				NewActor->AddOwnedComponent(ProjectileMovementComponent);
+
+				URotationMovementComponent* RotationMovementComponent = NewActor->CreateDefaultSubobject<URotationMovementComponent>(FName("RotationMovementComponent"));
+				NewActor->AddOwnedComponent(RotationMovementComponent);
+			}
+			else if (strcmp(ActorTypeName, "Text") == 0)
+			{
+				NewActor = FObjectFactory::ConstructObject<AActor>();
+				NewActor->Rename(FName("TextActor"));
+
+				UTextRenderComponent* TextComponent = NewActor->CreateDefaultSubobject<UTextRenderComponent>(FName("TextRenderComponent"));
+				TextComponent->SetText(L"Hello World!");
+				TextComponent->SetFontAtlasAsset(FAssetManager::Get().GetAssetAs<FFontAtlasAsset>(FName("TestFontAtlas")));
+				TextComponent->SetDepthState(false, false);
+
+				NewActor->SetRootComponent(TextComponent);
 			}
 			else
 			{

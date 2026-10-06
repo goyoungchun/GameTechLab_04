@@ -9,6 +9,7 @@
 #include "ObjectFactory.h"
 #include "UTextComponent.h"
 #include "FEditorViewportClient.h"
+#include "World.h"
 //#include "FInstrumentor.h"
 #include <algorithm>
 #include "FHiZOcclusionManager.h"
@@ -27,11 +28,13 @@ FGraphicsManager::FGraphicsManager(HWND hWindow)
 
 	mAspect = mRenderer->GetWidth() / static_cast<float>(mRenderer->GetHeight());
 
+	mLightInfoBuffer = mRenderer->CreateStructuredBuffer<FLightInfo>(1);
+
 	mMeshPipeline = mRenderer->CreateRenderPipeline();
 	mMeshPipeline->SetRasterRizerState(D3D11_CULL_BACK, 0, { EViewModeIndex::VMI_Lit, EViewModeIndex::VMI_Wireframe });
 	mMeshPipeline->SetDepthStencilState(true, true);
 	mMeshPipeline->SetShader("Assets/Shaders/StaticMeshShader.hlsl");
-	mMeshPipeline->AddConstantBuffer<FConstants>();
+	mMeshPipeline->AddConstantBuffer<FMeshContants>();
 	mMeshPipeline->AddConstantBuffer<FMatrix>();
 
 	mHighlightMarkPipeline = mRenderer->CreateRenderPipeline();
@@ -39,7 +42,7 @@ FGraphicsManager::FGraphicsManager(HWND hWindow)
 	mHighlightMarkPipeline->SetDepthStencilState(true, false, D3D11_COMPARISON_ALWAYS, D3D11_STENCIL_OP_REPLACE);
 	mHighlightMarkPipeline->SetBlendState(ERenderBlendMode::Opaque, false);
 	mHighlightMarkPipeline->SetShader("Assets/Shaders/StaticMeshShader.hlsl");
-	mHighlightMarkPipeline->AddConstantBuffer<FConstants>();
+	mHighlightMarkPipeline->AddConstantBuffer<FMeshContants>();
 	mHighlightMarkPipeline->AddConstantBuffer<FMatrix>();
 	mHighlightMarkPipeline->SetSamplerState(0, D3D11_FILTER_MIN_MAG_MIP_LINEAR, D3D11_TEXTURE_ADDRESS_WRAP, D3D11_TEXTURE_ADDRESS_WRAP);
 
@@ -78,7 +81,7 @@ FGraphicsManager::~FGraphicsManager()
 	delete mRenderer;
 }
 
-void FGraphicsManager::Prepare(const FCamera* mCamera, float Aspect, const FMatrix& ViewProjection, const FMatrix& InvViewProjection, FViewport& Viewport, const EViewModeIndex InViewMode, const EViewportType InViewportType)
+void FGraphicsManager::Prepare(const FCamera* mCamera, float Aspect, const FMatrix& ViewProjection, const FMatrix& InvViewProjection, FViewport& Viewport, UWorld* World, const EViewModeIndex InViewMode, const EViewportType InViewportType)
 {
 	//PROFILE_SCOPE("Viewport/Prepare");
 
@@ -119,10 +122,34 @@ void FGraphicsManager::Prepare(const FCamera* mCamera, float Aspect, const FMatr
 	mCameraNear = mCamera->mNear;
 	mCameraFar = mCamera->mFar;
 
-	// 그리는 순서가 중요하다: 가까운 것을 먼저, 먼 것을 나중에.
-	// 깊이 테스트가 켜져 있으면 나중에 그린 FarCube 가 깊이 비교에서 탈락해
-	// NearCube(주황)가 앞에 남고, 꺼져 있으면 FarCube(파랑)가 그 위를 덮어쓴다.
-	//mRenderer->UpdateConstantViewProjection(viewProjection);
+	// NOTE: LightInfos를 모으고 StructuredBuffer에 업데이트합니다.
+	mLightInfos.Empty();
+	for (TObjectIterator<UPointLightComponent> It; It; ++It)
+	{
+		UPointLightComponent* PointLight = *It;
+		if (PointLight->GetOwner()->GetWorld() != World)
+		{
+			continue;
+		}
+
+		FLightInfo& Info = mLightInfos.Emplace();
+		Info.Type = ELightType::Point;
+		Info.Position = PointLight->GetWorldLocation();
+		Info.Color = PointLight->GetColor();
+		Info.Intensity = PointLight->GetIntensity();
+		Info.Range = PointLight->GetRadius();
+		Info.FallOf = PointLight->GetRadiusFallOff();
+	}
+
+	if (mLightInfos.Num() * sizeof(FLightInfo) > mLightInfoBuffer->GetBufferSize())
+	{
+		mLightInfoBuffer = mRenderer->CreateStructuredBuffer<FLightInfo>(mLightInfos.Num());
+	}
+
+	if (!mLightInfos.IsEmpty())
+	{
+		mLightInfoBuffer->UpdateBuffer(mLightInfos.Data(), mLightInfos.Num());
+	}
 
 	mRenderer->BindRenderTarget(Viewport.GetFrontRenderTarget(), Viewport.GetDepthStencil());
 }
@@ -167,12 +194,13 @@ void FGraphicsManager::RenderHighLight(const TArray<UPrimitiveComponent*>& Primi
 		mHighlightVertexBuffer->UpdateBuffer(Vertices.Data(), Vertices.Num());
 		mHighlightIndexBuffer->UpdateBuffer(Indices.Data(), Indices.Num());
 
-		FConstants Constants{};
+		FMeshContants Constants{};
 		Constants.Matrix = Primitive->GetWorldMatrix();
 		Constants.Color = FVector4(0.f, 0.f, 0.f, 0.f);
 		Constants.HasTexture = 0;
 		Constants.UseVertexColor = 0;
 		Constants.UVOffset = FVector2(0.f, 0.f);
+		Constants.LightCount = 0;
 
 		mHighlightMarkPipeline->UpdateConstantBuffer(0, Constants);
 
@@ -250,9 +278,23 @@ void FGraphicsManager::Render()
 				Pipeline->UpdateConstantBuffer(1, mViewUnifiedProjectionMatrix);
 				Pipeline->SetSamplerState(0, D3D11_FILTER_MIN_MAG_MIP_LINEAR, D3D11_TEXTURE_ADDRESS_WRAP, D3D11_TEXTURE_ADDRESS_WRAP);
 			}
-			if (Info.Texture) Pipeline->SetShaderResource(0, Info.Texture->GetSRV());
+
+			if (Info.Texture)
+			{
+				Pipeline->SetShaderResource(0, Info.Texture->GetSRV());
+			}
+
+			Pipeline->SetShaderResource(1, mLightInfoBuffer->SRV);
+			
 			// 개별 Draw의 상수는 기존 동적 상수 버퍼에 Map/Unmap으로 갱신합니다.
-			const FConstants Constants{ Info.Model, Info.Color, Info.UVOffset, Info.UseVertexColor, Info.Texture ? 1 : 0 };
+			FMeshContants Constants;
+			Constants.Matrix = Info.Model;
+			Constants.Color = Info.Color;
+			Constants.UVOffset = Info.UVOffset;
+			Constants.UseVertexColor = Info.UseVertexColor;
+			Constants.HasTexture = Info.Texture ? 1 : 0;
+			Constants.LightCount = mLightInfos.Num();
+			
 			Pipeline->UpdateConstantBuffer(0, Constants);
 
 			if (Info.IndexBuffer)
@@ -284,13 +326,21 @@ void FGraphicsManager::Render()
 	{
 		PROFILE_SCOPE("Viewport/GraphicsRender/RenderQuad");
 
-		for (const FRenderQuadInfo& QuadInfo : mRenderCollector.GetOpaqueQuadInfos())
+		const auto& RenderQuadInfoPool = mRenderCollector.GetRenderQuadInfoPool();
+		const auto& RenderQuadInfos = RenderQuadInfoPool.GetPool();
+		auto& VisibleRenderInfoIndices = mRenderCollector.GetVisibleRenderQuadInfoIndices();
+		for (const uint32 Index : VisibleRenderInfoIndices)
 		{
+			const FRenderQuadInfo& QuadInfo = RenderQuadInfos[Index];
 			mRenderer->RenderQuad(QuadInfo);
 		}
 
-		for (const FRenderQuadInfo& QuadInfo : mRenderCollector.GetTransparentQuadInfos())
+		const auto& RenderTransparentQuadInfoPool = mRenderCollector.GetRenderTransparentQuadInfoPool();
+		const auto& RenderTransparentQuadInfos = RenderTransparentQuadInfoPool.GetPool();
+		auto& VisibleRenderTransparentInfoIndices = mRenderCollector.GetVisibleRenderTransparentQuadInfoIndices();
+		for (const uint32 Index : VisibleRenderTransparentInfoIndices)
 		{
+			const FRenderQuadInfo& QuadInfo = RenderTransparentQuadInfos[Index];
 			mRenderer->RenderQuad(QuadInfo);
 		}
 	}
@@ -350,8 +400,12 @@ void FGraphicsManager::Render()
 		mRenderer->RenderWorldGrid(GridWorldMatrix * mViewUnifiedProjectionMatrix, mCameraLocation, GridGap);
 	}
 
-	for (const FRenderQuadInfo& QuadInfo : mRenderCollector.GetOverlayQuadInfos())
+	const auto& RenderOverlayQuadInfoPool = mRenderCollector.GetRenderOverlayQuadInfoPool();
+	const auto& RenderOverlayQuadInfos = RenderOverlayQuadInfoPool.GetPool();
+	const auto& VisibleRenderOverlayInfoIndices = mRenderCollector.GetVisibleRenderOverlayQuadInfoIndices();
+	for (const uint32 Index : VisibleRenderOverlayInfoIndices)
 	{
+		const FRenderQuadInfo& QuadInfo = RenderOverlayQuadInfos[Index];
 		mRenderer->RenderQuad(QuadInfo);
 	}
 
