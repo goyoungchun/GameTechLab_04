@@ -439,14 +439,20 @@ void FViewport::Resize(URenderer& Renderer, uint32 Width, uint32 Height)
 		return;
 	}
 
-	if (RenderTarget && RenderTarget->Width == Width && RenderTarget->Height == Height)
+	if (RenderTargets[0] && RenderTargets[0]->Width == Width && RenderTargets[0]->Height == Height)
 	{
 		return;
 	}
 
-	RenderTarget = Renderer.CreateRenderTarget2D(Width, Height, DXGI_FORMAT_R8G8B8A8_UNORM);
-	RenderTarget->Width = Width;
-	RenderTarget->Height = Height;
+	RenderTargets[0] = Renderer.CreateRenderTarget2D(Width, Height, DXGI_FORMAT_R8G8B8A8_UNORM);
+	RenderTargets[0]->Width = Width;
+	RenderTargets[0]->Height = Height;
+
+	RenderTargets[1] = Renderer.CreateRenderTarget2D(Width, Height, DXGI_FORMAT_R8G8B8A8_UNORM);
+	RenderTargets[1]->Width = Width;
+	RenderTargets[1]->Height = Height;
+
+	FrontRenderTargetIndex = 0;
 
 	DepthStencil = Renderer.CreateDepthStencil(Width, Height);
 	DepthStencil->Width = Width;

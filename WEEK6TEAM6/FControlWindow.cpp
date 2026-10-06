@@ -48,6 +48,7 @@ void FControlWindow::RenderSpawnActorControl(const FGuiReference& GuiReference)
 		"Circle",
 		"SpotLight",
 		"Explosion",
+		"HeightFog"
 	};
 
 	ImGui::Combo("Actor Type", &mSelectedTargetSpawnIndex, ActorTypeNames, IM_ARRAYSIZE(ActorTypeNames));
@@ -94,6 +95,14 @@ void FControlWindow::RenderSpawnActorControl(const FGuiReference& GuiReference)
 				NewActor->Rename(FName("StaticMeshActor"));
 				UStaticMeshComponent* MeshComponent = NewActor->CreateDefaultSubobject<UStaticMeshComponent>(FName("StaticMeshComponent"));
 				NewActor->SetRootComponent(MeshComponent);
+			}
+			else if (strcmp(ActorTypeName, "HeightFog") == 0)
+			{
+				NewActor = FObjectFactory::ConstructObject<AActor>();
+				NewActor->Rename(FName("HeightFogActor"));
+
+				UHeightFogComponent* HeightFogComponent = NewActor->CreateDefaultSubobject<UHeightFogComponent>(FName("HeightFogComponent"));
+				NewActor->SetRootComponent(HeightFogComponent);
 			}
 			else
 			{

@@ -10,6 +10,9 @@
 #include "RenderInfo.h"
 #include "Vector.h"
 #include "ShowFlags.h"
+#include "FFogProcess.h"
+#include "FDepthPreviewProcess.h"
+#include "FRenderGraph.h"
 
 class FAssetManager;
 struct FViewport;
@@ -26,7 +29,7 @@ public:
 	FGraphicsManager(HWND hWindow);
 	~FGraphicsManager();
 
-	void Prepare(const FCamera* Camera,float viewportWidth, float viewportHeight, const FViewport& viewport, const EViewModeIndex InViewMode, const EViewportType InViewportType);
+	void Prepare(const FCamera* mCamera, float Aspect, const FMatrix& ViewProjection, const FMatrix& InvViewProjection, FViewport& Viewport, const EViewModeIndex InViewMode, const EViewportType InViewportType);
 
 	void RenderHighLight(const TArray<UPrimitiveComponent*>& Primitives);
 	void Render();
@@ -57,6 +60,8 @@ public:
 	void UpdateProjectionTransition(float deltaTime);
 
 	inline FRenderCollector& GetRenderCollector() { return mRenderCollector; }
+	inline FFogProcess& GetFogProcess() { return mFogProcess; }
+	inline FDepthPreviewProcess& GetDepthPreviewProcess() { return mDepthPreviewProcess; }
 
 	inline int32 GetGridGap() { return GridGap; }
 	void SetGridGap(int32 GridGap);
@@ -92,8 +97,10 @@ private:
 	FMatrix mViewMatrix;
 	FMatrix mProjectionMatrix;
 	FMatrix mViewProjectionMatrix;
+	FMatrix mInvViewProjectionMatrix;
 	FMatrix mViewOrthogonalProjectionMatrix;
 	FMatrix mViewUnifiedProjectionMatrix;
+	FViewport* mViewport;
 
 	// Prepare에서 갱신. 하이라이트 두께의 픽셀 → 월드 환산에 쓴다
 	FVector mCameraLocation;
@@ -124,6 +131,9 @@ private:
 	TSharedPtr<FIndexBuffer> mHighlightIndexBuffer;
 
 	FRenderCollector mRenderCollector;
+	FRenderGraph mRenderGraph;
+	FFogProcess mFogProcess;
+	FDepthPreviewProcess mDepthPreviewProcess;
 
 	int32 GridGap = 1;
 	bool bGpuTimerActive = false;

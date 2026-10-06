@@ -51,9 +51,6 @@
 #include "FObjViewer.h"
 #endif
 
-// NOTE: 현재 Occlusion이 제대로 동작하지 않을 확률이 높아서 임시로 비활성화. (어떻게 만든거야...)
-#define ENABLE_OCCULSION_CULLING 0
-
 FEditorEngine GEditor;
 
 void FEditorEngine::Initialize(HINSTANCE hInstance, WNDPROC WndProc)
@@ -450,7 +447,7 @@ void FEditorEngine::Render(float DeltaTime)
 			{
 				PROFILE_SCOPE("Viewport/Render");
 				CurrentViewport->Viewport->Resize(*mGraphicsManager->GetRenderer(), ViewportRect.Width, ViewportRect.Height);
-				mGraphicsManager->Prepare(&CurrentViewport->Client->mCamera, ViewportRect.Width, ViewportRect.Height, *CurrentViewport->Viewport, CurrentViewport->Client->GetViewMode(), CurrentViewport->Client->GetViewportType());
+				mGraphicsManager->Prepare(&CurrentViewport->Client->mCamera, CurrentRatio, ViewProjection, InvViewProjection, *CurrentViewport->Viewport, CurrentViewport->Client->GetViewMode(), CurrentViewport->Client->GetViewportType());
 				mGraphicsManager->RenderHighLight(HighlightedComponents);
 				mGraphicsManager->Render();
 
@@ -492,6 +489,7 @@ void FEditorEngine::Render(float DeltaTime)
 #endif
 		// 나중에 Ui 매니저에서 관리하도록 분리 필요
 		ImGui::SetMouseCursor(mMouseCursor);
+		mMouseCursor = ImGuiMouseCursor_Arrow;
 
 		FRect ViewportRect;
 		ViewportRect.X = mEditorUIManager->GetViewportX();

@@ -1,70 +1,7 @@
 #include "Renderer.h"
 #include "FInstrumentor.h"
-#include "NvapiHelpers.h"
-#include <dxgi1_6.h>
 
 constexpr uint32 MaxLineInstances = 1024;
-
-namespace
-{
-	Microsoft::WRL::ComPtr<IDXGIAdapter1> FindHighPerformanceAdapter()
-	{
-		Microsoft::WRL::ComPtr<IDXGIFactory1> Factory1;
-		if (FAILED(CreateDXGIFactory1(IID_PPV_ARGS(&Factory1))))
-		{
-			return {};
-		}
-
-		Microsoft::WRL::ComPtr<IDXGIFactory6> Factory6;
-		if (FAILED(Factory1.As(&Factory6)))
-		{
-			return {};
-		}
-
-		for (UINT Index = 0; Index < 16; ++Index)
-		{
-			Microsoft::WRL::ComPtr<IDXGIAdapter1> Adapter;
-			const HRESULT Hr = Factory6->EnumAdapterByGpuPreference(
-				Index,
-				DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE,
-				IID_PPV_ARGS(&Adapter));
-			if (Hr == DXGI_ERROR_NOT_FOUND)
-			{
-				break;
-			}
-			if (FAILED(Hr))
-			{
-				continue;
-			}
-
-			DXGI_ADAPTER_DESC1 Description{};
-			if (SUCCEEDED(Adapter->GetDesc1(&Description)) &&
-				(Description.Flags & DXGI_ADAPTER_FLAG_SOFTWARE) == 0)
-			{
-				return Adapter;
-			}
-		}
-
-		return {};
-	}
-
-	UINT GetByteSizeFromFormat(DXGI_FORMAT Format)
-	{
-		switch (Format)
-		{
-		case DXGI_FORMAT_R32G32B32A32_FLOAT:
-			return 16;
-		case DXGI_FORMAT_R32G32B32_FLOAT:
-			return 12;
-		case DXGI_FORMAT_R16G16B16A16_FLOAT:
-			return 8;
-		case DXGI_FORMAT_R8G8B8A8_UNORM:
-			return 4;
-		default:
-			return 0; // Unknown format
-		}
-	}
-}
 
 void URenderer::Create(HWND hWindow)
 {
@@ -158,7 +95,7 @@ void URenderer::CreateDeviceAndSwapChain(HWND hWindow)
 	CreateDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
 
-	auto HighPerformanceAdapter = FindHighPerformanceAdapter();
+	auto HighPerformanceAdapter = RenderUtils::FindHighPerformanceAdapter();
 	HRESULT DeviceResult = E_FAIL;
 	if (HighPerformanceAdapter)
 	{
@@ -393,7 +330,7 @@ Microsoft::WRL::ComPtr<ID3D11Texture2D> URenderer::CreateTexture2D(const D3D11_T
 	{
 		D3D11_SUBRESOURCE_DATA TextureData = {};
 		TextureData.pSysMem = InitialData;
-		TextureData.SysMemPitch = Desc.Width * GetByteSizeFromFormat(Desc.Format);
+		TextureData.SysMemPitch = Desc.Width * RenderUtils::GetByteSizeFromFormat(Desc.Format);
 
 		Device->CreateTexture2D(&Desc, &TextureData, &Texture);
 	}
@@ -478,7 +415,7 @@ TSharedPtr<FDepthStencil> URenderer::CreateDepthStencil(uint32 Width, uint32 Hei
 	SRVDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
 	SRVDesc.Texture2D.MostDetailedMip = 0;
 	SRVDesc.Texture2D.MipLevels = 1;
-	Device->CreateShaderResourceView(DepthStencil->Texture.Get(), &SRVDesc, DepthStencil->SRV.GetAddressOf());
+	Device->CreateShaderResourceView(DepthStencil->Texture.Get(), &SRVDesc, DepthStencil->StencilSRV.GetAddressOf());
 
 	D3D11_SHADER_RESOURCE_VIEW_DESC DepthSRVDesc{};
 	DepthSRVDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
@@ -491,6 +428,20 @@ TSharedPtr<FDepthStencil> URenderer::CreateDepthStencil(uint32 Width, uint32 Hei
 	DepthStencil->Height = Height;
 
 	return DepthStencil;
+}
+
+TSharedPtr<FShader> URenderer::CreateShader(const FString& ShaderPath)
+{
+	TSharedPtr<FShader> Shader = MakeShared<FShader>();
+	RenderUtils::CompileShader(Device, ShaderPath, Shader->VertexShader, Shader->PixelShader, Shader->InputLayout, Shader->Stride);
+	return Shader;
+}
+
+TSharedPtr<FShader> URenderer::CreateShaderFromMemory(const FString& ShaderMemory)
+{
+	TSharedPtr<FShader> Shader = MakeShared<FShader>();
+	RenderUtils::CompileShaderFromMemory(Device, ShaderMemory, Shader->VertexShader, Shader->PixelShader, Shader->InputLayout, Shader->Stride);
+	return Shader;
 }
 
 void URenderer::BindPipeline(const FRenderPipeline* Pipeline, uint32 StencilRef)
@@ -555,22 +506,22 @@ void URenderer::BindPipeline(const FRenderPipeline* Pipeline, uint32 StencilRef)
 		CurrentPrimitiveTopology = Pipeline->PrimitiveTopology;
 	}
 
-	if (CurrentInputLayout != Pipeline->InputLayout)
+	if (CurrentInputLayout != Pipeline->Shader->InputLayout.Get())
 	{
-		DeviceContext->IASetInputLayout(Pipeline->InputLayout);
-		CurrentInputLayout = Pipeline->InputLayout;
+		DeviceContext->IASetInputLayout(Pipeline->Shader->InputLayout.Get());
+		CurrentInputLayout = Pipeline->Shader->InputLayout.Get();
 	}
 
-	if (CurrentVertexShader != Pipeline->VertexShader)
+	if (CurrentVertexShader != Pipeline->Shader->VertexShader.Get())
 	{
-		DeviceContext->VSSetShader(Pipeline->VertexShader, nullptr, 0);
-		CurrentVertexShader = Pipeline->VertexShader;
+		DeviceContext->VSSetShader(Pipeline->Shader->VertexShader.Get(), nullptr, 0);
+		CurrentVertexShader = Pipeline->Shader->VertexShader.Get();
 	}
 
-	if (CurrentPixelShader != Pipeline->PixelShader)
+	if (CurrentPixelShader != Pipeline->Shader->PixelShader.Get())
 	{
-		DeviceContext->PSSetShader(Pipeline->PixelShader, nullptr, 0);
-		CurrentPixelShader = Pipeline->PixelShader;
+		DeviceContext->PSSetShader(Pipeline->Shader->PixelShader.Get(), nullptr, 0);
+		CurrentPixelShader = Pipeline->Shader->PixelShader.Get();
 	}
 
 	const int32 NewCBCount = Pipeline->ConstantBuffers.Num();
@@ -662,6 +613,11 @@ void URenderer::BindFrameBuffer()
 
 void URenderer::BindRenderTarget(const TSharedPtr<FRenderTarget2D>& RenderTarget, const TSharedPtr<FDepthStencil>& DepthStencil, bool bClear)
 {
+	BindRenderTarget(RenderTarget.get(), DepthStencil.get(), bClear);
+}
+
+void URenderer::BindRenderTarget(FRenderTarget2D* RenderTarget, FDepthStencil* DepthStencil, bool bClear)
+{
 	DeviceContext->OMSetRenderTargets(1, RenderTarget->RTV.GetAddressOf(), DepthStencil ? DepthStencil->DSV.Get() : nullptr);
 	if (bClear)
 	{
@@ -739,7 +695,7 @@ void URenderer::RenderPrimitive(const FRenderPipeline* Pipeline, ID3D11Buffer* B
 {
 	if (bShouldBindPipeline)
 		BindPipeline(Pipeline);
-	BindVertexBuffer(Buffer, Pipeline->Stride);
+	BindVertexBuffer(Buffer, Pipeline->Shader->Stride);
 
 	DeviceContext->Draw(NumVertices, 0);
 	++DrawCallCount;
@@ -791,7 +747,7 @@ void URenderer::RenderPrimitiveIndexed(const FRenderPipeline* Pipeline, const FR
 {
 	if (bShouldBindPipeline)
 		BindPipeline(Pipeline, StencilRef);
-	BindVertexBuffer(RenderInfo.VertexBuffer, Pipeline->Stride);
+	BindVertexBuffer(RenderInfo.VertexBuffer, Pipeline->Shader->Stride);
 	BindIndexBuffer(RenderInfo.IndexBuffer);
 
 	DeviceContext->DrawIndexed(RenderInfo.IndexCount, RenderInfo.StartIndex, 0);

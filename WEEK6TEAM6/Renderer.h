@@ -1,13 +1,18 @@
 #pragma once
 
 #include "Core.h"
-#include <d3d11.h>
-#include <d3dcompiler.h>
-#include <wrl/client.h>
 #include "Matrix.h"
 #include "Vector.h"
 #include "RenderInfo.h"
 #include "FRenderPipeline.h"
+#include "NvapiHelpers.h"
+#include <d3d11.h>
+#include <d3dcompiler.h>
+#include <wrl/client.h>
+#include <dxgi1_6.h>
+#include <sstream>
+#include <fstream>
+#include <filesystem>
 
 struct FCameraConstants
 {
@@ -308,23 +313,24 @@ private:
 	TMap<FBlendStateKey, ID3D11BlendState*, FBlendStateKeyHash> BlendStates;
 };
 
-struct FRenderTarget2D
+struct FTexture2D
 {
 	Microsoft::WRL::ComPtr<ID3D11Texture2D> Texture;
-	Microsoft::WRL::ComPtr<ID3D11RenderTargetView> RTV;
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> SRV;
 	UINT Width;
 	UINT Height;
 };
 
-struct FDepthStencil
+struct FRenderTarget2D : public FTexture2D
 {
-	Microsoft::WRL::ComPtr<ID3D11Texture2D> Texture;
-	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> DSV;
+	Microsoft::WRL::ComPtr<ID3D11RenderTargetView> RTV;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> SRV;
+};
+
+struct FDepthStencil : public FTexture2D
+{
+	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> DSV;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> StencilSRV;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> DepthSRV;
-	UINT Width;
-	UINT Height;
 };
 
 struct FVertexBuffer
@@ -392,6 +398,143 @@ struct FStructuredBuffer
 		DeviceContext->UpdateSubresource(Buffer.Get(), 0, &Box, Data, 0, 0);
 	}
 };
+
+struct FShader
+{
+	Microsoft::WRL::ComPtr<ID3D11VertexShader> VertexShader;
+	Microsoft::WRL::ComPtr<ID3D11PixelShader> PixelShader;
+	Microsoft::WRL::ComPtr<ID3D11InputLayout> InputLayout;
+	uint32 Stride;
+};
+
+namespace RenderUtils
+{
+	static Microsoft::WRL::ComPtr<IDXGIAdapter1> FindHighPerformanceAdapter()
+	{
+		Microsoft::WRL::ComPtr<IDXGIFactory1> Factory1;
+		if (FAILED(CreateDXGIFactory1(IID_PPV_ARGS(&Factory1))))
+		{
+			return {};
+		}
+
+		Microsoft::WRL::ComPtr<IDXGIFactory6> Factory6;
+		if (FAILED(Factory1.As(&Factory6)))
+		{
+			return {};
+		}
+
+		for (UINT Index = 0; Index < 16; ++Index)
+		{
+			Microsoft::WRL::ComPtr<IDXGIAdapter1> Adapter;
+			const HRESULT Hr = Factory6->EnumAdapterByGpuPreference(
+				Index,
+				DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE,
+				IID_PPV_ARGS(&Adapter));
+			if (Hr == DXGI_ERROR_NOT_FOUND)
+			{
+				break;
+			}
+			if (FAILED(Hr))
+			{
+				continue;
+			}
+
+			DXGI_ADAPTER_DESC1 Description{};
+			if (SUCCEEDED(Adapter->GetDesc1(&Description)) &&
+				(Description.Flags & DXGI_ADAPTER_FLAG_SOFTWARE) == 0)
+			{
+				return Adapter;
+			}
+		}
+
+		return {};
+	}
+
+	static UINT GetByteSizeFromFormat(DXGI_FORMAT Format)
+	{
+		switch (Format)
+		{
+		case DXGI_FORMAT_R32G32B32A32_FLOAT:
+			return 16;
+		case DXGI_FORMAT_R32G32B32_FLOAT:
+			return 12;
+		case DXGI_FORMAT_R16G16B16A16_FLOAT:
+			return 8;
+		case DXGI_FORMAT_R8G8B8A8_UNORM:
+			return 4;
+		default:
+			return 0; // Unknown format
+		}
+	}
+
+	static void CompileShaderFromMemory(ID3D11Device* Device, const FString& Memory, Microsoft::WRL::ComPtr<ID3D11VertexShader>& VertexShader, Microsoft::WRL::ComPtr<ID3D11PixelShader>& PixelShader, Microsoft::WRL::ComPtr<ID3D11InputLayout>& InputLayout, uint32& Stride)
+	{
+		ID3DBlob* VertexShaderCSO;
+		ID3DBlob* PixelShaderCSO;
+		HRESULT Result;
+
+		ID3DBlob* VSErrorBlob;
+		Result = D3DCompile(Memory.c_str(), Memory.Len(), nullptr, nullptr, nullptr, "mainVS", "vs_5_0", 0, 0, &VertexShaderCSO, &VSErrorBlob);
+		if (SUCCEEDED(Result))
+		{
+			Device->CreateVertexShader(VertexShaderCSO->GetBufferPointer(), VertexShaderCSO->GetBufferSize(), nullptr, VertexShader.GetAddressOf());
+		}
+		else if (VSErrorBlob)
+		{
+			OutputDebugStringA((char*)VSErrorBlob->GetBufferPointer());
+			VSErrorBlob->Release();
+		}
+
+		ID3DBlob* PSErrorBlob;
+		Result = D3DCompile(Memory.c_str(), Memory.Len(), nullptr, nullptr, nullptr, "mainPS", "ps_5_0", 0, 0, &PixelShaderCSO, &PSErrorBlob);
+		if (SUCCEEDED(Result))
+		{
+			Device->CreatePixelShader(PixelShaderCSO->GetBufferPointer(), PixelShaderCSO->GetBufferSize(), nullptr, PixelShader.GetAddressOf());
+		}
+		else if (PSErrorBlob)
+		{
+			OutputDebugStringA((char*)PSErrorBlob->GetBufferPointer());
+			PSErrorBlob->Release();
+		}
+
+		if (VertexShaderCSO)
+		{
+			// NOTE: 나중에 HLSL Reflection을 이용해서 InputLayout을 자동으로 생성하도록 개선, 추가로 캐싱해서 재사용 가능하도록 Pool을 만들어도 좋음
+			D3D11_INPUT_ELEMENT_DESC Layout[] =
+			{
+				{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 40, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			};
+
+			Device->CreateInputLayout(Layout, ARRAYSIZE(Layout), VertexShaderCSO->GetBufferPointer(), VertexShaderCSO->GetBufferSize(), InputLayout.GetAddressOf());
+			Stride = sizeof(FVertex);
+
+			VertexShaderCSO->Release();
+		}
+
+		if (PixelShaderCSO)
+		{
+			PixelShaderCSO->Release();
+		}
+	}
+
+	static void CompileShader(ID3D11Device* Device, const FString& ShaderPath, Microsoft::WRL::ComPtr<ID3D11VertexShader>& VertexShader, Microsoft::WRL::ComPtr<ID3D11PixelShader>& PixelShader, Microsoft::WRL::ComPtr<ID3D11InputLayout>& InputLayout, uint32& Stride)
+	{
+		std::ifstream FileStream(ShaderPath.ToString(), std::ios::in | std::ios::binary);
+		if (!FileStream)
+		{
+			return;
+		}
+
+		std::stringstream Buffer;
+		Buffer << FileStream.rdbuf();
+
+		FString Memory(Buffer.str());
+		CompileShaderFromMemory(Device, Memory, VertexShader, PixelShader, InputLayout, Stride);
+	}
+}
 
 class URenderer
 {
@@ -464,6 +607,9 @@ public:
 
 	TSharedPtr<FRenderTarget2D> CreateRenderTarget2D(uint32 Width, uint32 Height, DXGI_FORMAT Format);
 	TSharedPtr<FDepthStencil> CreateDepthStencil(uint32 Width, uint32 Height);
+
+	TSharedPtr<FShader> CreateShader(const FString& ShaderPath);
+	TSharedPtr<FShader> CreateShaderFromMemory(const FString& ShaderMemory);
 	
 	//Rendering
 	void Prepare(const FMatrix& ViewProjectionMatrix);
@@ -472,6 +618,7 @@ public:
 
 	void BindFrameBuffer();
 	void BindRenderTarget(const TSharedPtr<FRenderTarget2D>& RenderTarget, const TSharedPtr<FDepthStencil>& DepthStencil, bool bClear = true);
+	void BindRenderTarget(FRenderTarget2D* RenderTarget, FDepthStencil* DepthStencil, bool bClear = true);
 
 	void Render(const FRenderPipeline* Pipeline, UINT NumVertices);
 
@@ -512,8 +659,8 @@ public:
 	FORCEINLINE ID3D11Device* GetDevice() const { return Device; }
 	FORCEINLINE ID3D11DeviceContext* GetDeviceContext() const { return DeviceContext; }
 	FORCEINLINE void SetViewModeIndex(EViewModeIndex InViewModeIndex) { ViewModeIndex = InViewModeIndex; }
-	FORCEINLINE TSharedPtr<FRenderTarget2D> GetBindedRenderTarget() const { return BindedRenderTarget; }
-	FORCEINLINE TSharedPtr<FDepthStencil> GetBindedDepthStencil() const { return BindedDepthStencil; }
+	FORCEINLINE FRenderTarget2D* GetBindedRenderTarget() const { return BindedRenderTarget; }
+	FORCEINLINE FDepthStencil* GetBindedDepthStencil() const { return BindedDepthStencil; }
 
 	mutable uint64 DrawCallCount = 0;
 	uint64 GetDrawCallCount() const { return DrawCallCount; }
@@ -551,8 +698,8 @@ private:
 	ID3D11Texture2D* DepthStencilBuffer = nullptr;			// 실제 깊이값이 저장될 메모리
 	ID3D11DepthStencilView* DepthStencilView = nullptr;		// 그 메모리를 "출력 대상"으로 보는 뷰
 
-	TSharedPtr<FRenderTarget2D> BindedRenderTarget;
-	TSharedPtr<FDepthStencil> BindedDepthStencil;
+	FRenderTarget2D* BindedRenderTarget;
+	FDepthStencil* BindedDepthStencil;
 
 	TSharedPtr<FStructuredBuffer> LineStructuredBuffer;
 

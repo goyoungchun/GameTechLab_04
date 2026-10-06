@@ -298,7 +298,7 @@ void FHiZOcclusionManager::BeginFrame(ID3D11DeviceContext* Context)
 
 void FHiZOcclusionManager::GenerateHiZAndDispatchCull(
 	URenderer* Renderer,
-	const TSharedPtr<FDepthStencil>& SceneDepthStencil,
+	FDepthStencil* SceneDepthStencil,
 	const FMatrix& ViewProjectionMatrix,
 	float NearZ,
 	float FarZ

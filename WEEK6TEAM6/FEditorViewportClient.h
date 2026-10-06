@@ -137,9 +137,19 @@ private:
 
 struct FViewport
 {
-	TSharedPtr<FRenderTarget2D> RenderTarget;
-	TSharedPtr<FDepthStencil> DepthStencil;
-
+public:
 	void Resize(URenderer& Renderer, uint32 Width, uint32 Height);
+	
+	inline void Swap() { FrontRenderTargetIndex = 1 - FrontRenderTargetIndex; }
+
+	inline FRenderTarget2D* GetFrontRenderTarget() { return RenderTargets[FrontRenderTargetIndex].get(); }
+	inline FRenderTarget2D* GetBackRenderTarget() { return RenderTargets[1 - FrontRenderTargetIndex].get(); }
+	inline FDepthStencil* GetDepthStencil() { return DepthStencil.get(); }
+
+private:
+	TSharedPtr<FRenderTarget2D> RenderTargets[2];
+	int32 FrontRenderTargetIndex = 0;
+
+	TSharedPtr<FDepthStencil> DepthStencil;
 };
 

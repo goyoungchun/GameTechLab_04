@@ -266,3 +266,21 @@ struct FRect
 		: X(InX), Y(InY), Width(InWidth), Height(InHeight) {
 	}
 };
+
+struct FLinearColor
+{
+	union
+	{
+		struct { float R, G, B, A; };
+		float V[4];
+	};
+
+	FLinearColor() : R(0), G(0), B(0), A(1) {}
+	FLinearColor(float InR, float InG, float InB, float InA = 1.0f)
+		: R(InR)
+		, G(InG)
+		, B(InB)
+		, A(InA) 
+	{
+	}
+};

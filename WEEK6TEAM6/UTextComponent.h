@@ -14,6 +14,9 @@
 #include "FQuaternion.h"
 #include "FArchive.h"
 #include "Serializers.h"
+#include "FEngine.h"
+#include "FFogProcess.h"
+#include "Vector.h"
 
 class UPlaneComponent : public UPrimitiveComponent
 {
@@ -351,7 +354,8 @@ public:
 				Translation = FVector(Translation.x, Translation.y, Bounds.Max.z + 0.2f);
 			}
 
-			PivotMatrix = ScaleMatrix * ToMatrix(BillboardRotation) * FMatrix::Translation(Translation);
+			// PivotMatrix = ScaleMatrix * ToMatrix(BillboardRotation) * FMatrix::Translation(Translation);
+			PivotMatrix = ToMatrix(BillboardRotation) * FMatrix::Translation(Translation);
 		}
 
 		TextBuilder.Build(mText, TotalWidth, TotalHeight, [&](const FRect& Rect, const FRect& UV) {
@@ -458,4 +462,49 @@ public:
 
 		AddOwnedComponent(Text3DComponent);
 	}
+};
+
+class UHeightFogComponent : public UPrimitiveComponent
+{
+	REFLECT_CLASS(UHeightFogComponent, UPrimitiveComponent)
+
+public:
+	UHeightFogComponent()
+	{
+		FogProcess = &GEngine->GetGraphicsManager().GetFogProcess();
+		FogComponentCount++;
+		FogProcess->SetEnabled(FogComponentCount > 0);
+	}
+
+	~UHeightFogComponent()
+	{
+		FogComponentCount--;
+		FogProcess->SetEnabled(FogComponentCount > 0);
+	}
+
+	inline void SetFogDensity(float Density) { FogProcess->FogConstants.FogDensity = Density; }
+	inline float GetFogDensity() const { return FogProcess->FogConstants.FogDensity; }
+
+	inline void SetFogHeightFalloff(float Falloff) { FogProcess->FogConstants.FogHeightFalloff = Falloff; }
+	inline float GetFogHeightFalloff() const { return FogProcess->FogConstants.FogHeightFalloff; }
+
+	inline void SetFogStartDistance(float StartDistance) { FogProcess->FogConstants.StartDistance = StartDistance; }
+	inline float GetFogStartDistance() const { return FogProcess->FogConstants.StartDistance; }
+
+	inline void SetFogCutoffDistance(float CutoffDistance) { FogProcess->FogConstants.FogCutoffDistance = CutoffDistance; }
+	inline float GetFogCutoffDistance() const { return FogProcess->FogConstants.FogCutoffDistance; }
+
+	inline void SetFogMaxOpacity(float MaxOpacity) { FogProcess->FogConstants.FogMaxOpacity = MaxOpacity; }
+	inline float GetFogMaxOpacity() const { return FogProcess->FogConstants.FogMaxOpacity; }
+
+	inline void SetFogHeight(float Height) { FogProcess->FogConstants.FogHeight = Height; }
+	inline float GetFogHeight() const { return FogProcess->FogConstants.FogHeight; }
+
+	inline void SetFogInscatteringColor(const FLinearColor& Color) { FogProcess->FogConstants.FogInscatteringColor = Color; }
+	inline FLinearColor GetFogInscatteringColor() const { return FogProcess->FogConstants.FogInscatteringColor; }
+
+private:
+	inline static int32 FogComponentCount = 0;
+
+	FFogProcess* FogProcess;
 };

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Core.h"
 #include "Object.h"
 #include "Actor.h"
 #include "RenderInfo.h"

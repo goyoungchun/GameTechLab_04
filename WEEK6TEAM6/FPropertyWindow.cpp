@@ -132,6 +132,10 @@ void FPropertyWindow::Render(const FGuiReference& GuiReference)
 			{
 				RenderStaticMeshComponent(mSelectedComponent->Cast<UStaticMeshComponent>());
 			}
+			else if (mSelectedComponent->IsA<UHeightFogComponent>())
+			{
+				RenderHeightFogComponent(mSelectedComponent->Cast<UHeightFogComponent>());
+			}
 		}
 
 		if (mSelectedComponent != TargetComponent)
@@ -481,5 +485,50 @@ void FPropertyWindow::RenderStaticMeshComponent(UStaticMeshComponent* StaticMesh
 			StaticMeshComponent->SetUVOffset(i, UVOffset);
 		}
 		ImGui::PopID();
+	}
+}
+
+void FPropertyWindow::RenderHeightFogComponent(UHeightFogComponent* HeightFogComponent)
+{
+	float FogDensity = HeightFogComponent->GetFogDensity();
+	if (ImGui::DragFloat("Fog Density", &FogDensity, 0.01f, 0.0f, 1.0f))
+	{
+		HeightFogComponent->SetFogDensity(FogDensity);
+	}
+
+	float FogHeightFalloff = HeightFogComponent->GetFogHeightFalloff();
+	if (ImGui::DragFloat("Fog Height Falloff", &FogHeightFalloff, 0.01f, 0.0f, 1.0f))
+	{
+		HeightFogComponent->SetFogHeightFalloff(FogHeightFalloff);
+	}
+
+	float FogStartDistance = HeightFogComponent->GetFogStartDistance();
+	if (ImGui::DragFloat("Fog Start Distance", &FogStartDistance, 1.0f, 0.0f, 10000.0f))
+	{
+		HeightFogComponent->SetFogStartDistance(FogStartDistance);
+	}
+
+	float FogCutoffDistance = HeightFogComponent->GetFogCutoffDistance();
+	if (ImGui::DragFloat("Fog Cutoff Distance", &FogCutoffDistance, 1.0f, 0.0f, 10000.0f))
+	{
+		HeightFogComponent->SetFogCutoffDistance(FogCutoffDistance);
+	}
+
+	float FogMaxOpacity = HeightFogComponent->GetFogMaxOpacity();
+	if (ImGui::DragFloat("Fog Max Opacity", &FogMaxOpacity, 0.01f, 0.0f, 1.0f))
+	{
+		HeightFogComponent->SetFogMaxOpacity(FogMaxOpacity);
+	}
+
+	float FogHeight = HeightFogComponent->GetFogHeight();
+	if (ImGui::DragFloat("Fog Height", &FogHeight, 1.0f, -10000.0f, 10000.0f))
+	{
+		HeightFogComponent->SetFogHeight(FogHeight);
+	}
+
+	FLinearColor FogInscatteringColor = HeightFogComponent->GetFogInscatteringColor();
+	if (ImGui::ColorPicker3("Fog Inscattering Color", &FogInscatteringColor.R, ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_DisplayHSV | ImGuiColorEditFlags_DisplayHex))
+	{
+		HeightFogComponent->SetFogInscatteringColor(FogInscatteringColor);
 	}
 }

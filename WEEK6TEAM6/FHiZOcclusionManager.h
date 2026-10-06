@@ -34,7 +34,7 @@ public:
 	// Called after opaque mesh pass in GraphicsManager::Render
 	void GenerateHiZAndDispatchCull(
 		URenderer* Renderer,
-		const TSharedPtr<FDepthStencil>& SceneDepthStencil,
+		FDepthStencil* SceneDepthStencil,
 		const FMatrix& ViewProjectionMatrix,
 		float NearZ = 0.1f,
 		float FarZ = 1000.0f

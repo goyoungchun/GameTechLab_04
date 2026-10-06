@@ -12,6 +12,7 @@ class UStaticMeshComponent;
 class FAssetManager;
 class USceneComponent;
 class UActorComponent;
+class UHeightFogComponent;
 
 class FPropertyWindow
 {
@@ -28,6 +29,7 @@ private:
 	void RenderSpotLightComponent(USpotLightComponent* spotLightComponent);
 	void RenderAtlasAnimationComponent(UAtlasAnimationComponent* atlasAnimationComponent);
 	void RenderStaticMeshComponent(UStaticMeshComponent* StaticMeshComponent);
+	void RenderHeightFogComponent(UHeightFogComponent* HeightFogComponent);
 
 private:
 	FAssetManager* mAssetManager;

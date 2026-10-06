@@ -12,6 +12,8 @@ enum class EShowFlag : uint64
 	Primitive         = 1ull << 3,
 	FrustumCulling    = 1ull << 4,
 	OcclusionCulling  = 1ull << 5,
+	SceneDepth		  = 1ull << 6,
+	Fog				  = 1ull << 7,
 };
 
 inline constexpr EShowFlag operator|(EShowFlag a, EShowFlag b)
@@ -31,7 +33,9 @@ inline constexpr FShowFlagInfo GShowFlagInfos[] =
 	{ EShowFlag::Grid,              "Grid"              },
 	{ EShowFlag::Primitive,         "Primitive"         },
 	{ EShowFlag::FrustumCulling,    "Frustum Culling"   },
-	{ EShowFlag::OcclusionCulling,  "Occlusion Culling" }
+	{ EShowFlag::OcclusionCulling,  "Occlusion Culling" },
+	{ EShowFlag::SceneDepth,        "Scene Depth" },
+	{ EShowFlag::Fog,               "Fog" }
 };
 
 class FShowFlags
@@ -69,7 +73,7 @@ private:
 	FShowFlags() = default;
 
 	static constexpr EShowFlag DEFAULT_FLAGS =
-		EShowFlag::WorldAxis | EShowFlag::UUIDText | EShowFlag::Grid | EShowFlag::Primitive | EShowFlag::FrustumCulling | EShowFlag::OcclusionCulling;
+		EShowFlag::WorldAxis | EShowFlag::UUIDText | EShowFlag::Grid | EShowFlag::Primitive | EShowFlag::FrustumCulling | EShowFlag::OcclusionCulling | EShowFlag::Fog;
 
 	uint64 mFlags = static_cast<uint64>(DEFAULT_FLAGS);
 };

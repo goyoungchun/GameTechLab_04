@@ -1,4 +1,6 @@
 #pragma once
+
+#include "Core.h"
 #include "FEngine.h"
 #include "SceneData.h"
 #include "TArray.h"

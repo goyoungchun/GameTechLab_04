@@ -302,11 +302,14 @@ void UWorld::Render(float deltaTime, FRenderCollector& outCollector)
 					for (int32 i = 0; i < CurrentNode->ItemRange.Count; ++i)
 					{
 						int32 EntryIndex = CurrentNode->ItemRange.Offset + i;
+
+#if ENABLE_OCCULSION_CULLING
 						if (bOcclusionEnabled && FHiZOcclusionManager::Get().IsOccluded(EntryIndex))
 						{
 							FHiZOcclusionManager::Get().IncrementCulledCount();
 							continue;
 						}
+#endif
 
 						UPrimitiveComponent* Object = mBVH.GetPayload(EntryIndex);
 						if (Object && Object->GetRenderProxy())

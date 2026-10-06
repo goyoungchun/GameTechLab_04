@@ -21,6 +21,7 @@ class FWorldContext;
 struct FEditorViewportClient;
 struct FEditorLayout;
 struct FEditorViewport;
+struct FShader;
 
 struct FGuiReference
 {
@@ -58,6 +59,12 @@ private:
 private:
 	static constexpr float BottomBarHeight = 30.0f;
 	
+	struct FDepthPreviewData
+	{
+		ID3D11DeviceContext* Context;
+		ID3D11PixelShader* Shader;
+	};
+
 	URenderer& mRenderer;
 
 	FContentBrowser mContentBrowser;

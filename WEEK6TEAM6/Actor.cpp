@@ -55,7 +55,6 @@ void AActor::Serialize(FArchive& Ar)
 
 	Ar << RootComponentIndex;
 	Ar << ComponentsArray;
-	Ar << Name;
 }
 
 void AActor::Deserialize(FArchive& Ar)
@@ -82,8 +81,6 @@ void AActor::Deserialize(FArchive& Ar)
 		}
 		mComponents.Add(Component);
 	}
-
-	Ar << Name;
 }
 
 void AActor::SerializeClass(json::JSON& outJson) const

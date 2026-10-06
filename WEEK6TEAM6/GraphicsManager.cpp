@@ -16,12 +16,14 @@
 // 선분 하나당 정점 2개. 축 6개 + 앞으로 붙을 그리드까지 감당할 만큼 잡아둔다
 static constexpr uint32 LINE_VERTEX_CAPACITY = 8192;
 
-FGraphicsManager::FGraphicsManager(HWND hWindow) :
-	mbPerspectiveProjection(true)
+FGraphicsManager::FGraphicsManager(HWND hWindow) 
+	: mbPerspectiveProjection(true)
 	, mProjectionRatio(1.0f)
 {
 	mRenderer = new URenderer;
 	mRenderer->Create(hWindow);
+
+	mRenderGraph.Initialize(*mRenderer);
 
 	mAspect = mRenderer->GetWidth() / static_cast<float>(mRenderer->GetHeight());
 
@@ -76,7 +78,7 @@ FGraphicsManager::~FGraphicsManager()
 	delete mRenderer;
 }
 
-void FGraphicsManager::Prepare(const FCamera* mCamera, float viewportWidth, float viewportHeight, const FViewport& Viewport, const EViewModeIndex InViewMode, const EViewportType InViewportType)
+void FGraphicsManager::Prepare(const FCamera* mCamera, float Aspect, const FMatrix& ViewProjection, const FMatrix& InvViewProjection, FViewport& Viewport, const EViewModeIndex InViewMode, const EViewportType InViewportType)
 {
 	//PROFILE_SCOPE("Viewport/Prepare");
 
@@ -84,17 +86,17 @@ void FGraphicsManager::Prepare(const FCamera* mCamera, float viewportWidth, floa
 	const bool bIsOrtho = (InViewportType != EViewportType::Perspective);
 
 	float d = mCamera->mOrthoDistance;
-	mAspect = viewportWidth / viewportHeight;
+	mAspect = Aspect;
 
 	FMatrix view = mCamera->GetViewMatrix();
-	FMatrix projection_u_p = mCamera->GetUnifiedProjectionMatrix(d, 1.0f);
 	FMatrix projection_u_o = mCamera->GetUnifiedProjectionMatrix(d, 0.0f);
 	FMatrix projection_u = mCamera->GetUnifiedProjectionMatrix(d, bIsOrtho ? 0.0f : mProjectionRatio);
 
-	//mViewProjectionMatrix = view * mCamera->GetProjectionMatrix(mAspect, mCamera->mFovDegree, nearZ, farZ);
 	mViewMatrix = view;
 	mProjectionMatrix = projection_u;
-	mViewProjectionMatrix = view * projection_u_p;
+	mViewProjectionMatrix = ViewProjection;
+	mInvViewProjectionMatrix = InvViewProjection;
+	mViewport = &Viewport;
 
 	// 뷰 모드를 렌더러에 전달한다. BindPipeline이 드로우마다 이 값을 보고
 	// 솔리드/와이어프레임 래스터라이저를 고른다.
@@ -122,7 +124,7 @@ void FGraphicsManager::Prepare(const FCamera* mCamera, float viewportWidth, floa
 	// NearCube(주황)가 앞에 남고, 꺼져 있으면 FarCube(파랑)가 그 위를 덮어쓴다.
 	//mRenderer->UpdateConstantViewProjection(viewProjection);
 
-	mRenderer->BindRenderTarget(Viewport.RenderTarget, Viewport.DepthStencil);
+	mRenderer->BindRenderTarget(Viewport.GetFrontRenderTarget(), Viewport.GetDepthStencil());
 }
 
 void FGraphicsManager::RenderHighLight(const TArray<UPrimitiveComponent*>& Primitives)
@@ -134,8 +136,8 @@ void FGraphicsManager::RenderHighLight(const TArray<UPrimitiveComponent*>& Primi
 		return;
 	}
 
-	TSharedPtr<FRenderTarget2D> CurrentRenderTarget = mRenderer->GetBindedRenderTarget();
-	TSharedPtr<FDepthStencil> CurrentDepthStencil = mRenderer->GetBindedDepthStencil();
+	FRenderTarget2D* CurrentRenderTarget = mRenderer->GetBindedRenderTarget();
+	FDepthStencil* CurrentDepthStencil = mRenderer->GetBindedDepthStencil();
 
 	if (CurrentDepthStencil == nullptr)
 	{
@@ -187,7 +189,7 @@ void FGraphicsManager::RenderHighLight(const TArray<UPrimitiveComponent*>& Primi
 
 	// Draw Pass: 잠시 DepthStencil을 해제
 	mRenderer->BindRenderTarget(CurrentRenderTarget, nullptr, false);
-	mHighlightDrawPipeline->SetShaderResource(0, CurrentDepthStencil->SRV);
+	mHighlightDrawPipeline->SetShaderResource(0, CurrentDepthStencil->StencilSRV);
 
 	// Draw Pass: 스텐실에 마크가 찍힌 영역만 그린다.
 	FOutlineConstants OutlineConstants{};
@@ -207,6 +209,13 @@ void FGraphicsManager::RenderHighLight(const TArray<UPrimitiveComponent*>& Primi
 
 void FGraphicsManager::Render()
 {
+	mRenderGraph.Clear();
+
+	FRGTextureRef FrontRenderTargetHandle = mRenderGraph.RegisterExternalTexture(mViewport->GetFrontRenderTarget());
+	FRGTextureRef BackRenderTargetHandle = mRenderGraph.RegisterExternalTexture(mViewport->GetBackRenderTarget());
+	FRGTextureRef DepthStencilHandle = mRenderGraph.RegisterExternalTexture(mViewport->GetDepthStencil());
+
+	// TODO: 후에 아래 코드들을 ScenePass로 옮기고, ScenePass에서 RenderCollector를 받아서 처리하도록 한다.
     PROFILE_SCOPE("Viewport/GraphicsRender");
     {
         PROFILE_SCOPE("Viewport/GraphicsRender/RenderLines");
@@ -259,16 +268,18 @@ void FGraphicsManager::Render()
 		}
 	}
 	
+#if ENABLE_OCCULSION_CULLING
 	// Hi-Z Occlusion Culling: Downsamples depth buffer into Hi-Z pyramid and tests scene AABBs
 	if (FShowFlags::Get().IsEnabled(EShowFlag::OcclusionCulling) && mViewportType == EViewportType::Perspective)
 	{
 		PROFILE_SCOPE("Viewport/GraphicsRender/HiZOcclusion");
-		TSharedPtr<FDepthStencil> CurrentDepthStencil = mRenderer->GetBindedDepthStencil();
+		FDepthStencil* CurrentDepthStencil = mRenderer->GetBindedDepthStencil();
 		if (CurrentDepthStencil)
 		{
 			FHiZOcclusionManager::Get().GenerateHiZAndDispatchCull(mRenderer, CurrentDepthStencil, mViewUnifiedProjectionMatrix, mCameraNear, mCameraFar);
 		}
 	}
+#endif
 
 	{
 		PROFILE_SCOPE("Viewport/GraphicsRender/RenderQuad");
@@ -278,38 +289,75 @@ void FGraphicsManager::Render()
 			mRenderer->RenderQuad(QuadInfo);
 		}
 
-		if (FShowFlags::Get().IsEnabled(EShowFlag::Grid))
-		{
-			FMatrix GridWorldMatrix = FMatrix::Identity;
-
-			if (mViewportType == EViewportType::Front)
-			{
-				GridWorldMatrix = FMatrix::RotateY(90);
-			}
-			else if (mViewportType == EViewportType::Side)
-			{
-				GridWorldMatrix = FMatrix::RotateX(90);
-			}
-
-			// Match the grid's world-space half-width of 0.001.
-			mRenderer->RenderWorldAxis(mViewMatrix, mProjectionMatrix, FVector4(0.f, 0.f, 1.f, 1.f), FVector3(0.f, 0.f, 1.f), 0.002f);
-			mRenderer->RenderWorldGrid(GridWorldMatrix * mViewUnifiedProjectionMatrix, mCameraLocation, GridGap);
-		}
-
 		for (const FRenderQuadInfo& QuadInfo : mRenderCollector.GetTransparentQuadInfos())
 		{
 			mRenderer->RenderQuad(QuadInfo);
 		}
+	}
 
-		for (const FRenderQuadInfo& QuadInfo : mRenderCollector.GetOverlayQuadInfos())
+	// mFogProcess.SetEnabled(FShowFlags::Get().IsEnabled(EShowFlag::Fog));
+	mDepthPreviewProcess.SetEnabled(FShowFlags::Get().IsEnabled(EShowFlag::SceneDepth));
+
+	FPostProcess* PostProcesses[] = { 
+		&mFogProcess,
+		&mDepthPreviewProcess
+	};
+
+	FPostProcessContext PostProcessContext;
+	PostProcessContext.ViewProjectionMatrix = mViewProjectionMatrix;
+	PostProcessContext.InvViewProjectionMatrix = mInvViewProjectionMatrix;
+	PostProcessContext.ViewPosition = mCameraLocation;
+	PostProcessContext.NearPlane = mCameraNear;
+	PostProcessContext.FarPlane = mCameraFar;
+
+	for (FPostProcess* PostProcess : PostProcesses)
+	{
+		if (!PostProcess->IsEnabled())
 		{
-			mRenderer->RenderQuad(QuadInfo);
+			continue;
 		}
 
-		for (const FRenderQuad2DInfo& Quad2DInfo : mRenderCollector.GetQuad2DInfos())
+		FPostProcessInputs PostProcessInputs;
+		PostProcessInputs.InputColorTexture = FrontRenderTargetHandle;
+		PostProcessInputs.InputDepthTexture = DepthStencilHandle;
+		PostProcessInputs.OverrideOutputTexture = BackRenderTargetHandle;
+
+		PostProcess->AddPasses(mRenderGraph, PostProcessInputs, PostProcessContext);
+
+		std::swap(FrontRenderTargetHandle, BackRenderTargetHandle);
+		mViewport->Swap();
+	}
+
+	mRenderGraph.Execute();
+
+	mRenderer->BindRenderTarget(mViewport->GetFrontRenderTarget(), mViewport->GetDepthStencil(), false);
+
+	if (FShowFlags::Get().IsEnabled(EShowFlag::Grid))
+	{
+		FMatrix GridWorldMatrix = FMatrix::Identity;
+
+		if (mViewportType == EViewportType::Front)
 		{
-			mRenderer->RenderQuad2D(Quad2DInfo);
+			GridWorldMatrix = FMatrix::RotateY(90);
 		}
+		else if (mViewportType == EViewportType::Side)
+		{
+			GridWorldMatrix = FMatrix::RotateX(90);
+		}
+
+		// Match the grid's world-space half-width of 0.001.
+		mRenderer->RenderWorldAxis(mViewMatrix, mProjectionMatrix, FVector4(0.f, 0.f, 1.f, 1.f), FVector3(0.f, 0.f, 1.f), 0.002f);
+		mRenderer->RenderWorldGrid(GridWorldMatrix * mViewUnifiedProjectionMatrix, mCameraLocation, GridGap);
+	}
+
+	for (const FRenderQuadInfo& QuadInfo : mRenderCollector.GetOverlayQuadInfos())
+	{
+		mRenderer->RenderQuad(QuadInfo);
+	}
+
+	for (const FRenderQuad2DInfo& Quad2DInfo : mRenderCollector.GetQuad2DInfos())
+	{
+		mRenderer->RenderQuad2D(Quad2DInfo);
 	}
 }
 

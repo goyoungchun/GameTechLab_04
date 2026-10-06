@@ -9,6 +9,7 @@
 #include "GraphicsManager.h"
 #include "Camera.h"
 #include "FInstrumentor.h"
+#include "ShowFlags.h"
 
 FEditorUIManager::FEditorUIManager(URenderer& InRenderer)
 	: mRenderer(InRenderer)
@@ -100,102 +101,109 @@ void FEditorUIManager::Render(FGuiReference& GuiReference)
 			FEditorViewport* EditorViewport = &GuiReference.Viewports[i];
 
 			FRect DrawRect = EditorViewport->Window->Rect;
-			if (DrawRect.Width > 0 && DrawRect.Height > 0)
+			if (DrawRect.Width <= 0 || DrawRect.Height <= 0)
 			{
-				ImGui::SetCursorScreenPos(ImVec2(DrawRect.X, DrawRect.Y));
-
-				bool bHovered = ImGui::IsMouseHoveringRect(ImVec2(DrawRect.X, DrawRect.Y),
-					ImVec2(DrawRect.X + DrawRect.Width, DrawRect.Y + DrawRect.Height))
-					&& !ImGui::IsPopupOpen("", ImGuiPopupFlags_AnyPopupId);		// 팝업창, 콤보 드롭다운 등 열리면 false
-				const ImGuiViewport* MainViewport = ImGui::GetMainViewport();
-                const float Bottom = MainViewport->WorkPos.y + MainViewport->WorkSize.y;
-                float BlockedTop = Bottom - BottomBarHeight;
-                if (mContentBrowser.IsDrawerOpen())
-                    BlockedTop -= mContentBrowser.GetDrawerHeight();
-                if (ConsoleWindow::Get().bIsDrawerOpen)
-                    BlockedTop = (std::min)(BlockedTop, Bottom - BottomBarHeight - ConsoleWindow::Get().GetDrawerHeight());
-                bHovered = bHovered && IO.MousePos.y < BlockedTop;
-                EditorViewport->Client->SetActive(bHovered);
-
-				const TSharedPtr<FRenderTarget2D>& RenderTarget = EditorViewport->Viewport->RenderTarget;
-				DrawList->AddImage((ImTextureID)(intptr_t)RenderTarget->SRV.Get(), ImVec2(DrawRect.X, DrawRect.Y), ImVec2(DrawRect.X + DrawRect.Width, DrawRect.Y + DrawRect.Height));
-
-				ImGui::PushID(CurrentViewportIndex);
-
-				const float ViewportTypeWidth = 95.0f;
-				const float ViewModeWidth = 85.0f;
-				const float MaximizeButtonWidth = 28.0f;
-				const float SplitButtonWidth = 28.0f;
-
-				const float Spacing = ImGui::GetStyle().ItemSpacing.x;
-				const float MarginX = 8.0f;
-				const float MarginY = 4.0f;
-				const float ToolBarHeight = 28.0f;
-
-				const float ToolBarWidth = ViewportTypeWidth + ViewModeWidth + MaximizeButtonWidth + SplitButtonWidth + (Spacing * 3.0f) + MarginX;
-				const float StartCursorPos = DrawRect.X + DrawRect.Width - ToolBarWidth;
-				const float ItemHeight = 22.0f;
-
-				DrawList->AddRectFilled(ImVec2(DrawRect.X, DrawRect.Y), ImVec2(DrawRect.X + DrawRect.Width, DrawRect.Y + ToolBarHeight), IM_COL32(30, 30, 30, 180));
-
-				ImGui::SetCursorScreenPos(ImVec2(StartCursorPos, DrawRect.Y + MarginY));
-
-				ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 255));
-				ImGui::PushStyleColor(ImGuiCol_FrameBg, IM_COL32(15, 15, 15, 230));
-				ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, IM_COL32(45, 45, 45, 240));
-				ImGui::PushStyleColor(ImGuiCol_FrameBgActive, IM_COL32(60, 60, 60, 255));
-
-				ImGui::PushStyleColor(ImGuiCol_PopupBg, IM_COL32(20, 20, 20, 250));
-				ImGui::PushStyleColor(ImGuiCol_Header, IM_COL32(50, 50, 50, 255));
-				ImGui::PushStyleColor(ImGuiCol_HeaderHovered, IM_COL32(75, 75, 75, 255));
-
-				ImGui::PushStyleColor(ImGuiCol_Button, IM_COL32(15, 15, 15, 230));
-				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(55, 55, 55, 240));
-				ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(80, 80, 80, 255));
-
-				ImGui::SetNextItemWidth(100.0f);
-
-				const char* ViewportTypeNames[] = { "Perspective", "Top", "Front", "Side" };
-				int32 CurrentTypeIndex = static_cast<int32>(EditorViewport->Client->GetViewportType());
-
-				if (ImGui::Combo("##ViewportType", &CurrentTypeIndex, ViewportTypeNames, IM_ARRAYSIZE(ViewportTypeNames)))
-				{
-					EditorViewport->Client->SetViewportType(static_cast<EViewportType>(CurrentTypeIndex));
-				}
-
-				ImGui::SameLine();
-
-				ImGui::SetNextItemWidth(80.0f);
-
-				const char* ViewModeNames[] = { "Lit", "UnLit", "Wireframe" };
-				int32 CurrentModeIndex = static_cast<int32>(EditorViewport->Client->GetViewMode());
-
-				if (ImGui::Combo("##ViewMode", &CurrentModeIndex, ViewModeNames, IM_ARRAYSIZE(ViewModeNames)))
-				{
-					EditorViewport->Client->SetViewMode(static_cast<EViewModeIndex>(CurrentModeIndex));
-				}
-
-				ImGui::SameLine();
-
-				if (ImGui::Button("##Maximize", ImVec2(MaximizeButtonWidth, ItemHeight)))
-				{
-					GuiReference.EditorLayout->MaximizedViewportIndex = CurrentViewportIndex;
-					GuiReference.EditorLayout->bIsSplitView = false;
-				}
-				FEditorIconUtils::DrawMaximizeButtonIcon(DrawList);
-
-				ImGui::SameLine();
-
-				if (ImGui::Button("##Split", ImVec2(MaximizeButtonWidth, ItemHeight)))
-				{
-					GuiReference.EditorLayout->bIsSplitView = true;
-				}
-				FEditorIconUtils::DrawSplitButtonIcon(DrawList);
-
-				ImGui::PopStyleColor(10);
-				ImGui::PopID();
-				ImGui::Dummy(ImVec2(DrawRect.Width, DrawRect.Height));
+				continue;
 			}
+
+			ImGui::SetCursorScreenPos(ImVec2(DrawRect.X, DrawRect.Y));
+
+			bool bHovered = ImGui::IsMouseHoveringRect(ImVec2(DrawRect.X, DrawRect.Y), ImVec2(DrawRect.X + DrawRect.Width, DrawRect.Y + DrawRect.Height)) && !ImGui::IsPopupOpen("", ImGuiPopupFlags_AnyPopupId); // 팝업창, 콤보 드롭다운 등 열리면 false
+			const ImGuiViewport* MainViewport = ImGui::GetMainViewport();
+			const float Bottom = MainViewport->WorkPos.y + MainViewport->WorkSize.y;
+			float BlockedTop = Bottom - BottomBarHeight;
+
+			if (mContentBrowser.IsDrawerOpen())
+			{
+				BlockedTop -= mContentBrowser.GetDrawerHeight();
+			}
+
+			if (ConsoleWindow::Get().bIsDrawerOpen)
+			{
+				BlockedTop = (std::min)(BlockedTop, Bottom - BottomBarHeight - ConsoleWindow::Get().GetDrawerHeight());
+			}
+
+			bHovered = bHovered && IO.MousePos.y < BlockedTop;
+			EditorViewport->Client->SetActive(bHovered);
+
+			FRenderTarget2D* RenderTarget = EditorViewport->Viewport->GetFrontRenderTarget();
+			DrawList->AddImage((ImTextureID)(intptr_t)RenderTarget->SRV.Get(), ImVec2(DrawRect.X, DrawRect.Y), ImVec2(DrawRect.X + DrawRect.Width, DrawRect.Y + DrawRect.Height));
+
+			ImGui::PushID(CurrentViewportIndex);
+
+			const float ViewportTypeWidth = 95.0f;
+			const float ViewModeWidth = 85.0f;
+			const float MaximizeButtonWidth = 28.0f;
+			const float SplitButtonWidth = 28.0f;
+
+			const float Spacing = ImGui::GetStyle().ItemSpacing.x;
+			const float MarginX = 8.0f;
+			const float MarginY = 4.0f;
+			const float ToolBarHeight = 28.0f;
+
+			const float ToolBarWidth = ViewportTypeWidth + ViewModeWidth + MaximizeButtonWidth + SplitButtonWidth + (Spacing * 3.0f) + MarginX;
+			const float StartCursorPos = DrawRect.X + DrawRect.Width - ToolBarWidth;
+			const float ItemHeight = 22.0f;
+
+			DrawList->AddRectFilled(ImVec2(DrawRect.X, DrawRect.Y), ImVec2(DrawRect.X + DrawRect.Width, DrawRect.Y + ToolBarHeight), IM_COL32(30, 30, 30, 180));
+
+			ImGui::SetCursorScreenPos(ImVec2(StartCursorPos, DrawRect.Y + MarginY));
+
+			ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 255));
+			ImGui::PushStyleColor(ImGuiCol_FrameBg, IM_COL32(15, 15, 15, 230));
+			ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, IM_COL32(45, 45, 45, 240));
+			ImGui::PushStyleColor(ImGuiCol_FrameBgActive, IM_COL32(60, 60, 60, 255));
+
+			ImGui::PushStyleColor(ImGuiCol_PopupBg, IM_COL32(20, 20, 20, 250));
+			ImGui::PushStyleColor(ImGuiCol_Header, IM_COL32(50, 50, 50, 255));
+			ImGui::PushStyleColor(ImGuiCol_HeaderHovered, IM_COL32(75, 75, 75, 255));
+
+			ImGui::PushStyleColor(ImGuiCol_Button, IM_COL32(15, 15, 15, 230));
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(55, 55, 55, 240));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(80, 80, 80, 255));
+
+			ImGui::SetNextItemWidth(100.0f);
+
+			const char* ViewportTypeNames[] = { "Perspective", "Top", "Front", "Side" };
+			int32 CurrentTypeIndex = static_cast<int32>(EditorViewport->Client->GetViewportType());
+
+			if (ImGui::Combo("##ViewportType", &CurrentTypeIndex, ViewportTypeNames, IM_ARRAYSIZE(ViewportTypeNames)))
+			{
+				EditorViewport->Client->SetViewportType(static_cast<EViewportType>(CurrentTypeIndex));
+			}
+
+			ImGui::SameLine();
+
+			ImGui::SetNextItemWidth(80.0f);
+
+			const char* ViewModeNames[] = { "Lit", "UnLit", "Wireframe" };
+			int32 CurrentModeIndex = static_cast<int32>(EditorViewport->Client->GetViewMode());
+
+			if (ImGui::Combo("##ViewMode", &CurrentModeIndex, ViewModeNames, IM_ARRAYSIZE(ViewModeNames)))
+			{
+				EditorViewport->Client->SetViewMode(static_cast<EViewModeIndex>(CurrentModeIndex));
+			}
+
+			ImGui::SameLine();
+
+			if (ImGui::Button("##Maximize", ImVec2(MaximizeButtonWidth, ItemHeight)))
+			{
+				GuiReference.EditorLayout->MaximizedViewportIndex = CurrentViewportIndex;
+				GuiReference.EditorLayout->bIsSplitView = false;
+			}
+			FEditorIconUtils::DrawMaximizeButtonIcon(DrawList);
+
+			ImGui::SameLine();
+
+			if (ImGui::Button("##Split", ImVec2(MaximizeButtonWidth, ItemHeight)))
+			{
+				GuiReference.EditorLayout->bIsSplitView = true;
+			}
+			FEditorIconUtils::DrawSplitButtonIcon(DrawList);
+
+			ImGui::PopStyleColor(10);
+			ImGui::PopID();
+			ImGui::Dummy(ImVec2(DrawRect.Width, DrawRect.Height));
 		}
 
 		if (GuiReference.EditorLayout->bIsSplitView)
@@ -209,12 +217,18 @@ void FEditorUIManager::Render(FGuiReference& GuiReference)
 			float SplitX = mViewportX + mViewportWidth * VerticalRatio;
 			float SplitY = mViewportY + mViewportHeight * HorizontalRatio;
 
+			bool bHoverSplitLine = false;
+
 			ImGui::SetCursorScreenPos(ImVec2(SplitX - SplitHandleThickness * 0.5f, mViewportY));
 			ImGui::InvisibleButton("##SplitVertical", ImVec2(SplitHandleThickness, mViewportHeight));
 			if (ImGui::IsItemActive())
 			{
 				VerticalRatio = (IO.MousePos.x - mViewportX) / mViewportWidth;
 				VerticalRatio = std::clamp(VerticalRatio, 0.1f, 0.9f);
+			}
+			if (ImGui::IsItemHovered())
+			{
+				bHoverSplitLine = true;
 			}
 
 			ImGui::SetCursorScreenPos(ImVec2(mViewportX, SplitY - SplitHandleThickness * 0.5f));
@@ -224,6 +238,10 @@ void FEditorUIManager::Render(FGuiReference& GuiReference)
 				HorizontalRatio = (IO.MousePos.y - mViewportY) / mViewportHeight;
 				HorizontalRatio = std::clamp(HorizontalRatio, 0.1f, 0.9f);
 			}
+			if (ImGui::IsItemHovered())
+			{
+				bHoverSplitLine = true;
+			}
 
 			SplitX = mViewportX + mViewportWidth * VerticalRatio;
 			SplitY = mViewportY + mViewportHeight * HorizontalRatio;
@@ -232,6 +250,11 @@ void FEditorUIManager::Render(FGuiReference& GuiReference)
 			DrawList->AddLine(ImVec2(mViewportX, SplitY), ImVec2(mViewportX + mViewportWidth, SplitY), ImColor(0.8f, 0.8f, 0.8f, 1.0f), SplitThickness);
 
 			GuiReference.EditorLayout->SetSplitRatios(HorizontalRatio, VerticalRatio);
+
+			if (bHoverSplitLine)
+			{
+				GEditor.SetMouseCursor(ImGuiMouseCursor_ResizeAll);
+			}
 		}
 	}
 	ImGui::End();

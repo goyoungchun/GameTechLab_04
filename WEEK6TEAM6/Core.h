@@ -15,6 +15,9 @@
 #define FUNC_SIG "FUNC_SIG unknown!"
 #endif
 
+// NOTE: 현재 Occlusion이 제대로 동작하지 않을 확률이 높아서 임시로 비활성화. (어떻게 만든거야...)
+#define ENABLE_OCCULSION_CULLING 0
+
 typedef char int8;
 typedef unsigned char uint8;
 typedef short int16;
