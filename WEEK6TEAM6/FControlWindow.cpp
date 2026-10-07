@@ -26,7 +26,10 @@ void FControlWindow::Render(const FGuiReference& GuiReference)
 	ImGui::Text("Hello Jungle World!");
 
 	RenderSpawnActorControl(GuiReference);
-	RenderSceneControl(GuiReference);
+	if (GuiReference.WorldContext->GetWorldType() == EWorldType::Editor)
+	{
+		RenderSceneControl(GuiReference);
+	}
 	RenderCameraControl(GuiReference);
 	RenderGizmoControl(GuiReference);
 	RenderPIEControl(GuiReference);
@@ -152,7 +155,6 @@ void FControlWindow::RenderSpawnActorControl(const FGuiReference& GuiReference)
 	}
 
 	/*Scene Control*/
-	ImGui::SeparatorText("Scene Control");
 
 	const std::filesystem::path sceneDirectory = std::filesystem::absolute(std::filesystem::path(kDefaultAssetsPath) / std::filesystem::path(kSceneDataDir));
 

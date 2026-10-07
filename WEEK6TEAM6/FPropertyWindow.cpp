@@ -220,7 +220,7 @@ void FPropertyWindow::RenderAddComponentPopup()
 
 			if (mSelectedComponent && mSelectedComponent->IsA<USceneComponent>())
 			{
-				NewComponent->SetupAttachment(mSelectedComponent->Cast<USceneComponent>());
+				NewComponent->SetupAttachment(mSelectedComponent->Cast<USceneComponent>(), false);
 			}
 
 			mSelectedActor->AddOwnedComponent(NewComponent);
@@ -234,7 +234,7 @@ void FPropertyWindow::RenderAddComponentPopup()
 
 			if (mSelectedComponent && mSelectedComponent->IsA<USceneComponent>())
 			{
-				NewComponent->SetupAttachment(mSelectedComponent->Cast<USceneComponent>());
+				NewComponent->SetupAttachment(mSelectedComponent->Cast<USceneComponent>(), false);
 			}
 
 			mSelectedActor->AddOwnedComponent(NewComponent);
@@ -587,7 +587,7 @@ void FPropertyWindow::RenderPointLightComponent(UPointLightComponent* PointLight
 	}
 
 	float RadiusFallOffInput = PointLightComponent->GetRadiusFallOff();
-	if (ImGui::DragFloat("Radius Falloff", &RadiusFallOffInput, 0.1f, 0.f, FLT_MAX, "%.3f", ImGuiSliderFlags_AlwaysClamp))
+	if (ImGui::DragFloat("Radius Falloff", &RadiusFallOffInput, 0.1f, 0.001f, FLT_MAX, "%.3f", ImGuiSliderFlags_AlwaysClamp))
 	{
 		PointLightComponent->SetRadiusFallOff(RadiusFallOffInput);
 	}
