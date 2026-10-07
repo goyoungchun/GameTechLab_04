@@ -131,6 +131,8 @@ TMap<FString, std::function<const FClassInfo* ()>> FObjectFactory::mClassInfoMap
 	{"USphereComponent", &USphereComponent::GetStaticClass },
 	{"ASpotLight", &ASpotLight::GetStaticClass },
 	{"USpotLightComponent", &USpotLightComponent::GetStaticClass },
+	{"AHeightFog", &AHeightFog::GetStaticClass },
+	{"UHeightFogComponent", &UHeightFogComponent::GetStaticClass },
 	{"UPlaneComponent", &UPlaneComponent::GetStaticClass },
 	{"UText3DComponent", &UText3DComponent::GetStaticClass },
 	{"UAtlasAnimationComponent", &UAtlasAnimationComponent::GetStaticClass },
