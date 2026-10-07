@@ -356,6 +356,7 @@ void FGraphicsManager::Render()
 	};
 
 	FPostProcessContext PostProcessContext;
+	PostProcessContext.ViewMatrix = mViewMatrix;
 	PostProcessContext.ViewProjectionMatrix = mViewProjectionMatrix;
 	PostProcessContext.InvViewProjectionMatrix = mInvViewProjectionMatrix;
 	PostProcessContext.ViewPosition = mCameraLocation;

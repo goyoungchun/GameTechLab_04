@@ -27,6 +27,7 @@ private:
 	struct FFogConstants
 	{
 		FMatrix InvViewProjectionMatrix;
+		FMatrix ViewMatrix;
 		FVector ViewPosition;
 		float FogDensity = 0.2f;
 		FLinearColor FogInscatteringColor = FLinearColor(0.5f, 0.5f, 0.5f, 1.0f);

@@ -1,6 +1,7 @@
 cbuffer Constants : register(b0)
 {
     row_major matrix inv_view_proj;
+    row_major matrix view;
     float3 view_position;
     float fog_density;
     float4 fog_incattering_color;
@@ -65,11 +66,12 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
 
     float4 world_position = mul(clip_position, inv_view_proj);
     world_position.xyz /= world_position.w;
+    float4 pixel_view_position = mul(world_position, view);
     
     float3 V = world_position.xyz - view_position;
     
     float distance_to_camera = length(V);
-    if (distance_to_camera <= max(start_distance, 0.0) || distance_to_camera < 0.0001 || distance_to_camera > fog_cutoff_distance)
+    if (distance_to_camera <= max(start_distance, 0.0) || distance_to_camera < 0.0001 || pixel_view_position.z > fog_cutoff_distance)
     {
         return color;
     }

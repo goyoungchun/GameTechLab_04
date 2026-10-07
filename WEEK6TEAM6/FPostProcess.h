@@ -14,6 +14,7 @@ struct FPostProcessInputs
 
 struct FPostProcessContext
 {
+    FMatrix ViewMatrix;
 	FMatrix ViewProjectionMatrix;
 	FMatrix InvViewProjectionMatrix;
     FVector ViewPosition;

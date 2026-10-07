@@ -31,6 +31,7 @@ FRGTextureRef FFogProcess::AddPasses(FRenderGraph& RenderGraph, const FPostProce
 		RenderTarget.Height = OutputTexture.Texture->Height;
 
 		FogConstants.InvViewProjectionMatrix = Context.InvViewProjectionMatrix;
+		FogConstants.ViewMatrix = Context.ViewMatrix;
 		FogConstants.ViewPosition = Context.ViewPosition;
 
 		FogPipeline->SetShaderResource(0, InputColorTexture.SRV);
