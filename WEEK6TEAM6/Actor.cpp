@@ -228,8 +228,32 @@ void AActor::CreateEditorComponents()
 	{
 		Text3DComponent->SetupAttachment(mRootComponent, false);
 	}
-	
+
 	AddOwnedComponent(Text3DComponent);
+
+	TArray<UPointLightComponent*> PointLightComponents;
+	for (UActorComponent* Component : mComponents)
+	{
+		UPointLightComponent* PointLightComponent = Component->Cast<UPointLightComponent>();
+		if (PointLightComponent)
+		{
+			PointLightComponents.Add(PointLightComponent);
+		}
+	}
+
+	for (UPointLightComponent* PointLightComponent : PointLightComponents)
+	{
+		UBillboardComponent* BillboardComponent = CreateDefaultSubobject<UBillboardComponent>(FName("PointLightIcon"));
+		BillboardComponent->SetTexture(FAssetManager::Get().GetAssetAs<FTexture2DAsset>(BuiltInAssetID::PointLightIcon, true));
+		BillboardComponent->SetBlendState(ERenderBlendMode::Transparent);
+		BillboardComponent->SetDepthState(false, false);
+		BillboardComponent->SetEditorOnly(true);
+		BillboardComponent->SetDoNotSerialize(true);
+		BillboardComponent->SetVisualizeProxy(true);
+		BillboardComponent->SetupAttachment(PointLightComponent, false);
+
+		AddOwnedComponent(BillboardComponent);
+	}
 }
 
 const FTransform& AActor::GetTransform() const
