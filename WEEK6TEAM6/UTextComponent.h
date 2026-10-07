@@ -613,24 +613,6 @@ public:
 		SetRootComponent(SpotLightComponent);
 	}
 
-	void DeserializeClass(const json::JSON& inJson) override
-	{
-		Super::DeserializeClass(inJson);
-
-		for (UActorComponent* Component : GetComponents())
-		{
-			UBillboardComponent* BillboardComponent = Component->Cast<UBillboardComponent>();
-
-			if (!BillboardComponent)
-			{
-				continue;
-			}
-
-			BillboardComponent->SetBlendState(ERenderBlendMode::Transparent);
-			BillboardComponent->SetDepthState(true, false);
-		}
-	}
-
 	void CreateEditorComponents() override
 	{
 		UBillboardComponent* BillboardComponent = CreateDefaultSubobject<UBillboardComponent>(FName("SpotLightIcon"));
@@ -644,7 +626,7 @@ public:
 		USceneComponent* RootComp = GetRootComponent();
 		if (RootComp)
 		{
-			BillboardComponent->SetupAttachment(RootComp);
+			BillboardComponent->SetupAttachment(RootComp, false);
 		}
 
 		AddOwnedComponent(BillboardComponent);
@@ -720,24 +702,6 @@ public:
 	{
 		UHeightFogComponent* HeightFogComponent = CreateDefaultSubobject<UHeightFogComponent>(FName("HeightFogComponent"));
 		SetRootComponent(HeightFogComponent);
-	}
-
-	void DeserializeClass(const json::JSON& inJson) override
-	{
-		Super::DeserializeClass(inJson);
-
-		for (UActorComponent* Component : GetComponents())
-		{
-			UBillboardComponent* BillboardComponent = Component->Cast<UBillboardComponent>();
-
-			if (!BillboardComponent)
-			{
-				continue;
-			}
-
-			BillboardComponent->SetBlendState(ERenderBlendMode::Transparent);
-			BillboardComponent->SetDepthState(true, false);
-		}
 	}
 
 	void CreateEditorComponents() override

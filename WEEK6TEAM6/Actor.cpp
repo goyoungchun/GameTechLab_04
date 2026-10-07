@@ -109,6 +109,11 @@ void AActor::DeserializeClass(const json::JSON& inJson)
 {
 	UObject::DeserializeClass(inJson);
 
+	while (!mComponents.IsEmpty())
+	{
+		FObjectFactory::DestroyObject(mComponents.Last());
+	}
+
 	const json::JSON& propertiesJson = inJson.at("Properties");
 
 	if (!propertiesJson.hasKey("mComponents") || propertiesJson.at("mComponents").JSONType() != json::JSON::Class::Array)
