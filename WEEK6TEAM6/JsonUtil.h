@@ -6,6 +6,8 @@
 #include "FGuid.h"
 #include "enum.h"
 #include "TArray.h"
+#include "FName.h"
+#include "TMap.h"
 
 namespace JsonUtils
 {
@@ -15,6 +17,7 @@ namespace JsonUtils
 	json::JSON ToJson(const FRotator& Rotator);
 	json::JSON ToJson(const EPrimitive& Primitive);
 	json::JSON ToJson(const FGuid& Guid);
+	json::JSON ToJson(const FName& Name);
 
 	template <typename T>
 	inline json::JSON ToJson(const TArray<T>& Array)
@@ -32,6 +35,39 @@ namespace JsonUtils
 			}
 		}
 		return jsonArray;
+	}
+
+	template <typename TKey, typename TValue>
+	inline json::JSON ToJson(const TMap<TKey, TValue>& Map)
+	{
+		auto Entries = json::JSON::Make(json::JSON::Class::Array);
+
+		for (const auto& [Key, Value] : Map)
+		{
+			auto Entry = json::JSON::Make(json::JSON::Class::Object);
+
+			if constexpr (std::is_arithmetic_v<TKey>)
+			{
+				Entry["Key"] = Key;
+			}
+			else
+			{
+				Entry["Key"] = ToJson(Key);
+			}
+
+			if constexpr (std::is_arithmetic_v<TValue>)
+			{
+				Entry["Value"] = Value;
+			}
+			else
+			{
+				Entry["Value"] = ToJson(Value);
+			}
+
+			Entries.append(std::move(Entry));
+		}
+
+		return Entries;
 	}
 
 	template <typename T>
@@ -154,6 +190,17 @@ namespace JsonUtils
 		return FGuid(json.at("A").ToInt(), json.at("B").ToInt(), json.at("C").ToInt(), json.at("D").ToInt());
 	}
 
+	template <>
+	inline FName FromJson(const json::JSON& json)
+	{
+		if (json.JSONType() != json::JSON::Class::String)
+		{
+			throw std::runtime_error("Json String expected for FName");
+		}
+
+		return FName(json.ToString());
+	}
+
 	template <typename T>
 	inline void FromJson(const json::JSON& json, TArray<T>& array)
 	{
@@ -166,6 +213,23 @@ namespace JsonUtils
 		for (const auto& element : json.ArrayRange())
 		{
 			array.Add(FromJson<T>(element));
+		}
+	}
+
+	template <typename TKey, typename TValue>
+	inline void FromJson(const json::JSON& Json, TMap<TKey, TValue>& Map)
+	{
+		if (Json.JSONType() != json::JSON::Class::Array)
+		{
+			throw std::runtime_error("Json Array expected for TMap");
+		}
+
+		Map.Empty();
+		for (const auto& Element : Json.ArrayRange())
+		{
+			TKey Key = FromJson<TKey>(Element.at("Key"));
+			TValue Value = FromJson<TValue>(Element.at("Value"));
+			Map.Add(Key, Value);
 		}
 	}
 }

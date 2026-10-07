@@ -212,14 +212,14 @@ void FEditorEngine::Cleanup()
 	FEngine::Cleanup();
 }
 
-FWorldContext& FEditorEngine::GetEditorWorldContext()
+FWorldContext* FEditorEngine::GetEditorWorldContext()
 {
 	if (mEditorWorldContextIndex == -1)
 	{
-		throw std::runtime_error("No editor world context found.");
+		return nullptr;
 	}
 
-	return mWorldContexts[mEditorWorldContextIndex];
+	return &mWorldContexts[mEditorWorldContextIndex];
 }
 
 FWorldContext* FEditorEngine::GetPIEWorldContext()
@@ -458,7 +458,7 @@ void FEditorEngine::Render(float DeltaTime)
 	mGraphicsManager->EndGpuRenderTimer();
 
 	FGuiReference GuiReference;
-	GuiReference.WorldContext = mbIsPlayingInEditor ? GEditor.GetPIEWorldContext() : &GEditor.GetEditorWorldContext();
+	GuiReference.WorldContext = mbIsPlayingInEditor ? GEditor.GetPIEWorldContext() : GEditor.GetEditorWorldContext();
 	GuiReference.SceneManager = &GEditor;
 	GuiReference.GraphicsManager = mGraphicsManager;
 	GuiReference.FileManager = mFileManager;
@@ -637,17 +637,27 @@ void FEditorEngine::CreateNewMapForEditing()
 		UE_LOG_WARN("CreateNewMapForEditing: Cannot create a new map while in Play-In-Editor mode.");
 		return;
 	}
+	
+	FWorldContext* EditorWorldContext = GetEditorWorldContext();
+	if (!EditorWorldContext)
+	{
+		EditorWorldContext = CreateNewWorldContext(EWorldType::Editor);
+	}
+	else if (EditorWorldContext->mWorld)
+	{
+		UWorld::DestroyWorld(EditorWorldContext->mWorld);
+		EditorWorldContext->mWorld = nullptr;
+	}
 
-	EnqueuePendingTask([this] {
-		FWorldContext& EditorWorldContext = CreateNewWorldContext(EWorldType::Editor);
-		UWorld* EditorWorld = UWorld::CreateWorld(EWorldType::Editor);
-		EditorWorldContext.SetCurrentWorld(EditorWorld);
+	UWorld* EditorWorld = UWorld::CreateWorld(EWorldType::Editor);
+	EditorWorldContext->mWorld = EditorWorld;
 
-		for (FEditorViewport& Viewport : mViewports)
-		{
-			Viewport.Client->SetWorld(EditorWorld);
-		}
-	});
+	for (FEditorViewport& Viewport : mViewports)
+	{
+		Viewport.Client->SetWorld(EditorWorld);
+	}
+
+	ResetSelectedComponent();
 }
 
 void FEditorEngine::StartPIE()
@@ -658,23 +668,21 @@ void FEditorEngine::StartPIE()
 		return;
 	}
 
-	EnqueuePendingTask([this] {
-		UWorld* EditorWorld = GetEditorWorldContext().World();
+	UWorld* EditorWorld = GetEditorWorldContext()->World();
 
-		UWorld* PIEWorld = UWorld::DuplicateWorldForPIE(EditorWorld);
+	UWorld* PIEWorld = UWorld::DuplicateWorldForPIE(EditorWorld);
 
-		FWorldContext& NewWorldContext = CreateNewWorldContext(EWorldType::PIE);
-		NewWorldContext.SetCurrentWorld(PIEWorld);
+	FWorldContext* NewWorldContext = CreateNewWorldContext(EWorldType::PIE);
+	NewWorldContext->mWorld = PIEWorld;
 
-		for (FEditorViewport& Viewport : mViewports)
-		{
-			Viewport.Client->SetWorld(PIEWorld);
-		}
+	for (FEditorViewport& Viewport : mViewports)
+	{
+		Viewport.Client->SetWorld(PIEWorld);
+	}
 
-		// TODO: PIE 모드에서 필요한 초기화 작업을 수행합니다.
+	// TODO: PIE 모드에서 필요한 초기화 작업을 수행합니다.
 
-		mbIsPlayingInEditor = true;
-	});
+	mbIsPlayingInEditor = true;
 }
 
 void FEditorEngine::EndPIE()
@@ -684,26 +692,24 @@ void FEditorEngine::EndPIE()
 		UE_LOG_WARN("EndPIE: Not currently in Play-In-Editor mode.");
 		return;
 	}
+	
+	FWorldContext* Context = GetPIEWorldContext();
+	if (!Context)
+	{
+		return;
+	}
 
-	EnqueuePendingTask([this] {
-		FWorldContext* Context = GetPIEWorldContext();
-		if (!Context)
-		{
-			return;
-		}
+	// TODO: PIE 모드에서 필요한 정리 작업을 수행합니다.
 
-		// TODO: PIE 모드에서 필요한 정리 작업을 수행합니다.
+	DestroyWorldContext(Context);
 
-		DestroyWorldContext(Context);
+	FWorldContext* EditorWorldContext = GetEditorWorldContext();
+	for (FEditorViewport& Viewport : mViewports)
+	{
+		Viewport.Client->SetWorld(EditorWorldContext->World());
+	}
 
-		FWorldContext& EditorWorldContext = GetEditorWorldContext();
-		for (FEditorViewport& Viewport : mViewports)
-		{
-			Viewport.Client->SetWorld(EditorWorldContext.World());
-		}
-
-		mbIsPlayingInEditor = false;
-	});
+	mbIsPlayingInEditor = false;
 }
 
 void SaveMap(UWorld* World, FCamera* Camera, const std::filesystem::path& scenePath, const FFileManager& fileManager)
@@ -713,18 +719,12 @@ void SaveMap(UWorld* World, FCamera* Camera, const std::filesystem::path& sceneP
 	// 기존 파일이 있으면 Version을 유지한다.
 	try
 	{
-		const FString previousSceneString =
-			fileManager.ReadFileToString(scenePath);
+		const FString previousSceneString = fileManager.ReadFileToString(scenePath);
+		const json::JSON previousSceneJson = json::JSON::Load(previousSceneString);
 
-		const json::JSON previousSceneJson =
-			json::JSON::Load(previousSceneString);
-
-		if (previousSceneJson.hasKey("Version") &&
-			previousSceneJson.at("Version").JSONType() ==
-			json::JSON::Class::Integral)
+		if (previousSceneJson.hasKey("Version") && previousSceneJson.at("Version").JSONType() == json::JSON::Class::Integral)
 		{
-			version =
-				previousSceneJson.at("Version").ToInt();
+			version = previousSceneJson.at("Version").ToInt();
 		}
 	}
 	catch (const std::exception&)
@@ -753,11 +753,11 @@ void SaveMap(UWorld* World, FCamera* Camera, const std::filesystem::path& sceneP
 	fileManager.WriteStringToFile(scenePath, jsonString);
 }
 
-void LoadMap(FWorldContext& WorldContext, FCamera* Camera, const std::filesystem::path& scenePath, const FFileManager& fileManager)
+void LoadMap(UWorld* World, FCamera* Camera, const std::filesystem::path& scenePath, const FFileManager& fileManager)
 {
-	if (WorldContext.World() == nullptr)
+	if (World == nullptr)
 	{
-		throw std::runtime_error("World context does not have a valid world.");
+		throw std::runtime_error("World does not have a valid world.");
 	}
 
 	const FString jsonString = fileManager.ReadFileToString(scenePath);
@@ -779,7 +779,7 @@ void LoadMap(FWorldContext& WorldContext, FCamera* Camera, const std::filesystem
 
 	const json::JSON WorldJson = sceneJson.at("World");
 
-	WorldContext.World()->DeserializeClass(WorldJson);
+	World->DeserializeClass(WorldJson);
 
 	json::JSON PerspectiveCameraJson = sceneJson.at("PerspectiveCamera");
 	Camera->Transform.SetLocation(JsonUtils::FromJson<FVector>(PerspectiveCameraJson.at("Location")));

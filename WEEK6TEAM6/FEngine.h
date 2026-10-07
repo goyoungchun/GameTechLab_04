@@ -17,6 +17,7 @@ public:
 	void SetCurrentWorld(UWorld* InWorld);
 
 	inline UWorld* World() const { return mWorld; }
+	inline EWorldType GetWorldType() const { return mWorldType; }
 
 private:
 	friend class FEngine;
@@ -37,7 +38,7 @@ public:
 	virtual void Tick(float DeltaTime) = 0;
 	virtual void Render(float DeltaTime) = 0;
 
-	FWorldContext& CreateNewWorldContext(EWorldType WorldType);
+	FWorldContext* CreateNewWorldContext(EWorldType WorldType);
 	void DestroyWorldContext(FWorldContext* Context);
 	void DestroyWorldContext(UWorld* InWorld);
 

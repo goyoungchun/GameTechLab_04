@@ -173,9 +173,10 @@ void FControlWindow::RenderSceneControl(const FGuiReference& GuiReference)
 
 	if (ImGui::Button("New scene"))
 	{
-		GEditor.CreateNewMapForEditing();
-		GEditor.ResetSelectedComponent();
-		GuiReference.ViewportClient->Reset();
+		GEditor.EnqueuePendingTask([ViewportClient = GuiReference.ViewportClient]() {
+			GEditor.CreateNewMapForEditing();
+			ViewportClient->Reset();
+		});
 	}
 
 	ImGui::SameLine();
@@ -213,13 +214,17 @@ void FControlWindow::RenderSceneControl(const FGuiReference& GuiReference)
 		{
 			//std::filesystem::create_directories(sceneDirectory);
 
-			const std::optional<std::filesystem::path> selectedPath =
-				FNativeFileDialog::OpenScene(SceneDirectory);
+			const std::optional<std::filesystem::path> selectedPath = FNativeFileDialog::OpenScene(SceneDirectory);
 
 			// 취소한 경우에는 현재 씬과 카메라 상태를 건드리지 않는다.
 			if (selectedPath.has_value())
 			{
-				LoadMap(*GuiReference.WorldContext, GuiReference.EditorCamera, selectedPath.value(), *GuiReference.FileManager);
+				GEditor.EnqueuePendingTask([PrevWorld = GuiReference.WorldContext->World(), Camera = GuiReference.EditorCamera, selectedPath, FileManager = GuiReference.FileManager]() {
+					GEditor.CreateNewMapForEditing();
+					FWorldContext* NewWorldContext = GEditor.GetEditorWorldContext();
+					UWorld* NewWorld = NewWorldContext->World();
+					LoadMap(NewWorld, Camera, selectedPath.value(), *FileManager);
+				});
 
 				// 파일 로드가 실행된 뒤에만 카메라를 초기화한다.
 				GuiReference.ViewportClient->Reset();
@@ -425,14 +430,20 @@ void FControlWindow::RenderPIEControl(const FGuiReference& GuiReference)
 	ImGui::SeparatorText("Play In Editor");
 	if (ImGui::Button("Play"))
 	{
-		GEditor.StartPIE();
-		GEditor.ResetSelectedComponent();
+		GEditor.EnqueuePendingTask([ViewportClient = GuiReference.ViewportClient]() {
+			GEditor.StartPIE();
+			GEditor.ResetSelectedComponent();
+			ViewportClient->Reset();
+		});
 	}
 
 	ImGui::SameLine();
 	if (ImGui::Button("Stop"))
 	{
-		GEditor.EndPIE();
-		GEditor.ResetSelectedComponent();
+		GEditor.EnqueuePendingTask([ViewportClient = GuiReference.ViewportClient]() {
+			GEditor.EndPIE();
+			GEditor.ResetSelectedComponent();
+			ViewportClient->Reset();
+		});
 	}
 }

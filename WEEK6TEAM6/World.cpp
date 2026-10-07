@@ -87,26 +87,41 @@ UWorld::~UWorld()
 	FObjectFactory::DestroyObject(mLevel);
 }
 
-void UWorld::SerializeClass(json::JSON& outJson) const
+void UWorld::SerializeClass(json::JSON& OutJson) const
 {
-	UObject::SerializeClass(outJson);
+	Super::SerializeClass(OutJson);
+
 	json::JSON actorsJson = json::JSON::Make(json::JSON::Class::Array);
 
+	TMap<FGuid, FGuid> HierarchyMap;
 	for (const AActor* actor : mLevel->GetActors())
 	{
 		json::JSON actorJson;
 		actor->SerializeClass(actorJson);
+
+		for (UActorComponent* Component : actor->GetComponents())
+		{
+			USceneComponent* SceneComponent = Component->Cast<USceneComponent>();
+			if (!SceneComponent || !SceneComponent->HasParent() || !SceneComponent->ShouldSerialize())
+			{
+				continue;
+			}
+
+			HierarchyMap.Add(SceneComponent->GetUniqueID(), SceneComponent->GetParentComponent()->GetUniqueID());
+		}
+
 		actorsJson.append(std::move(actorJson));
 	}
 
-	outJson["Properties"]["mActors"] = actorsJson;
+	OutJson["Properties"]["mActors"] = actorsJson;
+	OutJson["Properties"]["mHierarchyMap"] = JsonUtils::ToJson(HierarchyMap);
 }
 
-void UWorld::DeserializeClass(const json::JSON& inJson)
+void UWorld::DeserializeClass(const json::JSON& InJson)
 {
-	UObject::DeserializeClass(inJson);
+	Super::DeserializeClass(InJson);
 
-	const json::JSON& propertiesJson = inJson.at("Properties");
+	const json::JSON& propertiesJson = InJson.at("Properties");
 
 	if (!propertiesJson.hasKey("mActors") || propertiesJson.at("mActors").JSONType() != json::JSON::Class::Array)
 	{
@@ -115,21 +130,50 @@ void UWorld::DeserializeClass(const json::JSON& inJson)
 
 	const json::JSON& actorsJson = propertiesJson.at("mActors");
 
-	for (const auto& actorJson : actorsJson.ArrayRange())
+	TMap<FGuid, USceneComponent*> ComponentMap;
+	for (const auto& ActorJson : actorsJson.ArrayRange())
 	{
-		if (!actorJson.hasKey("ClassName") || actorJson.at("ClassName").JSONType() != json::JSON::Class::String)
+		if (!ActorJson.hasKey("ClassName") || ActorJson.at("ClassName").JSONType() != json::JSON::Class::String)
 		{
 			throw std::runtime_error(std::format("{}: ClassName requires a string", GetClass()->Name));
 		}
-		FString className(actorJson.at("ClassName").ToString());
 
-		const FClassInfo* classInfo = FObjectFactory::GetClassInfoByName(className);
-		if (!classInfo)
+		FString className(ActorJson.at("ClassName").ToString());
+
+		const FClassInfo* ClassInfo = FObjectFactory::GetClassInfoByName(className);
+		if (!ClassInfo)
 		{
 			throw std::runtime_error(std::format("{}: Unknown class name: {}", GetClass()->Name, className));
 		}
-		AActor* actor = static_cast<AActor*>(FObjectFactory::LoadObject(classInfo, actorJson));
-		mLevel->AddActor(actor);
+
+		AActor* Actor = FObjectFactory::ConstructUnInitializedObject(ClassInfo)->Cast<AActor>();
+		Actor->DeserializeClass(ActorJson);
+
+		for (UActorComponent* Component : Actor->GetComponents())
+		{
+			USceneComponent* SceneComponent = Component->Cast<USceneComponent>();
+			if (SceneComponent)
+			{
+				ComponentMap.Add(SceneComponent->GetUniqueID(), SceneComponent);
+			}
+		}
+
+		mLevel->AddActor(Actor);
+	}
+
+	const json::JSON& HierarchyMapJson = propertiesJson.at("mHierarchyMap");
+
+	TMap<FGuid, FGuid> HierarchyMap;
+	JsonUtils::FromJson(HierarchyMapJson, HierarchyMap);
+	for (const auto& [Key, Value] : HierarchyMap)
+	{
+		USceneComponent* ChildComponent = *ComponentMap.Find(Key);
+		USceneComponent* ParentComponent = *ComponentMap.Find(Value);
+		if (!ChildComponent || !ParentComponent)
+		{
+			throw std::runtime_error(std::format("{}: Invalid hierarchy map entry: {} -> {}", GetClass()->Name, Key.ToString(), Value.ToString()));
+		}
+		ChildComponent->SetupAttachment(ParentComponent, false);
 	}
 }
 
@@ -348,6 +392,11 @@ UWorld* UWorld::CreateWorld(EWorldType WorldType)
 	UWorld* NewWorld = FObjectFactory::ConstructUnInitializedObject<UWorld>();
 	NewWorld->mWorldType = WorldType;
 	return NewWorld;
+}
+
+void  UWorld::DestroyWorld(UWorld* World)
+{
+	FObjectFactory::DestroyObject(World);
 }
 
 UWorld* UWorld::DuplicateWorldForPIE(UWorld* SourceWorld)

@@ -64,4 +64,9 @@ namespace JsonUtils
 		GuidJson["D"] = Guid.D;
 		return GuidJson;
 	}
+
+	json::JSON ToJson(const FName& Name)
+	{
+		return json::JSON(Name.ToString());
+	}
 }

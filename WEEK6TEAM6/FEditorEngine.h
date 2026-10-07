@@ -109,7 +109,7 @@ public:
 	virtual void Initialize(HINSTANCE hInstance, WNDPROC WndProc) override;
 	virtual void Cleanup() override;
 
-	FWorldContext& GetEditorWorldContext();
+	FWorldContext* GetEditorWorldContext();
 	FWorldContext* GetPIEWorldContext();
 
 	virtual void Tick(float DeltaTime) override;
@@ -158,4 +158,4 @@ private:
 extern FEditorEngine GEditor;
 
 void SaveMap(UWorld* World, FCamera* Camera, const std::filesystem::path& scenePath, const FFileManager& fileManager);
-void LoadMap(FWorldContext& WorldContext, FCamera* Camera, const std::filesystem::path& scenePath, const FFileManager& fileManager);
+void LoadMap(UWorld* World, FCamera* Camera, const std::filesystem::path& scenePath, const FFileManager& fileManager);

@@ -83,9 +83,10 @@ void AActor::Deserialize(FArchive& Ar)
 	}
 }
 
-void AActor::SerializeClass(json::JSON& outJson) const
+void AActor::SerializeClass(json::JSON& OutJson) const
 {
-	UObject::SerializeClass(outJson);
+	Super::SerializeClass(OutJson);
+
 	json::JSON componentsJson = json::JSON::Make(json::JSON::Class::Array);
 
 	for (const UActorComponent* component : mComponents)
@@ -100,8 +101,8 @@ void AActor::SerializeClass(json::JSON& outJson) const
 		componentsJson.append(std::move(componentJson));
 	}
 
-	outJson["Properties"]["mComponents"] = componentsJson;
-	outJson["Properties"]["mRootComponentUUID"] = mRootComponent ? mRootComponent->UUID : -1;
+	OutJson["Properties"]["mComponents"] = componentsJson;
+	OutJson["Properties"]["mRootComponent"] = JsonUtils::ToJson(mRootComponent ? mRootComponent->GetUniqueID() : FGuid());
 }
 
 void AActor::DeserializeClass(const json::JSON& inJson)
@@ -117,29 +118,28 @@ void AActor::DeserializeClass(const json::JSON& inJson)
 
 	const json::JSON& componentsJson = propertiesJson.at("mComponents");
 
-	for (const auto& componentJson : componentsJson.ArrayRange())
+	for (const auto& ComponentJson : componentsJson.ArrayRange())
 	{
-		if (!componentJson.hasKey("ClassName") || componentJson.at("ClassName").JSONType() != json::JSON::Class::String)
+		if (!ComponentJson.hasKey("ClassName") || ComponentJson.at("ClassName").JSONType() != json::JSON::Class::String)
 		{
 			throw std::runtime_error(std::format("{}: ClassName requires a string", GetClass()->Name));
 		}
-		FString className(componentJson.at("ClassName").ToString());
 
+		FString className(ComponentJson.at("ClassName").ToString());
 		const FClassInfo* classInfo = FObjectFactory::GetClassInfoByName(className);
 		if (!classInfo)
 		{
 			throw std::runtime_error(std::format("{}: Unknown class name: {}", GetClass()->Name, className));
 		}
-		UActorComponent* component = static_cast<UActorComponent*>(FObjectFactory::LoadObject(classInfo, componentJson));
-		AddOwnedComponent(component);
+
+		UActorComponent* Component = FObjectFactory::ConstructUnInitializedObject(classInfo)->Cast<UActorComponent>();
+		Component->DeserializeClass(ComponentJson);
+
+		AddOwnedComponent(Component);
 	}
 
-	if (!propertiesJson.hasKey("mRootComponentUUID") || propertiesJson.at("mRootComponentUUID").JSONType() != json::JSON::Class::Integral)
-	{
-		throw std::runtime_error(std::format("{}: mRootComponentUUID requires an integral", GetClass()->Name));
-	}
-	int32 RootComponentUUID = propertiesJson.at("mRootComponentUUID").ToInt();
-	if (RootComponentUUID == -1)
+	FGuid RootComponentID = JsonUtils::FromJson<FGuid>(propertiesJson.at("mRootComponent"));
+	if (RootComponentID == FGuid())
 	{
 		mRootComponent = nullptr;
 	}
@@ -147,9 +147,9 @@ void AActor::DeserializeClass(const json::JSON& inJson)
 	{
 		for (UActorComponent* Component : mComponents)
 		{
-			if (Component->UUID == RootComponentUUID)
+			if (Component->GetUniqueID() == RootComponentID)
 			{
-				mRootComponent = static_cast<USceneComponent*>(Component);
+				mRootComponent = Component->Cast<USceneComponent>();
 				break;
 			}
 		}

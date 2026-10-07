@@ -71,6 +71,7 @@ public:
 	inline ULevel* GetLevel() const { return mLevel; }
 
 	static UWorld* CreateWorld(EWorldType WorldType);
+	static void DestroyWorld(UWorld* World);
 	static UWorld* DuplicateWorldForPIE(UWorld* SourceWorld);
 
 private:

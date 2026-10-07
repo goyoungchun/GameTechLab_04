@@ -7,6 +7,7 @@
 #include "TSparseArray.h"
 #include "ObjectFactory.h"
 #include "FName.h"
+#include "FGuid.h"
 
 namespace json { class JSON; }
 
@@ -35,8 +36,6 @@ public:
 	int32 UUID;
 	uint32 InternalIndex;
 	uint32 ObjectMapIndex;
-
-	FName Name;
 
 	virtual ~UObject();
 
@@ -78,6 +77,8 @@ public:
 	inline const FName& GetName() const { return Name; }
 	inline void Rename(const FName& name) { Name = name; }
 
+	inline const FGuid& GetUniqueID() const { return Guid; }
+
 	static UObject* GetObjectByUUID(int32 uuid);
 	static UObject* GetObjectByInternalIndex(uint32 internalIndex);
 
@@ -105,6 +106,9 @@ private:
 	
 	template <typename T>
 	friend class TObjectIterator;
+
+	FName Name;
+	FGuid Guid;
 };
 
 // 이터레이터를 사용하면 for문 안에서의 Object Insert/Remove는 허용하지 않는다. (나중에 지연 삭제를 구현할 수 있다면 허용 가능)

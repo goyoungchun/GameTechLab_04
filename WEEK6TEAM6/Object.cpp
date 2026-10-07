@@ -4,6 +4,7 @@
 #include "FDuplicatedDataRW.h"
 #include "Serializers.h"
 #include "FArchive.h"
+#include "JsonUtil.h"
 
 TSparseArray<UObject*> UObject::GUObjectArray;
 TMap<const FClassInfo*, TArray<uint32>> UObject::GUObjectMap;
@@ -72,9 +73,11 @@ void UObject::SerializeClass(json::JSON& outJson) const
 {
 	outJson["ClassName"] = GetClass()->Name;
 
-	json::JSON propertiesJson = json::JSON::Make(json::JSON::Class::Object);
-	propertiesJson["UUID"] = UUID;
-	outJson["Properties"] = propertiesJson;
+	json::JSON PropertiesJson = json::JSON::Make(json::JSON::Class::Object);
+	PropertiesJson["UUID"] = UUID;
+	PropertiesJson["Name"] = JsonUtils::ToJson(Name);
+	PropertiesJson["Guid"] = JsonUtils::ToJson(Guid);
+	outJson["Properties"] = PropertiesJson;
 }
 
 void UObject::DeserializeClass(const json::JSON& inJson)
@@ -83,14 +86,16 @@ void UObject::DeserializeClass(const json::JSON& inJson)
 	{
 		throw std::runtime_error("Invalid JSON format for Properties");
 	}
-	const json::JSON& propertiesJson = inJson.at("Properties");
 
-	if (!propertiesJson.hasKey("UUID") || propertiesJson.at("UUID").JSONType() != json::JSON::Class::Integral)
+	const json::JSON& PropertiesJson = inJson.at("Properties");
+	if (!PropertiesJson.hasKey("UUID") || PropertiesJson.at("UUID").JSONType() != json::JSON::Class::Integral)
 	{
 		throw std::runtime_error("Invalid JSON format for UUID");
 	}
 
-	UUID = propertiesJson.at("UUID").ToInt();
+	UUID = PropertiesJson.at("UUID").ToInt();
+	Name = JsonUtils::FromJson<FName>(PropertiesJson.at("Name"));
+	Guid = JsonUtils::FromJson<FGuid>(PropertiesJson.at("Guid"));
 }
 
 bool UObject::IsA(const FClassInfo* classInfo) const

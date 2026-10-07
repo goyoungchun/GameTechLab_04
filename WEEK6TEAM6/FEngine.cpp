@@ -94,14 +94,14 @@ void FEngine::Cleanup()
 	delete mGraphicsManager;
 }
 
-FWorldContext& FEngine::CreateNewWorldContext(EWorldType WorldType)
+FWorldContext* FEngine::CreateNewWorldContext(EWorldType WorldType)
 {
 	FWorldContext& NewContext = mWorldContexts.Emplace();
 	NewContext.mWorldType = WorldType;
 
 	OnCreateWorldContext(NewContext);
 
-	return NewContext;
+	return &NewContext;
 }
 
 void FEngine::DestroyWorldContext(FWorldContext* Context)

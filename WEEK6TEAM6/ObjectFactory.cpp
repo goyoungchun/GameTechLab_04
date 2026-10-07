@@ -18,7 +18,7 @@ UObject* FObjectFactory::ConstructUnInitializedObject(const FClassInfo* classInf
 	if (Instance)
 	{
 		Instance->UUID = UEngineStatics::GenerateUUID();
-
+		Instance->Guid = FGuid::NewGuid();
 		Instance->InternalIndex = UObject::GUObjectArray.Add(Instance);
 
 		const FClassInfo* ClassInfo = Instance->GetClass();
@@ -122,21 +122,24 @@ bool FObjectFactory::RegisterClassInfo(FString className, const FClassInfo* clas
 #include "UStaticMeshComponent.h"
 
 TMap<FString, std::function<const FClassInfo* ()>> FObjectFactory::mClassInfoMap = {
-	{"UObject", &UObject::GetStaticClass },
-	{"AActor", &AActor::GetStaticClass },
-	{"UActorComponent", &UActorComponent::GetStaticClass },
-	{"USceneComponent", &USceneComponent::GetStaticClass },
-	{"UPrimitiveComponent", &UPrimitiveComponent::GetStaticClass },
-	{"UCubeComponent", &UCubeComponent::GetStaticClass },
-	{"USphereComponent", &USphereComponent::GetStaticClass },
-	{"ASpotLight", &ASpotLight::GetStaticClass },
-	{"USpotLightComponent", &USpotLightComponent::GetStaticClass },
-	{"UPlaneComponent", &UPlaneComponent::GetStaticClass },
-	{"UText3DComponent", &UText3DComponent::GetStaticClass },
-	{"UAtlasAnimationComponent", &UAtlasAnimationComponent::GetStaticClass },
-	{"UWorld", &UWorld::GetStaticClass },
-	{"UStaticMeshComponent", &UStaticMeshComponent::GetStaticClass},
-	{"UProjectileMovementComponent", &UProjectileMovementComponent::GetStaticClass},
-	{"URotationMovementComponent", &URotationMovementComponent::GetStaticClass},
-	{"UPointLightComponent", &UPointLightComponent::GetStaticClass },
+	{ "UObject", &UObject::GetStaticClass },
+	{ "AActor", &AActor::GetStaticClass },
+	{ "UActorComponent", &UActorComponent::GetStaticClass },
+	{ "USceneComponent", &USceneComponent::GetStaticClass },
+	{ "UPrimitiveComponent", &UPrimitiveComponent::GetStaticClass },
+	{ "UCubeComponent", &UCubeComponent::GetStaticClass },
+	{ "USphereComponent", &USphereComponent::GetStaticClass },
+	{ "ASpotLight", &ASpotLight::GetStaticClass },
+	{ "USpotLightComponent", &USpotLightComponent::GetStaticClass },
+	{ "UPlaneComponent", &UPlaneComponent::GetStaticClass },
+	{ "UText3DComponent", &UText3DComponent::GetStaticClass },
+	{ "UAtlasAnimationComponent", &UAtlasAnimationComponent::GetStaticClass },
+	{ "UWorld", &UWorld::GetStaticClass },
+	{ "UStaticMeshComponent", &UStaticMeshComponent::GetStaticClass},
+	{ "UProjectileMovementComponent", &UProjectileMovementComponent::GetStaticClass},
+	{ "URotationMovementComponent", &URotationMovementComponent::GetStaticClass},
+	{ "UPointLightComponent", &UPointLightComponent::GetStaticClass },
+	{ "UHeightFogComponent", &UHeightFogComponent::GetStaticClass },
+	{ "UBillboardComponent", &UBillboardComponent::GetStaticClass },
+	{ "UTextRenderComponent", &UTextRenderComponent::GetStaticClass },
 };
