@@ -10,11 +10,13 @@
 namespace JsonUtils
 {
 	json::JSON ToJson(const FString& String);
+	json::JSON ToJson(const FVector4& Vector);
 	json::JSON ToJson(const FVector2& Vector);
 	json::JSON ToJson(const FVector& Vector);
 	json::JSON ToJson(const FRotator& Rotator);
 	json::JSON ToJson(const EPrimitive& Primitive);
 	json::JSON ToJson(const FGuid& Guid);
+	json::JSON ToJson(const FLinearColor& LinearColor);
 
 	template <typename T>
 	inline json::JSON ToJson(const TArray<T>& Array)
@@ -46,6 +48,10 @@ namespace JsonUtils
 			else if (json.JSONType() == json::JSON::Class::Floating)
 			{
 				return static_cast<T>(json.ToFloat());
+			}
+			else if (json.JSONType() == json::JSON::Class::Boolean)
+			{
+				return static_cast<T>(json.ToBool());
 			}
 			else
 			{
@@ -91,6 +97,17 @@ namespace JsonUtils
 		}
 
 		return FVector(json.at(0).ToFloat(), json.at(1).ToFloat(), json.at(2).ToFloat());
+	}
+
+	template <>
+	inline FVector4 FromJson(const json::JSON& json)
+	{
+		if (json.JSONType() != json::JSON::Class::Array)
+		{
+			throw std::runtime_error("Json Array expected for FVector4");
+		}
+
+		return FVector4(json.at(0).ToFloat(), json.at(1).ToFloat(), json.at(2).ToFloat(), json.at(3).ToFloat());
 	}
 
 	template <>
@@ -167,5 +184,16 @@ namespace JsonUtils
 		{
 			array.Add(FromJson<T>(element));
 		}
+	}
+
+	template <>
+	inline FLinearColor FromJson(const json::JSON& json)
+	{
+		if (json.JSONType() != json::JSON::Class::Array)
+		{
+			throw std::runtime_error("Json Array expected for FLinearColor");
+		}
+
+		return FLinearColor(json.at(0).ToFloat(), json.at(1).ToFloat(), json.at(2).ToFloat(), json.at(3).ToFloat());
 	}
 }

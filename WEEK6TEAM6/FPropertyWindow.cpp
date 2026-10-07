@@ -152,6 +152,10 @@ void FPropertyWindow::Render(const FGuiReference& GuiReference)
 			{
 				RenderRotationMovementComponent(mSelectedComponent->Cast<URotationMovementComponent>());
 			}
+			else if (mSelectedComponent->IsA<UBillboardComponent>())
+			{
+				RenderBillboardComponent(mSelectedComponent->Cast<UBillboardComponent>());
+			}
 		}
 
 		if (mSelectedComponent != TargetComponent)
@@ -224,6 +228,19 @@ void FPropertyWindow::RenderAddComponentPopup()
 			ImGui::CloseCurrentPopup();
 		}
 
+		if (ImGui::MenuItem("BillboardComponent"))
+		{
+			UBillboardComponent* NewComponent = mSelectedActor->CreateDefaultSubobject<UBillboardComponent>(FName(MakeUniqueName("BillboardComponent", mSelectedActor->GetComponents())));
+
+			if (mSelectedComponent && mSelectedComponent->IsA<USceneComponent>())
+			{
+				NewComponent->SetupAttachment(mSelectedComponent->Cast<USceneComponent>());
+			}
+
+			mSelectedActor->AddOwnedComponent(NewComponent);
+
+			ImGui::CloseCurrentPopup();
+		}
 		ImGui::EndPopup();
 	}
 }
@@ -609,5 +626,87 @@ void FPropertyWindow::RenderRotationMovementComponent(URotationMovementComponent
 	if (ImGui::DragFloat("Rotation Speed", &RotationSpeedInput, 0.1f))
 	{
 		RotationMovementComponent->SetRotationSpeed(RotationSpeedInput);
+	}
+}
+
+void FPropertyWindow::RenderBillboardComponent(UBillboardComponent* BillboardComponent)
+{
+	TSharedPtr<FTexture2DAsset> CurrentTexture = BillboardComponent->GetTexture();
+
+	FString CurrentTextureName = CurrentTexture ? CurrentTexture->GetAssetName().ToString() : "NONE";
+	if (ImGui::BeginCombo("TextureAsset", CurrentTextureName.CStr()))
+	{
+		TArray<FString> TextureNames;
+		mAssetManager->ForEachMetaInfo([&TextureNames](const FAssetMetaInfo& metaInfo)
+			{
+				if (metaInfo.AssetType == EAssetType::Texture2D)
+				{
+					TextureNames.Add(metaInfo.AssetName.ToString());
+				}
+			});
+		for (const FString& TextureName : TextureNames)
+		{
+			bool isSelected = (CurrentTextureName == TextureName);
+
+			if (ImGui::Selectable(TextureName.CStr(), isSelected))
+			{
+				TSharedPtr<FTexture2DAsset> newTexture = mAssetManager->GetAssetAs<FTexture2DAsset>(FName(TextureName), true);
+				BillboardComponent->SetTexture(newTexture);
+			}
+			if (ImGui::IsItemHovered()) ImGui::SetTooltip("%s", TextureName.CStr());
+
+			if (isSelected)
+			{
+				ImGui::SetItemDefaultFocus();
+			}
+		}
+		ImGui::EndCombo();
+	}
+
+	//ERenderBlendMode CurrentBlendMode = BillboardComponent->GetRenderBlendMode();
+	//if (ImGui::BeginCombo("BlendMode", BlendModeNames[static_cast<int>(CurrentBlendMode)].CStr()))
+	//{
+	//	for (int i = 0; i < BlendModeNames.Num() ; i++)
+	//	for (const FString& BlendMode : BlendModeNames)
+	//	{
+	//		bool isSelected = (CurrentBlendMode == ERenderBlendMode);
+
+	//		if (ImGui::Selectable(TextureName.CStr(), isSelected))
+	//		{
+	//			TSharedPtr<FTexture2DAsset> newTexture = mAssetManager->GetAssetAs<FTexture2DAsset>(FName(TextureName), true);
+	//			BillboardComponent->SetTexture(newTexture);
+	//		}
+	//		if (ImGui::IsItemHovered()) ImGui::SetTooltip("%s", TextureName.CStr());
+
+	//		if (isSelected)
+	//		{
+	//			ImGui::SetItemDefaultFocus();
+	//		}
+	//	}
+	//	ImGui::EndCombo();
+	//}
+
+	FVector4 SubUV = BillboardComponent->GetSubUV();
+	if (ImGui::DragFloat4("SubUV", &SubUV.x, 0.05f))
+	{
+		BillboardComponent->SetSubUV(SubUV);
+	}
+
+	FVector2 SubUVOffset = BillboardComponent->GetSubUVOffset();
+	if (ImGui::DragFloat2("SubUVOffset", &SubUVOffset.X, 0.05f))
+	{
+		BillboardComponent->SetSubUVOffset(SubUVOffset);
+	}
+
+	bool EnableDepthTest = BillboardComponent->GetEnbaleDepthTest();
+	if (ImGui::Checkbox("EnableDepthTest", &EnableDepthTest))
+	{
+		BillboardComponent->SetEnbaleDepthTest(EnableDepthTest);
+	}
+
+	bool EnableDepthWrite = BillboardComponent->GetEnbaleDepthWrite();
+	if (ImGui::Checkbox("EnableDepthWrite", &EnableDepthWrite))
+	{
+		BillboardComponent->SetEnbaleDepthWrite(EnableDepthWrite);
 	}
 }

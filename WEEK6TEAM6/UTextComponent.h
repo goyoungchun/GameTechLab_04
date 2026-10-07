@@ -240,6 +240,11 @@ public:
 			FGuid AssetID = mTextureAsset->GetAssetID();
 			outJson["Properties"]["ObjTextureAsset"] = JsonUtils::ToJson(AssetID);
 		}
+		outJson["Properties"]["mSubUVOffset"] = JsonUtils::ToJson(mSubUVOffset);
+		outJson["Properties"]["mEnableDepthTest"] = mEnableDepthTest;
+		outJson["Properties"]["mEnableDepthWrite"] = mEnableDepthWrite;
+		outJson["Properties"]["mBlendMode"] = static_cast<int>(mBlendMode);
+		outJson["Properties"]["mSubUV"] = JsonUtils::ToJson(mSubUV);
 	}
 
 	void DeserializeClass(const json::JSON& inJson) override
@@ -247,21 +252,39 @@ public:
 		UPrimitiveComponent::DeserializeClass(inJson);
 
 		const json::JSON& PropertiesJson = inJson.at("Properties");
-		if (!PropertiesJson.hasKey("ObjTextureAsset"))
+		if (PropertiesJson.hasKey("ObjTextureAsset"))
 		{
-			throw std::runtime_error("UBillboardComponent: ObjTextureAsset property is required");
+			if (PropertiesJson.at("ObjTextureAsset").JSONType() == json::JSON::Class::Object)
+			{
+				FGuid AssetID = JsonUtils::FromJson<FGuid>(PropertiesJson.at("ObjTextureAsset"));
+				if (AssetID.IsValid())
+				{
+					mTextureAsset = FAssetManager::Get().GetAssetAs<FTexture2DAsset>(AssetID, true);
+				}
+			}
 		}
 
-		if (PropertiesJson.at("ObjTextureAsset").JSONType() != json::JSON::Class::Object)
+		if (PropertiesJson.hasKey("mSubUVOffset"))
 		{
-			throw std::runtime_error("UBillboardComponent: ObjTextureAsset property requires an object");
+			mSubUVOffset = JsonUtils::FromJson<FVector2>(PropertiesJson.at("mSubUVOffset"));
+		}
+		if (PropertiesJson.hasKey("mEnableDepthTest"))
+		{
+			mEnableDepthTest = JsonUtils::FromJson<bool>(PropertiesJson.at("mEnableDepthTest"));
+		}
+		if (PropertiesJson.hasKey("mEnableDepthWrite"))
+		{
+			mEnableDepthWrite = JsonUtils::FromJson<bool>(PropertiesJson.at("mEnableDepthWrite"));
+		}
+		if (PropertiesJson.hasKey("mBlendMode"))
+		{
+			mBlendMode = static_cast<ERenderBlendMode>(JsonUtils::FromJson<int>(PropertiesJson.at("mBlendMode")));
+		}
+		if (PropertiesJson.hasKey("mSubUV"))
+		{
+			mSubUV = JsonUtils::FromJson<FVector4>(PropertiesJson.at("mSubUV"));
 		}
 
-		FGuid AssetID = JsonUtils::FromJson<FGuid>(PropertiesJson.at("ObjTextureAsset"));
-		if (AssetID.IsValid())
-		{
-			mTextureAsset = FAssetManager::Get().GetAssetAs<FTexture2DAsset>(AssetID, true);
-		}
 	}
 
 	void Tick(float DeltaTime) override
@@ -333,13 +356,28 @@ public:
 	inline void SetDepthState(bool enableDepthTest, bool enableDepthWrite) { mEnableDepthTest = enableDepthTest; mEnableDepthWrite = enableDepthWrite; }
 	void SetBlendState(ERenderBlendMode InBlendMode) { mBlendMode = InBlendMode; }
 
+	inline FVector4 GetSubUV() { return mSubUV; }
+	void SetSubUV(FVector4 InmSubUV) { mSubUV = InmSubUV; }
+
+	inline FVector2 GetSubUVOffset() { return mSubUVOffset; }
+	void SetSubUVOffset(FVector2 InmSubUVOffset) { mSubUVOffset = InmSubUVOffset; }
+
+	inline void SetEnbaleDepthTest(bool InEnableDepthTest) { mEnableDepthTest = InEnableDepthTest; }
+	inline bool GetEnbaleDepthTest() { return mEnableDepthTest; }
+
+	inline void SetEnbaleDepthWrite(bool InEnableDepthWrite) { mEnableDepthWrite = InEnableDepthWrite; }
+	inline bool GetEnbaleDepthWrite() { return mEnableDepthWrite; }
+
+	inline void SetRenderBlendMode(ERenderBlendMode InBlendMode) { mBlendMode = InBlendMode; }
+	inline ERenderBlendMode GetRenderBlendMode() { return mBlendMode; }
+
 protected:
 	TSharedPtr<FStaticMeshAsset> mMeshAsset;
 	TSharedPtr<FTexture2DAsset> mTextureAsset;
 	FVector4 mSubUV = { 0.f, 0.f, 1.f, 1.f };
 	FVector2 mSubUVOffset = { 0.f, 0.f };
 
-	ERenderBlendMode mBlendMode = ERenderBlendMode::Opaque;
+	ERenderBlendMode mBlendMode = ERenderBlendMode::Transparent;
 	bool mEnableDepthTest = true;
 	bool mEnableDepthWrite = true;
 };
@@ -697,6 +735,39 @@ public:
 		Ar << Color;
 	}
 
+	void SerializeClass(json::JSON& outJson) const override
+	{
+		Super::SerializeClass(outJson);
+
+		outJson["Properties"]["Intensity"] = Intensity;
+		outJson["Properties"]["Radius"] = Radius;
+		outJson["Properties"]["RadiusFallOff"] = RadiusFallOff;
+		outJson["Properties"]["Color"] = JsonUtils::ToJson(Color);
+	}
+
+	void DeserializeClass(const json::JSON& inJson) override
+	{
+		Super::DeserializeClass(inJson);
+
+		const json::JSON& PropertiesJson = inJson.at("Properties");
+		if (PropertiesJson.hasKey("Intensity"))
+		{
+			Intensity = JsonUtils::FromJson<float>(PropertiesJson.at("Intensity"));
+		}
+		if (PropertiesJson.hasKey("Radius"))
+		{
+			Radius = JsonUtils::FromJson<float>(PropertiesJson.at("Radius"));
+		}
+		if (PropertiesJson.hasKey("RadiusFallOff"))
+		{
+			RadiusFallOff = JsonUtils::FromJson<float>(PropertiesJson.at("RadiusFallOff"));
+		}
+		if (PropertiesJson.hasKey("Color"))
+		{
+			Color = JsonUtils::FromJson<FLinearColor>(PropertiesJson.at("Color"));
+		}
+	}
+
 	inline void SetIntensity(float InIntensity) { Intensity = InIntensity; }
 	inline float GetIntensity() const { return Intensity; }
 
@@ -736,6 +807,24 @@ public:
 	{
 		Super::Deserialize(Ar);
 		Ar << Velocity;
+	}
+
+	void SerializeClass(json::JSON& outJson) const override
+	{
+		Super::SerializeClass(outJson);
+
+		outJson["Properties"]["Velocity"] = JsonUtils::ToJson(Velocity);
+	}
+
+	void DeserializeClass(const json::JSON& inJson) override
+	{
+		Super::DeserializeClass(inJson);
+
+		const json::JSON& PropertiesJson = inJson.at("Properties");
+		if (PropertiesJson.hasKey("Velocity"))
+		{
+			Velocity = JsonUtils::FromJson<FVector>(PropertiesJson.at("Velocity"));
+		}
 	}
 
 	void Tick(float DeltaTime) override
@@ -787,6 +876,29 @@ public:
 
 		Ar << RotationAxis;
 		Ar << RotationSpeed;
+	}
+
+	void SerializeClass(json::JSON& outJson) const override
+	{
+		Super::SerializeClass(outJson);
+
+		outJson["Properties"]["RotationAxis"] = JsonUtils::ToJson(RotationAxis);
+		outJson["Properties"]["RotationSpeed"] = RotationSpeed;
+	}
+
+	void DeserializeClass(const json::JSON& inJson) override
+	{
+		Super::DeserializeClass(inJson);
+
+		const json::JSON& PropertiesJson = inJson.at("Properties");
+		if (PropertiesJson.hasKey("RotationAxis"))
+		{
+			RotationAxis = JsonUtils::FromJson<FVector>(PropertiesJson.at("RotationAxis"));
+		}
+		if (PropertiesJson.hasKey("RotationSpeed"))
+		{
+			RotationSpeed = JsonUtils::FromJson<float>(PropertiesJson.at("RotationSpeed"));
+		}
 	}
 
 	void Tick(float DeltaTime) override

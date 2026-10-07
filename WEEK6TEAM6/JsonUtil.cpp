@@ -8,6 +8,16 @@ namespace JsonUtils
 		return json::JSON(String.c_str());
 	}
 
+	json::JSON ToJson(const FVector4& Vector)
+	{
+		json::JSON vectorJson = json::JSON::Make(json::JSON::Class::Array);
+		vectorJson[0] = Vector.x;
+		vectorJson[1] = Vector.y;
+		vectorJson[2] = Vector.z;
+		vectorJson[3] = Vector.w;
+		return vectorJson;
+	}
+
 	json::JSON ToJson(const FVector2& Vector)
 	{
 		json::JSON vectorJson = json::JSON::Make(json::JSON::Class::Array);
@@ -63,5 +73,14 @@ namespace JsonUtils
 		GuidJson["C"] = Guid.C;
 		GuidJson["D"] = Guid.D;
 		return GuidJson;
+	}
+	json::JSON ToJson(const FLinearColor& LinearColor)
+	{
+		json::JSON FLinearColorJson = json::JSON::Make(json::JSON::Class::Array);
+		FLinearColorJson[0] = LinearColor.R;
+		FLinearColorJson[1] = LinearColor.G;
+		FLinearColorJson[2] = LinearColor.B;
+		FLinearColorJson[3] = LinearColor.A;
+		return FLinearColorJson;
 	}
 }
