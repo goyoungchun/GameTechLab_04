@@ -423,16 +423,71 @@ void FControlWindow::RenderPIEControl(const FGuiReference& GuiReference)
 {
 	/* Play In Editor Control */
 	ImGui::SeparatorText("Play In Editor");
-	if (ImGui::Button("Play"))
+
+	ImGui::PushStyleColor(ImGuiCol_Button, IM_COL32(10, 10, 10, 255));
+	ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(65, 65, 65, 255));
+	ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(90, 90, 90, 255));
+
+	ImGui::PushFont(nullptr, ImGui::GetStyle().FontSizeBase * 1.5f);
+	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10.f, 8.f));
+
+	const char* label = bStarted ? "Stop PIE" : "Start PIE";
+
+	if (bStarted)
 	{
-		GEditor.StartPIE();
-		GEditor.ResetSelectedComponent();
+		ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(220, 30, 30, 255));
+	}
+	else
+	{
+		ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(80, 220, 120, 255));
 	}
 
-	ImGui::SameLine();
-	if (ImGui::Button("Stop"))
+	const float size = ImGui::GetFrameHeight();
+	const float gap = ImGui::GetStyle().ItemSpacing.x;
+
+	const float rowWidth = ImGui::CalcTextSize(label).x + gap + size;
+	const float available = ImGui::GetContentRegionAvail().x;
+
+	if (available > rowWidth)
 	{
-		GEditor.EndPIE();
-		GEditor.ResetSelectedComponent();
+		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (available - rowWidth) * 0.5f - 38.0f);
 	}
+
+	ImGui::AlignTextToFramePadding();
+	ImGui::TextUnformatted(label);
+	ImGui::SameLine(0.f, gap);
+
+	if (bStarted)
+	{
+
+		if (ImGui::Button("##Stop", ImVec2(44.0f, 44.0f)))
+		{
+			GEditor.EndPIE();
+			GEditor.ResetSelectedComponent();
+			bStarted = false;
+		}
+
+		const ImVec2 min = ImGui::GetItemRectMin();
+		const ImVec2 max = ImGui::GetItemRectMax();
+
+		ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(min.x + 13.0f, min.y + 13.0f), ImVec2(max.x - 13.0f, max.y - 13.0f), IM_COL32(230, 70, 70, 255));
+
+	}
+
+
+	else
+	{
+
+		if (ImGui::ArrowButton("##Play", ImGuiDir_Right))
+		{
+			GEditor.StartPIE();
+			GEditor.ResetSelectedComponent();
+			bStarted = true;
+		}
+
+	}
+
+	ImGui::PopStyleVar();
+	ImGui::PopFont();
+	ImGui::PopStyleColor(4);
 }
