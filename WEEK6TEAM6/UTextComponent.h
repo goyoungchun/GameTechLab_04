@@ -626,7 +626,7 @@ public:
 		USceneComponent* RootComp = GetRootComponent();
 		if (RootComp)
 		{
-			BillboardComponent->SetupAttachment(RootComp);
+			BillboardComponent->SetupAttachment(RootComp, false);
 		}
 
 		AddOwnedComponent(BillboardComponent);
