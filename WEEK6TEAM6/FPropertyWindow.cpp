@@ -79,7 +79,7 @@ void FPropertyWindow::Render(const FGuiReference& GuiReference)
 				ImGuiTreeNodeFlags NodeFlags = ImGuiTreeNodeFlags_Leaf;
 				NodeFlags |= bSelected ? ImGuiTreeNodeFlags_Selected : 0;
 
-				bool Open = ImGui::TreeNodeEx(Component->GetClass()->Name.c_str(), NodeFlags);
+				bool Open = ImGui::TreeNodeEx(Component->GetName().ToString().c_str(), NodeFlags);
 
 				if (ImGui::IsItemClicked())
 				{
@@ -241,7 +241,55 @@ void FPropertyWindow::RenderAddComponentPopup()
 
 			ImGui::CloseCurrentPopup();
 		}
+
+		if (ImGui::MenuItem("ProjectileMovementComponent"))
+		{
+			UProjectileMovementComponent* NewComponent = mSelectedActor->CreateDefaultSubobject<UProjectileMovementComponent>(FName(MakeUniqueName("ProjectileMovementComponent", mSelectedActor->GetComponents())));
+
+			mSelectedActor->AddOwnedComponent(NewComponent);
+
+			ImGui::CloseCurrentPopup();
+		}
+
+		if (ImGui::MenuItem("RotationMovementComponent"))
+		{
+			URotationMovementComponent* NewComponent = mSelectedActor->CreateDefaultSubobject<URotationMovementComponent>(FName(MakeUniqueName("RotationMovementComponent", mSelectedActor->GetComponents())));
+
+			mSelectedActor->AddOwnedComponent(NewComponent);
+
+			ImGui::CloseCurrentPopup();
+		}
+
+		if (ImGui::MenuItem("PointLightComponent"))
+		{
+			UPointLightComponent* NewComponent = mSelectedActor->CreateDefaultSubobject<UPointLightComponent>(FName(MakeUniqueName("PointLightComponent", mSelectedActor->GetComponents())));
+
+			if (mSelectedComponent && mSelectedComponent->IsA<USceneComponent>())
+			{
+				NewComponent->SetupAttachment(mSelectedComponent->Cast<USceneComponent>(), false);
+			}
+
+			mSelectedActor->AddOwnedComponent(NewComponent);
+
+			ImGui::CloseCurrentPopup();
+		}
+
+		if (ImGui::MenuItem("TextRenderComponent"))
+		{
+			UTextRenderComponent* NewComponent = mSelectedActor->CreateDefaultSubobject<UTextRenderComponent>(FName(MakeUniqueName("TextRenderComponent", mSelectedActor->GetComponents())));
+
+			if (mSelectedComponent && mSelectedComponent->IsA<USceneComponent>())
+			{
+				NewComponent->SetupAttachment(mSelectedComponent->Cast<USceneComponent>(), false);
+			}
+
+			mSelectedActor->AddOwnedComponent(NewComponent);
+			NewComponent->SetFontAtlasAsset(FAssetManager::Get().GetAssetAs<FFontAtlasAsset>(FName("TestFontAtlas"), true));
+
+			ImGui::CloseCurrentPopup();
+		}
 		ImGui::EndPopup();
+
 	}
 }
 
@@ -595,11 +643,11 @@ void FPropertyWindow::RenderPointLightComponent(UPointLightComponent* PointLight
 
 void FPropertyWindow::RenderTextRenderComponent(UTextRenderComponent* TextRenderComponent)
 {
-	char textBuffer[256] = {};
+	char textBuffer[1024 * 16] = {};
 	const FString currentText = Wide2Utf(TextRenderComponent->GetText());
 	strncpy_s(textBuffer, currentText.CStr(), sizeof(textBuffer) - 1);
 
-	if (ImGui::InputText("Display Text", textBuffer, sizeof(textBuffer)))
+	if (ImGui::InputTextMultiline("Display Text", textBuffer, sizeof(textBuffer), ImVec2(-FLT_MIN, ImGui::GetTextLineHeight() * 16)))
 	{
 		TextRenderComponent->SetText(Utf2Wide(FString(textBuffer)));
 	}

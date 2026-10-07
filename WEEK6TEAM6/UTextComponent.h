@@ -1046,7 +1046,6 @@ public:
 		Super::SerializeClass(OutJson);
 
 		OutJson["Properties"]["mText"] = JsonUtils::ToJson(mText);
-		OutJson["Properties"]["mFontAtlasAsset"] = JsonUtils::ToJson(mFontAtlasAsset ? mFontAtlasAsset->GetAssetID() : FGuid());
 		OutJson["Properties"]["mColor"] = JsonUtils::ToJson(mColor);
 	}
 
@@ -1057,11 +1056,8 @@ public:
 		const json::JSON& propertiesJson = inJson.at("Properties");
 		
 		mText = JsonUtils::FromJson<std::wstring>(propertiesJson.at("mText"));
-
-		FGuid FontAtlasAssetID = JsonUtils::FromJson<FGuid>(propertiesJson.at("mFontAtlasAsset"));
-		mFontAtlasAsset = FAssetManager::Get().GetAssetAs<FFontAtlasAsset>(FontAtlasAssetID, true);
-
 		mColor = JsonUtils::FromJson<FVector4>(propertiesJson.at("mColor"));
+		mFontAtlasAsset = FAssetManager::Get().GetAssetAs<FFontAtlasAsset>(FName("TestFontAtlas"), true);
 	}
 
 	void Render(FRenderCollector& RenderCollector) override
