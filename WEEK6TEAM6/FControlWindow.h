@@ -18,6 +18,8 @@ private:
 	void RenderPIEControl(const FGuiReference& GuiReference);
 
 private:
+	bool bStarted = false;
+
 	int32 mSelectedTargetSpawnIndex = 1;
 	int32 mSpawnCount = 1;
 };

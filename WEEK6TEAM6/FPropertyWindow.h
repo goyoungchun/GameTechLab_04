@@ -17,6 +17,7 @@ class UPointLightComponent;
 class UTextRenderComponent;
 class UProjectileMovementComponent;
 class URotationMovementComponent;
+class UBillboardComponent;
 
 class FPropertyWindow
 {
@@ -38,6 +39,7 @@ private:
 	void RenderTextRenderComponent(UTextRenderComponent* TextRenderComponent);
 	void RenderProjectileMovementComponent(UProjectileMovementComponent* ProjectileMovementComponent);
 	void RenderRotationMovementComponent(URotationMovementComponent* RotationMovementComponent);
+	void RenderBillboardComponent(UBillboardComponent* BillboardComponent);
 
 private:
 	FAssetManager* mAssetManager;

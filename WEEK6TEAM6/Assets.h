@@ -39,6 +39,7 @@ namespace BuiltInAssetID
 	inline const FGuid ExplosionSpriteAtlas(0xB17B0001, 0x00000000, 0x00000000, 0x00002000); // NOTE: 현재 텍스쳐를 통해 스프라이트 아틀라스를 생성하는 에디터 기능이 없어서 임시로 고정 Guid를 부여함. 후에 에디터에서 스프라이트 아틀라스를 생성할 수 있는 기능이 생기면 제거해야 함.
 	inline const FGuid ExplosionTexture(0xB17B0001, 0x00000000, 0x00000000, 0x00002001);
 	inline const FGuid SpotLightIcon(0xB17B0001, 0x00000000, 0x00000000, 0x00003000);
+	inline const FGuid HeightFogIcon(0xB17B0001, 0x00000000, 0x00000000, 0x00003001);
 }
 
 class FFileAssetSource : public FAssetSource

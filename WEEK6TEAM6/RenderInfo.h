@@ -29,6 +29,12 @@ enum class ERenderBlendMode
 	Additive,
 	Count
 };
+//TArray<FString> BlendModeNames = {
+//    "Opaque",
+//    "Masked",
+//    "Transparent",
+//    "Additive"
+//};
 
 struct FRenderInfo
 {

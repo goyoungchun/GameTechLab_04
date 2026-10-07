@@ -15,6 +15,10 @@ public:
 
     ~FFogProcess() override = default;
 
+	void RegisterFogComponent() { ++FogComponentCount; }
+	void UnregisterFogComponent() { --FogComponentCount; }
+	bool HasFogComponent() const { return FogComponentCount > 0; }
+
     FRGTextureRef AddPasses(FRenderGraph& RenderGraph, const FPostProcessInputs& Inputs, const FPostProcessContext& Context) override;
 
 private:
@@ -38,4 +42,6 @@ private:
 
 	FFogConstants FogConstants;
 	FRenderTarget2D RenderTarget;
+
+	int32 FogComponentCount = 0;
 };
