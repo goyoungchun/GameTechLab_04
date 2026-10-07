@@ -671,9 +671,6 @@ public:
 	uint64 GetDrawCallCount() const { return DrawCallCount; }
 	void ResetDrawCallCount() { DrawCallCount = 0; }
 
-	void DrawIndexed(UINT IndexCount, UINT StartIndex = 0) const;
-	void Draw(UINT VertexCount) const;
-
 private:
 	void CreateDeviceAndSwapChain(HWND hWindow);
 	void ReleaseDeviceAndSwapChain();

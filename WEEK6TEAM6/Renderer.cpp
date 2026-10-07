@@ -753,17 +753,6 @@ void URenderer::RenderPrimitiveIndexed(const FRenderPipeline* Pipeline, const FR
 	DeviceContext->DrawIndexed(RenderInfo.IndexCount, RenderInfo.StartIndex, 0);
 	++DrawCallCount;
 }
-void URenderer::DrawIndexed(UINT IndexCount, UINT StartIndex) const
-{
-	DeviceContext->DrawIndexed(IndexCount, StartIndex, 0);
-	++DrawCallCount;
-}
-
-void URenderer::Draw(UINT VertexCount) const
-{
-	DeviceContext->Draw(VertexCount, 0);
-	++DrawCallCount;
-}
 
 void URenderer::RenderQuad2D(const FRenderQuad2DInfo& Info)
 {

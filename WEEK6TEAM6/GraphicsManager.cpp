@@ -346,11 +346,13 @@ void FGraphicsManager::Render()
 	}
 
 	// mFogProcess.SetEnabled(FShowFlags::Get().IsEnabled(EShowFlag::Fog));
+	mFXAAProcess.SetEnabled(FShowFlags::Get().IsEnabled(EShowFlag::FXAA));
 	mDepthPreviewProcess.SetEnabled(FShowFlags::Get().IsEnabled(EShowFlag::SceneDepth));
 
 	FPostProcess* PostProcesses[] = { 
 		&mFogProcess,
-		&mDepthPreviewProcess
+		&mFXAAProcess,
+		&mDepthPreviewProcess,
 	};
 
 	FPostProcessContext PostProcessContext;

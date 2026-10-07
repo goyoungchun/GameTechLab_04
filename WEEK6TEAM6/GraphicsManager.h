@@ -12,6 +12,7 @@
 #include "ShowFlags.h"
 #include "FFogProcess.h"
 #include "FDepthPreviewProcess.h"
+#include "FFXAAProcess.h"
 #include "FRenderGraph.h"
 
 class FAssetManager;
@@ -158,6 +159,7 @@ private:
 	FRenderCollector mRenderCollector;
 	FRenderGraph mRenderGraph;
 	FFogProcess mFogProcess;
+	FFXAAProcess mFXAAProcess;
 	FDepthPreviewProcess mDepthPreviewProcess;
 
 	int32 GridGap = 1;

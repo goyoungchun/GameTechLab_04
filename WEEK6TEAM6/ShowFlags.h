@@ -14,6 +14,7 @@ enum class EShowFlag : uint64
 	OcclusionCulling  = 1ull << 5,
 	SceneDepth		  = 1ull << 6,
 	Fog				  = 1ull << 7,
+	FXAA			  = 1ull << 8,
 };
 
 inline constexpr EShowFlag operator|(EShowFlag a, EShowFlag b)
@@ -35,7 +36,8 @@ inline constexpr FShowFlagInfo GShowFlagInfos[] =
 	{ EShowFlag::FrustumCulling,    "Frustum Culling"   },
 	{ EShowFlag::OcclusionCulling,  "Occlusion Culling" },
 	{ EShowFlag::SceneDepth,        "Scene Depth" },
-	{ EShowFlag::Fog,               "Fog" }
+	{ EShowFlag::Fog,               "Fog" },
+	{ EShowFlag::FXAA,              "FXAA" },
 };
 
 class FShowFlags
