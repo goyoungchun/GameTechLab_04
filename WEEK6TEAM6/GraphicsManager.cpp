@@ -345,7 +345,7 @@ void FGraphicsManager::Render()
 		}
 	}
 
-	// mFogProcess.SetEnabled(FShowFlags::Get().IsEnabled(EShowFlag::Fog));
+	mFogProcess.SetEnabled(FShowFlags::Get().IsEnabled(EShowFlag::Fog) && mFogProcess.HasFogComponent());
 	mFXAAProcess.SetEnabled(FShowFlags::Get().IsEnabled(EShowFlag::FXAA));
 	mDepthPreviewProcess.SetEnabled(FShowFlags::Get().IsEnabled(EShowFlag::SceneDepth));
 

@@ -635,12 +635,14 @@ public:
 		FogProcess = &GEngine->GetGraphicsManager().GetFogProcess();
 		FogComponentCount++;
 		FogProcess->SetEnabled(FogComponentCount > 0);
+		FogProcess->RegisterFogComponent();
 	}
 
 	~UHeightFogComponent()
 	{
 		FogComponentCount--;
 		FogProcess->SetEnabled(FogComponentCount > 0);
+		FogProcess->UnregisterFogComponent();
 	}
 
 	inline void SetFogDensity(float Density) { FogProcess->FogConstants.FogDensity = Density; }
