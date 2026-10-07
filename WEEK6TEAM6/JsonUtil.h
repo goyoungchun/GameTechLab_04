@@ -20,6 +20,7 @@ namespace JsonUtils
 	json::JSON ToJson(const FGuid& Guid);
 	json::JSON ToJson(const FName& Name);
 	json::JSON ToJson(const FLinearColor& LinearColor);
+	json::JSON ToJson(const std::wstring& WString);
 
 	template <typename T>
 	inline json::JSON ToJson(const TArray<T>& Array)
@@ -259,5 +260,17 @@ namespace JsonUtils
 		}
 
 		return FLinearColor(json.at(0).ToFloat(), json.at(1).ToFloat(), json.at(2).ToFloat(), json.at(3).ToFloat());
+	}
+
+	template <>
+	inline std::wstring FromJson(const json::JSON& json)
+	{
+		if (json.JSONType() != json::JSON::Class::String)
+		{
+			throw std::runtime_error("Json String expected for std::wstring");
+		}
+
+		std::string utf8Str = json.ToString();
+		return Utf2Wide(utf8Str);
 	}
 }

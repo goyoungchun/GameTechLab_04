@@ -89,4 +89,10 @@ namespace JsonUtils
 		FLinearColorJson[3] = LinearColor.A;
 		return FLinearColorJson;
 	}
+
+	json::JSON ToJson(const std::wstring& WString)
+	{
+		FString Str = Wide2Utf(WString);
+		return json::JSON(Str.c_str());
+	}
 }

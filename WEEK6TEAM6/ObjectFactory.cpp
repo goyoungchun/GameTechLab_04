@@ -142,4 +142,5 @@ TMap<FString, std::function<const FClassInfo* ()>> FObjectFactory::mClassInfoMap
 	{"URotationMovementComponent", &URotationMovementComponent::GetStaticClass},
 	{"UPointLightComponent", &UPointLightComponent::GetStaticClass },
 	{"UBillboardComponent", &UBillboardComponent::GetStaticClass},
+	{"UTextRenderComponent", &UTextRenderComponent::GetStaticClass }
 };
