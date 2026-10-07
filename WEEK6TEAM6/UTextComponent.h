@@ -303,9 +303,10 @@ public:
 
 		FMatrix TranslationMatrix = FMatrix::ExtractTranslation(PivotMatrix);
 		FVector Translation = FMatrix::GetTranslation(PivotMatrix);
+		FMatrix ScaleMatrix = FMatrix::ExtractScaleMatrix(PivotMatrix);
 		FQuaternion BillboardRotation = RenderCollector.Camera->Transform.GetRotation();
 
-		PivotMatrix = ToMatrix(BillboardRotation) * FMatrix::Translation(Translation);
+		PivotMatrix = ScaleMatrix * ToMatrix(BillboardRotation) * FMatrix::Translation(Translation);
 
 		FRenderQuadInfo& QuadInfo = mRenderProxy->GetRenderTransparentQuadInfo(0);
 		QuadInfo.Model = PivotMatrix;

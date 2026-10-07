@@ -34,7 +34,11 @@ public:
 	AActor* GetOwner() const;
 
 	// Todo: Make as pure class
+
+	virtual void BeginPlay() {}
+	virtual void EndPlay(const EEndPlayReason EndPlayReason) {}
 	virtual void Tick(float deltaTime);
+
     // 생성자에서는 플래그만 지정하고, 월드에 등록된 뒤에는 활성 목록도 갱신합니다.
     void SetTickable(bool bTickable);
     bool IsTickable() const { return (mComponentFlags & EActorComponentFlags::Tickable) != 0; }
