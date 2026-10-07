@@ -18,6 +18,16 @@ public:
 	void RegisterFogComponent() { ++FogComponentCount; }
 	void UnregisterFogComponent() { --FogComponentCount; }
 	bool HasFogComponent() const { return FogComponentCount > 0; }
+	void ResetFogConstants() 
+	{
+		FogConstants.FogHeightFalloff = 0.2f;
+		FogConstants.FogDensity = 0.2f;
+		FogConstants.FogInscatteringColor = FLinearColor(0.5f, 0.5f, 0.5f, 1.0f);
+		FogConstants.StartDistance = 0.0f;
+		FogConstants.FogCutoffDistance = 1000.0f;
+		FogConstants.FogMaxOpacity = 1.0f;
+		FogConstants.FogHeight = 0.0f;
+	}
 
     FRGTextureRef AddPasses(FRenderGraph& RenderGraph, const FPostProcessInputs& Inputs, const FPostProcessContext& Context) override;
 

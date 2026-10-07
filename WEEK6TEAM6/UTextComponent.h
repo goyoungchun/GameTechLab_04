@@ -613,24 +613,6 @@ public:
 		SetRootComponent(SpotLightComponent);
 	}
 
-	void DeserializeClass(const json::JSON& inJson) override
-	{
-		Super::DeserializeClass(inJson);
-
-		for (UActorComponent* Component : GetComponents())
-		{
-			UBillboardComponent* BillboardComponent = Component->Cast<UBillboardComponent>();
-
-			if (!BillboardComponent)
-			{
-				continue;
-			}
-
-			BillboardComponent->SetBlendState(ERenderBlendMode::Transparent);
-			BillboardComponent->SetDepthState(true, false);
-		}
-	}
-
 	void CreateEditorComponents() override
 	{
 		UBillboardComponent* BillboardComponent = CreateDefaultSubobject<UBillboardComponent>(FName("SpotLightIcon"));
@@ -680,6 +662,7 @@ public:
 	~UHeightFogComponent()
 	{
 		FogComponentCount--;
+		FogProcess->ResetFogConstants();
 		FogProcess->SetEnabled(FogComponentCount > 0);
 		FogProcess->UnregisterFogComponent();
 	}
@@ -704,6 +687,55 @@ public:
 
 	inline void SetFogInscatteringColor(const FLinearColor& Color) { FogProcess->FogConstants.FogInscatteringColor = Color; }
 	inline FLinearColor GetFogInscatteringColor() const { return FogProcess->FogConstants.FogInscatteringColor; }
+	
+	virtual void SerializeClass(json::JSON& OutJson) const override
+	{
+		Super::SerializeClass(OutJson);
+
+		OutJson["Properties"]["FogDensity"] = GetFogDensity();
+		OutJson["Properties"]["FogHeightFalloff"] = GetFogHeightFalloff();
+		OutJson["Properties"]["FogStartDistance"] = GetFogStartDistance();
+		OutJson["Properties"]["FogCutoffDistance"] = GetFogCutoffDistance();
+		OutJson["Properties"]["FogMaxOpacity"] = GetFogMaxOpacity();
+		OutJson["Properties"]["FogHeight"] = GetFogHeight();
+		OutJson["Properties"]["FogInscatteringColor"] = JsonUtils::ToJson(GetFogInscatteringColor());
+
+	}
+
+	void DeserializeClass(const json::JSON& inJson) override
+	{
+		Super::DeserializeClass(inJson);
+
+		const json::JSON& PropertiesJson = inJson.at("Properties");
+		if (PropertiesJson.hasKey("FogDensity"))
+		{
+			SetFogDensity(JsonUtils::FromJson<float>(PropertiesJson.at("FogDensity")));
+		}
+		if (PropertiesJson.hasKey("FogHeightFalloff"))
+		{
+			SetFogDensity(JsonUtils::FromJson<float>(PropertiesJson.at("FogHeightFalloff")));
+		}
+		if (PropertiesJson.hasKey("FogStartDistance"))
+		{
+			SetFogStartDistance(JsonUtils::FromJson<float>(PropertiesJson.at("FogStartDistance")));
+		}
+		if (PropertiesJson.hasKey("FogCutoffDistance"))
+		{
+			SetFogCutoffDistance(JsonUtils::FromJson<float>(PropertiesJson.at("FogCutoffDistance")));
+		}
+		if (PropertiesJson.hasKey("FogMaxOpacity"))
+		{
+			SetFogMaxOpacity(JsonUtils::FromJson<float>(PropertiesJson.at("FogMaxOpacity")));
+		}
+		if (PropertiesJson.hasKey("FogHeight"))
+		{
+			SetFogHeight(JsonUtils::FromJson<float>(PropertiesJson.at("FogHeight")));
+		}
+		if (PropertiesJson.hasKey("FogInscatteringColor"))
+		{
+			SetFogInscatteringColor(JsonUtils::FromJson<FLinearColor>(PropertiesJson.at("FogInscatteringColor")));
+		}
+	}
 
 private:
 	inline static int32 FogComponentCount = 0;
@@ -720,24 +752,6 @@ public:
 	{
 		UHeightFogComponent* HeightFogComponent = CreateDefaultSubobject<UHeightFogComponent>(FName("HeightFogComponent"));
 		SetRootComponent(HeightFogComponent);
-	}
-
-	void DeserializeClass(const json::JSON& inJson) override
-	{
-		Super::DeserializeClass(inJson);
-
-		for (UActorComponent* Component : GetComponents())
-		{
-			UBillboardComponent* BillboardComponent = Component->Cast<UBillboardComponent>();
-
-			if (!BillboardComponent)
-			{
-				continue;
-			}
-
-			BillboardComponent->SetBlendState(ERenderBlendMode::Transparent);
-			BillboardComponent->SetDepthState(true, false);
-		}
 	}
 
 	void CreateEditorComponents() override
