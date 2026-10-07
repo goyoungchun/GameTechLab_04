@@ -220,7 +220,7 @@ void FPropertyWindow::RenderAddComponentPopup()
 
 			if (mSelectedComponent && mSelectedComponent->IsA<USceneComponent>())
 			{
-				NewComponent->SetupAttachment(mSelectedComponent->Cast<USceneComponent>());
+				NewComponent->SetupAttachment(mSelectedComponent->Cast<USceneComponent>(), false);
 			}
 
 			mSelectedActor->AddOwnedComponent(NewComponent);
@@ -234,7 +234,7 @@ void FPropertyWindow::RenderAddComponentPopup()
 
 			if (mSelectedComponent && mSelectedComponent->IsA<USceneComponent>())
 			{
-				NewComponent->SetupAttachment(mSelectedComponent->Cast<USceneComponent>());
+				NewComponent->SetupAttachment(mSelectedComponent->Cast<USceneComponent>(), false);
 			}
 
 			mSelectedActor->AddOwnedComponent(NewComponent);
