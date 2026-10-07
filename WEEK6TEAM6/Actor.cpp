@@ -244,6 +244,22 @@ const FTransform& AActor::GetTransform() const
 	}
 }
 
+void AActor::BeginPlay()
+{
+	for (UActorComponent* component : mComponents)
+	{
+		component->BeginPlay();
+	}
+}
+
+void AActor::EndPlay(const EEndPlayReason EndPlayReason)
+{
+	for (UActorComponent* component : mComponents)
+	{
+		component->EndPlay(EndPlayReason);
+	}
+}
+
 void AActor::Tick(float deltaTime)
 {
     // 현재 월드의 갱신 단위는 컴포넌트입니다. 여기서 다시 순회하면 중복 Tick이 발생합니다.

@@ -76,3 +76,12 @@ enum class ELevelTick
 	ViewportsOnly,
 	All,
 };
+
+enum class EEndPlayReason
+{
+	Destroyed,
+	LevelTransition,
+	EndPlayInEditor,
+	RemovedFromWorld,
+	Quit,
+};
