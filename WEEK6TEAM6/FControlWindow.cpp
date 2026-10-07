@@ -99,11 +99,8 @@ void FControlWindow::RenderSpawnActorControl(const FGuiReference& GuiReference)
 			}
 			else if (strcmp(ActorTypeName, "HeightFog") == 0)
 			{
-				NewActor = FObjectFactory::ConstructObject<AActor>();
+				NewActor = FObjectFactory::ConstructUnInitializedObject<AHeightFog>();
 				NewActor->Rename(FName("HeightFogActor"));
-
-				UHeightFogComponent* HeightFogComponent = NewActor->CreateDefaultSubobject<UHeightFogComponent>(FName("HeightFogComponent"));
-				NewActor->SetRootComponent(HeightFogComponent);
 			}
 			else if (strcmp(ActorTypeName, "FireBall") == 0)
 			{

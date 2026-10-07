@@ -635,12 +635,14 @@ public:
 		FogProcess = &GEngine->GetGraphicsManager().GetFogProcess();
 		FogComponentCount++;
 		FogProcess->SetEnabled(FogComponentCount > 0);
+		FogProcess->RegisterFogComponent();
 	}
 
 	~UHeightFogComponent()
 	{
 		FogComponentCount--;
 		FogProcess->SetEnabled(FogComponentCount > 0);
+		FogProcess->UnregisterFogComponent();
 	}
 
 	inline void SetFogDensity(float Density) { FogProcess->FogConstants.FogDensity = Density; }
@@ -668,6 +670,68 @@ private:
 	inline static int32 FogComponentCount = 0;
 
 	FFogProcess* FogProcess;
+};
+
+class AHeightFog : public AActor
+{
+	REFLECT_CLASS(AHeightFog, AActor)
+
+public:
+	AHeightFog()
+	{
+		UHeightFogComponent* HeightFogComponent = CreateDefaultSubobject<UHeightFogComponent>(FName("HeightFogComponent"));
+		SetRootComponent(HeightFogComponent);
+	}
+
+	void DeserializeClass(const json::JSON& inJson) override
+	{
+		Super::DeserializeClass(inJson);
+
+		for (UActorComponent* Component : GetComponents())
+		{
+			UBillboardComponent* BillboardComponent = Component->Cast<UBillboardComponent>();
+
+			if (!BillboardComponent)
+			{
+				continue;
+			}
+
+			BillboardComponent->SetBlendState(ERenderBlendMode::Transparent);
+			BillboardComponent->SetDepthState(true, false);
+		}
+	}
+
+	void CreateEditorComponents() override
+	{
+		UBillboardComponent* BillboardComponent = CreateDefaultSubobject<UBillboardComponent>(FName("HeightFogIcon"));
+		BillboardComponent->SetTexture(FAssetManager::Get().GetAssetAs<FTexture2DAsset>(BuiltInAssetID::HeightFogIcon, true));
+		BillboardComponent->SetBlendState(ERenderBlendMode::Transparent);
+		BillboardComponent->SetDepthState(true, false);
+		BillboardComponent->SetEditorOnly(true);
+		BillboardComponent->SetDoNotSerialize(true);
+		BillboardComponent->SetVisualizeProxy(true);
+
+		USceneComponent* RootComp = GetRootComponent();
+		if (RootComp)
+		{
+			BillboardComponent->SetupAttachment(RootComp);
+		}
+
+		AddOwnedComponent(BillboardComponent);
+
+		UText3DComponent* Text3DComponent = CreateDefaultSubobject<UText3DComponent>(FName("UUIDDisplayer"));
+		Text3DComponent->SetRelativeScale3D(FVector(0.01f, 0.01f, 0.01f));
+		Text3DComponent->SetBillboard(true);
+		Text3DComponent->SetText(Utf2Wide(std::format("UUID: {}", UUID)));
+		Text3DComponent->SetFontAtlasAsset(FAssetManager::Get().GetAssetAs<FFontAtlasAsset>(FName("TestFontAtlas")));
+		Text3DComponent->SetDepthState(false, false);
+		Text3DComponent->SetEditorOnly(true);
+		Text3DComponent->SetDoNotSerialize(true);
+
+		Text3DComponent->SetupAttachment(BillboardComponent, false);
+
+		AddOwnedComponent(Text3DComponent);
+	}
 };
 
 class UPointLightComponent : public USceneComponent
