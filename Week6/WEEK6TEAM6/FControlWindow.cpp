@@ -1,0 +1,498 @@
+#include "FControlWindow.h"
+#include "Camera.h"
+#include "Renderer.h"
+#include "FLogManager.h"
+#include "MathUtility.h"
+#include "ImGui/imgui.h"
+#include "ShowFlags.h"
+#include "NativeFileDialog.h"
+#include "FileManager.h"
+#include "ObjectFactory.h"
+#include "UTextComponent.h"
+#include "UAtlasAnimationComponent.h"
+#include "UStaticMeshComponent.h"
+#include "World.h"
+#include "FEditorEngine.h"
+#include "FEditorViewportClient.h"
+#include "FEditorUIManager.h"
+#include "enum.h"
+#include "GraphicsManager.h"
+
+void FControlWindow::Render(const FGuiReference& GuiReference)
+{
+	ImGuiWindowFlags flags = ImGuiWindowFlags_NoCollapse;
+	ImGui::Begin("Jungle Control Panel", nullptr, flags);
+
+	ImGui::Text("Hello Jungle World!");
+
+	RenderSpawnActorControl(GuiReference);
+	if (GuiReference.WorldContext->GetWorldType() == EWorldType::Editor)
+	{
+		RenderSceneControl(GuiReference);
+	}
+	RenderCameraControl(GuiReference);
+	RenderGizmoControl(GuiReference);
+	RenderPIEControl(GuiReference);
+
+	ImGui::End();
+}
+
+void FControlWindow::RenderSpawnActorControl(const FGuiReference& GuiReference)
+{
+	/* Spawn Actor */
+	// NOTE: This name array must be edited when adding new primitive types to EPrimitive enum.
+	ImGui::SeparatorText("Spawn Actor");
+
+	const char* ActorTypeNames[] = {
+		"Sphere",
+		"Cube",
+		"Triangle",
+		"GizmoArrow",
+		"Circle",
+		"SpotLight",
+		"Explosion",
+		"HeightFog",
+		"FireBall",
+		"Text",
+	};
+
+	ImGui::Combo("Actor Type", &mSelectedTargetSpawnIndex, ActorTypeNames, IM_ARRAYSIZE(ActorTypeNames));
+
+	if (ImGui::Button("Spawn"))
+	{
+		for (int32 i = 0; i < mSpawnCount; ++i)
+		{
+			const char* ActorTypeName = ActorTypeNames[mSelectedTargetSpawnIndex];
+
+			AActor* NewActor = nullptr;
+			if (strcmp(ActorTypeName, "Explosion") == 0)
+			{
+				TSharedPtr<FSpriteAtlasAsset> ExplosionAtlas = FAssetManager::Get().GetAssetAs<FSpriteAtlasAsset>(FName("ExplosionSpriteAtlas"));
+
+				NewActor = FObjectFactory::ConstructObject<AActor>();
+				NewActor->Rename(FName("ExplosionActor"));
+
+				UAtlasAnimationComponent* AnimComponent = NewActor->CreateDefaultSubobject<UAtlasAnimationComponent>(FName("AtlasAnimationComponent"));
+				AnimComponent->SetAtlas(ExplosionAtlas);
+				AnimComponent->SetDepthState(true, false);
+				AnimComponent->Play();
+
+				NewActor->SetRootComponent(AnimComponent);
+			}
+			else if (strcmp(ActorTypeName, "Sphere") == 0 || strcmp(ActorTypeName, "Cube") == 0 || strcmp(ActorTypeName, "Triangle") == 0 || strcmp(ActorTypeName, "GizmoArrow") == 0 || strcmp(ActorTypeName, "Circle") == 0)
+			{
+				NewActor = FObjectFactory::ConstructObject<AActor>();
+				NewActor->Rename(FName(std::format("{}Actor", ActorTypeName)));
+
+				UStaticMeshComponent* MeshComponent = NewActor->CreateDefaultSubobject<UStaticMeshComponent>(FName("StaticMeshComponent"));
+				MeshComponent->SetMesh(FAssetManager::Get().GetAssetAs<FStaticMeshAsset>(FName(std::format("{}Mesh", ActorTypeName)), true));
+				NewActor->SetRootComponent(MeshComponent);
+			}
+			else if (strcmp(ActorTypeName, "SpotLight") == 0)
+			{
+				NewActor = FObjectFactory::ConstructUnInitializedObject<ASpotLight>();
+				NewActor->Rename(FName("SpotLightActor"));
+			}
+			else if (strcmp(ActorTypeName, "StaticMesh") == 0)
+			{
+				NewActor = FObjectFactory::ConstructObject<AActor>();
+				NewActor->Rename(FName("StaticMeshActor"));
+				UStaticMeshComponent* MeshComponent = NewActor->CreateDefaultSubobject<UStaticMeshComponent>(FName("StaticMeshComponent"));
+				NewActor->SetRootComponent(MeshComponent);
+			}
+			else if (strcmp(ActorTypeName, "HeightFog") == 0)
+			{
+				NewActor = FObjectFactory::ConstructUnInitializedObject<AHeightFog>();
+				NewActor->Rename(FName("HeightFogActor"));
+			}
+			else if (strcmp(ActorTypeName, "FireBall") == 0)
+			{
+				NewActor = FObjectFactory::ConstructObject<AActor>();
+				NewActor->Rename(FName("FireBallActor"));
+
+				UStaticMeshComponent* MeshComponent = NewActor->CreateDefaultSubobject<UStaticMeshComponent>(FName("StaticMeshComponent"));
+				MeshComponent->SetMesh(FAssetManager::Get().GetAssetAs<FStaticMeshAsset>(BuiltInAssetID::SphereMesh, true));
+				NewActor->SetRootComponent(MeshComponent);
+
+				UPointLightComponent* PointLightComponent = NewActor->CreateDefaultSubobject<UPointLightComponent>(FName("PointLightComponent"));
+				PointLightComponent->SetupAttachment(MeshComponent);
+				NewActor->AddOwnedComponent(PointLightComponent);
+
+				UProjectileMovementComponent* ProjectileMovementComponent = NewActor->CreateDefaultSubobject<UProjectileMovementComponent>(FName("ProjectileMovementComponent"));
+				NewActor->AddOwnedComponent(ProjectileMovementComponent);
+
+				URotationMovementComponent* RotationMovementComponent = NewActor->CreateDefaultSubobject<URotationMovementComponent>(FName("RotationMovementComponent"));
+				NewActor->AddOwnedComponent(RotationMovementComponent);
+			}
+			else if (strcmp(ActorTypeName, "Text") == 0)
+			{
+				NewActor = FObjectFactory::ConstructObject<AActor>();
+				NewActor->Rename(FName("TextActor"));
+
+				UTextRenderComponent* TextComponent = NewActor->CreateDefaultSubobject<UTextRenderComponent>(FName("TextRenderComponent"));
+				TextComponent->SetText(L"Hello World!");
+				TextComponent->SetFontAtlasAsset(FAssetManager::Get().GetAssetAs<FFontAtlasAsset>(FName("TestFontAtlas")));
+				TextComponent->SetDepthState(false, false);
+
+				NewActor->SetRootComponent(TextComponent);
+			}
+			else
+			{
+				UE_LOG_ERROR("Unknown actor class: %s", ActorTypeName);
+			}
+
+			if (NewActor)
+			{
+				GuiReference.WorldContext->World()->GetLevel()->AddActor(NewActor);
+			}
+		}
+	}
+	ImGui::SameLine();
+
+	if (ImGui::InputInt("Number of spawn", &mSpawnCount))
+	{
+		mSpawnCount = FGenericPlatformMath::Max(1, mSpawnCount);
+	}
+
+	/*Scene Control*/
+
+	const std::filesystem::path sceneDirectory = std::filesystem::absolute(std::filesystem::path(kDefaultAssetsPath) / std::filesystem::path(kSceneDataDir));
+
+	void* ownerWindow = ImGui::GetMainViewport()->PlatformHandleRaw;
+}
+
+void FControlWindow::RenderSceneControl(const FGuiReference& GuiReference)
+{
+	/*Scene Control*/
+	ImGui::SeparatorText("Scene Control");
+
+	const std::filesystem::path SceneDirectory = std::filesystem::absolute(std::filesystem::path(kDefaultAssetsPath) / std::filesystem::path(kSceneDataDir));
+
+	void* OwnerWindow = ImGui::GetMainViewport()->PlatformHandleRaw;
+
+	if (ImGui::Button("New scene"))
+	{
+		GEditor.EnqueuePendingTask([ViewportClient = GuiReference.ViewportClient]() {
+			GEditor.CreateNewMapForEditing();
+			ViewportClient->Reset();
+		});
+	}
+
+	ImGui::SameLine();
+
+	if (ImGui::Button("Save scene"))
+	{
+		try
+		{
+			// 저장 대화상자의 초기 폴더가 반드시 존재하도록 한다.
+			//std::filesystem::create_directories(sceneDirectory);
+
+			const std::optional<std::filesystem::path> selectedPath = FNativeFileDialog::SaveScene(SceneDirectory);
+
+			// 취소 버튼을 누른 경우에는 아무 작업도 하지 않는다.
+			if (selectedPath.has_value())
+			{
+				SaveMap(GuiReference.WorldContext->World(), GuiReference.EditorCamera, selectedPath.value(), *GuiReference.FileManager);
+
+				UE_LOG("Scene saved: %s", selectedPath->string().c_str());
+			}
+		}
+		catch (const std::exception& e)
+		{
+			UE_LOG_ERROR(
+				"Failed to save scene: %s",
+				e.what());
+		}
+	}
+
+	ImGui::SameLine();
+
+	if (ImGui::Button("Load scene"))
+	{
+		try
+		{
+			//std::filesystem::create_directories(sceneDirectory);
+
+			const std::optional<std::filesystem::path> selectedPath = FNativeFileDialog::OpenScene(SceneDirectory);
+
+			// 취소한 경우에는 현재 씬과 카메라 상태를 건드리지 않는다.
+			if (selectedPath.has_value())
+			{
+				GEditor.EnqueuePendingTask([PrevWorld = GuiReference.WorldContext->World(), Camera = GuiReference.EditorCamera, selectedPath, FileManager = GuiReference.FileManager]() {
+					GEditor.CreateNewMapForEditing();
+					FWorldContext* NewWorldContext = GEditor.GetEditorWorldContext();
+					UWorld* NewWorld = NewWorldContext->World();
+					LoadMap(NewWorld, Camera, selectedPath.value(), *FileManager);
+				});
+
+				// 파일 로드가 실행된 뒤에만 카메라를 초기화한다.
+				GuiReference.ViewportClient->Reset();
+
+				UE_LOG("Scene loaded: %s", selectedPath->string().c_str());
+			}
+		}
+		catch (const std::exception& e)
+		{
+			UE_LOG_ERROR("Failed to load scene: %s", e.what());
+		}
+	}
+}
+
+void FControlWindow::RenderCameraControl(const FGuiReference& GuiReference)
+{
+	ImGuiIO& io = ImGui::GetIO();
+
+	/* Camera Control */
+	ImGui::SeparatorText("Camera Control");
+
+	FCamera& camera = GuiReference.ViewportClient->GetCamera();
+	URenderer* renderer = GuiReference.GraphicsManager->GetRenderer();
+
+	if (ImGui::BeginCombo("##ShowFlags", "Show Flags"))
+	{
+		// 표시 옵션은 표를 그대로 훑어 체크박스를 만든다.
+		// 옵션을 추가할 때 ShowFlags.h의 GShowFlagInfos에만 한 줄 적으면 여기 바로 나온다.
+		FShowFlags& showFlags = FShowFlags::Get();
+		for (const FShowFlagInfo& flagInfo : GShowFlagInfos)
+		{
+			bool bEnabled = showFlags.IsEnabled(flagInfo.Flag);
+			if (ImGui::Checkbox(flagInfo.Name, &bEnabled))
+			{
+				showFlags.SetEnabled(flagInfo.Flag, bEnabled);
+			}
+		}
+
+		bool bOrthographic = GuiReference.GraphicsManager->IsOrthographicTarget();
+		if (ImGui::Checkbox("Orthogonal", &bOrthographic))
+		{
+			// Preserve the camera and ortho zoom; animate only the projection ratio.
+			GuiReference.GraphicsManager->StartProjectionTransition(bOrthographic);
+		}
+
+		ImGui::EndCombo();
+	}
+	{
+		static constexpr int32 GridGapValues[] = { 1, 5, 10, 50, 100, 500 };
+		static constexpr const char* GridGapLabels[] = { "(1)", "(5)", "(10)", "(50)", "(100)", "(500)" };
+		constexpr int StepCount = IM_ARRAYSIZE(GridGapValues);
+
+		const int32 GridGap = GuiReference.GraphicsManager->GetGridGap();
+		int SelectedIndex = 0;
+		for (int i = 1; i < StepCount; ++i)
+		{
+			if (GridGap >= (GridGapValues[i - 1] + GridGapValues[i]) / 2.0f)
+			{
+				SelectedIndex = i;
+			}
+		}
+
+		ImGui::Text("Grid Gap: %d", GridGap);
+		const ImGuiStyle& Style = ImGui::GetStyle();
+		const float FontSize = ImGui::GetFontSize();
+		const float LabelWidth = ImGui::CalcTextSize("(500)").x;
+		const float Width = (std::max)(ImGui::GetContentRegionAvail().x,
+			(LabelWidth + Style.ItemInnerSpacing.x) * StepCount);
+		const float Padding = LabelWidth * 0.5f;
+		const ImVec2 Origin = ImGui::GetCursorScreenPos();
+		const float TrackLeft = Origin.x + Padding;
+		const float TrackWidth = Width - Padding * 2.0f;
+		const float TrackY = Origin.y + FontSize;
+		const float TrackHeight = FontSize * 0.3f;
+		const float LabelY = TrackY + TrackHeight + Style.ItemInnerSpacing.y;
+		ImGui::InvisibleButton("##GridGapSelector",
+			ImVec2(Width, LabelY + FontSize - Origin.y));
+		const bool bActive = ImGui::IsItemActive();
+		const bool bHovered = ImGui::IsItemHovered();
+		bool bChanged = false;
+		if (bActive && ImGui::IsMouseDown(ImGuiMouseButton_Left))
+		{
+			// Snap to the closest displayed step, including when dragging past either end.
+			const float Position = FMath::Clamp((io.MousePos.x - TrackLeft) / TrackWidth, 0.0f, 1.0f);
+			SelectedIndex = static_cast<int>(Position * (StepCount - 1) + 0.5f);
+			bChanged = true;
+		}
+		if (bChanged && GridGapValues[SelectedIndex] != GridGap)
+		{
+			GuiReference.GraphicsManager->SetGridGap(GridGapValues[SelectedIndex]);
+		}
+
+		if (ImGui::IsItemVisible())
+		{
+			ImDrawList* DrawList = ImGui::GetWindowDrawList();
+			const ImU32 TrackColor = ImGui::GetColorU32(bActive ? ImGuiCol_FrameBgActive :
+				(bHovered ? ImGuiCol_FrameBgHovered : ImGuiCol_FrameBg));
+			const ImU32 HandleColor = ImGui::GetColorU32(bActive ? ImGuiCol_SliderGrabActive : ImGuiCol_SliderGrab);
+			DrawList->AddRectFilled(ImVec2(TrackLeft, TrackY),
+				ImVec2(TrackLeft + TrackWidth, TrackY + TrackHeight), TrackColor, Style.FrameRounding);
+			for (int i = 0; i < StepCount; ++i)
+			{
+				const float X = TrackLeft + TrackWidth * i / (StepCount - 1);
+				const ImU32 LabelColor = ImGui::GetColorU32(i == SelectedIndex ? ImGuiCol_Text : ImGuiCol_TextDisabled);
+				DrawList->AddLine(ImVec2(X, TrackY), ImVec2(X, TrackY + TrackHeight), LabelColor);
+				DrawList->AddText(ImVec2(X - ImGui::CalcTextSize(GridGapLabels[i]).x * 0.5f, LabelY),
+					LabelColor, GridGapLabels[i]);
+			}
+			const float HandleX = TrackLeft + TrackWidth * SelectedIndex / (StepCount - 1);
+			DrawList->AddTriangleFilled(ImVec2(HandleX - FontSize * 0.4f, Origin.y),
+				ImVec2(HandleX + FontSize * 0.4f, Origin.y), ImVec2(HandleX, TrackY + TrackHeight), HandleColor);
+		}
+	}
+
+	ImGui::Text("FOV     ");
+	ImGui::SameLine();
+	ImGui::SliderFloat("##FOV", &camera.mFovDegree, 0.0f, 180.0f);
+
+	ImGui::Text("Sensitivity");
+	ImGui::SameLine();
+	ImGui::SliderFloat("##CameraSensitivity", &camera.Sensitivity, 0.01f, 1.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
+
+	// 1) 라벨 텍스트를 먼저 그리고 같은 줄로
+	ImGui::Text("Location");
+	ImGui::SameLine();
+
+	// 2) 텍스트를 그린 "뒤"의 남은 폭을 기준으로 계산
+	const float spacing = ImGui::GetStyle().ItemSpacing.x;
+	const float itemWidth = (ImGui::GetContentRegionAvail().x - spacing * 2.0f) / 3.0f;
+
+	FVector Location = camera.Transform.GetLocation();
+	bool bLocationChanged = false;
+
+	ImGui::SetNextItemWidth(itemWidth);
+	bLocationChanged |= ImGui::DragFloat("##CamLocX", &Location.x, 0.1f, 10.0f);
+	ImGui::SameLine();
+	ImGui::SetNextItemWidth(itemWidth);
+	bLocationChanged |= ImGui::DragFloat("##CamLocY", &Location.y, 0.1f, 10.0f);
+	ImGui::SameLine();
+	ImGui::SetNextItemWidth(itemWidth);
+	bLocationChanged |= ImGui::DragFloat("##CamLocZ", &Location.z, 0.1f, 10.0f);
+	
+	if (bLocationChanged)
+	{
+		camera.Transform.SetLocation(Location);
+	}
+
+	FQuaternion Rotation = camera.Transform.GetRotation();
+	FRotator Rotator = ToEulerAngles(Rotation);
+	bool bRotationChanged = false;
+
+	ImGui::Text("Rotation");
+	ImGui::SameLine();
+	ImGui::SetNextItemWidth(itemWidth);
+	bRotationChanged |= ImGui::DragFloat("##CamRotX", &Rotator.Roll, 0.1f, 180.0f);
+	ImGui::SameLine();
+	ImGui::SetNextItemWidth(itemWidth);
+	bRotationChanged |= ImGui::DragFloat("##CamRotY", &Rotator.Pitch, 0.1f, 180.0f);
+	ImGui::SameLine();
+	ImGui::SetNextItemWidth(itemWidth);
+	bRotationChanged |= ImGui::DragFloat("##CamRotZ", &Rotator.Yaw, 0.1f, 180.0f);
+
+	if (bRotationChanged)
+	{
+		camera.Transform.SetRotation(ToQuaternion(Rotator));
+	}
+}
+
+void FControlWindow::RenderGizmoControl(const FGuiReference& GuiReference)
+{
+	/* Gizmo Control */
+	ImGui::SeparatorText("Gizmo Control");
+
+	// Display the current gizmo mode dropdown
+	const char* gizmoModeNames[] = { "Translate", "Rotate", "Scale" };
+
+	EGIZMO_TYPE currentGizmoType = GuiReference.ViewportClient->mGizmo.GetOperation();
+	int32 currentGizmoIndex = static_cast<int32>(currentGizmoType);
+	if (ImGui::Combo("Gizmo Mode", &currentGizmoIndex, gizmoModeNames, IM_ARRAYSIZE(gizmoModeNames)))
+	{
+		if (currentGizmoIndex == 0)
+		{
+			GuiReference.ViewportClient->mGizmo.SetOperation(EGIZMO_TYPE::TRANSLATE);
+		}
+		else if (currentGizmoIndex == 1)
+		{
+			GuiReference.ViewportClient->mGizmo.SetOperation(EGIZMO_TYPE::ROTATE);
+		}
+		else if (currentGizmoIndex == 2)
+		{
+			GuiReference.ViewportClient->mGizmo.SetOperation(EGIZMO_TYPE::SCALE);
+		}
+	}
+	if (ImGui::Button("Next Gizmo Mode"))
+	{
+		GuiReference.ViewportClient->mGizmo.SetOperation(static_cast<EGIZMO_TYPE>((currentGizmoIndex + 1) % 3));
+	}
+}
+
+void FControlWindow::RenderPIEControl(const FGuiReference& GuiReference)
+{
+	/* Play In Editor Control */
+	ImGui::SeparatorText("Play In Editor");
+
+	ImGui::PushStyleColor(ImGuiCol_Button, IM_COL32(10, 10, 10, 255));
+	ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(65, 65, 65, 255));
+	ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(90, 90, 90, 255));
+
+	ImGui::PushFont(nullptr, ImGui::GetStyle().FontSizeBase * 1.5f);
+	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10.f, 8.f));
+
+	const char* label = bStarted ? "Stop PIE" : "Start PIE";
+
+	if (bStarted)
+	{
+		ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(220, 30, 30, 255));
+	}
+	else
+	{
+		ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(80, 220, 120, 255));
+	}
+
+	const float size = ImGui::GetFrameHeight();
+	const float gap = ImGui::GetStyle().ItemSpacing.x;
+
+	const float rowWidth = ImGui::CalcTextSize(label).x + gap + size;
+	const float available = ImGui::GetContentRegionAvail().x;
+
+	if (available > rowWidth)
+	{
+		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (available - rowWidth) * 0.5f - 38.0f);
+	}
+
+	ImGui::AlignTextToFramePadding();
+	ImGui::TextUnformatted(label);
+	ImGui::SameLine(0.f, gap);
+
+	if (bStarted)
+	{
+
+		if (ImGui::Button("##Stop", ImVec2(44.0f, 44.0f)))
+		{
+			GEditor.EnqueuePendingTask([ViewportClient = GuiReference.ViewportClient]() {
+				GEditor.EndPIE();
+				GEditor.ResetSelectedComponent();
+				ViewportClient->Reset();
+			});
+			bStarted = false;
+		}
+
+		const ImVec2 min = ImGui::GetItemRectMin();
+		const ImVec2 max = ImGui::GetItemRectMax();
+
+		ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(min.x + 13.0f, min.y + 13.0f), ImVec2(max.x - 13.0f, max.y - 13.0f), IM_COL32(230, 70, 70, 255));
+	}
+	else
+	{
+		if (ImGui::ArrowButton("##Play", ImGuiDir_Right))
+		{
+			GEditor.EnqueuePendingTask([ViewportClient = GuiReference.ViewportClient]() {
+				GEditor.StartPIE();
+				GEditor.ResetSelectedComponent();
+				ViewportClient->Reset();
+			});
+			bStarted = true;
+		}
+	}
+
+	ImGui::PopStyleVar();
+	ImGui::PopFont();
+	ImGui::PopStyleColor(4);
+}

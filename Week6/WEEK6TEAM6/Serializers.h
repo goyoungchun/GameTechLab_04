@@ -1,0 +1,240 @@
+#pragma once
+
+#include "Core.h"
+#include "FArchive.h"
+#include "Vector.h"
+#include "FName.h"
+#include "FGuid.h"
+#include "FAsset.h"
+#include "Transform.h"
+#include "FObjImporter.h"
+#include "FQuaternion.h"
+#include "Object.h"
+
+// FVector Serializers (x, y, z)
+template <>
+struct FArchiveSerializer<FVector>
+{
+	static void Serialize(FArchive& Ar, FVector& Value)
+	{
+		Ar << Value.x;
+		Ar << Value.y;
+		Ar << Value.z;
+	}
+};
+
+// FVector2 Serializers (x, y)
+template <>
+struct FArchiveSerializer<FVector2>
+{
+	static void Serialize(FArchive& Ar, FVector2& Value)
+	{
+		Ar << Value.X;
+		Ar << Value.Y;
+	}
+};
+
+template <>
+struct FArchiveSerializer<FVector4>
+{
+	static void Serialize(FArchive& Ar, FVector4& Value)
+	{
+		Ar << Value.x;
+		Ar << Value.y;
+		Ar << Value.z;
+		Ar << Value.w;
+	}
+};
+
+template <>
+struct FArchiveSerializer<FVertex>
+{
+	static void Serialize(FArchive& Ar, FVertex& Value)
+	{
+		Ar << Value.Pos;
+		Ar << Value.Normal;
+		Ar << Value.Color;
+		Ar << Value.Tex;
+	}
+};
+
+template <>
+struct FArchiveSerializer<FStaticMeshSection>
+{
+	static void Serialize(FArchive& Ar, FStaticMeshSection& Value)
+	{
+		Ar << Value.FirstIndex;
+		Ar << Value.IndexCount;
+		Ar << Value.MaterialName;
+		Ar << Value.MaterialAssetID;
+	}
+};
+
+// FString Serializers (length 만큼)
+template<>
+struct FArchiveSerializer<FString>
+{
+	static void Serialize(FArchive& Ar, FString& Value)
+	{
+		uint64 Length = Ar.GetMode() == EArchiveMode::Write ? Value.Len() : 0;		
+		Ar << Length;
+
+		if (Ar.GetMode() == EArchiveMode::Read)
+		{
+			Value.Resize(static_cast<int32>(Length));
+		}
+
+		if (Length > 0)
+		{
+			Ar.Serialize(Value.CStr(), Length);
+		}
+	}
+};
+
+template<>
+struct FArchiveSerializer<std::wstring>
+{
+	static void Serialize(FArchive& Ar, std::wstring& Value)
+	{
+		uint64 Length = Ar.GetMode() == EArchiveMode::Write ? Value.length() : 0;
+		Ar << Length;
+
+		if (Ar.GetMode() == EArchiveMode::Read)
+		{
+			Value.resize(static_cast<size_t>(Length));
+		}
+
+		if (Length > 0)
+		{
+			Ar.Serialize(Value.data(), Length * sizeof(wchar_t));
+		}
+	}
+};
+
+// FName 전용 Serializers (FName <-> String)
+template <>
+struct FArchiveSerializer<FName>
+{
+	static void Serialize(FArchive& Ar, FName& Value)
+	{
+		FString NameString;
+
+		if (Ar.GetMode() == EArchiveMode::Write)
+		{
+			NameString = Value.ToString();
+		}
+
+		Ar << NameString;
+
+		if (Ar.GetMode() == EArchiveMode::Read)
+		{
+			Value = FName(NameString);
+		}
+	}
+};
+
+// FGuid 전용 Serializers (uint32, uint32, uint32, uint32)
+template <>
+struct FArchiveSerializer<FGuid>
+{
+	static void Serialize(FArchive& Ar, FGuid& Value)
+	{
+		Ar << Value.A;
+		Ar << Value.B;
+		Ar << Value.C;
+		Ar << Value.D;
+	}
+};
+
+// FAssetFileHeader 전용 Serializers (ver, type, id)
+template <>
+struct FArchiveSerializer<FAssetFileHeader>
+{
+	static void Serialize(FArchive& Ar, FAssetFileHeader& Value)
+	{
+		Ar << Value.Version;
+		Ar << Value.AssetType;
+		Ar << Value.AssetID;
+	}
+};
+
+template <>
+struct FArchiveSerializer<FQuaternion>
+{
+	static void Serialize(FArchive& Ar, FQuaternion& Value)
+	{
+		Ar << Value.X;
+		Ar << Value.Y;
+		Ar << Value.Z;
+		Ar << Value.W;
+	}
+};
+
+template <>
+struct FArchiveSerializer<FLinearColor>
+{
+	static void Serialize(FArchive& Ar, FLinearColor& Value)
+	{
+		Ar << Value.R;
+		Ar << Value.G;
+		Ar << Value.B;
+		Ar << Value.A;
+	}
+};
+
+template <>
+struct FArchiveSerializer<FTransform>
+{
+	static void Serialize(FArchive& Ar, FTransform& Value)
+	{
+		if (Ar.GetMode() == EArchiveMode::Write)
+		{
+			FVector Location = Value.GetLocation();
+			FQuaternion Rotation = Value.GetRotation();
+			FVector Scale = Value.GetScale();
+
+			Ar << Location;
+			Ar << Rotation;
+			Ar << Scale;
+		}
+		else if (Ar.GetMode() == EArchiveMode::Read)
+		{
+			FVector Location;
+			FQuaternion Rotation;
+			FVector Scale;
+
+			Ar << Location;
+			Ar << Rotation;
+			Ar << Scale;
+
+			Value.SetLocation(Location);
+			Value.SetRotation(Rotation);
+			Value.SetScale(Scale);
+		}
+	}
+};
+
+template <typename T>
+requires std::derived_from<T, UObject>
+struct FArchiveSerializer<T*>
+{
+	static void Serialize(FArchive& Ar, T*& Value)
+	{
+		UObject* ObjectPtr = Value;
+		Ar.SerializeObject(ObjectPtr);
+
+		if (!ObjectPtr)
+		{
+			Value = nullptr;
+			return;
+		}
+
+		if (!ObjectPtr->IsA<T>())
+		{
+			throw std::runtime_error("Serialized object is not of the expected type.");
+		}
+
+		Value = ObjectPtr->Cast<T>();
+	}
+};
+

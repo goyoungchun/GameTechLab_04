@@ -1,0 +1,122 @@
+﻿#pragma once
+
+#include "Object.h"
+
+struct FRenderInfo;
+class FRenderCollector;
+class FRenderProxy;
+
+enum EActorComponentFlags
+{
+	EditorOnly = 1 << 0, // 에디터에서만 존재하는 컴포넌트. 게임에서는 제거된다.
+	DoNotSerialize = 1 << 1, // 직렬화하지 않는다.
+	Renderable = 1 << 2, // 렌더링 가능한 컴포넌트. (UPrimitiveComponent 등)
+    Tickable = 1 << 3, // 매 프레임 갱신할 컴포넌트. World의 Tick 목록에 직접 등록합니다.
+	VisualizeProxy = 1 << 4, // 에디터에서 기본 상태에서는 보이지 않는 컴포넌트를 표시하기 위한 플래그. 이 플래그가 켜져 있으면 Moouse picking에 의해 선택이 되어도 본인이 아니라 선택할 수 있는 부모 컴포넌트가 선택됩니다. (예: USpotLightComponent)
+};
+
+class UActorComponent : public UObject
+{
+	REFLECT_CLASS(UActorComponent, UObject)
+
+public:
+	UActorComponent();
+	virtual ~UActorComponent();
+
+	virtual void Serialize(FArchive& Ar) override;
+	virtual void Deserialize(FArchive& Ar) override;
+
+	virtual void BeginDestroy() override;
+
+	void DestroyComponent();
+
+	void SetOwner(AActor* owner);
+	AActor* GetOwner() const;
+
+	// Todo: Make as pure class
+
+	virtual void BeginPlay() {}
+	virtual void EndPlay(const EEndPlayReason EndPlayReason) {}
+	virtual void Tick(float deltaTime);
+
+    // 생성자에서는 플래그만 지정하고, 월드에 등록된 뒤에는 활성 목록도 갱신합니다.
+    void SetTickable(bool bTickable);
+    bool IsTickable() const { return (mComponentFlags & EActorComponentFlags::Tickable) != 0; }
+	virtual void Render(FRenderCollector& RenderCollector);
+	virtual void GetRenderInfos(TArray<FRenderInfo>* outRenderInfos) const;
+
+	inline void SetEditorOnly(bool bEditorOnly) 
+	{ 
+		if (bEditorOnly)
+		{
+			mComponentFlags |= EActorComponentFlags::EditorOnly; 
+		}
+		else
+		{
+			mComponentFlags &= ~EActorComponentFlags::EditorOnly;
+		}
+	}
+	
+	inline bool IsEditorOnly() const { return (mComponentFlags & EActorComponentFlags::EditorOnly) != 0; }
+
+	inline void SetDoNotSerialize(bool bDoNotSerialize) 
+	{ 
+		if (bDoNotSerialize)
+		{
+			mComponentFlags |= EActorComponentFlags::DoNotSerialize; 
+		}
+		else
+		{
+			mComponentFlags &= ~EActorComponentFlags::DoNotSerialize;
+		}
+	}
+
+	inline bool ShouldSerialize() const { return (mComponentFlags & EActorComponentFlags::DoNotSerialize) == 0; }
+
+	inline void SetRenderable(bool bRenderable)
+	{
+		if (bRenderable)
+		{
+			mComponentFlags |= EActorComponentFlags::Renderable;
+		}
+		else
+		{
+			mComponentFlags &= ~EActorComponentFlags::Renderable;
+		}
+	}
+
+	inline bool IsRenderable() const { return (mComponentFlags & EActorComponentFlags::Renderable) != 0; }
+
+	inline void SetVisualizeProxy(bool bVisualizeProxy)
+	{
+		if (bVisualizeProxy)
+		{
+			mComponentFlags |= EActorComponentFlags::VisualizeProxy;
+		}
+		else
+		{
+			mComponentFlags &= ~EActorComponentFlags::VisualizeProxy;
+		}
+	}
+
+	inline bool IsVisualizeProxy() const { return (mComponentFlags & EActorComponentFlags::VisualizeProxy) != 0; }
+
+	inline FRenderProxy* GetRenderProxy() { return mRenderProxy; }
+
+protected:
+	void MarkRenderDirty();
+
+public:
+	uint8 bTickInEditor = false;
+
+protected:
+	AActor* mOwner;
+	FRenderProxy* mRenderProxy = nullptr;
+
+private:
+    friend class AActor;
+
+	uint32 mComponentFlags = 0;
+	bool mRenderDirty = true;
+};
+
