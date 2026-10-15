@@ -34,3 +34,8 @@
 * **주요 구현:** 컴포넌트 기반 편집, Play In Editor(PIE), 포인트·스포트 라이트와 안개·FXAA 후처리를 지원
 * **담당 부분:** PIE, ExponentialHeightFog, ProjcetileMovementComponent, RotationMovementComponent, SpotLightComponent, FXAA, FWorldContext
 
+
+### [Week7 — Hitori Engine](./Week7)
+
+* **주요 구현:** point light, directional light, ambient light, spot light 등 다양한 조명, Gouraud·Lambert·Phong 셰이딩 구현, 노멀매핑 구현,  Compute Shader를 활용한 타일 기반 라이트 컬링과 노멀·컬링 결과 시각화 구현.
+* **담당 부분:** 4가지 light 구현 및 Light Actor 구조 설계, 탄젠트 공간 기반 노멀 매핑과 World Normal 시각화 구현. 노멀맵 로딩 및 머티리얼 편집 기능 연동

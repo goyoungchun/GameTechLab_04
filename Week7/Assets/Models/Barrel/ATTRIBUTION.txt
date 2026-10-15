@@ -1,0 +1,24 @@
+Barrel by Pavel Kutejnikov (Kutejnikov)
+Source: https://opengameart.org/content/barrel-3
+Original download: https://opengameart.org/sites/default/files/barrel_0.7z
+License: Creative Commons Attribution 4.0 International
+https://creativecommons.org/licenses/by/4.0/
+
+Adaptations in this package:
+- Selected the original triangulated barrel mesh (barrel_tris.obj).
+- Added barrel.mtl and OBJ material links for the current importer.
+- Uniformly scaled to height 2.0 and centered X/Z at the bottom pivot.
+- Clamped two UVs from U=-0.0014 to U=0 (less than one texture pixel).
+- Renamed diffuse and normal texture copies; image pixels are unchanged.
+- Selected the supplied DirectX normal map as normal.png.
+- Included the supplied OpenGL normal map as normal_gl.png.
+  Change `norm normal.png` to `norm normal_gl.png` if your tangent convention requires it.
+
+Keep these files together under Assets/Models/Barrel_ImporterReady/.
+Load barrel.obj. The package contains no .obj.bin cache.
+The MTL uses relative paths, Kd 1 1 1, d 1, map_Kd, and norm.
+The current renderer uses diffuse and normal; other PBR maps are omitted.
+If you change the MTL after import, remove its barrel.obj.bin cache and restart the editor.
+
+Validation: triangle faces, all position/UV/normal indices, UV bounds,
+material links and texture decoding checked. Engine rendering is not verified.
