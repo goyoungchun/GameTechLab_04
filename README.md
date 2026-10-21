@@ -39,3 +39,8 @@
 
 * **주요 구현:** point light, directional light, ambient light, spot light 등 다양한 조명, Gouraud·Lambert·Phong 셰이딩 구현, 노멀매핑 구현,  Compute Shader를 활용한 타일 기반 라이트 컬링과 노멀·컬링 결과 시각화 구현.
 * **담당 부분:** 4가지 light 구현 및 Light Actor 구조 설계, 탄젠트 공간 기반 노멀 매핑과 World Normal 시각화 구현. 노멀맵 로딩 및 머티리얼 편집 기능 연동
+
+### [Week8 — Hitori Engine](./Week8)
+
+* **주요 구현:** CSM, PCF·PCSS 기반 그림자 렌더링과 다중 페이지 섀도 아틀라스, 그림자 캐싱을 구현
+* **담당 부분:** PCSS의 깊이 계산과 소프트 섀도 품질 개선. 광원별 그림자 설정과 최소 탐색 깊이 추가, Rect Light 광원 반경 처리 수정.
