@@ -19,6 +19,8 @@ IncludeDir = {}
 IncludeDir["ImGui"] = "Source/ThirdParty/ImGui"
 IncludeDir["stb"]   = "Source/ThirdParty/stb"
 IncludeDir["json"]  = "Source/ThirdParty/json"
+IncludeDir["LuaJIT"] = "Source/ThirdParty/LuaJIT/include"
+IncludeDir["sol2"]   = "Source/ThirdParty/sol2"
 
 -- premake의 filter는 project()를 만나면 초기화된다.
 -- 두 프로젝트가 같은 런타임(/MDd vs /MD)으로 컴파일되지 않으면 링크가 실패하므로
@@ -40,6 +42,8 @@ function CommonSettings()
 		"NOMINMAX",
 		"UNICODE",
 		"_UNICODE",
+		"SOL_LUAJIT=1",          -- sol2에게 LuaJIT(5.1 API)임을 알림
+		"SOL_ALL_SAFETIES_ON=1", -- 타입 오류 시 크래시 대신 에러 메시지
 	}
 
 	filter "files:**.hlsl"
@@ -142,6 +146,8 @@ project "HitoriEngine"
 		"Source/Runtime",
 		"%{IncludeDir.stb}",
 		"%{IncludeDir.json}",
+		"%{IncludeDir.LuaJIT}",
+		"%{IncludeDir.sol2}",
 	}
 
 	links
@@ -187,6 +193,8 @@ project "HitoriEditor"
 		"%{IncludeDir.ImGui}/backends",
 		"%{IncludeDir.stb}",
 		"%{IncludeDir.json}",
+		"%{IncludeDir.LuaJIT}",
+		"%{IncludeDir.sol2}",
 	}
 
 	links
@@ -198,7 +206,11 @@ project "HitoriEditor"
 		"ole32.lib",
 		"shell32.lib",
 		"uuid.lib",
+		"lua51.lib",
 	}
+
+	libdirs { "Source/ThirdParty/LuaJIT/lib" }
+	postbuildcommands { '{COPYFILE} "%{wks.location}Source/ThirdParty/LuaJIT/lib/lua51.dll" "%{cfg.targetdir}"' }
 
 	filter "files:**.manifest"
 		buildaction "Manifest"
