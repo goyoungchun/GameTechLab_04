@@ -3,6 +3,7 @@
 
 #include "imgui_internal.h"
 #include "Editor/HitoriEd/EditorDragDrop.h"
+#include "Editor/HitoriEd/EditorFileUtils.h"
 #include "Component/PrimitiveComponent.h"
 #include "Component/StaticMeshComponent.h"
 #include "Component/TextRenderComponent.h"
@@ -27,6 +28,7 @@
 #include <format>
 #include <iostream>
 #include <string>
+#include <Component/ScriptComponent.h>
 
 namespace
 {
@@ -655,6 +657,79 @@ namespace
 		}
 	}
 
+	bool CreateScriptFromTemplate(const fs::path& TemplatePath, const fs::path& NewPath)
+	{
+		std::error_code Ec;
+
+		if (!fs::exists(TemplatePath, Ec))
+		{
+			HTR_LOG(Error, "Template not found: {}", TemplatePath.string());
+			return false;
+		}
+
+		if (fs::exists(NewPath, Ec))
+			return true;
+
+		fs::create_directories(NewPath.parent_path(), Ec);   // Assets/Scripts 폴더가 없으면 생성
+
+		if (!fs::copy_file(TemplatePath, NewPath, fs::copy_options::skip_existing, Ec))
+		{
+			HTR_LOG(Error, "Failed to create script: {} ({})", NewPath.string(), Ec.message());
+			return false;
+		}
+		return true;
+	}
+
+	void OpenScript(FString ScriptPath)
+	{
+		std::filesystem::path Path = std::filesystem::absolute(std::filesystem::u8path(ScriptPath));
+		Path.make_preferred();
+		LPCTSTR LuaFilePath = (Path.c_str());
+
+		// ShellExecute() -> Windows 확장자 연결(Association)에 따라 파일 열기
+		HINSTANCE hInst = ShellExecute(
+			NULL, // 부모 윈도우 핸들 (NULL 사용 가능)
+			_T("open"), // 동작(Verb). "open"이면 등록된 기본 프로그램으로 열기
+			LuaFilePath, // 열고자 하는 파일 경로
+			NULL, // 명령줄 인자 (필요 없다면 NULL)
+			NULL, // 작업 디렉터리 (필요 없다면 NULL)
+			SW_SHOWNORMAL // 열리는 창의 상태
+		);
+
+		// ShellExecute는 성공 시 32보다 큰 값을 반환합니다.
+		// 실패 시 32 이하의 값이 반환되므로 간단히 체크 가능
+		if ((INT_PTR)hInst <= 32) {
+			MessageBox(NULL, _T("파일 열기에 실패했습니다."), _T("Error"), MB_OK | MB_ICONERROR);
+		}
+	}
+
+	void DrawScriptComponent(UScriptComponent* ScriptComponent, UWorld* World)
+	{
+		ImGui::Separator();
+
+		const FString& Path = ScriptComponent->GetScriptPath();
+		const bool bHasScript = !Path.empty() && std::filesystem::exists(Path);
+
+		if (ImGui::Button("Create Script"))
+		{
+			FString ScriptPath(ScriptComponent->GetScriptFolderPath());
+			FString SceneName = std::filesystem::path(FEditorFileUtils::GetScenePath(World)).stem().string();
+			FString ActorName = ScriptComponent->GetOwner()->GetName();
+			ScriptComponent->SetScriptPath(ScriptPath + SceneName + "_" + ActorName + ".lua");
+
+			CreateScriptFromTemplate(ScriptComponent->GetTemplateScriptPath(), ScriptComponent->GetScriptPath());
+		}
+
+		ImGui::SameLine();
+
+		ImGui::BeginDisabled(!bHasScript);          // 파일이 없으면 Edit 버튼 비활성화
+		if (ImGui::Button("Edit Script"))
+		{
+			OpenScript(Path);
+		}
+		ImGui::EndDisabled();
+	}
+
 	void DrawMaterial(UBillboardComponent* BillboardComponent)
 	{
 		const int32 NumSlots = BillboardComponent->GetNumMaterials();
@@ -924,7 +999,8 @@ namespace
 			FString* Value = static_cast<FString*>(ValuePtr);
 			char Buffer[256] = {};
 			strncpy_s(Buffer, Value->c_str(), sizeof(Buffer) - 1);
-			bChanged = ImGui::InputText(Label.c_str(), Buffer, sizeof(Buffer));
+			const ImGuiInputTextFlags Flags = Property.bReadOnly ? ImGuiInputTextFlags_ReadOnly : ImGuiInputTextFlags_None;
+			bChanged = ImGui::InputText(Label.c_str(), Buffer, sizeof(Buffer), Flags);
 			if (bChanged) *Value = Buffer;
 			break;
 		}
@@ -1128,6 +1204,10 @@ void FDetailsPanel::OnRender()
 					DrawShadowMapPreviews(ShadowMapPreviews);
 				}
 			}
+			else if (UScriptComponent* ScriptComponent = Cast<UScriptComponent>(SelectedComponent))
+			{
+				DrawScriptComponent(ScriptComponent, World);
+			}
 		}
 	}
 
@@ -1172,6 +1252,7 @@ void FDetailsPanel::DrawComponentTree(USceneComponent* SceneComp)
 
 }
 
+
 void FDetailsPanel::DrawAddComponentPopup(AActor * Owner)
 {
 	if (ImGui::BeginPopup("AddComponentPopup"))
@@ -1180,6 +1261,13 @@ void FDetailsPanel::DrawAddComponentPopup(AActor * Owner)
 		ImGui::Separator();
 		
 		// 추가 가능한 컴포넌트 목록
+		if (ImGui::Selectable("Script Component"))
+		{
+			auto* NewComp = Owner->CreateDefaultSubobject<UScriptComponent>("LuaScript");
+			SelectedComponent = NewComp;
+			NewComp->RegisterComponent();
+			
+		}
 		if (ImGui::Selectable("StaticMesh Component"))
 		{
 			auto* NewComp = Owner->CreateDefaultSubobject<UStaticMeshComponent>("StaticMesh");

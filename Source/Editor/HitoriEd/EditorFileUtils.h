@@ -9,7 +9,7 @@ public:
 	static bool SaveScene(UWorld* World);
 	static bool SaveSceneAs(UWorld* World);
 	static bool LoadScene(UWorld* World);
-	static FString GetScenePath() { return CurrentScenePath; }
+	static FString GetScenePath(UWorld* World);
 
 private:
 	static FString OpenSaveSceneDialog();
