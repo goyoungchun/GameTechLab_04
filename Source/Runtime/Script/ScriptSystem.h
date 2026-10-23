@@ -25,6 +25,7 @@ public:
 private:
 	sol::state Lua;
 
+
 	void Init();
 	void OpenLibraries();
 	void OverridePrint();

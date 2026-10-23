@@ -22,6 +22,7 @@ public:
 	virtual ~AActor();
 
 	virtual void BeginPlay();
+	virtual void EndPlay();
 	bool HasBegunPlay() const { return bHasBegunPlay; }
 	void RegisterAllComponents();
 	void UnregisterAllComponents();

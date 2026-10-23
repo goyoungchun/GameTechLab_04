@@ -12,7 +12,11 @@ function OnOverlap(OtherActor)
 OtherActor:PrintLocation();
 end
 
+function OnHit(OtherActor)
+OtherActor:PrintLocation();
+end
+
 function Tick(dt)
-obj.Location = obj.Location + obj.Velocity * dt
+obj.Location = obj.Location + Vector(1,0,0) * dt
 obj:PrintLocation()
 end

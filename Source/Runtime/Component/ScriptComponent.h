@@ -18,7 +18,13 @@ public:
 	virtual ~UScriptComponent() override;
 
 	virtual void BeginPlay() override;
+	virtual void EndPlay() override;
 	virtual void TickComponent(float DeltaTime) override;
+
+	void OnHit(AActor* InOtherActor);
+	void OnOverlap(AActor* InOtherActor);
+
+	void Initialize();
 
 	void SetScriptPath(FString InScriptPath);
 	FString GetScriptPath();
@@ -27,6 +33,9 @@ public:
 
 private:
 	FString ScriptPath;
+	sol::environment Environment;
+	sol::safe_function LuaBeginPlay, LuaTick, LuaEndPlay, LuaOnOverlap, LuaOnHit;
+
 
 	constexpr static FStringView  TemplatePath = "Assets/Scripts/Template/template.lua";
 	constexpr static FStringView  ScriptFolderPath = "Assets/Scripts/";

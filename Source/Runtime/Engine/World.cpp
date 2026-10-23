@@ -266,6 +266,7 @@ bool UWorld::DestroyActor(AActor* Actor)
 	FString ActorName = Actor->GetName();
 	uint32 ActorUUID = Actor->GetUUID();
 
+	Actor->EndPlay();
 	Actor->RegisterAllActorTickFunctions(false);
 	Actor->UnregisterAllComponents();
 
@@ -546,6 +547,14 @@ void UWorld::BeginPlay()
 void UWorld::EndPlay()
 {
 	bBegunPlay = false;
+
+	TArray<AActor*> InitialActors;
+	for (ULevel* Level : Levels)
+		if (Level)
+			for (AActor* Actor : Level->GetActors())
+				if (Actor) InitialActors.Add(Actor);
+
+	for (AActor* Actor : InitialActors) Actor->EndPlay();
 }
 
 bool UWorld::DuplicateWorld(UWorld* Source)
