@@ -42,7 +42,7 @@ void UScriptComponent::BeginPlay()
 	Super::BeginPlay();
 	Initialize();
 
-	if (!LuaBeginPlay.valid())
+	if (!LuaBeginPlay.valid() || GetOwner()->IsActorBeingDestroyed())
 	{
 		return;
 	}
@@ -71,7 +71,7 @@ void UScriptComponent::EndPlay()
 	LuaOnOverlap = sol::nil;
 	LuaOnHit = sol::nil;
 	LuaEndPlay = sol::nil;
-	Environment = sol::lua_nil;
+	Environment = sol::nil;
 	Super::EndPlay();
 }
 
@@ -79,7 +79,7 @@ void UScriptComponent::TickComponent(float DeltaTime)
 {
 	Super::TickComponent(DeltaTime);
 
-	if (!LuaTick.valid())
+	if (!LuaTick.valid() || GetOwner()->IsActorBeingDestroyed())
 	{
 		return;
 	}
@@ -94,7 +94,7 @@ void UScriptComponent::TickComponent(float DeltaTime)
 
 void UScriptComponent::OnHit(AActor *InOtherActor)
 {
-	if (!LuaOnHit.valid())
+	if (!LuaOnHit.valid() || GetOwner()->IsActorBeingDestroyed())
 	{
 		return;
 	}
@@ -109,7 +109,7 @@ void UScriptComponent::OnHit(AActor *InOtherActor)
 
 void UScriptComponent::OnOverlap(AActor* InOtherActor)
 {
-	if (!LuaOnOverlap.valid())
+	if (!LuaOnOverlap.valid() || GetOwner()->IsActorBeingDestroyed())
 	{
 		return;
 	}

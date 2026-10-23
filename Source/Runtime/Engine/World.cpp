@@ -96,6 +96,22 @@ AActor* UWorld::SpawnActor(UClass* Class, FName InName, const FTransform* Transf
 	return NewActor;
 }
 
+void UWorld::FlushDestroyList()
+{
+	while (!DestroyList.IsEmpty())
+	{
+		TArray<AActor*> ToDestroy = DestroyList;
+		DestroyList.Reset();
+		for (AActor* Actor : ToDestroy)
+		{
+			if (Actor)
+			{
+				DestroyActor(Actor);
+			}
+		}
+	}
+}
+
 void UWorld::Tick(EWorldTick TickType, float DeltaTime)
 {
 	CurrentTickType = TickType;
@@ -121,6 +137,7 @@ void UWorld::Tick(EWorldTick TickType, float DeltaTime)
 				}
 			}
 		}
+		FlushDestroyList();
 	}
 	else if (WorldType == EWorldType::Editor)
 	{
@@ -168,6 +185,7 @@ void UWorld::ClearWorld()
 	Scene.RemoveAllLights();
 	PlayerPawn = nullptr;
 	PlayerController = nullptr;
+	DestroyList.Reset();
 	HTR_LOG(Info, "{} : ", PersistentLevel->GetActorNum());
 }
 
@@ -224,8 +242,19 @@ int32 UWorld::GetActorNum()
 	return PersistentLevel->GetActorNum();
 }
 
+void UWorld::AddDestroyList(AActor* InActor)
+{
+	DestroyList.Add(InActor);
+}
+
 bool UWorld::DestroyActor(AActor* Actor)
 {
+	int32 Index = DestroyList.Find(Actor);
+	if (Index >= 0 && Index < DestroyList.Num())
+	{
+		DestroyList.RemoveAt(Index, 1);
+	}
+
 	if (!Actor)
 		return false;
 

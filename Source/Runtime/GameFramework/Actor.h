@@ -50,6 +50,8 @@ public:
 	FQuat GetActorQuat() const;           //xx 타입명변경
 	FTransform GetActorTransform() const;
 
+	bool IsActorBeingDestroyed();
+
 	void SetActorEnableCollision(bool bEnabled) { bActorEnableCollision = bEnabled; }
 	bool GetActorEnableCollision() const { return bActorEnableCollision; }
 
@@ -88,6 +90,7 @@ protected:
 
 private:
 	bool bHasBegunPlay = false;
+	bool bIsActorBeingDestroyed = false;
 
 	
 

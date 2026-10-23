@@ -144,10 +144,25 @@ FTransform AActor::GetActorTransform() const
     return FTransform::Identity;
 }
 
+bool AActor::IsActorBeingDestroyed()
+{
+    return (bIsActorBeingDestroyed);
+}
+
 bool AActor::Destroy()
 {
     if (!World)
         return false;
+
+    if (bIsActorBeingDestroyed)
+        return true;
+
+    if (bHasBegunPlay)
+    {
+        bIsActorBeingDestroyed = true;
+        World->AddDestroyList(this);
+        return true;
+    }
 
     return World->DestroyActor(this);
 }
