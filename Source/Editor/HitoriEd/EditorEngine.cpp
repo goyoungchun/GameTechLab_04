@@ -123,7 +123,6 @@ bool UEditorEngine::Init() {
 	OutputLogPanel = EditorUI->AddEditorPanel<FOutputLogPanel>();
 	FLog::AddSink(OutputLogPanel);
 	HTR_LOG(Info, "Editor Initialize...");
-
 	HTR_LOG(Info, "Initialize ImGui...");
 	ImGuiRenderer = MakeUnique<FImGuiRenderer>();
 	if (!ImGuiRenderer->Init(MainWindow->GetHandle(), RenderDevice->GetDevice(),

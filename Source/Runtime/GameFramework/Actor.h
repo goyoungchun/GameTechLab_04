@@ -15,8 +15,8 @@ class AActor : public UObject
 {
 	DECLARE_CLASS(AActor, UObject)
 	REFLECT_START(ClassName)
-		PROPERTY(bActorEnableCollision)
-		REFLECT_END()
+	PROPERTY(bActorEnableCollision)
+	REFLECT_END()
 public:
 	AActor();
 	virtual ~AActor();
@@ -43,6 +43,7 @@ public:
 	void RemoveOwnedComponent(UActorComponent* Component);
 	
 	FVector GetActorLocation() const;
+	void SetActorLocation(FVector InLocation);
 	FRotator GetActorRotation() const;
 	FVector GetActorScale3D() const;
 	FQuat GetActorQuat() const;           //xx 타입명변경
@@ -52,6 +53,8 @@ public:
 	bool GetActorEnableCollision() const { return bActorEnableCollision; }
 
 	bool Destroy();
+
+	void PrintLocation(); // 테스트용 테스트 하고 삭제해야됨
 	
 	//xx삭제 예정
 	friend class UWorld;

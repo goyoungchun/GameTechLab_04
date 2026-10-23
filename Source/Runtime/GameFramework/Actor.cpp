@@ -85,6 +85,14 @@ FVector AActor::GetActorLocation() const
     return FVector::ZeroVector;
 }
 
+void AActor::SetActorLocation(FVector InLocation)
+{
+    if (RootComponent)
+    {
+        RootComponent->SetWorldLocation(InLocation);
+    }
+}
+
 FRotator AActor::GetActorRotation() const
 {
     if (RootComponent)
@@ -133,6 +141,12 @@ bool AActor::Destroy()
         return false;
 
     return World->DestroyActor(this);
+}
+
+void AActor::PrintLocation()
+{
+    FVector Location = GetActorLocation();
+    HTR_LOG(Info, "Location {} {} {}\n", Location.X, Location.Y, Location.Z);
 }
 
 void AActor::DuplicateSubobjects(UObject* SourceObject)
