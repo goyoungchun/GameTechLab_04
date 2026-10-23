@@ -36,6 +36,8 @@ public:
 
 	UPrimitiveComponent();
 	virtual ~UPrimitiveComponent();
+	void OnRegister() override;
+	void OnUnregister() override;
 
 	virtual void BeginPlay() override;
 

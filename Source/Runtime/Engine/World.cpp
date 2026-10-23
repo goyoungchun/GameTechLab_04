@@ -13,6 +13,7 @@
 #include "UObject/UObjectIterator.h"
 
 #include "Collision/Ray.h"
+#include "Collision/FPhysSceneChaos.h"
 #include "Component/BillboardComponent.h"
 #include "Component/ParticleSubUVComponent.h"
 
@@ -32,8 +33,17 @@ DECLARE_CYCLE_STAT("Update All Transforms", STAT_UpdateAllTransforms); // 각 Tr
 
 
 
+UWorld::UWorld()
+	: PhysicsScene(MakeUnique<FPhysSceneChaos>(this))
+{
+}
+
 UWorld::~UWorld()
 {
+	// Scene이 사라지기 전에 남아 있는 컴포넌트의 World 연결을 끊는다.
+	for (TObjectIterator<UActorComponent> Component; Component; ++Component)
+		if (Component->GetWorld() == this && Component->IsRegistered())
+			Component->UnregisterComponent();
 }
 
 bool  UWorld::Init()
@@ -112,8 +122,12 @@ void UWorld::Tick(EWorldTick TickType, float DeltaTime)
 		{
 			{
 				SCOPE_CYCLE_COUNTER(STAT_ActorTick);
-				// 모든 Actor를 도는 대신 등록된 Tick 함수(메인 카메라 포함)만 실행한다.
-				TickTaskManager.RunAllTickGroups(DeltaTime);
+				TickTaskManager.RunTickGroup(ETickingGroup::PrePhysics, DeltaTime);
+				PhysicsScene->StartFrame(DeltaTime);
+				TickTaskManager.RunTickGroup(ETickingGroup::DuringPhysics, DeltaTime);
+				PhysicsScene->EndFrame();
+				TickTaskManager.RunTickGroup(ETickingGroup::PostPhysics, DeltaTime);
+				TickTaskManager.RunTickGroup(ETickingGroup::PostUpdateWork, DeltaTime);
 
 				for (ULevel* Level : Levels)
 				{

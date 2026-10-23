@@ -8,6 +8,7 @@
 #include "Engine/PrimitiveSceneProxy.h"
 #include "Engine/Scene.h"
 #include "Engine/World.h"
+#include "Collision/FPhysSceneChaos.h"
 
 namespace
 {
@@ -42,6 +43,18 @@ UPrimitiveComponent::UPrimitiveComponent()
 UPrimitiveComponent::~UPrimitiveComponent()
 {
 	UnregisterComponent();
+}
+
+void UPrimitiveComponent::OnRegister()
+{
+	Super::OnRegister();
+	GetWorld()->GetPhysicsScene().RegisterPrimitive(this);
+}
+
+void UPrimitiveComponent::OnUnregister()
+{
+	GetWorld()->GetPhysicsScene().UnRegisterPrimitive(this);
+	Super::OnUnregister();
 }
 
 void UPrimitiveComponent::BeginPlay()

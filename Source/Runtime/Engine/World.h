@@ -20,6 +20,7 @@
 //class ACameraActor;
 class ULevel;
 class UBillboardComponent;
+class FPhysSceneChaos;
 
 struct FViewContext;
 
@@ -50,7 +51,7 @@ class UWorld : public UObject
 	DECLARE_CLASS(UWorld, UObject)
 
 public:
-	UWorld() = default;
+	UWorld();
 	virtual ~UWorld();
 
 	bool Init();
@@ -107,6 +108,8 @@ public:
 	void EndPlay();
 
 	FScene& GetScene() { return Scene; }
+	FPhysSceneChaos& GetPhysicsScene() { return *PhysicsScene; }
+	const FPhysSceneChaos& GetPhysicsScene() const { return *PhysicsScene; }
 	FTickTaskManager& GetTickTaskManager() { return TickTaskManager; }
 
 
@@ -141,6 +144,7 @@ private:
 	bool bIsPaused = false;
 
 	FScene Scene;
+	TUniquePtr<FPhysSceneChaos> PhysicsScene;
 
 
 };
