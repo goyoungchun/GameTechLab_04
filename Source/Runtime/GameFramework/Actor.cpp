@@ -50,6 +50,15 @@ void AActor::BeginPlay()
     RegisterAllActorTickFunctions(true);
 }
 
+void AActor::EndPlay()
+{
+    if (!bHasBegunPlay) return;
+    bHasBegunPlay = false;
+    for (UActorComponent* Component : Components)
+        if (Component) Component->EndPlayComponent();
+    RegisterAllActorTickFunctions(false);
+}
+
 void AActor::RegisterAllActorTickFunctions(bool bRegister)
 {
     if (bRegister && !World) return;
@@ -83,6 +92,24 @@ FVector AActor::GetActorLocation() const
         return RootComponent->GetWorldLocation();
     }
     return FVector::ZeroVector;
+}
+
+void AActor::SetActorLocation(FVector InLocation)
+{
+    if (RootComponent)
+    {
+        RootComponent->SetWorldLocation(InLocation);
+    }
+}
+
+void AActor::SetActorRotation(FRotator InRotation)
+{
+    if (RootComponent) RootComponent->SetRelativeRotation(InRotation);
+}
+
+void AActor::SetActorScale3D(FVector InScale)
+{
+    if (RootComponent) RootComponent->SetRelativeScale3D(InScale);
 }
 
 FRotator AActor::GetActorRotation() const
@@ -127,12 +154,33 @@ FTransform AActor::GetActorTransform() const
     return FTransform::Identity;
 }
 
+bool AActor::IsActorBeingDestroyed()
+{
+    return (bIsActorBeingDestroyed);
+}
+
 bool AActor::Destroy()
 {
     if (!World)
         return false;
 
+    if (bIsActorBeingDestroyed)
+        return true;
+
+    if (bHasBegunPlay)
+    {
+        bIsActorBeingDestroyed = true;
+        World->AddDestroyList(this);
+        return true;
+    }
+
     return World->DestroyActor(this);
+}
+
+void AActor::PrintLocation()
+{
+    FVector Location = GetActorLocation();
+    HTR_LOG(Info, "Location {} {} {}\n", Location.X, Location.Y, Location.Z);
 }
 
 void AActor::DuplicateSubobjects(UObject* SourceObject)
@@ -199,3 +247,4 @@ void AActor::DuplicateSubobjects(UObject* SourceObject)
         }
     }
 }
+

@@ -156,3 +156,12 @@ void UActorComponent::BeginPlayComponent()
     bHasBegunPlay = true;
     BeginPlay();
 }
+
+void UActorComponent::EndPlayComponent()
+{
+    if (!IsRegistered()) return;
+    RegisterComponentTickFunctions(false);
+    if (!bHasBegunPlay) return;
+    bHasBegunPlay = false;
+    EndPlay();
+}

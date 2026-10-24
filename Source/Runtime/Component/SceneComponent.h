@@ -79,6 +79,8 @@ public:
 
 	virtual float GetCollisionRadius() const;
 
+	void SetWorldLocation(FVector InLocation);
+
 	FVector GetWorldLocation() const;
 	FRotator GetWorldRotation() const;
 	FVector GetWorldScale3D() const;

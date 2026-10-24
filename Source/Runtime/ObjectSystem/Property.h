@@ -68,6 +68,7 @@ struct FProperty
 	float MinValue = 0.0f;
 	float MaxValue = 0.0f;
 	bool bHasRange = false;
+    bool bReadOnly = false;
     TArray<FEnumEntry> EnumEntries;
     int64 (*GetEnumValue)(const void*) = nullptr;
     void (*SetEnumValue)(void*, int64) = nullptr;

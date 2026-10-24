@@ -149,6 +149,16 @@ void FContentDrawerPanel::OnRender()
 
 					ImGui::EndDragDropSource();
 				}
+				if (!bIsDirectory && Path.extension() == ".lua" && ImGui::BeginDragDropSource())
+				{
+					ImGui::SetDragDropPayload(EditorDragDrop::Script, PathString.c_str(), PathString.size() + 1);
+
+					ImGui::TextUnformatted(FilenameString.c_str());
+						
+					ImGui::EndDragDropSource();
+				}
+
+
 				// 더블 클릭 이벤트 처리
 				if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
 				{

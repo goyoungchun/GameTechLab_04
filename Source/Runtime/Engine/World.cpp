@@ -26,6 +26,8 @@
 #include "Core/Stats/LightweightStats.h"
 #include "Core/Stats/EditorStats.h"
 
+#include "Script/ScriptSystem.h"
+
 
 DECLARE_CYCLE_STAT("Actor Tick", STAT_ActorTick); // Actor 틱 측정
 DECLARE_CYCLE_STAT("Update All Transforms", STAT_UpdateAllTransforms); // 각 Transform의 Update 시간 측정
@@ -96,6 +98,22 @@ AActor* UWorld::SpawnActor(UClass* Class, FName InName, const FTransform* Transf
 	return NewActor;
 }
 
+void UWorld::FlushDestroyList()
+{
+	while (!DestroyList.IsEmpty())
+	{
+		TArray<AActor*> ToDestroy = DestroyList;
+		DestroyList.Reset();
+		for (AActor* Actor : ToDestroy)
+		{
+			if (Actor)
+			{
+				DestroyActor(Actor);
+			}
+		}
+	}
+}
+
 void UWorld::Tick(EWorldTick TickType, float DeltaTime)
 {
 	CurrentTickType = TickType;
@@ -121,6 +139,7 @@ void UWorld::Tick(EWorldTick TickType, float DeltaTime)
 				}
 			}
 		}
+		FlushDestroyList();
 	}
 	else if (WorldType == EWorldType::Editor)
 	{
@@ -168,6 +187,7 @@ void UWorld::ClearWorld()
 	Scene.RemoveAllLights();
 	PlayerPawn = nullptr;
 	PlayerController = nullptr;
+	DestroyList.Reset();
 	HTR_LOG(Info, "{} : ", PersistentLevel->GetActorNum());
 }
 
@@ -224,8 +244,19 @@ int32 UWorld::GetActorNum()
 	return PersistentLevel->GetActorNum();
 }
 
+void UWorld::AddDestroyList(AActor* InActor)
+{
+	DestroyList.Add(InActor);
+}
+
 bool UWorld::DestroyActor(AActor* Actor)
 {
+	int32 Index = DestroyList.Find(Actor);
+	if (Index >= 0 && Index < DestroyList.Num())
+	{
+		DestroyList.RemoveAt(Index, 1);
+	}
+
 	if (!Actor)
 		return false;
 
@@ -266,6 +297,7 @@ bool UWorld::DestroyActor(AActor* Actor)
 	FString ActorName = Actor->GetName();
 	uint32 ActorUUID = Actor->GetUUID();
 
+	Actor->EndPlay();
 	Actor->RegisterAllActorTickFunctions(false);
 	Actor->UnregisterAllComponents();
 
@@ -476,6 +508,8 @@ bool UWorld::SweepSingle(const FRay& WorldRay, float MaxDistance, float Radius, 
 
 void UWorld::BeginPlay()
 {
+	FScriptSystem::Get().Init();
+
 	// 플레이 모드 폰 및 컨트롤러 준비
 	if (WorldType == EWorldType::PIE)
 	{
@@ -546,6 +580,15 @@ void UWorld::BeginPlay()
 void UWorld::EndPlay()
 {
 	bBegunPlay = false;
+
+	TArray<AActor*> InitialActors;
+	for (ULevel* Level : Levels)
+		if (Level)
+			for (AActor* Actor : Level->GetActors())
+				if (Actor) InitialActors.Add(Actor);
+
+	for (AActor* Actor : InitialActors) Actor->EndPlay();
+	FScriptSystem::Get().Shutdown();
 }
 
 bool UWorld::DuplicateWorld(UWorld* Source)
