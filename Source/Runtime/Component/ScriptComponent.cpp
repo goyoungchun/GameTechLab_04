@@ -276,12 +276,18 @@ bool UScriptComponent::CheckChangeScriptFile(float DeltaTime)
 
 bool UScriptComponent::HotReloadFile()
 {
-	sol::environment NewEnvironment;
+	sol::environment OldEnvironment = Environment;
+	TArray<TUniquePtr<FCoroutineRecord>> OldRecords(std::move(CoroutineRecords));
 
+	sol::environment NewEnvironment;
 	if (LoadScriptFile(NewEnvironment))
 	{
+		OldRecords.Reset();
+		UnbindScriptAPI(OldEnvironment);
 		return true;
 	}
+
+	CoroutineRecords = std::move(OldRecords);
 	return false;
 }
 
