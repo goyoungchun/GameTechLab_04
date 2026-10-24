@@ -1,10 +1,12 @@
 #pragma once
 
 #include "Engine/EngineBaseTypes.h"
-#include "Core/Delegate.h"
 #include "ObjectSystem/Class.h"
 #include "ObjectSystem/Object.h"
+#include "Core/DelegateCombinations.h"
 
+DECLARE_MULTICAST_DELEGATE_TwoParams(FComponentActivateDelegate, UActorComponent*, bool);
+DECLARE_MULTICAST_DELEGATE_OneParam(FComponentDeactivateDelegate, UActorComponent*);
 
 class AActor;
 class UWorld;
@@ -41,8 +43,8 @@ public:
   bool IsComponentTickEnabled() const
   { return PrimaryComponentTick.bCanEverTick && PrimaryComponentTick.IsTickFunctionEnabled(); }
 
-  TMulticastDelegate<UActorComponent*, bool> OnComponentActivated;
-  TMulticastDelegate<UActorComponent*> OnComponentDeactivated;
+  FComponentActivateDelegate OnComponentActivated;
+  FComponentDeactivateDelegate OnComponentDeactivated;
 
   // 컴포넌트 등록 및 해제
   void RegisterComponent();
