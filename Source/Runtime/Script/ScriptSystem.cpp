@@ -3,11 +3,11 @@
 
 FScriptSystem::FScriptSystem()
 {
-	Init();
 }
 
 sol::state& FScriptSystem::GetLua()
 {
+	assert(bIsInitialized && "FScriptSystem::Init() not called");
 	return *Lua;
 }
 
@@ -106,14 +106,25 @@ void FScriptSystem::RegisterTypes()
 
 void FScriptSystem::Init()
 {
+	if (bIsInitialized)
+	{
+		return;
+	}
 	Lua = MakeUnique<sol::state>();
 	OpenLibraries();
 	RegisterTypes();
 	OverridePrint();
+	bIsInitialized = true;
 }
 
 void FScriptSystem::Shutdown()
 {
+	if (!bIsInitialized)
+	{
+		return;
+	}
 	Lua->collect_garbage();
 	Lua.reset();
+
+	bIsInitialized = false;
 }

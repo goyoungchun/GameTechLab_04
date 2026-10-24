@@ -17,16 +17,14 @@ public:
 
 	FScriptSystem();
 	~FScriptSystem() = default;
-
+	void Init();
 	sol::state& GetLua();
 	
 	void Shutdown();
 	
 private:
+	bool bIsInitialized = false;
 	TUniquePtr<sol::state> Lua;
-
-
-	void Init();
 	void OpenLibraries();
 	void OverridePrint();
 	void RegisterTypes();

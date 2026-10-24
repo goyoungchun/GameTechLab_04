@@ -26,6 +26,8 @@
 #include "Core/Stats/LightweightStats.h"
 #include "Core/Stats/EditorStats.h"
 
+#include "Script/ScriptSystem.h"
+
 
 DECLARE_CYCLE_STAT("Actor Tick", STAT_ActorTick); // Actor 틱 측정
 DECLARE_CYCLE_STAT("Update All Transforms", STAT_UpdateAllTransforms); // 각 Transform의 Update 시간 측정
@@ -506,6 +508,8 @@ bool UWorld::SweepSingle(const FRay& WorldRay, float MaxDistance, float Radius, 
 
 void UWorld::BeginPlay()
 {
+	FScriptSystem::Get().Init();
+
 	// 플레이 모드 폰 및 컨트롤러 준비
 	if (WorldType == EWorldType::PIE)
 	{
@@ -584,6 +588,7 @@ void UWorld::EndPlay()
 				if (Actor) InitialActors.Add(Actor);
 
 	for (AActor* Actor : InitialActors) Actor->EndPlay();
+	FScriptSystem::Get().Shutdown();
 }
 
 bool UWorld::DuplicateWorld(UWorld* Source)
