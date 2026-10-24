@@ -13,6 +13,4 @@
   </Project>
   <Project Path="Source\ThirdParty\ImGui\ImGui.vcxproj" Id="C0FF640D-2C14-8DBE-F595-301E616989EF">
   </Project>
-  <Project Path="Tests\Physics\PhysicsSimulationTests.vcxproj" Id="2068F939-0C62-228C-F5CE-B89CE16788F8">
-  </Project>
 </Solution>

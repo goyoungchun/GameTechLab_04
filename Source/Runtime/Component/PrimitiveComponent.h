@@ -8,12 +8,14 @@
 #include "Collision/HitResult.h"
 #include "Collision/PhysicsTypes.h"
 
+// Unreal의 컴포넌트 충돌 이벤트와 동일한 인자 구성이다.
+DECLARE_MULTICAST_DELEGATE_SixParams(FComponentBeginOverlapSignature, UPrimitiveComponent*, AActor*, UPrimitiveComponent*, int32, bool, const FHitResult&);
+DECLARE_MULTICAST_DELEGATE_FourParams(FComponentEndOverlapSignature, UPrimitiveComponent*, AActor*, UPrimitiveComponent*, int32);
+DECLARE_MULTICAST_DELEGATE_FiveParams(FComponentHitSignature, UPrimitiveComponent*, AActor*, UPrimitiveComponent*, FVector, const FHitResult&);
+
 class FPrimitiveSceneProxy;
 
-// Unreal의 컴포넌트 충돌 이벤트와 동일한 인자 구성이다.
-using FComponentBeginOverlapSignature = TMulticastDelegate<UPrimitiveComponent*, AActor*, UPrimitiveComponent*, int32, bool, const FHitResult&>;
-using FComponentEndOverlapSignature = TMulticastDelegate<UPrimitiveComponent*, AActor*, UPrimitiveComponent*, int32>;
-using FComponentHitSignature = TMulticastDelegate<UPrimitiveComponent*, AActor*, UPrimitiveComponent*, FVector, const FHitResult&>;
+
 
 enum class EPrimitiveType
 {
