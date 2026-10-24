@@ -1,6 +1,7 @@
 #include "EnginePCH.h"
 #include "ScriptComponent.h"
 #include "GameFramework/Actor.h"
+#include "Core/EngineLog.h"
 
 UScriptComponent::UScriptComponent()
 {
@@ -21,6 +22,22 @@ bool UScriptComponent::LoadScriptFile(sol::environment InEnvironment)
 	sol::state& Lua = FScriptSystem::Get().GetLua();
 	InEnvironment = sol::environment(Lua, sol::create, Lua.globals());
 	InEnvironment["obj"] = GetOwner();
+
+	bAcceptCoroutines = true;
+	InEnvironment.set_function("StartCoroutine", [this](sol::protected_function Fn, sol::variadic_args Args)
+		{
+			return StartCoroutine(Fn, Args);
+		}
+	);
+	InEnvironment.set_function("StopCoroutine", [this](sol::optional<uint32> Id)
+		{
+			if (!Id)
+				return;
+			if (FCoroutineRecord* Record = FindRecord(*Id))
+				StopRecord(*Record);
+		}
+	);
+	InEnvironment.set_function("StopAllCoroutines", [this]() { StopAllRecords(); });
 
 	if (!ResolveScriptPath())
 	{
@@ -76,6 +93,8 @@ void UScriptComponent::BeginPlay()
 
 void UScriptComponent::EndPlay()
 {	
+	bAcceptCoroutines = false;
+
 	if (LuaEndPlay.valid())
 	{
 		auto Result = LuaEndPlay();
@@ -85,6 +104,18 @@ void UScriptComponent::EndPlay()
 			HTR_LOG(Error, "[Script] LuaEndPlay failed: {} ({})", ScriptPath, Err.what());
 		}
 	}
+
+	StopAllRecords();
+	CoroutineRecords.Reset();
+
+	if (Environment.valid())
+	{
+		Environment["StartCoroutine"]	= sol::lua_nil;
+		Environment["StopCoroutine"]	= sol::lua_nil;
+		Environment["StopAllCoroutines"] = sol::lua_nil;
+		Environment["obj"]				= sol::lua_nil;
+	}
+
 	LuaBeginPlay = sol::nil;
 	LuaTick = sol::nil;
 	LuaOnOverlap = sol::nil;
@@ -222,7 +253,6 @@ void UScriptComponent::TickComponent(float DeltaTime)
 {
 	Super::TickComponent(DeltaTime);
 
-
 	if (GetOwner()->IsActorBeingDestroyed())
 	{
 		return;
@@ -233,17 +263,19 @@ void UScriptComponent::TickComponent(float DeltaTime)
 		HotReloadFile();
 	}
 
-	if (!LuaTick.valid())
+	++FrameCounter;
+	
+	if (LuaTick.valid())
 	{
-		return;
+		auto Result = LuaTick(DeltaTime);
+		if (!Result.valid())
+		{
+			sol::error Err = Result;
+			HTR_LOG(Error, "[Script] LuaTick failed: {} ({})", ScriptPath, Err.what());
+		}
 	}
-	auto Result = LuaTick(DeltaTime);
-	if (!Result.valid())
-	{
-		sol::error Err = Result;
-		HTR_LOG(Error, "[Script] LuaTick failed: {} ({})", ScriptPath, Err.what());
-		return;
-	}
+	
+	UpdateCoroutines(DeltaTime);
 }
 
 void UScriptComponent::OnHit(AActor *InOtherActor)
@@ -295,4 +327,206 @@ const FStringView UScriptComponent::GetTemplateScriptPath()
 const FStringView UScriptComponent::GetScriptFolderPath()
 {
 	return (ScriptFolderPath);
+}
+
+template<typename... Args>
+void UScriptComponent::ResumeRecord(FCoroutineRecord& Record, Args&&... InArgs)
+{
+	if (Record.State != ECoroutineState::Waiting)
+		return;
+
+	Record.LastFrame = FrameCounter;
+	Record.State = ECoroutineState::Running;
+	sol::protected_function_result Result = Record.Coroutine(std::forward<Args>(InArgs)...);
+
+	switch (Result.status())
+	{
+	case sol::call_status::ok:
+		if (Record.State == ECoroutineState::Running)
+			Record.State = ECoroutineState::Finished;
+		break;
+	case sol::call_status::yielded:
+		if (Record.State == ECoroutineState::Running)
+			HandleYieldedResult(Result, Record);
+		break;
+	default:
+	{ 
+		sol::error Err = Result;
+		Record.State = ECoroutineState::Errored;
+		HTR_LOG(Error, "[ScriptComponent] ResumeRecord failed: {}", Err.what());
+		break;
+	}
+	}
+}
+
+sol::optional<uint32> UScriptComponent::StartCoroutine(sol::protected_function Fn, sol::variadic_args Args)
+{
+	if (!bAcceptCoroutines)
+	{
+		HTR_LOG(Warning, "[Script] {}: StartCoroutine refused (component is not playing)", ScriptPath);
+		return sol::nullopt;
+	}
+
+	sol::state& Lua = FScriptSystem::Get().GetLua();
+
+	TUniquePtr<FCoroutineRecord> NewRecord = MakeUnique<FCoroutineRecord>();
+	NewRecord->Id = NextCoroutineId++;
+	NewRecord->Thread = sol::thread::create(Lua.lua_state());
+	NewRecord->Coroutine = sol::coroutine(NewRecord->Thread.thread_state(), Fn);
+
+	FCoroutineRecord* Record = NewRecord.get();
+	const uint32 Id = Record->Id;
+	CoroutineRecords.Add(std::move(NewRecord));
+	ResumeRecord(*Record, Args);
+	return Id;
+}
+
+void UScriptComponent::HandleYieldedResult(sol::protected_function_result& Result, FCoroutineRecord& Record)
+{
+	int ReturnCount = Result.return_count();
+	if (ReturnCount == 0)
+	{
+		Record.WaitType = EWaitType::None;
+		Record.State = ECoroutineState::Waiting;
+		return;
+	}
+	
+	sol::object Value = Result.get<sol::object>();
+	sol::type Type = Value.get_type();
+	if (Type == sol::type::lua_nil)
+	{
+		Record.WaitType = EWaitType::None;
+		Record.State = ECoroutineState::Waiting;
+		return;
+	}
+	else if (Type == sol::type::table)
+	{
+		sol::table Wait = Value.as<sol::table>();
+		auto WaitType = Wait.get<sol::optional<std::string>>("WaitType");
+
+		if (!WaitType)
+		{
+			Record.State = ECoroutineState::Errored;
+			HTR_LOG(Error, "[Script] {}: WaitType is not string!", ScriptPath);
+			return;
+		}
+
+		if (WaitType == "seconds")
+		{
+			auto Seconds = Wait.get<sol::optional<float>>("Seconds");
+
+			if (!Seconds)
+			{
+				Record.State = ECoroutineState::Errored;
+				HTR_LOG(Error, "[Script] {}: seconds not number!", ScriptPath);
+				return;
+			}
+
+			Record.Remaining = *Seconds;
+			Record.WaitType = EWaitType::Seconds;
+			Record.State = ECoroutineState::Waiting;
+			return;
+		}
+		else if (WaitType == "until" || WaitType == "while")
+		{
+			auto Predicate = Wait.get<sol::object>("Predicate");
+
+			if (Predicate.get_type() != sol::type::function)
+			{
+				Record.State = ECoroutineState::Errored;
+				HTR_LOG(Error, "[Script] {}: Predicate is not function", ScriptPath);
+				return;
+			}
+			Record.Predicate = sol::protected_function(FScriptSystem::Get().GetLua().lua_state(), Predicate);
+			Record.WaitType = WaitType == "until" ? EWaitType::Until : EWaitType::While;
+			Record.State = ECoroutineState::Waiting;
+			return;
+		}
+		else
+		{
+			Record.State = ECoroutineState::Errored;
+			HTR_LOG(Error, "[Script] {}: Unknown WaitType {}", ScriptPath, *WaitType);
+			return;
+		}
+	}
+	else
+	{
+		Record.State = ECoroutineState::Errored;
+		HTR_LOG(Error, "[Script] {}: Unknown yield value", ScriptPath);
+		return;
+	}
+}
+
+void UScriptComponent::UpdateCoroutines(float DeltaTime)
+{
+	for (int32 i = 0; i < CoroutineRecords.Num(); ++i)
+	{
+		FCoroutineRecord* Record = CoroutineRecords[i].get();
+		if (Record->IsActive() && Record->LastFrame != FrameCounter && IsRecordReady(*Record, DeltaTime))
+		{
+			ResumeRecord(*Record);
+		}
+	}
+
+	for (int32 i = CoroutineRecords.Num() - 1; i >= 0; --i)
+	{
+		if (!CoroutineRecords[i].get()->IsActive())
+			CoroutineRecords.RemoveAt(static_cast<uint32>(i), 1);
+	}
+}
+
+bool UScriptComponent::IsRecordReady(FCoroutineRecord& Record, float DeltaTime)
+{
+	EWaitType WaitType = Record.WaitType;
+
+	switch (WaitType)
+	{
+	case EWaitType::None:
+		return true;
+	case EWaitType::Seconds:
+		Record.Remaining -= DeltaTime;
+		return Record.Remaining <= 0;
+	case EWaitType::While:
+	case EWaitType::Until:
+	{
+		sol::protected_function_result Result = Record.Predicate();
+
+		if (!Result.valid())
+		{
+			sol::error Err = Result;
+			Record.State = ECoroutineState::Errored;
+			HTR_LOG(Error, "[Script] {}: wait condition failed (Predicate): {}", ScriptPath, Err.what());
+			return false;
+		}
+
+		const bool bCondition = Result.get<bool>();
+		return (WaitType == EWaitType::Until) ? bCondition : !bCondition;
+	}
+	}
+	return false;
+}
+
+void UScriptComponent::StopRecord(FCoroutineRecord& Record)
+{
+	if (Record.IsActive())
+		Record.State = ECoroutineState::Stopped;
+}
+
+void UScriptComponent::StopAllRecords()
+{
+	for (TUniquePtr<FCoroutineRecord>& Record : CoroutineRecords)
+	{
+		StopRecord(*Record);
+	}
+}
+
+FCoroutineRecord* UScriptComponent::FindRecord(uint32 Id)
+{
+	for (TUniquePtr<FCoroutineRecord>& Record : CoroutineRecords)
+	{
+		if (Record->Id == Id)
+			return Record.get();
+	}
+
+	return nullptr;
 }
