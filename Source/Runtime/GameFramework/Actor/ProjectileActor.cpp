@@ -30,7 +30,9 @@ AProjectileActor::AProjectileActor()
     ProjectileMovementComponent->SetAutoActivate(false);
     ProjectileMovementComponent->SetComponentTickEnabled(false);
     ProjectileMovementComponent->OnComponentDeactivated.Add(
-        [this](UActorComponent*) { if (bInFlight) ReturnToPool(); });
+        [this](UActorComponent*) { 
+            if (bInFlight) ReturnToPool();
+        });
 }
 
 void AProjectileActor::Launch(const FVector& Position, const FVector& Direction, bool bUseStaticMesh)

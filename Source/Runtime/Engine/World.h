@@ -94,6 +94,9 @@ public:
 
 	int32 GetActorNum();
 
+	void AddDestroyList(AActor* InActor);
+	void FlushDestroyList();
+
 	bool DestroyActor(AActor* Actor);
 
 	// View별 Billboard 행렬 공급자는 이 동기 호출 동안만 사용하며 저장하지 않는다.
@@ -128,6 +131,8 @@ private:
 	FTickTaskManager TickTaskManager;
 
 	TQueue<AActor*> BeginPlayList;
+
+	TArray<AActor*> DestroyList;
 
 	//메인 카메라 
 	ACameraActor* MainCamera = nullptr;

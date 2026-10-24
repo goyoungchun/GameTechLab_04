@@ -18,6 +18,7 @@
 #include "Core/SplashScreen.h"
 #include "Core/Stats/LightweightStats.h"
 #include "Tasks/TaskScheduler.h"
+#include "Script/ScriptSystem.h"
 
 namespace
 {
@@ -189,6 +190,7 @@ void FEngineLoop::Exit()
 	DepthBuffer.reset();
 	Swapchain.reset();
 	Renderer.reset();
+	FScriptSystem::Get().Shutdown();
 
 	if (RenderDevice)
 	{
