@@ -35,10 +35,13 @@ public:
 	const FStringView GetScriptFolderPath();
 
 private:
-	FString	ScriptPath;
-	float	HotReloadCheckTimer = 0.f;
-	bool	bScriptNotFound = false;
-	fs::file_time_type LastFileWriteTime;
+	void BindScriptAPI(sol::environment& InEnvironment);
+	void BindCoroutineAPI(sol::environment& InEnvironment);
+	void UnbindScriptAPI(sol::environment& InEnvironment);
+	void UnbindCoroutineAPI(sol::environment& InEnvironment);
+	void CacheScriptCallbacks(sol::environment& Env);
+	void ClearScriptCallbacks();
+	void ClearCoroutines();
 
 	template<typename... Args>
 	void ResumeRecord(FCoroutineRecord& Record, Args&&... InArgs);
@@ -53,7 +56,10 @@ private:
 	bool IsRecordReady(FCoroutineRecord& Record, float DeltaTime);
 
 private:
-	FString ScriptPath;
+	FString	ScriptPath;
+	float	HotReloadCheckTimer = 0.f;
+	bool	bScriptNotFound = false;
+	fs::file_time_type LastFileWriteTime;
 	sol::environment Environment;
 	sol::safe_function LuaBeginPlay, LuaTick, LuaEndPlay, LuaOnOverlap, LuaOnHit;
 

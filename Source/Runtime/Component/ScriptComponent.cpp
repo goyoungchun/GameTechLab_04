@@ -21,9 +21,64 @@ bool UScriptComponent::LoadScriptFile(sol::environment InEnvironment)
 	}
 	sol::state& Lua = FScriptSystem::Get().GetLua();
 	InEnvironment = sol::environment(Lua, sol::create, Lua.globals());
-	InEnvironment["obj"] = GetOwner();
+	BindScriptAPI(InEnvironment);
 
-	bAcceptCoroutines = true;
+	if (!ResolveScriptPath())
+	{
+		UnbindScriptAPI(InEnvironment);
+		return false;
+	}
+
+	auto Result = Lua.safe_script_file(ScriptPath, InEnvironment, sol::script_pass_on_error);
+	if (!Result.valid())
+	{
+		sol::error Err = Result;
+		HTR_LOG(Error, "[Script] Load failed: {} ({})", ScriptPath, Err.what());
+		ClearCoroutines();
+		UnbindScriptAPI(InEnvironment);
+		return false;
+	}
+
+	CacheScriptCallbacks(InEnvironment);
+
+	std::error_code ErrorCode;
+	LastFileWriteTime = fs::last_write_time(ScriptPath, ErrorCode);
+	if (ErrorCode)
+	{
+		HTR_LOG(Error, "[Script] Last Write Time Check failed: {} ({})", ScriptPath, ErrorCode.message());
+	}
+
+	Environment = InEnvironment;
+	Lua.collect_garbage();
+	return true;
+}
+
+void UScriptComponent::CacheScriptCallbacks(sol::environment& InEnvironment)
+{
+	LuaBeginPlay = InEnvironment["BeginPlay"];
+	LuaTick = InEnvironment["Tick"];
+	LuaEndPlay = InEnvironment["EndPlay"];
+	LuaOnOverlap = InEnvironment["OnOverlap"];
+	LuaOnHit = InEnvironment["OnHit"];
+}
+
+void UScriptComponent::ClearScriptCallbacks()
+{
+	LuaBeginPlay	= sol::nil;
+	LuaTick			= sol::nil;
+	LuaOnOverlap	= sol::nil;
+	LuaOnHit		= sol::nil;
+	LuaEndPlay		= sol::nil;
+}
+
+void UScriptComponent::BindScriptAPI(sol::environment& InEnvironment)
+{
+	InEnvironment["obj"] = GetOwner();
+	BindCoroutineAPI(InEnvironment);
+}
+
+void UScriptComponent::BindCoroutineAPI(sol::environment& InEnvironment)
+{
 	InEnvironment.set_function("StartCoroutine", [this](sol::protected_function Fn, sol::variadic_args Args)
 		{
 			return StartCoroutine(Fn, Args);
@@ -38,43 +93,37 @@ bool UScriptComponent::LoadScriptFile(sol::environment InEnvironment)
 		}
 	);
 	InEnvironment.set_function("StopAllCoroutines", [this]() { StopAllRecords(); });
+}
 
-	if (!ResolveScriptPath())
-	{
-		return false;
-	}
+void UScriptComponent::UnbindScriptAPI(sol::environment& InEnvironment)
+{
+	if (!InEnvironment.valid())
+		return;
 
-	auto Result = Lua.safe_script_file(ScriptPath, InEnvironment, sol::script_pass_on_error);
-	if (!Result.valid())
-	{
-		sol::error Err = Result;
-		HTR_LOG(Error, "[Script] Load failed: {} ({})", ScriptPath, Err.what());
-		return false;
-	}
+	UnbindCoroutineAPI(InEnvironment);
+	InEnvironment["obj"] = sol::lua_nil;
+}
 
-	LuaBeginPlay = InEnvironment["BeginPlay"];
-	LuaTick = InEnvironment["Tick"];
-	LuaEndPlay = InEnvironment["EndPlay"];
-	LuaOnOverlap = InEnvironment["OnOverlap"];
-	LuaOnHit = InEnvironment["OnHit"];
+void UScriptComponent::UnbindCoroutineAPI(sol::environment& InEnvironment)
+{
+	if (!InEnvironment.valid())
+		return;
+	
+	InEnvironment["StartCoroutine"] = sol::lua_nil;
+	InEnvironment["StopCoroutine"] = sol::lua_nil;
+	InEnvironment["StopAllCoroutines"] = sol::lua_nil;
+}
 
-	std::error_code ErrorCode;
-	LastFileWriteTime = fs::last_write_time(ScriptPath, ErrorCode);
-	if (ErrorCode)
-	{
-		HTR_LOG(Error, "[Script] Last Write Time Check failed: {} ({})", ScriptPath, ErrorCode.message());
-	}
-
-	Environment = InEnvironment;
-
-	Lua.collect_garbage();
-	return true;
+void UScriptComponent::ClearCoroutines()
+{
+	StopAllRecords();
+	CoroutineRecords.Reset();
 }
 
 void UScriptComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
+	bAcceptCoroutines = true;
 	sol::environment NewEnvironment;
 	LoadScriptFile(NewEnvironment);
 
@@ -105,23 +154,10 @@ void UScriptComponent::EndPlay()
 		}
 	}
 
-	StopAllRecords();
-	CoroutineRecords.Reset();
-
-	if (Environment.valid())
-	{
-		Environment["StartCoroutine"]	= sol::lua_nil;
-		Environment["StopCoroutine"]	= sol::lua_nil;
-		Environment["StopAllCoroutines"] = sol::lua_nil;
-		Environment["obj"]				= sol::lua_nil;
-	}
-
-	LuaBeginPlay = sol::nil;
-	LuaTick = sol::nil;
-	LuaOnOverlap = sol::nil;
-	LuaOnHit = sol::nil;
-	LuaEndPlay = sol::nil;
-	Environment = sol::nil;
+	ClearCoroutines();
+	UnbindScriptAPI(Environment);
+	Environment = sol::lua_nil;
+	ClearScriptCallbacks();
 	Super::EndPlay();
 }
 
@@ -258,13 +294,13 @@ void UScriptComponent::TickComponent(float DeltaTime)
 		return;
 	}
 
+	++FrameCounter;
+
 	if (CheckChangeScriptFile(DeltaTime))
 	{
 		HotReloadFile();
 	}
 
-	++FrameCounter;
-	
 	if (LuaTick.valid())
 	{
 		auto Result = LuaTick(DeltaTime);
