@@ -23,7 +23,7 @@ public:
 	void Shutdown();
 	
 private:
-	sol::state Lua;
+	TUniquePtr<sol::state> Lua;
 
 
 	void Init();

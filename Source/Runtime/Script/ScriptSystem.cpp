@@ -8,24 +8,24 @@ FScriptSystem::FScriptSystem()
 
 sol::state& FScriptSystem::GetLua()
 {
-	return Lua;
+	return *Lua;
 }
 
 void FScriptSystem::OpenLibraries()
 {
-	Lua.open_libraries(sol::lib::base);
-	Lua.open_libraries(sol::lib::math);
-	Lua.open_libraries(sol::lib::string);
-	Lua.open_libraries(sol::lib::table);
-	Lua.open_libraries(sol::lib::coroutine);
-	Lua.open_libraries(sol::lib::jit);
+	Lua->open_libraries(sol::lib::base);
+	Lua->open_libraries(sol::lib::math);
+	Lua->open_libraries(sol::lib::string);
+	Lua->open_libraries(sol::lib::table);
+	Lua->open_libraries(sol::lib::coroutine);
+	Lua->open_libraries(sol::lib::jit);
 }
 
 void FScriptSystem::OverridePrint()
 {
-	Lua.set_function("print", [this](sol::variadic_args Args)
+	Lua->set_function("print", [this](sol::variadic_args Args)
 		{
-			sol::protected_function ToString = Lua["tostring"];
+			sol::protected_function ToString = (*Lua)["tostring"];
 
 			FString Line;
 			for (auto Arg : Args)
@@ -42,7 +42,7 @@ void FScriptSystem::OverridePrint()
 
 void FScriptSystem::RegisterTypes()
 {
-	Lua.new_usertype<FVector>("Vector",
+	Lua->new_usertype<FVector>("Vector",
 		sol::call_constructor, sol::constructors<FVector(), FVector(float, float, float)>(),
 		"x", &FVector::X,
 		"y", &FVector::Y,
@@ -52,7 +52,7 @@ void FScriptSystem::RegisterTypes()
 		sol::meta_function::multiplication, [](const FVector& v, float f) { return v * f; }
 	);
 
-	Lua.new_usertype<AActor>("Actor",
+	Lua->new_usertype<AActor>("Actor",
 		sol::no_constructor,
 		"UUID", sol::readonly_property(&AActor::GetUUID),
 		"Location", sol::property(&AActor::GetActorLocation, &AActor::SetActorLocation),
@@ -62,6 +62,7 @@ void FScriptSystem::RegisterTypes()
 
 void FScriptSystem::Init()
 {
+	Lua = MakeUnique<sol::state>();
 	OpenLibraries();
 	RegisterTypes();
 	OverridePrint();
@@ -69,5 +70,6 @@ void FScriptSystem::Init()
 
 void FScriptSystem::Shutdown()
 {
-	
+	Lua->collect_garbage();
+	Lua.reset();
 }
