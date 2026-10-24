@@ -658,7 +658,7 @@ namespace
 		}
 	}
 
-	bool CreateScriptFromTemplate(const fs::path& TemplatePath, const fs::path& NewPath)
+	bool CreateScriptFromTemplate(const fs::path& TemplatePath, FString& NewPath)
 	{
 		std::error_code Ec;
 
@@ -668,16 +668,23 @@ namespace
 			return false;
 		}
 
-		if (fs::exists(NewPath, Ec))
-			return true;
-
-		fs::create_directories(NewPath.parent_path(), Ec);   // Assets/Scripts 폴더가 없으면 생성
-
-		if (!fs::copy_file(TemplatePath, NewPath, fs::copy_options::skip_existing, Ec))
+		const fs::path BasePath = NewPath;
+		fs::path Candidate = BasePath;
+		for (int32 Suffix = 1; fs::exists(Candidate, Ec); ++Suffix)
 		{
-			HTR_LOG(Error, "Failed to create script: {} ({})", NewPath.string(), Ec.message());
+			Candidate = BasePath.parent_path() /
+				(BasePath.stem().string() + "_" + std::to_string(Suffix) + BasePath.extension().string());
+		}
+
+		fs::create_directories(Candidate.parent_path(), Ec);   // Assets/Scripts 폴더가 없으면 생성
+
+		if (!fs::copy_file(TemplatePath, Candidate, fs::copy_options::none, Ec))
+		{
+			HTR_LOG(Error, "Failed to create script: {} ({})", Candidate.generic_string(), Ec.message());
 			return false;
 		}
+
+		NewPath = Candidate.generic_string();
 		return true;
 	}
 
@@ -733,6 +740,24 @@ namespace
 				}
 			}
 		}
+	}
+
+	// 드롭된 경로가 연결 가능한 스크립트인지 확인한다.
+	bool IsValidScriptPath(const fs::path& InPath, UScriptComponent* ScriptComponent)
+	{
+		std::error_code ErrorCode;
+		if (InPath.extension() != ".lua" || !fs::is_regular_file(InPath, ErrorCode))
+		{
+			return false;
+		}
+
+		fs::path ScriptFolder = fs::path(FString(ScriptComponent->GetScriptFolderPath())).lexically_normal();
+		if (!ScriptFolder.has_filename())
+		{
+			ScriptFolder = ScriptFolder.parent_path();
+		}
+		const fs::path Relative = InPath.lexically_normal().lexically_relative(ScriptFolder);
+		return !Relative.empty() && *Relative.begin() != "..";
 	}
 
 	bool RenameScriptFile(FString InOldPath, FString InNewPath, UScriptComponent* ScriptComponent, UWorld* World, FString& OutError)
@@ -857,18 +882,22 @@ namespace
 		
 		const bool bHasScript = ScriptComponent->ResolveScriptPath();
 
-		const FString& Path = ScriptComponent->GetScriptPath();
+		const FString Path = ScriptComponent->GetScriptPath();
 
-		ImGui::BeginDisabled(!World->HasBegunPlay());
+		ImGui::BeginDisabled(World->HasBegunPlay());
 		if (ImGui::Button("Create Script"))
 		{
-			FString ScriptFolderPath = FString(ScriptComponent->GetScriptFolderPath());
-			FString SceneName = std::filesystem::path(FEditorFileUtils::GetScenePath(World)).stem().string();
-			FString ActorName = ScriptComponent->GetOwner()->GetName();
-			ScriptComponent->SetScriptPath(ScriptFolderPath + SceneName + "_" + ActorName + ".lua");
+			const FString ScriptFolderPath = FString(ScriptComponent->GetScriptFolderPath());
+			const FString SceneName = std::filesystem::path(FEditorFileUtils::GetScenePath(World)).stem().string();
+			const FString ActorName = ScriptComponent->GetOwner()->GetName();
 
-			CreateScriptFromTemplate(ScriptComponent->GetTemplateScriptPath(), ScriptComponent->GetScriptPath());
+			FString NewScriptPath = ScriptFolderPath + SceneName + "_" + ActorName + ".lua";
+			if (CreateScriptFromTemplate(ScriptComponent->GetTemplateScriptPath(), NewScriptPath))
+			{
+				ScriptComponent->SetScriptPath(NewScriptPath);
+			}
 		}
+		ImGui::EndDisabled();
 
 		ImGui::SameLine();
 		ImGui::BeginDisabled(!bHasScript);
@@ -885,6 +914,30 @@ namespace
 			ImGui::OpenPopup("RenameScript");
 		}
 		ImGui::EndDisabled();
+
+		
+		ImGui::BeginDisabled(World->HasBegunPlay());
+		ImGui::Button("Drop .lua here", ImVec2(-FLT_MIN, 0.0f));
+		if (ImGui::BeginDragDropTarget())
+		{
+			if (const ImGuiPayload* Payload = ImGui::AcceptDragDropPayload(EditorDragDrop::Script))
+			{
+				const FString DroppedPath(static_cast<const char*>(Payload->Data), Payload->DataSize - 1);
+
+				if (IsValidScriptPath(DroppedPath, ScriptComponent))
+				{
+					ScriptComponent->SetScriptPath(fs::path(DroppedPath).generic_string());
+				}
+				else
+				{
+					HTR_LOG(Warning, "[Script] Cannot attach '{}': not a .lua file in {}",
+						DroppedPath, FString(ScriptComponent->GetScriptFolderPath()));
+				}
+			}
+			ImGui::EndDragDropTarget();
+		}
+		ImGui::EndDisabled();
+
 		DrawRenamePopup(Path, ScriptComponent, World);
 	}
 

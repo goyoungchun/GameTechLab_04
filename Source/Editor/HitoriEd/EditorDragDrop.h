@@ -10,4 +10,7 @@ namespace EditorDragDrop
 
 	// 페이로드 내용: UFont* 한 개
 	inline constexpr const char* Font = "ASSET_FONT";
+
+	// 페이로드 내용: 스크립트 경로 문자열 ("Assets/Scripts/Name.lua", '/' 구분자, '\0' 포함)
+	inline constexpr const char* Script = "ASSET_SCRIPT";
 }
