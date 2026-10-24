@@ -136,25 +136,14 @@ bool UScriptComponent::HotReloadFile()
 		return false;
 	}
 
-	LoadResult = Lua.load_file(ScriptPath);
-	if (!LoadResult.valid())
-	{
-		sol::error Err = LoadResult;
-		HTR_LOG(Error, "[Script] HotReload failed: {} ({})", ScriptPath, Err.what());
-		return false;
-	}
-	sol::protected_function Chunk = LoadResult;
-
 	NewEnvironment = sol::environment(Lua, sol::create, Lua.globals());
 	NewEnvironment["obj"] = GetOwner();
 
-	NewEnvironment.set_on(Chunk);
-
-	auto RunResult = Chunk();
-	if (!RunResult.valid())
+	auto Result = Lua.safe_script_file(ScriptPath, NewEnvironment, sol::script_pass_on_error);
+	if (!Result.valid())
 	{
-		sol::error Err = RunResult;
-		HTR_LOG(Error, "[Script] HotReload failed : {} ({})", ScriptPath, Err.what());
+		sol::error Err = Result;
+		HTR_LOG(Error, "[Script] HotReload failed: {} ({})", ScriptPath, Err.what());
 		return false;
 	}
 

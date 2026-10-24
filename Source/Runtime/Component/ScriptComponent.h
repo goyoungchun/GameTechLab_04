@@ -24,7 +24,7 @@ public:
 
 	void OnHit(AActor* InOtherActor);
 	void OnOverlap(AActor* InOtherActor);
-
+		
 	void Initialize();
 
 	void SetScriptPath(FString InScriptPath);
