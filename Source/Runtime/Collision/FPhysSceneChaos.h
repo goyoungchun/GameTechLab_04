@@ -1,6 +1,7 @@
 #pragma once
 
 #include "FChaosScene.h"
+#include "PhysicsBodyState.h"
 #include "Container/Array.h"
 #include "Container/Map.h"
 #include "Core/Types.h"
@@ -8,6 +9,7 @@
 
 class UPrimitiveComponent;
 class FPBDRigidsSolver;
+class FEventManger;
 class UWorld;
 
 // 언리얼 엔진에서는 FSingleParticlePhysicsProxy를 사용함.
@@ -35,9 +37,10 @@ public:
 	void EndFrame();
 	FPBDRigidsSolver& GetSolver() { return *Solver; }
 	int32 GetNumPrimitives() const { return PrimitiveSnapShots.Num(); }
+	UPrimitiveComponent* FindPrimitive(uint64 BodyId) const;
 
-	// 매 프레임 업데이트 직전 : Component -> PrimitiveSnapshots
-	void CaptureTransformsBeforeUpdate();
+	// 매 프레임 업데이트 직전 : Snapshot 갱신 및 Component의 물리 입력 수집
+	TArray<FPhysicsBodyState> CapturePhysicsInputs();
 	// Solver 결과 -> PrmitiveSnapshots
 	void BufferPhysicsResults();
 	// PrimitiveSnapShots -> Component
@@ -48,6 +51,7 @@ private:
 	TMap<uint64, FPrimitiveTransformSnapshot*> BodySnapshots;
 	UWorld* OwningWorld = nullptr;
 	TUniquePtr<FPBDRigidsSolver> Solver;
+	TUniquePtr<FEventManger> EventManager;
 	uint64 NextBodyId = 1;
 	bool bFrameStarted = false;
 };

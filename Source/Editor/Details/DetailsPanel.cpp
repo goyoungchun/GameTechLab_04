@@ -4,6 +4,9 @@
 #include "imgui_internal.h"
 #include "Editor/HitoriEd/EditorDragDrop.h"
 #include "Component/PrimitiveComponent.h"
+#include "Component/BoxComponent.h"
+#include "Component/SphereComponent.h"
+#include "Component/CapsuleComponent.h"
 #include "Component/StaticMeshComponent.h"
 #include "Component/TextRenderComponent.h"
 #include "Component/SpotLightComponent.h"
@@ -1180,6 +1183,36 @@ void FDetailsPanel::DrawAddComponentPopup(AActor * Owner)
 		ImGui::Separator();
 		
 		// 추가 가능한 컴포넌트 목록
+		if (ImGui::Selectable("Box Component"))
+		{
+			auto* NewComp = Owner->CreateDefaultSubobject<UBoxComponent>("Box");
+			if (Owner->GetRootComponent())
+				NewComp->SetupAttachment(Owner->GetRootComponent());
+			else
+				Owner->SetRootComponent(NewComp);
+			NewComp->RegisterComponent();
+			SelectedComponent = NewComp;
+		}
+		if (ImGui::Selectable("Sphere Component"))
+		{
+			auto* NewComp = Owner->CreateDefaultSubobject<USphereComponent>("Sphere");
+			if (Owner->GetRootComponent())
+				NewComp->SetupAttachment(Owner->GetRootComponent());
+			else
+				Owner->SetRootComponent(NewComp);
+			NewComp->RegisterComponent();
+			SelectedComponent = NewComp;
+		}
+		if (ImGui::Selectable("Capsule Component"))
+		{
+			auto* NewComp = Owner->CreateDefaultSubobject<UCapsuleComponent>("Capsule");
+			if (Owner->GetRootComponent())
+				NewComp->SetupAttachment(Owner->GetRootComponent());
+			else
+				Owner->SetRootComponent(NewComp);
+			NewComp->RegisterComponent();
+			SelectedComponent = NewComp;
+		}
 		if (ImGui::Selectable("StaticMesh Component"))
 		{
 			auto* NewComp = Owner->CreateDefaultSubobject<UStaticMeshComponent>("StaticMesh");

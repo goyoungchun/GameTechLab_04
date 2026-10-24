@@ -93,6 +93,35 @@ void UObject::Serialize(json& Handle, bool bIsLoading)
 				else Handle[Property.Name] = Value;
 				break;
 			}
+			case EPropertyType::Enum:
+			{
+				if (!Property.GetEnumValue || !Property.SetEnumValue || Property.EnumEntries.IsEmpty())
+					break;
+
+				if (bIsLoading)
+				{
+					const json& StoredValue = Handle[Property.Name];
+					if (!StoredValue.is_number_integer())
+						break;
+
+					const int64 Value = StoredValue.get<int64>();
+					// 등록되지 않은 enum 값은 적용하지 않고 기존 값을 유지한다.
+					for (const FEnumEntry& Entry : Property.EnumEntries)
+					{
+						if (Entry.Value == Value)
+						{
+							Property.SetEnumValue(Ptr, Value);
+							bPropertyLoaded = true;
+							break;
+						}
+					}
+				}
+				else
+				{
+					Handle[Property.Name] = Property.GetEnumValue(Ptr);
+				}
+				break;
+			}
 			case EPropertyType::String:
 			{
 				FString& Value = *static_cast<FString*>(Ptr);

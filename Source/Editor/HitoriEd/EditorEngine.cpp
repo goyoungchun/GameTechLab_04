@@ -1306,6 +1306,7 @@ void UEditorEngine::RenderFrame(FEditorViewportClient *ViewClient,
 	if (!bIsPIE &&
 			SettingsPanel->GetSettings().bDrawBatchLine) {
 		LineBatcher->BeginFrame();
+		LineBatcher->BuildShapeVertexBuffer();
 
 		if (SettingsPanel->GetSettings().bDrawBoundingBox) {
 			LineBatcher->BuildVertexBuffer();

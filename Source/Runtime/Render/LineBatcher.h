@@ -14,6 +14,7 @@ public:
 	~FLineBatcher();
 	bool Init(FRenderer* InRenderer, UWorld* InWorld);
 	void BuildVertexBuffer();
+	void BuildShapeVertexBuffer();
 
 	void BeginFrame();
 
@@ -23,6 +24,9 @@ public:
 
 	// 로컬 AABB의 모서리를 각각 월드로 옮겨 그린다. 회전이 살아있는 OBB가 된다.
 	void AddOrientedBox(const FBox& LocalBox, const FMatrix& WorldMatrix, const FVector4& Color);
+	// 로컬 형상의 점을 월드 행렬로 변환한다. 비균등 Scale도 그대로 반영된다.
+	void AddSphere(float Radius, const FMatrix& WorldMatrix, const FVector4& Color);
+	void AddCapsule(float Radius, float HalfHeight, const FMatrix& WorldMatrix, const FVector4& Color);
 	void AddPath(const TArray<FVector>& Points, const FVector4& Color);
 
 	void Flush();

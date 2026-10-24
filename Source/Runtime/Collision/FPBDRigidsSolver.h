@@ -2,6 +2,10 @@
 
 #include "Container/Array.h"
 #include "PhysicsBodyState.h"
+#include "PhysicsCollision.h"
+
+class FPBDRigidsEvolutionGBF;
+class UPrimitiveComponent;
 
 // 실제 언리얼 구조
 // 추후 필요에 따라 체계화 필요
@@ -18,25 +22,19 @@ class FPhysicsSolverBase : public FPhysicsSolverEvents
 class FPBDRigidsSolver : public FPhysicsSolverBase
 {
 public:
-	FPBDRigidsSolver() = default;
-	~FPBDRigidsSolver() = default;
+	FPBDRigidsSolver();
+	~FPBDRigidsSolver();
 
-	void OnGravity(float deltatime);
+	void RegisterBody(uint64 BodyId, UPrimitiveComponent* Component);
+	void UnregisterBody(uint64 BodyId);
+	void SetBodyStates(const TArray<FPhysicsBodyState>& InBodyStates);
 
-	void SetBodyStates(const TArray<FPhysicsBodyState>& InBodyStates)
-	{
-		BodyStates = InBodyStates;
-		ResultTransforms.Reset();
-	}
+	void AdvanceSolverBy(float DeltaTime);
 
-	void AdvanceSolverBy(float /*DeltaTime*/)
-	{
-		// 적분/충돌 구현 전에는 입력 Pose를 그대로 반환한다.
-		ResultTransforms = BodyStates;
-	}
-
-	const TArray<FPhysicsBodyState>& GetResultTransforms() const { return ResultTransforms; }
+	const TArray<FPhysicsBodyState>& GetResultTransforms() const;
+	const TArray<FPhysicsCollisionResult>& GetCollisionResults() const;
 private:
+	TUniquePtr<FPBDRigidsEvolutionGBF> Evolution;
 	TArray<FPhysicsBodyState> BodyStates;
 	TArray<FPhysicsBodyState> ResultTransforms;
 };

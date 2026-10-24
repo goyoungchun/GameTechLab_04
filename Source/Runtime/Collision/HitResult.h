@@ -1,5 +1,8 @@
 #pragma once
 
+#include "Math/Vector.h"
+#include <cfloat>
+
 class AActor;
 class UPrimitiveComponent;
 
@@ -17,6 +20,8 @@ struct FHitResult
 	FVector ImpactNormal = FVector();
 	// 내 충돌체의 접촉 법선 벡터
 	FVector Normal = FVector();
+	// 겹친 충돌체를 Normal 방향으로 분리하는 데 필요한 거리.
+	float PenetrationDepth = 0.0f;
 	// 차단 충돌 여부 (true이면 차단 충돌, false이면 겹침 충돌(그냥 통과))
 	bool bBlockingHit = false;
 	// 충돌 시작 시 겹침 상태였는지 여부 (true이면 겹침 상태에서 시작, false이면 겹치지 않은 상태에서 시작)
@@ -39,6 +44,7 @@ struct FHitResult
 		ImpactPoint = FVector::ZeroVector;
 		ImpactNormal = FVector::ZeroVector;
 		Normal = FVector::ZeroVector;
+		PenetrationDepth = 0.0f;
 		bBlockingHit = false;
 		bStartPenetrating = false;
 	}

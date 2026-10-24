@@ -1,11 +1,14 @@
 #include "EnginePCH.h"
 #include "LineBatcher.h"
 #include "Component/PrimitiveComponent.h"
+#include "Component/ShapeComponent.h"
 
 #include "RenderCommand.h"
 #include "RenderResourceManager.h"
 
 #include "UObject/UObjectIterator.h"
+
+#include <cmath>
 
 FLineBatcher::~FLineBatcher()
 {
@@ -36,12 +39,24 @@ void FLineBatcher::BuildVertexBuffer()
 {
 	for (TObjectIterator<UPrimitiveComponent> Itr; Itr; ++Itr)
 	{
+		if (!Itr->IsRegistered() || Itr->GetWorld() != World || !Itr->IsVisible())
+			continue;
 		// 로컬 AABB와 월드 행렬을 그대로 넘기고 변환은 AddOrientedBox가 한다.
 		// (월드 행렬이어야 부모에 붙은 컴포넌트도 제자리에 그려진다)
 		AddOrientedBox(
 			Itr->CalcLocalBounds(),
 			Itr->GetWorldMatrix(),
 			FVector4(1.0f, 1.0f, 1.0f, 1.0f));
+	}
+}
+
+void FLineBatcher::BuildShapeVertexBuffer()
+{
+	for (TObjectIterator<UShapeComponent> Itr; Itr; ++Itr)
+	{
+		if (!Itr->IsRegistered() || Itr->GetWorld() != World || !Itr->IsVisible() || !Itr->GetDrawShape())
+			continue;
+		Itr->DrawShape(*this);
 	}
 }
 
@@ -115,6 +130,75 @@ void FLineBatcher::AddOrientedBox(const FBox& LocalBox, const FMatrix& WorldMatr
 	}
 
 }
+void FLineBatcher::AddSphere(float Radius, const FMatrix& WorldMatrix, const FVector4& Color)
+{
+	if (!(Radius > 0.0f))
+		return;
+
+	constexpr int32 SegmentCount = 32;
+	for (int32 Segment = 0; Segment < SegmentCount; ++Segment)
+	{
+		const float AngleA = 2.0f * PI * Segment / SegmentCount;
+		const float AngleB = 2.0f * PI * (Segment + 1) / SegmentCount;
+		const float CosA = std::cos(AngleA) * Radius;
+		const float SinA = std::sin(AngleA) * Radius;
+		const float CosB = std::cos(AngleB) * Radius;
+		const float SinB = std::sin(AngleB) * Radius;
+		AddLine(WorldMatrix.TransformPosition(FVector(CosA, SinA, 0.0f)),
+			WorldMatrix.TransformPosition(FVector(CosB, SinB, 0.0f)), Color);
+		AddLine(WorldMatrix.TransformPosition(FVector(CosA, 0.0f, SinA)),
+			WorldMatrix.TransformPosition(FVector(CosB, 0.0f, SinB)), Color);
+		AddLine(WorldMatrix.TransformPosition(FVector(0.0f, CosA, SinA)),
+			WorldMatrix.TransformPosition(FVector(0.0f, CosB, SinB)), Color);
+	}
+}
+
+void FLineBatcher::AddCapsule(float Radius, float HalfHeight, const FMatrix& WorldMatrix, const FVector4& Color)
+{
+	if (!(Radius > 0.0f))
+		return;
+
+	const float CylinderHalfHeight = std::max(0.0f, HalfHeight - Radius);
+	const FVector TopCenter(0.0f, 0.0f, CylinderHalfHeight);
+	const FVector BottomCenter(0.0f, 0.0f, -CylinderHalfHeight);
+	const FVector Up(0.0f, 0.0f, 1.0f);
+	constexpr int32 SegmentCount = 32;
+	constexpr int32 ArcSegmentCount = 8;
+
+	// 원통 양 끝의 원.
+	for (int32 Segment = 0; Segment < SegmentCount; ++Segment)
+	{
+		const float AngleA = 2.0f * PI * Segment / SegmentCount;
+		const float AngleB = 2.0f * PI * (Segment + 1) / SegmentCount;
+		const FVector A(std::cos(AngleA) * Radius, std::sin(AngleA) * Radius, 0.0f);
+		const FVector B(std::cos(AngleB) * Radius, std::sin(AngleB) * Radius, 0.0f);
+		AddLine(WorldMatrix.TransformPosition(TopCenter + A), WorldMatrix.TransformPosition(TopCenter + B), Color);
+		AddLine(WorldMatrix.TransformPosition(BottomCenter + A), WorldMatrix.TransformPosition(BottomCenter + B), Color);
+	}
+
+	// 네 방향의 옆선과 양 끝 반구의 호.
+	for (int32 Side = 0; Side < 4; ++Side)
+	{
+		const float SideAngle = 0.5f * PI * Side;
+		const FVector Radial(std::cos(SideAngle), std::sin(SideAngle), 0.0f);
+		AddLine(WorldMatrix.TransformPosition(TopCenter + Radial * Radius),
+			WorldMatrix.TransformPosition(BottomCenter + Radial * Radius), Color);
+		for (int32 Segment = 0; Segment < ArcSegmentCount; ++Segment)
+		{
+			const float AngleA = 0.5f * PI * Segment / ArcSegmentCount;
+			const float AngleB = 0.5f * PI * (Segment + 1) / ArcSegmentCount;
+			const FVector RadialA = Radial * (std::cos(AngleA) * Radius);
+			const FVector RadialB = Radial * (std::cos(AngleB) * Radius);
+			const FVector UpA = Up * (std::sin(AngleA) * Radius);
+			const FVector UpB = Up * (std::sin(AngleB) * Radius);
+			AddLine(WorldMatrix.TransformPosition(TopCenter + RadialA + UpA),
+				WorldMatrix.TransformPosition(TopCenter + RadialB + UpB), Color);
+			AddLine(WorldMatrix.TransformPosition(BottomCenter + RadialA - UpA),
+				WorldMatrix.TransformPosition(BottomCenter + RadialB - UpB), Color);
+		}
+	}
+}
+
 void FLineBatcher::AddPath(const TArray<FVector>& Points, const FVector4& Color)
 {
 	if (Points.IsEmpty())

@@ -6,8 +6,14 @@
 #include "Render/RenderPacket.h"
 #include "Render/GeometryGenerator.h"
 #include "Collision/HitResult.h"
+#include "Collision/PhysicsTypes.h"
 
 class FPrimitiveSceneProxy;
+
+// Unreal의 컴포넌트 충돌 이벤트와 동일한 인자 구성이다.
+using FComponentBeginOverlapSignature = TMulticastDelegate<UPrimitiveComponent*, AActor*, UPrimitiveComponent*, int32, bool, const FHitResult&>;
+using FComponentEndOverlapSignature = TMulticastDelegate<UPrimitiveComponent*, AActor*, UPrimitiveComponent*, int32>;
+using FComponentHitSignature = TMulticastDelegate<UPrimitiveComponent*, AActor*, UPrimitiveComponent*, FVector, const FHitResult&>;
 
 enum class EPrimitiveType
 {
@@ -30,6 +36,25 @@ class UPrimitiveComponent :public USceneComponent
 		PROPERTY(bCastShadow)
 		PROPERTY(bReceiveShadow)
 		PROPERTY(bBackfaceDepth)
+		PROPERTY_ENUM(MotionType,
+			FEnumEntry(EPhysicsMotionType::Static, "Static"),
+			FEnumEntry(EPhysicsMotionType::Kinematic, "Kinematic"),
+			FEnumEntry(EPhysicsMotionType::Dynamic, "Dynamic"))
+		PROPERTY_ENUM(ObjectChannel,
+			FEnumEntry(ECollisionChannel::WorldStatic, "WorldStatic"),
+			FEnumEntry(ECollisionChannel::WorldDynamic, "WorldDynamic"))
+		PROPERTY(bEnableGravity)
+		// 구조체 내부의 채널별 응답을 기존 Details/직렬화/복사 경로에 등록한다.
+		InClass->AddProperty<ECollisionResponse>("WorldStatic",
+			offsetof(ThisClass, CollisionResponses) + offsetof(FCollisionResponseContainer, WorldStatic),
+			{ FEnumEntry(ECollisionResponse::Ignore, "Ignore"),
+			  FEnumEntry(ECollisionResponse::Overlap, "Overlap"),
+			  FEnumEntry(ECollisionResponse::Block, "Block") });
+		InClass->AddProperty<ECollisionResponse>("WorldDynamic",
+			offsetof(ThisClass, CollisionResponses) + offsetof(FCollisionResponseContainer, WorldDynamic),
+			{ FEnumEntry(ECollisionResponse::Ignore, "Ignore"),
+			  FEnumEntry(ECollisionResponse::Overlap, "Overlap"),
+			  FEnumEntry(ECollisionResponse::Block, "Block") });
 	REFLECT_END()
 public:
 	virtual void OnPropertyChanged(const FString& PropertyName) override;
@@ -40,6 +65,11 @@ public:
 	void OnUnregister() override;
 
 	virtual void BeginPlay() override;
+
+	FComponentBeginOverlapSignature OnComponentBeginOverlap;
+	FComponentEndOverlapSignature OnComponentEndOverlap;
+	// Block 접촉이 검출된 물리 Step마다 호출된다. BeginHit/EndHit 이벤트는 없다.
+	FComponentHitSignature OnComponentHit;
 
 	// Todo: subuv
 	//void SubmitToRenderQueue(TQueue<FRenderPacket>& RenderQueue);
@@ -80,6 +110,33 @@ public:
 	void SetReceiveShadow(bool ReceiveShadow);
 	bool GetBackfaceDepth() const;
 
+	EPhysicsMotionType GetMotionType() const { return MotionType; }
+	void SetMotionType(EPhysicsMotionType InMotionType) { MotionType = InMotionType; OnPropertyChanged("MotionType"); }
+	ECollisionChannel GetObjectChannel() const { return ObjectChannel; }
+	void SetObjectChannel(ECollisionChannel InObjectChannel) { ObjectChannel = InObjectChannel; OnPropertyChanged("ObjectChannel"); }
+	const FCollisionResponseContainer& GetCollisionResponses() const { return CollisionResponses; }
+	void SetCollisionResponses(const FCollisionResponseContainer& InResponses) { CollisionResponses = InResponses; OnPropertyChanged("CollisionResponses"); }
+	ECollisionResponse GetCollisionResponseToChannel(ECollisionChannel Channel) const
+	{
+		return CollisionResponses.GetResponse(Channel);
+	}
+	void SetCollisionResponseToChannel(ECollisionChannel Channel, ECollisionResponse InResponse)
+	{
+		switch (Channel)
+		{
+		case ECollisionChannel::WorldStatic:
+			CollisionResponses.WorldStatic = InResponse;
+			OnPropertyChanged("WorldStatic");
+			break;
+		case ECollisionChannel::WorldDynamic:
+			CollisionResponses.WorldDynamic = InResponse;
+			OnPropertyChanged("WorldDynamic");
+			break;
+		}
+	}
+	bool IsGravityEnabled() const { return bEnableGravity; }
+	void SetEnableGravity(bool bInEnableGravity) { bEnableGravity = bInEnableGravity; OnPropertyChanged("bEnableGravity"); }
+
 protected:
 	bool ShouldCreateRenderState() const override { return true; }
 	void CreateRenderState() override;
@@ -94,4 +151,10 @@ private:
 	bool bCastShadow = true;
 	bool bReceiveShadow = true;
 	bool bBackfaceDepth = false;
+
+	EPhysicsMotionType MotionType = EPhysicsMotionType::Static;
+	ECollisionChannel ObjectChannel = ECollisionChannel::WorldStatic;
+	FCollisionResponseContainer CollisionResponses;
+	// 중력 적분은 Dynamic일 때만 이 설정을 사용한다.
+	bool bEnableGravity = true;
 };

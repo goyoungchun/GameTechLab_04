@@ -2,6 +2,7 @@
 
 #include "FPhysSceneChaos.h"
 #include "FPBDRigidsSolver.h"
+#include "FEventManger.h"
 #include "Component/PrimitiveComponent.h"
 #include "Engine/World.h"
 
@@ -55,6 +56,7 @@ namespace
 FPhysSceneChaos::FPhysSceneChaos(UWorld* InWorld)
 	: OwningWorld(InWorld)
 	, Solver(MakeUnique<FPBDRigidsSolver>())
+	, EventManager(MakeUnique<FEventManger>())
 {
 	assert(OwningWorld);
 }
@@ -79,6 +81,7 @@ bool FPhysSceneChaos::RegisterPrimitive(UPrimitiveComponent* inPrimitive)
 
 	PrimitiveSnapShots.Add(Snapshot);
 	BodySnapshots.Add(Snapshot->BodyId, Snapshot);
+	Solver->RegisterBody(Snapshot->BodyId, inPrimitive);
 	return true;
 }
 
@@ -92,6 +95,7 @@ bool FPhysSceneChaos::UnRegisterPrimitive(UPrimitiveComponent* inPrimitive)
 		FPrimitiveTransformSnapshot* Snapshot = PrimitiveSnapShots[i];
 		if (Snapshot && Snapshot->Component == inPrimitive)
 		{
+			Solver->UnregisterBody(Snapshot->BodyId);
 			BodySnapshots.Remove(Snapshot->BodyId);
 			PrimitiveSnapShots.RemoveAtSwap(i);
 			delete Snapshot;
@@ -109,19 +113,39 @@ FPhysSceneChaos::~FPhysSceneChaos()
 	}
 }
 
-// 매 프레임 업데이트 직전 : Component -> PrimitiveSnapshots
-void FPhysSceneChaos::CaptureTransformsBeforeUpdate()
+UPrimitiveComponent* FPhysSceneChaos::FindPrimitive(uint64 BodyId) const
 {
-	for (FPrimitiveTransformSnapshot* component : PrimitiveSnapShots)
+	FPrimitiveTransformSnapshot* const* Found = BodySnapshots.Find(BodyId);
+	return Found ? (*Found)->Component : nullptr;
+}
+
+// 매 프레임 업데이트 직전 : Snapshot 갱신 및 Component의 물리 입력 수집
+TArray<FPhysicsBodyState> FPhysSceneChaos::CapturePhysicsInputs()
+{
+	TArray<FPhysicsBodyState> InputStates;
+	InputStates.Reserve(PrimitiveSnapShots.Num());
+	for (FPrimitiveTransformSnapshot* Snapshot : PrimitiveSnapShots)
 	{
-		component->WorldTransformBeforeUpdate = GetWorldTransform(*component->Component);
-		component->UpdatedWorldTransform = component->WorldTransformBeforeUpdate;
-		component->bHasPhysicsResult = false;
+		const UPrimitiveComponent* Component = Snapshot->Component;
+		Snapshot->WorldTransformBeforeUpdate = GetWorldTransform(*Component);
+		Snapshot->UpdatedWorldTransform = Snapshot->WorldTransformBeforeUpdate;
+		Snapshot->bHasPhysicsResult = false;
+
+		FPhysicsBodyState State;
+		State.BodyId = Snapshot->BodyId;
+		State.WorldTransform = Snapshot->WorldTransformBeforeUpdate;
+		State.MotionType = Component->GetMotionType();
+		State.ObjectChannel = Component->GetObjectChannel();
+		State.CollisionResponses = Component->GetCollisionResponses();
+		State.bEnableGravity = Component->IsGravityEnabled();
+		InputStates.Add(State);
 	}
+	return InputStates;
 }
 // Solver 결과 -> PrmitiveSnapshots
 void FPhysSceneChaos::BufferPhysicsResults()
 {
+	EventManager->BufferCollisionResults(Solver->GetCollisionResults());
 	for (const FPhysicsBodyState& Result : Solver->GetResultTransforms())
 	{
 		// 프레임 도중 제거된 Body의 결과는 버린다. 배열 순서는 대응에 사용하지 않는다.
@@ -173,13 +197,8 @@ void FPhysSceneChaos::PullFromPhysicsState()
 void FPhysSceneChaos::StartFrame(float DeltaTime)
 {
 	assert(!bFrameStarted);
-	CaptureTransformsBeforeUpdate();
-	TArray<FPhysicsBodyState> InputStates;
-	InputStates.Reserve(PrimitiveSnapShots.Num());
-	for (const FPrimitiveTransformSnapshot* Snapshot : PrimitiveSnapShots)
-		InputStates.Add({ Snapshot->BodyId, Snapshot->WorldTransformBeforeUpdate });
 
-	Solver->SetBodyStates(InputStates);
+	Solver->SetBodyStates(CapturePhysicsInputs());
 	Solver->AdvanceSolverBy(DeltaTime);
 	BufferPhysicsResults();
 	bFrameStarted = true;
@@ -190,4 +209,6 @@ void FPhysSceneChaos::EndFrame()
 		return;
 	PullFromPhysicsState();
 	bFrameStarted = false;
+	// 콜백에서는 최신 Pose를 읽을 수 있다. 컴포넌트 제거도 이 시점 이후에 허용한다.
+	EventManager->DispatchEvents(*this);
 }
