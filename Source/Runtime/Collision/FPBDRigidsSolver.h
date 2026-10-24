@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Container/Array.h"
+#include "Container/Map.h"
 #include "PhysicsBodyState.h"
 #include "PhysicsCollision.h"
 
@@ -37,4 +38,6 @@ private:
 	TUniquePtr<FPBDRigidsEvolutionGBF> Evolution;
 	TArray<FPhysicsBodyState> BodyStates;
 	TArray<FPhysicsBodyState> ResultTransforms;
+	// 게임 코드가 움직인 Kinematic의 실제 이동 속도를 다음 Step에서 계산한다.
+	TMap<uint64, FVector> PreviousKinematicLocations;
 };

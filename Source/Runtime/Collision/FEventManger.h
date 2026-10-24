@@ -16,6 +16,7 @@ public:
 
 	// 물리 결과를 복사한 뒤, Scene이 Transform을 반영한 EndFrame에서 통지한다.
 	void BufferCollisionResults(const TArray<FPhysicsCollisionResult>& InResults);
+	void QueueSweepResult(const FPhysicsSweepResult& Result);
 	void DispatchEvents(const FPhysSceneChaos& Scene);
 
 private:
@@ -34,8 +35,10 @@ private:
 	void EndInvalidOverlaps(const FPhysSceneChaos& Scene);
 
 	TArray<FPhysicsCollisionResult> PendingResults;
+	TArray<FPhysicsSweepResult> PendingSweepResults;
 	// BodyId만 보관하므로 제거된 컴포넌트 포인터가 다음 프레임까지 남지 않는다.
 	std::map<FBodyPair, FOverlapState> ActiveOverlaps;
+	std::map<FBodyPair, FPhysicsSweepResult> ActiveSweepOverlaps;
 	bool bHasBufferedResults = false;
 	bool bDispatching = false;
 };

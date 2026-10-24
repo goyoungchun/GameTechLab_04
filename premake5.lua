@@ -1,3 +1,9 @@
+newoption
+{
+	trigger = "physics-tests",
+	description = "Generate the headless physics regression test project",
+}
+
 workspace "Hitori"
 	architecture "x64"
 	startproject "HitoriEditor"
@@ -225,3 +231,21 @@ project "HitoriEditor"
 		targetname "Benchmark_Debug"
 
 	filter {}
+
+if _OPTIONS["physics-tests"] then
+	project "PhysicsSimulationTests"
+		location "Tests/Physics"
+		kind "ConsoleApp"
+		CommonSettings()
+		files { "Tests/Physics/PhysicsSimulationTests.cpp" }
+		includedirs
+		{
+			"Source/Runtime",
+			IncludeDir.json,
+			IncludeDir.LuaJIT,
+			IncludeDir.sol2,
+		}
+		links { "HitoriEngine", "ImGui", "lua51.lib", "ole32.lib", "shell32.lib", "uuid.lib" }
+		libdirs { "Source/ThirdParty/LuaJIT/lib" }
+		postbuildcommands { '{COPYFILE} "%{wks.location}Source/ThirdParty/LuaJIT/lib/lua51.dll" "%{cfg.targetdir}"' }
+end

@@ -3,6 +3,7 @@
 
 #include "GameFramework/Actor.h"
 #include "Engine/World.h"
+#include "Collision/FPhysSceneChaos.h"
 #include <cmath>
 
 USceneComponent::~USceneComponent()
@@ -176,21 +177,41 @@ bool USceneComponent::MoveComponentImpl(const FVector& Delta, const FQuat& NewRo
     const FVector Start = GetWorldLocation();
     FVector Destination = Start + Delta;
     bool bBlocked = false;
+	TArray<FHitResult> SweepOverlaps;
+	UPrimitiveComponent* MovingPrimitive = Cast<UPrimitiveComponent>(this);
+	UWorld* SweepWorld = nullptr;
+	float SweepRadius = 0.0f;
     if (bSweep && (!GetOwner() || GetOwner()->GetActorEnableCollision()))
     {
         AActor* OwnerActor = GetOwner();
-        UWorld* World = OwnerActor ? OwnerActor->GetWorld() : nullptr;
+        UWorld* World = GetWorld();
+        if (!World && OwnerActor) World = OwnerActor->GetWorld();
         if (!World) return false;
 		// 이동량의 방향을 정규화하여 Ray를 생성하고, SweepSingle 함수를 호출하여 충돌 체크를 수행한다.
         const FRay Ray(Start, Delta.Normalized());
-        bBlocked = World->SweepSingle(Ray, Delta.Size(), GetCollisionRadius(), Hit, OwnerActor);
+		SweepWorld = World;
+		SweepRadius = GetCollisionRadius();
+        bBlocked = World->SweepSingle(Ray, Delta.Size(), SweepRadius, Hit, OwnerActor, MovingPrimitive, &SweepOverlaps);
 		// 충돌이 발생하면 이동량을 조정하여 충돌 지점까지 이동하도록 한다.
         if (bBlocked)
-            Destination = Start + Delta * Hit.Time + Hit.ImpactNormal * 0.1f;
+		{
+			constexpr float ContactOffset = 1e-4f;
+			const float PushOut = Hit.bStartPenetrating ? Hit.PenetrationDepth + ContactOffset : std::min(ContactOffset, Hit.Distance);
+            Destination = Start + Delta * Hit.Time + Hit.Normal * PushOut;
+		}
     }
 	// 충돌 체크가 끝나면, 부모 컴포넌트가 있으면 부모의 월드 행렬을 이용하여 상대 위치를 계산하고, 없으면 절대 위치를 사용한다.
     Relative.Location = Parent ? ParentInverse.TransformPosition(Destination) : Destination;
     SetTransform(Relative);
+	// 이동 도중 사용자 콜백이 대상을 제거하지 않도록 기존 EndFrame 이벤트 경로에 합친다.
+	if (SweepWorld && MovingPrimitive)
+	{
+		const float TravelDistance = std::max(0.0f, (Destination - Start).Dot(Delta / Delta.Size()));
+		for (const FHitResult& Overlap : SweepOverlaps)
+			if (Overlap.Distance <= TravelDistance + 1e-5f)
+				SweepWorld->GetPhysicsScene().RecordSweepResult(MovingPrimitive, Overlap, SweepRadius);
+		if (bBlocked) SweepWorld->GetPhysicsScene().RecordSweepResult(MovingPrimitive, Hit, SweepRadius);
+	}
     return !bBlocked;
 }
 

@@ -101,7 +101,10 @@ public:
 	// 현재 World의 Component에 Ray를 전달하고 가장 가까운 유효 교차를 반환한다.
 	bool LineTraceSingle(const FRay& WorldRay, FHitResult& OutHit,
 		FBillboardTraceTransform ResolveBillboard = nullptr, const void* ViewContext = nullptr);
-	bool SweepSingle(const FRay& WorldRay, float MaxDistance, float Radius, FHitResult& OutHit, AActor* IgnoreActor = nullptr);
+	// 가장 가까운 Block만 OutHit에 반환한다. Overlap은 Block까지의 실제 이동 구간에서 따로 수집한다.
+	bool SweepSingle(const FRay& WorldRay, float MaxDistance, float Radius, FHitResult& OutHit,
+		AActor* IgnoreActor = nullptr, const UPrimitiveComponent* MovingComponent = nullptr,
+		TArray<FHitResult>* OutOverlaps = nullptr);
 
 	void BeginPlay();
 	bool HasBegunPlay() const { return bBegunPlay; }

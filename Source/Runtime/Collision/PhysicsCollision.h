@@ -26,4 +26,16 @@ struct FPhysicsCollisionResult
 	FVector Normal;
 	float PenetrationDepth = 0.0f;
 	ECollisionResponse Response = ECollisionResponse::Block;
+	// Sweep에서 생성한 이벤트에 한해 이동 경로의 시간과 거리를 보존한다.
+	bool bFromSweep = false;
+	float SweepTime = 0.0f;
+	float SweepDistance = 0.0f;
+};
+
+// 이동체와 검사 반지름으로 최종 위치의 겹침 유지 여부를 확인한다.
+struct FPhysicsSweepResult
+{
+	FPhysicsCollisionResult Contact;
+	uint64 MovingBodyId = 0;
+	float Radius = 0.0f;
 };

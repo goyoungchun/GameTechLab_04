@@ -4,6 +4,7 @@
 #include "FPhysSceneChaos.h"
 #include "Component/PrimitiveComponent.h"
 #include "GameFramework/Actor.h"
+#include <set>
 
 namespace
 {
@@ -22,7 +23,8 @@ namespace
 	{
 		FHitResult Hit;
 		Hit.HitComponent = Other;
-		Hit.Distance = 0.0f;
+		Hit.Distance = Result.SweepDistance;
+		Hit.Time = Result.SweepTime;
 		Hit.ImpactPoint = Result.ContactPoint;
 		// Evolution의 A -> B 법선을 받는 컴포넌트가 밀려나는 방향으로 바꾼다.
 		Hit.Normal = bForA ? -Result.Normal : Result.Normal;
@@ -43,6 +45,12 @@ void FEventManger::BufferCollisionResults(const TArray<FPhysicsCollisionResult>&
 	bHasBufferedResults = true;
 }
 
+void FEventManger::QueueSweepResult(const FPhysicsSweepResult& Result)
+{
+	PendingSweepResults.Add(Result);
+	bHasBufferedResults = true;
+}
+
 void FEventManger::DispatchEvents(const FPhysSceneChaos& Scene)
 {
 	if (!bHasBufferedResults || bDispatching)
@@ -52,6 +60,9 @@ void FEventManger::DispatchEvents(const FPhysSceneChaos& Scene)
 
 	// 콜백 중 다음 결과가 들어와도 이번 Step의 목록은 변하지 않는다.
 	const TArray<FPhysicsCollisionResult> FrameResults = std::move(PendingResults);
+	const TArray<FPhysicsSweepResult> FrameSweeps = std::move(PendingSweepResults);
+	std::set<FBodyPair> PreviouslyOverlapping;
+	for (const auto& [Pair, State] : ActiveOverlaps) PreviouslyOverlapping.insert(Pair);
 	std::map<FBodyPair, FPhysicsCollisionResult> CurrentCollisions;
 	for (FPhysicsCollisionResult Result : FrameResults)
 	{
@@ -68,6 +79,50 @@ void FEventManger::DispatchEvents(const FPhysSceneChaos& Scene)
 		Result.Response = GetCurrentResponse(Scene.FindPrimitive(Result.BodyIdA), Scene.FindPrimitive(Result.BodyIdB));
 		if (Result.Response != ECollisionResponse::Ignore)
 			CurrentCollisions.emplace(FBodyPair{ Result.BodyIdA, Result.BodyIdB }, Result);
+	}
+
+	std::map<FBodyPair, FPhysicsCollisionResult> SweptOverlaps;
+	for (FPhysicsSweepResult Sweep : FrameSweeps)
+	{
+		FPhysicsCollisionResult& Result = Sweep.Contact;
+		if (Result.BodyIdA == 0 || Result.BodyIdB == 0 || Result.BodyIdA == Result.BodyIdB) continue;
+		if (Result.BodyIdA > Result.BodyIdB)
+		{
+			std::swap(Result.BodyIdA, Result.BodyIdB);
+			Result.Normal = -Result.Normal;
+		}
+		Result.Response = GetCurrentResponse(Scene.FindPrimitive(Result.BodyIdA), Scene.FindPrimitive(Result.BodyIdB));
+		const FBodyPair Pair{ Result.BodyIdA, Result.BodyIdB };
+		if (Result.Response == ECollisionResponse::Block)
+		{
+			// Solver와 Sweep이 같은 쌍을 보고해도 Hit는 한 번만 전달한다.
+			CurrentCollisions[Pair] = Result;
+			ActiveSweepOverlaps.erase(Pair);
+		}
+		else if (Result.Response == ECollisionResponse::Overlap)
+		{
+			SweptOverlaps.try_emplace(Pair, Result);
+			ActiveSweepOverlaps[Pair] = Sweep;
+		}
+	}
+	// 메시 Bounds와 Static/Kinematic 쌍도 이동이 없는 다음 프레임에 겹침을 유지한다.
+	for (auto It = ActiveSweepOverlaps.begin(); It != ActiveSweepOverlaps.end();)
+	{
+		const FBodyPair Pair = It->first;
+		FPhysicsCollisionResult& Result = It->second.Contact;
+		Result.Response = GetCurrentResponse(Scene.FindPrimitive(Pair.first), Scene.FindPrimitive(Pair.second));
+		if (Result.Response == ECollisionResponse::Overlap && Scene.IsSweepOverlapping(It->second))
+		{
+			CurrentCollisions[Pair] = Result;
+			++It;
+		}
+		else
+		{
+			const auto Current = CurrentCollisions.find(Pair);
+			if (Current != CurrentCollisions.end() && Current->second.Response == ECollisionResponse::Overlap)
+				CurrentCollisions.erase(Current);
+			It = ActiveSweepOverlaps.erase(It);
+		}
 	}
 
 	std::map<FBodyPair, FOverlapState> EndedOverlaps;
@@ -100,6 +155,17 @@ void FEventManger::DispatchEvents(const FPhysSceneChaos& Scene)
 			NotifyHit(Pair, false, Result, Scene);
 		}
 	}
+	// 한 번의 이동으로 완전히 통과한 트리거도 Begin/End를 같은 EndFrame에 통지한다.
+	for (const auto& [Pair, Result] : SweptOverlaps)
+	{
+		if (CurrentCollisions.contains(Pair) || PreviouslyOverlapping.contains(Pair)) continue;
+		ActiveOverlaps.try_emplace(Pair);
+		NotifyBeginOverlap(Pair, true, Result, Scene);
+		NotifyBeginOverlap(Pair, false, Result, Scene);
+		const FOverlapState State = ActiveOverlaps.at(Pair);
+		ActiveOverlaps.erase(Pair);
+		NotifyEndOverlap(Pair, State, Scene);
+	}
 	// 앞선 콜백에서 제거되거나 Ignore/Block으로 바뀐 겹침을 같은 Step에 정리한다.
 	EndInvalidOverlaps(Scene);
 	bDispatching = false;
@@ -124,8 +190,7 @@ void FEventManger::NotifyBeginOverlap(const FBodyPair& Pair, bool bForA,
 	const FHitResult Hit = MakeHitResult(Other, bForA, Result, false);
 	// 콜백에서 컴포넌트를 제거해도 델리게이트 자체를 계속 참조하지 않는다.
 	auto Delegate = Self->OnComponentBeginOverlap;
-	// 현재 Evolution은 Sweep이 아닌 이산 접촉 검사이며 컴포넌트당 Body는 하나다.
-	Delegate.Broadcast(Self, Other->GetOwner(), Other, 0, false, Hit);
+	Delegate.Broadcast(Self, Other->GetOwner(), Other, 0, Result.bFromSweep, Hit);
 }
 
 void FEventManger::NotifyEndOverlap(const FBodyPair& Pair, const FOverlapState& State, const FPhysSceneChaos& Scene)

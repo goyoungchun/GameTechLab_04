@@ -19,6 +19,11 @@
 
 namespace
 {
+	bool IsFinitePhysicsVector(const FVector& Value)
+	{
+		return std::isfinite(Value.X) && std::isfinite(Value.Y) && std::isfinite(Value.Z);
+	}
+
 	bool IsValidPhysicsBounds(const FBox& Bounds)
 	{
 		for (int32 Axis = 0; Axis < 3; ++Axis)
@@ -35,6 +40,179 @@ namespace
 		return A.Min.X <= B.Max.X && A.Max.X >= B.Min.X
 			&& A.Min.Y <= B.Max.Y && A.Max.Y >= B.Min.Y
 			&& A.Min.Z <= B.Max.Z && A.Max.Z >= B.Min.Z;
+	}
+
+	// 접촉점 계산에 필요한 박스 정보. 두 박스 모두 A 좌표계로 표현한다.
+	struct FContactBox
+	{
+		FVector Center;
+		FVector Axes[3];
+		FVector Extent;
+	};
+
+	// Normal.Dot(Point - Center) <= Limit인 영역에 다각형을 남긴다.
+	void ClipContactPolygon(TArray<FVector>& Polygon, const FVector& Center,
+		const FVector& Normal, float Limit)
+	{
+		if (Polygon.IsEmpty())
+			return;
+
+		constexpr float ClipTolerance = 1e-5f;
+		TArray<FVector> Clipped;
+		Clipped.Reserve(Polygon.Num() + 1);
+		FVector Previous = Polygon.Last();
+		float PreviousDistance = Normal.Dot(Previous - Center) - Limit - ClipTolerance;
+		for (const FVector& Current : Polygon)
+		{
+			const float CurrentDistance = Normal.Dot(Current - Center) - Limit - ClipTolerance;
+			const bool bPreviousInside = PreviousDistance <= 0.0f;
+			const bool bCurrentInside = CurrentDistance <= 0.0f;
+			if (bPreviousInside != bCurrentInside)
+			{
+				const float T = PreviousDistance / (PreviousDistance - CurrentDistance);
+				Clipped.Add(Previous + (Current - Previous) * T);
+			}
+			if (bCurrentInside)
+				Clipped.Add(Current);
+
+			Previous = Current;
+			PreviousDistance = CurrentDistance;
+		}
+		Polygon = std::move(Clipped);
+	}
+
+	// 두 선분에서 가장 가까운 점 쌍을 구하고, 두 번째 선분 위의 점을 반환한다.
+	FVector ClosestPointOnSecondSegment(const FVector& P0, const FVector& P1,
+		const FVector& Q0, const FVector& Q1)
+	{
+		constexpr float Epsilon = 1e-12f;
+		const FVector D1 = P1 - P0;
+		const FVector D2 = Q1 - Q0;
+		const FVector R = P0 - Q0;
+		const float A = D1.Dot(D1);
+		const float E = D2.Dot(D2);
+		const float F = D2.Dot(R);
+		if (E <= Epsilon)
+			return Q0;
+
+		float S = 0.0f;
+		float T = 0.0f;
+		if (A <= Epsilon)
+		{
+			T = std::clamp(F / E, 0.0f, 1.0f);
+		}
+		else
+		{
+			const float C = D1.Dot(R);
+			const float B = D1.Dot(D2);
+			const float Denominator = A * E - B * B;
+			if (Denominator > Epsilon * A * E)
+				S = std::clamp((B * F - C * E) / Denominator, 0.0f, 1.0f);
+
+			T = (B * S + F) / E;
+			if (T < 0.0f)
+			{
+				T = 0.0f;
+				S = std::clamp(-C / A, 0.0f, 1.0f);
+			}
+			else if (T > 1.0f)
+			{
+				T = 1.0f;
+				S = std::clamp((B - C) / A, 0.0f, 1.0f);
+			}
+		}
+		return Q0 + D2 * T;
+	}
+
+	// Direction 쪽 모서리를 선택하고, EdgeAxis를 따라 선분을 만든다.
+	void GetContactEdge(const FContactBox& Box, int32 EdgeAxis,
+		const FVector& Direction, FVector& OutStart, FVector& OutEnd)
+	{
+		FVector EdgeCenter = Box.Center;
+		for (int32 Axis = 0; Axis < 3; ++Axis)
+		{
+			if (Axis == EdgeAxis)
+				continue;
+			const float Sign = Box.Axes[Axis].Dot(Direction) >= 0.0f ? 1.0f : -1.0f;
+			EdgeCenter += Box.Axes[Axis] * (Box.Extent[Axis] * Sign);
+		}
+		const FVector HalfEdge = Box.Axes[EdgeAxis] * Box.Extent[EdgeAxis];
+		OutStart = EdgeCenter - HalfEdge;
+		OutEnd = EdgeCenter + HalfEdge;
+	}
+
+	// 단일 접촉점을 B 표면의 대표점으로 정의한다. 면 접촉은 후보점들의 평균이다.
+	// BestAxisIndex: 0~2는 A 면, 3~5는 B 면, 6~14는 모서리 조합이다.
+	bool ComputeBoxContactPoint(const FContactBox& A, const FContactBox& B,
+		const FVector& NormalAtoB, int32 BestAxisIndex, FVector& OutPoint)
+	{
+		if (BestAxisIndex < 0 || BestAxisIndex >= 15)
+			return false;
+
+		if (BestAxisIndex >= 6)
+		{
+			const int32 PairIndex = BestAxisIndex - 6;
+			FVector P0, P1, Q0, Q1;
+			GetContactEdge(A, PairIndex / 3, NormalAtoB, P0, P1);
+			GetContactEdge(B, PairIndex % 3, -NormalAtoB, Q0, Q1);
+			OutPoint = ClosestPointOnSecondSegment(P0, P1, Q0, Q1);
+			return true;
+		}
+
+		const bool bReferenceIsA = BestAxisIndex < 3;
+		const FContactBox& Reference = bReferenceIsA ? A : B;
+		const FContactBox& Incident = bReferenceIsA ? B : A;
+		const int32 ReferenceAxis = bReferenceIsA ? BestAxisIndex : BestAxisIndex - 3;
+		const FVector ReferenceNormal = bReferenceIsA ? NormalAtoB : -NormalAtoB;
+		const FVector ReferenceFaceCenter = Reference.Center
+			+ ReferenceNormal * Reference.Extent[ReferenceAxis];
+
+		// 기준 면과 가장 마주보는 상대 면을 선택한다.
+		int32 IncidentAxis = 0;
+		for (int32 Axis = 1; Axis < 3; ++Axis)
+		{
+			if (std::abs(Incident.Axes[Axis].Dot(ReferenceNormal))
+				> std::abs(Incident.Axes[IncidentAxis].Dot(ReferenceNormal)))
+				IncidentAxis = Axis;
+		}
+		const float IncidentSign = Incident.Axes[IncidentAxis].Dot(ReferenceNormal) >= 0.0f ? -1.0f : 1.0f;
+		const FVector IncidentFaceCenter = Incident.Center
+			+ Incident.Axes[IncidentAxis] * (Incident.Extent[IncidentAxis] * IncidentSign);
+		const int32 IncidentU = (IncidentAxis + 1) % 3;
+		const int32 IncidentV = (IncidentAxis + 2) % 3;
+		const FVector U = Incident.Axes[IncidentU] * Incident.Extent[IncidentU];
+		const FVector V = Incident.Axes[IncidentV] * Incident.Extent[IncidentV];
+		TArray<FVector> Polygon
+		{
+			IncidentFaceCenter - U - V,
+			IncidentFaceCenter + U - V,
+			IncidentFaceCenter + U + V,
+			IncidentFaceCenter - U + V
+		};
+
+		// 기준 면의 네 변에 대응하는 평면으로 상대 면을 잘라낸다.
+		const int32 ReferenceU = (ReferenceAxis + 1) % 3;
+		const int32 ReferenceV = (ReferenceAxis + 2) % 3;
+		for (int32 SideAxis : { ReferenceU, ReferenceV })
+		{
+			ClipContactPolygon(Polygon, Reference.Center,
+				Reference.Axes[SideAxis], Reference.Extent[SideAxis]);
+			ClipContactPolygon(Polygon, Reference.Center,
+				-Reference.Axes[SideAxis], Reference.Extent[SideAxis]);
+		}
+		ClipContactPolygon(Polygon, ReferenceFaceCenter, ReferenceNormal, 0.0f);
+		if (Polygon.IsEmpty())
+			return false;
+
+		FVector Sum = FVector::ZeroVector;
+		for (const FVector& Point : Polygon)
+		{
+			// A가 기준이면 후보는 B 표면 위에 있다. B가 기준이면 B 면에 투영한다.
+			const float Separation = (Point - ReferenceFaceCenter).Dot(ReferenceNormal);
+			Sum += bReferenceIsA ? Point : Point - ReferenceNormal * Separation;
+		}
+		OutPoint = Sum / static_cast<float>(Polygon.Num());
+		return true;
 	}
 
 	ECollisionResponse GetPairResponse(const FPhysicsBodyState& A, const FPhysicsBodyState& B)
@@ -82,10 +260,27 @@ void FPBDRigidsEvolutionGBF::AdvanceOneTimeStep(TArray<FPhysicsBodyState>& InOut
 
 void FPBDRigidsEvolutionGBF::ApplyGravityAndIntegrate(TArray<FPhysicsBodyState>& InOutBodyStates, float DeltaTime)
 {
-	// TODO: BodyId별 속도와 이동 유형(Static/Kinematic/Dynamic), 중력 설정을 준비한다.
-	// TODO: Dynamic Body에만 Velocity += Gravity * DeltaTime을 적용하고 예측 위치를 계산한다.
-	// TODO: 속도는 프레임 사이에 유지하며, MovementComponent가 제어하는 Body는 적분하지 않는다.
-	// TODO: 계산한 예측 Pose를 InOutBodyStates의 WorldTransform에 기록한다.
+	if (!std::isfinite(DeltaTime) || DeltaTime <= 0.0f)
+		return;
+
+	const FVector Gravity(0.0f, 0.0f, -9.8f);
+	for (FPhysicsBodyState& State : InOutBodyStates)
+	{
+		if (State.MotionType == EPhysicsMotionType::Static)
+			State.LinearVelocity = FVector::ZeroVector;
+		if (!IsFinitePhysicsVector(State.LinearVelocity))
+			State.LinearVelocity = FVector::ZeroVector;
+		if (State.MotionType != EPhysicsMotionType::Dynamic)
+			continue;
+
+		// 반암시적 Euler 적분. 중력을 꺼도 기존 속도에 의한 이동은 유지한다.
+		const FVector Velocity = State.LinearVelocity + (State.bEnableGravity ? Gravity * DeltaTime : FVector::ZeroVector);
+		const FVector Location = State.WorldTransform.Location + Velocity * DeltaTime;
+		if (!IsFinitePhysicsVector(Velocity) || !IsFinitePhysicsVector(Location))
+			continue;
+		State.LinearVelocity = Velocity;
+		State.WorldTransform.Location = Location;
+	}
 }
 
 void FPBDRigidsEvolutionGBF::UpdateBVHAndCollectPairs(const TArray<FPhysicsBodyState>& InBodyStates)
@@ -395,7 +590,10 @@ bool FPBDRigidsEvolutionGBF::SCCollisionTest(const USphereComponent* A, const FT
 
 bool FPBDRigidsEvolutionGBF::BBCollisionTest(const UBoxComponent* A, const FTransform& TransformA,
 	const UBoxComponent* B, const FTransform& TransformB, FPhysicsCollisionResult& OutResult)
-{	
+{
+	if (!A || !B)
+		return false;
+
 	const FQuat RotationA = TransformA.GetOrientation().Normalized();
 	const FQuat RotationB = TransformB.GetOrientation().Normalized();
 	const FQuat InvA = RotationA.Inverse();
@@ -410,7 +608,7 @@ bool FPBDRigidsEvolutionGBF::BBCollisionTest(const UBoxComponent* A, const FTran
 
 	const FVector BPositionInA = InvA.RotateVector(TransformB.Location - TransformA.Location);
 
-	const FVector AxesInA[6] =
+	FVector AxesInA[15] =
 	{
 		// A의 세 축
 		FVector(1, 0, 0),
@@ -423,11 +621,37 @@ bool FPBDRigidsEvolutionGBF::BBCollisionTest(const UBoxComponent* A, const FTran
 		BAxisZInA
 	};
 
+	// A의 축 3개 × B의 축 3개 = 외적 축 9개
+	for (int32 i = 0; i < 3; ++i)
+	{
+		for (int32 j = 0; j < 3; ++j)
+		{
+			AxesInA[6 + i * 3 + j] =
+				AxesInA[i].Cross(AxesInA[3 + j]);
+		}
+	}
+
+	constexpr float AxisLengthSquaredEpsilon = 1e-12f;
+
 	float MinDepth = FLT_MAX;
 	FVector BestNormalInA = FVector::ZeroVector;
+	int32 BestAxisIndex = -1;
 
-	for (const FVector& AxisInA : AxesInA)
+	for (int32 AxisIndex = 0; AxisIndex < 15; ++AxisIndex)
 	{
+		FVector AxisInA = AxesInA[AxisIndex];
+		const float LengthSquared = AxisInA.Dot(AxisInA);
+
+		if (!std::isfinite(LengthSquared))
+			return false;
+
+		// 거의 평행한 두 축의 외적은 검사 방향으로 사용할 수 없다.
+		if (LengthSquared <= AxisLengthSquaredEpsilon)
+			continue;
+
+		// 모든 축에서 침투 깊이를 같은 거리 단위로 비교한다.
+		AxisInA /= std::sqrt(LengthSquared);
+
 		// A를 검사 축에 투영한 반크기
 		const float ARadius =
 			AExtent.X * std::abs(AxisInA.X) +
@@ -444,22 +668,51 @@ bool FPBDRigidsEvolutionGBF::BBCollisionTest(const UBoxComponent* A, const FTran
 		const float Distance = std::abs(SignedDistance);
 		const float Depth = ARadius + BRadius - Distance;
 
+		if (!std::isfinite(Depth))
+			return false;
+
 		// 한 축에서라도 분리되어 있으면 충돌하지 않는다.
+		// Depth == 0이면 접촉한 상태로 취급한다.
 		if (Depth < 0.0f)
 			return false;
 
-		// 가장 적게 이동해서 분리할 수 있는 축을 기억한다.
+		// 최소 침투 깊이와 해당 축을 저장한다.
 		if (Depth < MinDepth)
 		{
 			MinDepth = Depth;
-			BestNormalInA =
-				SignedDistance >= 0.0f ? AxisInA : -AxisInA;
+			// A → B 방향으로 법선의 부호를 맞춘다.
+			BestNormalInA = SignedDistance >= 0.0f ? AxisInA : -AxisInA;
+			BestAxisIndex = AxisIndex;
 		}
 	}
 
+	const FContactBox BoxA
+	{
+		FVector::ZeroVector,
+		{ AxesInA[0], AxesInA[1], AxesInA[2] },
+		AExtent
+	};
+	const FContactBox BoxB
+	{
+		BPositionInA,
+		{ BAxisXInA, BAxisYInA, BAxisZInA },
+		BExtent
+	};
+	FVector ContactInA;
+	if (!ComputeBoxContactPoint(BoxA, BoxB, BestNormalInA, BestAxisIndex, ContactInA)
+		|| !IsFinitePhysicsVector(ContactInA))
+		return false;
+
+	// Scale은 Extent에 이미 반영했으므로 회전과 이동만 적용한다.
+	const FVector WorldContactPoint = TransformA.Location + RotationA.RotateVector(ContactInA);
+	if (!IsFinitePhysicsVector(WorldContactPoint))
+		return false;
+
+	// A 좌표계에서 구한 법선을 월드 좌표계로 변환
 	OutResult.Normal = RotationA.RotateVector(BestNormalInA).Normalized();
 	OutResult.PenetrationDepth = MinDepth;
-	
+	OutResult.ContactPoint = WorldContactPoint;
+	return true;
 }
 
 bool FPBDRigidsEvolutionGBF::BCCollisionTest(const UBoxComponent* A, const FTransform& TransformA,
@@ -478,10 +731,63 @@ bool FPBDRigidsEvolutionGBF::CCCollisionTest(const UCapsuleComponent* A, const F
 
 void FPBDRigidsEvolutionGBF::ResolveContacts(TArray<FPhysicsBodyState>& InOutBodyStates, float DeltaTime)
 {
-	// TODO: CollisionResults 중 Response가 Block인 결과를 순회한다. BodyId로 상태를 찾는다.
-	// TODO: 물리적으로 막히는 접촉에 대해 침투 위치와 충돌 방향 속도를 보정한다.
-	// TODO: Dynamic Body만 수정하고 Static/Kinematic Body의 위치는 유지한다.
-	// TODO: 필요한 경우 역질량, 반발 계수, 마찰과 반복 횟수를 추가한다.
-	// TODO: 보정한 Pose를 InOutBodyStates의 WorldTransform에 반영한다.
+	if (!std::isfinite(DeltaTime) || DeltaTime <= 0.0f || CollisionResults.IsEmpty())
+		return;
+
+	TMap<uint64, int32> BodyIndices;
+	BodyIndices.Reserve(InOutBodyStates.Num());
+	TArray<FVector> PredictedLocations;
+	PredictedLocations.Reserve(InOutBodyStates.Num());
+	for (int32 Index = 0; Index < InOutBodyStates.Num(); ++Index)
+	{
+		BodyIndices.Add(InOutBodyStates[Index].BodyId, Index);
+		PredictedLocations.Add(InOutBodyStates[Index].WorldTransform.Location);
+	}
+
+	// 여러 접촉을 순차적으로 보정한다. 이미 분리한 양을 빼서 같은 깊이를 반복 적용하지 않는다.
+	constexpr int32 SolverIterations = 16;
+	for (int32 Iteration = 0; Iteration < SolverIterations; ++Iteration)
+	{
+		for (const FPhysicsCollisionResult& Contact : CollisionResults)
+		{
+			if (Contact.Response != ECollisionResponse::Block || Contact.BodyIdA == Contact.BodyIdB
+				|| !IsFinitePhysicsVector(Contact.Normal) || !std::isfinite(Contact.PenetrationDepth)
+				|| Contact.PenetrationDepth < 0.0f)
+				continue;
+			const int32* IndexA = BodyIndices.Find(Contact.BodyIdA);
+			const int32* IndexB = BodyIndices.Find(Contact.BodyIdB);
+			if (!IndexA || !IndexB)
+				continue;
+
+			FPhysicsBodyState& A = InOutBodyStates[*IndexA];
+			FPhysicsBodyState& B = InOutBodyStates[*IndexB];
+			// 질량 설정이 없는 현재 단계에서는 모든 Dynamic을 동일 질량으로 취급한다.
+			const float InvMassA = A.MotionType == EPhysicsMotionType::Dynamic ? 1.0f : 0.0f;
+			const float InvMassB = B.MotionType == EPhysicsMotionType::Dynamic ? 1.0f : 0.0f;
+			const float InvMassSum = InvMassA + InvMassB;
+			const float NormalLengthSquared = Contact.Normal.Dot(Contact.Normal);
+			if (InvMassSum == 0.0f || !std::isfinite(NormalLengthSquared) || NormalLengthSquared <= 1e-8f)
+				continue;
+			const FVector Normal = Contact.Normal / std::sqrt(NormalLengthSquared);
+			const FVector CorrectionA = A.WorldTransform.Location - PredictedLocations[*IndexA];
+			const FVector CorrectionB = B.WorldTransform.Location - PredictedLocations[*IndexB];
+			const float RemainingDepth = Contact.PenetrationDepth - (CorrectionB - CorrectionA).Dot(Normal);
+			if (RemainingDepth > 0.0f)
+			{
+				const FVector Correction = Normal * (RemainingDepth / InvMassSum);
+				if (InvMassA > 0.0f) A.WorldTransform.Location -= Correction * InvMassA;
+				if (InvMassB > 0.0f) B.WorldTransform.Location += Correction * InvMassB;
+			}
+
+			// 반발 계수 0: 서로 접근하는 법선 속도만 제거하고 접선 속도와 분리 속도는 유지한다.
+			const float NormalVelocity = (B.LinearVelocity - A.LinearVelocity).Dot(Normal);
+			if (NormalVelocity < 0.0f)
+			{
+				const FVector Impulse = Normal * (-NormalVelocity / InvMassSum);
+				if (InvMassA > 0.0f) A.LinearVelocity -= Impulse * InvMassA;
+				if (InvMassB > 0.0f) B.LinearVelocity += Impulse * InvMassB;
+			}
+		}
+	}
 }
 

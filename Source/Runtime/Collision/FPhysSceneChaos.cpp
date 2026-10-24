@@ -3,7 +3,9 @@
 #include "FPhysSceneChaos.h"
 #include "FPBDRigidsSolver.h"
 #include "FEventManger.h"
+#include "PhysicsSweep.h"
 #include "Component/PrimitiveComponent.h"
+#include "Component/MovementComponent.h"
 #include "Engine/World.h"
 
 #include <algorithm>
@@ -119,6 +121,58 @@ UPrimitiveComponent* FPhysSceneChaos::FindPrimitive(uint64 BodyId) const
 	return Found ? (*Found)->Component : nullptr;
 }
 
+void FPhysSceneChaos::GatherSweepCandidates(const FBox& Bounds, TArray<UPrimitiveComponent*>& OutCandidates) const
+{
+	OutCandidates.Reset();
+	for (const FPrimitiveTransformSnapshot* Snapshot : PrimitiveSnapShots)
+	{
+		UPrimitiveComponent* Component = Snapshot->Component;
+		if (!Component || !Component->IsRegistered() || Component->GetWorld() != OwningWorld)
+			continue;
+		const FBox Candidate = Component->CalcBounds();
+		if (Candidate.Min.X <= Bounds.Max.X && Candidate.Max.X >= Bounds.Min.X
+			&& Candidate.Min.Y <= Bounds.Max.Y && Candidate.Max.Y >= Bounds.Min.Y
+			&& Candidate.Min.Z <= Bounds.Max.Z && Candidate.Max.Z >= Bounds.Min.Z)
+			OutCandidates.Add(Component);
+	}
+}
+
+void FPhysSceneChaos::RecordSweepResult(UPrimitiveComponent* MovingComponent, const FHitResult& Hit, float Radius)
+{
+	if (!MovingComponent || !Hit.HitComponent || MovingComponent == Hit.HitComponent)
+		return;
+	FPhysicsSweepResult Result;
+	for (const FPrimitiveTransformSnapshot* Snapshot : PrimitiveSnapShots)
+	{
+		if (Snapshot->Component == MovingComponent) Result.Contact.BodyIdA = Snapshot->BodyId;
+		if (Snapshot->Component == Hit.HitComponent) Result.Contact.BodyIdB = Snapshot->BodyId;
+	}
+	if (Result.Contact.BodyIdA == 0 || Result.Contact.BodyIdB == 0)
+		return;
+	Result.Contact.ContactPoint = Hit.ImpactPoint;
+	Result.Contact.Normal = -Hit.Normal;
+	Result.Contact.PenetrationDepth = Hit.PenetrationDepth;
+	Result.Contact.Response = ResolveCollisionResponse(
+		MovingComponent->GetCollisionResponseToChannel(Hit.HitComponent->GetObjectChannel()),
+		Hit.HitComponent->GetCollisionResponseToChannel(MovingComponent->GetObjectChannel()));
+	Result.Contact.bFromSweep = true;
+	Result.Contact.SweepTime = Hit.Time;
+	Result.Contact.SweepDistance = Hit.Distance;
+	Result.MovingBodyId = Result.Contact.BodyIdA;
+	Result.Radius = Radius;
+	EventManager->QueueSweepResult(Result);
+}
+
+bool FPhysSceneChaos::IsSweepOverlapping(const FPhysicsSweepResult& Result) const
+{
+	UPrimitiveComponent* Moving = FindPrimitive(Result.MovingBodyId);
+	const uint64 OtherId = Result.MovingBodyId == Result.Contact.BodyIdA ? Result.Contact.BodyIdB : Result.Contact.BodyIdA;
+	UPrimitiveComponent* Other = FindPrimitive(OtherId);
+	if (!Moving || !Other) return false;
+	FHitResult Hit;
+	return SweepSphereAgainstComponent(FRay{ Moving->GetWorldLocation(), FVector::ZeroVector }, 0.0f, Result.Radius, Other, Hit);
+}
+
 // 매 프레임 업데이트 직전 : Snapshot 갱신 및 Component의 물리 입력 수집
 TArray<FPhysicsBodyState> FPhysSceneChaos::CapturePhysicsInputs()
 {
@@ -138,6 +192,24 @@ TArray<FPhysicsBodyState> FPhysSceneChaos::CapturePhysicsInputs()
 		State.ObjectChannel = Component->GetObjectChannel();
 		State.CollisionResponses = Component->GetCollisionResponses();
 		State.bEnableGravity = Component->IsGravityEnabled();
+		// MovementComponent가 같은 Component나 부모를 이동하면 물리가 중복 적분하지 않는다.
+		if (const AActor* Owner = Component->GetOwner())
+		{
+			for (UActorComponent* OwnedComponent : Owner->GetComponents())
+			{
+				const auto* Movement = Cast<UMovementComponent>(OwnedComponent);
+				if (!Movement || !Movement->IsRegistered() || !Movement->IsActive() || !Movement->IsComponentTickEnabled())
+					continue;
+				for (const USceneComponent* Target = Component; Target; Target = Target->GetAttachParent())
+				{
+					if (Movement->GetUpdatedComponent() != Target)
+						continue;
+					State.MotionType = EPhysicsMotionType::Kinematic;
+					State.LinearVelocity = Movement->GetVelocity();
+					break;
+				}
+			}
+		}
 		InputStates.Add(State);
 	}
 	return InputStates;
@@ -148,6 +220,11 @@ void FPhysSceneChaos::BufferPhysicsResults()
 	EventManager->BufferCollisionResults(Solver->GetCollisionResults());
 	for (const FPhysicsBodyState& Result : Solver->GetResultTransforms())
 	{
+		// Static/Kinematic 자식은 부모 Transform을 따른다. 입력 Pose를 다시 쓰면
+		// Dynamic 부모가 이동한 뒤 자식 메시만 이전 월드 위치로 되돌아간다.
+		if (Result.MotionType != EPhysicsMotionType::Dynamic)
+			continue;
+
 		// 프레임 도중 제거된 Body의 결과는 버린다. 배열 순서는 대응에 사용하지 않는다.
 		FPrimitiveTransformSnapshot** Found = BodySnapshots.Find(Result.BodyId);
 		if (!Found)

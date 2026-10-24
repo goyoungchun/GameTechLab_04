@@ -11,6 +11,9 @@ class UPrimitiveComponent;
 class FPBDRigidsSolver;
 class FEventManger;
 class UWorld;
+struct FBox;
+struct FHitResult;
+struct FPhysicsSweepResult;
 
 // 언리얼 엔진에서는 FSingleParticlePhysicsProxy를 사용함.
 // 추후 필요시 임시 구조체 제거 및 체계화 필요함
@@ -38,6 +41,10 @@ public:
 	FPBDRigidsSolver& GetSolver() { return *Solver; }
 	int32 GetNumPrimitives() const { return PrimitiveSnapShots.Num(); }
 	UPrimitiveComponent* FindPrimitive(uint64 BodyId) const;
+	// 렌더링 표시 여부와 독립적으로 현재 Component Pose의 Sweep 후보를 수집한다.
+	void GatherSweepCandidates(const FBox& Bounds, TArray<UPrimitiveComponent*>& OutCandidates) const;
+	void RecordSweepResult(UPrimitiveComponent* MovingComponent, const FHitResult& Hit, float Radius);
+	bool IsSweepOverlapping(const FPhysicsSweepResult& Result) const;
 
 	// 매 프레임 업데이트 직전 : Snapshot 갱신 및 Component의 물리 입력 수집
 	TArray<FPhysicsBodyState> CapturePhysicsInputs();

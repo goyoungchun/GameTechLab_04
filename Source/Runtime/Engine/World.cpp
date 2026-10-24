@@ -14,6 +14,7 @@
 
 #include "Collision/Ray.h"
 #include "Collision/FPhysSceneChaos.h"
+#include "Collision/PhysicsSweep.h"
 #include "Component/BillboardComponent.h"
 #include "Component/ParticleSubUVComponent.h"
 
@@ -390,101 +391,56 @@ bool UWorld::LineTraceSingle(const FRay& WorldRay, FHitResult& OutHit,
 	return OutHit.HitComponent != nullptr;
 }
 
-bool UWorld::SweepSingle(const FRay& WorldRay, float MaxDistance, float Radius, FHitResult& OutHit, AActor* IgnoreActor)
+bool UWorld::SweepSingle(const FRay& WorldRay, float MaxDistance, float Radius, FHitResult& OutHit,
+	AActor* IgnoreActor, const UPrimitiveComponent* MovingComponent, TArray<FHitResult>* OutOverlaps)
 {
 	OutHit = FHitResult(1.0f);
+	if (OutOverlaps) OutOverlaps->Reset();
 	if (MaxDistance <= 0.0f || !std::isfinite(MaxDistance) || Radius < 0.0f || !std::isfinite(Radius)) return false;
-	Scene.UpdateAllTransforms(); // Sweeps during actor ticks must see movement earlier in this tick.
-	float NearestT = MaxDistance;
-
-	const auto TraceComponent = [&](FPrimitiveSceneProxy* Proxy, float& InOutNearestT)
+	if (MovingComponent && (MovingComponent->GetWorld() != this
+		|| (MovingComponent->GetOwner() && !MovingComponent->GetOwner()->GetActorEnableCollision()))) return false;
+	const float DirectionLength = WorldRay.Direction.Length();
+	if (!std::isfinite(DirectionLength) || DirectionLength <= 0.0f) return false;
+	const FRay Ray{ WorldRay.Origin, WorldRay.Direction / DirectionLength };
+	const FVector End = Ray.PointAt(MaxDistance);
+	const FVector Padding(Radius);
+	const FBox Bounds{
+		FVector(std::min(Ray.Origin.X, End.X), std::min(Ray.Origin.Y, End.Y), std::min(Ray.Origin.Z, End.Z)) - Padding,
+		FVector(std::max(Ray.Origin.X, End.X), std::max(Ray.Origin.Y, End.Y), std::max(Ray.Origin.Z, End.Z)) + Padding };
+	TArray<UPrimitiveComponent*> Candidates;
+	PhysicsScene->GatherSweepCandidates(Bounds, Candidates);
+	TArray<FHitResult> Overlaps;
+	float NearestDistance = MaxDistance;
+	for (UPrimitiveComponent* Target : Candidates)
+	{
+		const AActor* TargetOwner = Target->GetOwner();
+		if (Target == MovingComponent || (TargetOwner && (TargetOwner == IgnoreActor || !TargetOwner->GetActorEnableCollision()))
+			|| (MovingComponent && MovingComponent->GetOwner() && TargetOwner == MovingComponent->GetOwner())) continue;
+		const ECollisionChannel MovingChannel = MovingComponent ? MovingComponent->GetObjectChannel() : ECollisionChannel::WorldDynamic;
+		const ECollisionResponse MovingResponse = MovingComponent
+			? MovingComponent->GetCollisionResponseToChannel(Target->GetObjectChannel()) : ECollisionResponse::Block;
+		const ECollisionResponse Response = ResolveCollisionResponse(MovingResponse, Target->GetCollisionResponseToChannel(MovingChannel));
+		if (Response == ECollisionResponse::Ignore) continue;
+		FHitResult Hit;
+		if (!SweepSphereAgainstComponent(Ray, MaxDistance, Radius, Target, Hit)) continue;
+		Hit.bBlockingHit = Response == ECollisionResponse::Block;
+		if (Response == ECollisionResponse::Overlap)
 		{
-			UPrimitiveComponent* Component = Proxy ? Proxy->GetComponent() : nullptr;
-			if (!Component || !Component->IsVisible() || !Component->GetOwner() ||
-				!Component->GetOwner()->GetActorEnableCollision() ||
-				Component->GetOwner() == IgnoreActor || Component->GetOwner()->GetWorld() != this) return false;
-			if (UStaticMesh* Mesh = Proxy ? Proxy->GetMesh() : nullptr)
-			{
-				FAABB Bounds = Proxy->GetBounds();
-				Bounds.Extent += FVector(Radius, Radius, Radius);
-
-				float T = InOutNearestT;
-				if (!RayIntersectsAABB(WorldRay, Bounds.Center - Bounds.Extent, Bounds.Center + Bounds.Extent, T) ||
-					T > InOutNearestT)
-				{
-					return false;
-				}
-
-				FVector ImpactNormal;
-				FVector ImpactPoint = WorldRay.Origin + WorldRay.Direction * T;
-				FVector D = ImpactPoint - Bounds.Center;
-				float NormX = D.X / Bounds.Extent.X;
-				float NormY = D.Y / Bounds.Extent.Y;
-				float NormZ = D.Z / Bounds.Extent.Z;
-
-				float AbsX = fabsf(NormX);
-				float AbsY = fabsf(NormY);
-				float AbsZ = fabsf(NormZ);
-				float MaxAxis = std::max({ AbsX, AbsY, AbsZ });
-
-				if (MaxAxis == AbsX)
-				{
-					ImpactNormal = FVector(NormX > 0 ? 1.0f : -1.0f, 0.0f, 0.0f);
-				}
-				else if (MaxAxis == AbsY)
-				{
-					ImpactNormal = FVector(0.0f, NormY > 0 ? 1.0f : -1.0f, 0.0f);
-				}
-				else
-				{
-					ImpactNormal = FVector(0.0f, 0.0f, NormZ > 0 ? 1.0f : -1.0f);
-				}
-
-				if (ImpactNormal.Dot(WorldRay.Direction) > 0.0f)
-					return false;
-
-
-
-				OutHit.bBlockingHit = true;
-				OutHit.HitComponent = Proxy->GetComponent();
-				OutHit.Distance = T;
-				OutHit.Time = T / MaxDistance;
-				OutHit.ImpactPoint = ImpactPoint;
-				OutHit.ImpactNormal = ImpactNormal;
-				OutHit.Normal = OutHit.ImpactNormal;
-				InOutNearestT = T;
-				return true;
-			}
-
-			const FMatrix& WorldToLocal = Proxy->GetWorldToLocal();
-			const FRay LocalRay{
-				.Origin = WorldToLocal.TransformPosition(WorldRay.Origin),
-				.Direction = WorldToLocal.TransformVector(WorldRay.Direction)
-			};
-
-			float T = InOutNearestT;
-			if (!Component->LineTraceComponentLocal(LocalRay, T) || T > InOutNearestT)
-			{
-				return false;
-			}
-
-			OutHit.bBlockingHit = true;
-			OutHit.HitComponent = Component;
-			OutHit.Distance = T;
-			OutHit.Time = T / MaxDistance;
-			OutHit.ImpactPoint = WorldRay.Origin + WorldRay.Direction * T;
-			OutHit.ImpactNormal = -WorldRay.Direction;
-			OutHit.Normal = OutHit.ImpactNormal;
-			InOutNearestT = T;
-			return true;
-		};
-	const FPreparedRay PreparedRay(WorldRay);
-	const FVector Extent(Radius, Radius, Radius);
-	Scene.BVH.TraceClosest(
-		[&](const FBox& Bounds, float& OutEnterT) { return RayIntersectsAABB(PreparedRay, Bounds.Min - Extent, Bounds.Max + Extent, OutEnterT); },
-		[&](FPrimitiveSceneProxy* Proxy, float& OutNearestT) { return TraceComponent(Proxy, OutNearestT); },
-		NearestT);
-
+			if (OutOverlaps) Overlaps.Add(Hit);
+		}
+		else if ((Hit.Distance > 1e-6f || Hit.bStartPenetrating || Hit.Normal.Dot(Ray.Direction) < -1e-6f)
+			&& Hit.Distance <= NearestDistance)
+		{
+			NearestDistance = Hit.Distance;
+			OutHit = Hit;
+		}
+	}
+	if (OutOverlaps)
+	{
+		std::stable_sort(Overlaps.begin(), Overlaps.end(), [](const FHitResult& A, const FHitResult& B) { return A.Distance < B.Distance; });
+		for (const FHitResult& Hit : Overlaps)
+			if (Hit.Distance <= NearestDistance + 1e-5f) OutOverlaps->Add(Hit);
+	}
 	return OutHit.bBlockingHit;
 }
 
