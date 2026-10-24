@@ -2,6 +2,7 @@
 #include "Editor/Details/DetailsPanel.h"
 
 #include "imgui_internal.h"
+#include "Engine/Level.h"
 #include "Editor/HitoriEd/EditorDragDrop.h"
 #include "Editor/HitoriEd/EditorFileUtils.h"
 #include "Component/PrimitiveComponent.h"
@@ -703,6 +704,152 @@ namespace
 		}
 	}
 
+
+	void UpdateScriptReferencesInWorld(FString InOldPath, FString InNewPath, UWorld *World)
+	{ 
+		if (!World || !World->GetPersistentLevel())
+		{
+			return;
+		}
+
+		for (AActor* Actor : World->GetPersistentLevel()->GetActors())
+		{
+			if (!Actor)
+			{
+				continue;
+			}
+			for (UActorComponent* ActorComponent : Actor->GetComponents())
+			{
+				if (!ActorComponent)	
+				{ 
+					continue;
+				}
+				if (UScriptComponent * ScriptComponent = Cast<UScriptComponent>(ActorComponent))
+				{
+					if (ScriptComponent->GetScriptPath() == InOldPath)
+					{
+						ScriptComponent->SetScriptPath(InNewPath);
+					}
+				}
+			}
+		}
+	}
+
+	bool RenameScriptFile(FString InOldPath, FString InNewPath, UScriptComponent* ScriptComponent, UWorld* World, FString& OutError)
+	{
+		std::error_code ErrorCode;
+		OutError.clear();
+
+		fs::path NewPath = InNewPath;
+
+		const FString NewFileName = NewPath.filename().string();
+		if (NewFileName.empty())
+		{
+			OutError = "파일 이름을 입력하세요.";
+			return false;
+		}
+		// Windows 파일 이름 금지 문자
+		if (NewFileName.find_first_of(":*?\"<>|") != FString::npos)
+		{
+			OutError = "파일 이름에 : * ? \" < > | 를 사용할 수 없습니다.";
+			return false;
+		}
+		if (NewFileName.front() == '.' || NewFileName.back() == '.' || NewFileName.back() == ' ')
+		{
+			OutError = "올바르지 않은 파일 이름입니다.";
+			return false;
+		}
+
+		if (NewPath.extension() != ".lua")
+		{
+			NewPath += ".lua";
+		}
+		if (fs::path(InOldPath) == NewPath)
+		{
+			return true;
+		}
+
+		// 스크립트 폴더 밖으로 나가는 경로는 거부한다. 하위 폴더는 허용.
+		fs::path ScriptFolder = fs::path(FString(ScriptComponent->GetScriptFolderPath())).lexically_normal();
+		if (!ScriptFolder.has_filename())
+		{
+			ScriptFolder = ScriptFolder.parent_path();
+		}
+		const fs::path RelativeToFolder = NewPath.lexically_normal().lexically_relative(ScriptFolder);
+		if (RelativeToFolder.empty() || *RelativeToFolder.begin() == "..")
+		{
+			OutError = ScriptFolder.generic_string() + " 폴더 밖으로 옮길 수 없습니다.";
+			return false;
+		}
+
+		if (fs::exists(NewPath, ErrorCode) && !fs::equivalent(InOldPath, NewPath, ErrorCode))
+		{
+			OutError = "같은 이름의 파일이 이미 있습니다.";
+			return false;
+		}
+		ErrorCode.clear();
+
+		fs::rename(InOldPath, NewPath, ErrorCode);
+		if (ErrorCode)
+		{
+			HTR_LOG(Error, "[Script] Rename failed: '{}' -> '{}' ({})",
+				InOldPath, NewPath.generic_string(), ErrorCode.message());
+			OutError = "이름을 바꾸지 못했습니다: " + ErrorCode.message();
+			return false;
+		}
+		UpdateScriptReferencesInWorld(InOldPath, NewPath.generic_string(), World);
+		HTR_LOG(Info, "[Script] Rename: '{}' -> '{}'", InOldPath, NewPath.generic_string());
+		return true;
+	}
+
+	static char RenameBuffer[256] = {};
+	static FString RenameError;
+
+	void DrawRenamePopup(FString OldPath, UScriptComponent* ScriptComponent, UWorld* World)
+	{
+		if (!ImGui::BeginPopupModal("RenameScript", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+		{
+			return;
+		}
+
+		if (ImGui::IsWindowAppearing())
+		{
+			const FString FileName = fs::path(OldPath).filename().string();
+			strncpy_s(RenameBuffer, FileName.c_str(), sizeof(RenameBuffer) - 1);
+			RenameError.clear();
+			ImGui::SetKeyboardFocusHere();
+		}
+
+		const bool bEnter = ImGui::InputText("New Script File Name", RenameBuffer, sizeof(RenameBuffer),
+			ImGuiInputTextFlags_EnterReturnsTrue);
+		if (ImGui::IsItemEdited())
+		{
+			RenameError.clear();
+		}
+
+		if (!RenameError.empty())
+		{
+			ImGui::TextColored(ImVec4(1.0f, 0.35f, 0.35f, 1.0f), "%s", RenameError.c_str());
+		}
+
+		if (ImGui::Button("OK") || bEnter)
+		{
+			const fs::path NewPath = fs::path(OldPath).parent_path() / RenameBuffer;
+			if (RenameScriptFile(OldPath, NewPath.generic_string(), ScriptComponent, World, RenameError))
+			{
+				ImGui::CloseCurrentPopup();
+			}
+		}
+
+		ImGui::SameLine();
+		if (ImGui::Button("Cancel") || ImGui::IsKeyPressed(ImGuiKey_Escape))
+		{
+			ImGui::CloseCurrentPopup();
+		}
+		ImGui::EndPopup();
+		
+	}
+
 	void DrawScriptComponent(UScriptComponent* ScriptComponent, UWorld* World)
 	{
 		ImGui::Separator();
@@ -712,6 +859,7 @@ namespace
 
 		const FString& Path = ScriptComponent->GetScriptPath();
 
+		ImGui::BeginDisabled(!World->HasBegunPlay());
 		if (ImGui::Button("Create Script"))
 		{
 			FString ScriptFolderPath = FString(ScriptComponent->GetScriptFolderPath());
@@ -723,13 +871,21 @@ namespace
 		}
 
 		ImGui::SameLine();
-
-		ImGui::BeginDisabled(!bHasScript);          // 파일이 없으면 Edit 버튼 비활성화
+		ImGui::BeginDisabled(!bHasScript);
 		if (ImGui::Button("Edit Script"))
 		{
 			OpenScript(Path);
 		}
 		ImGui::EndDisabled();
+		
+		ImGui::SameLine();
+		ImGui::BeginDisabled(!bHasScript || World->HasBegunPlay());
+		if (ImGui::Button("Rename Script"))
+		{
+			ImGui::OpenPopup("RenameScript");
+		}
+		ImGui::EndDisabled();
+		DrawRenamePopup(Path, ScriptComponent, World);
 	}
 
 	void DrawMaterial(UBillboardComponent* BillboardComponent)
