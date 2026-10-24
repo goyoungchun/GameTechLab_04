@@ -9,6 +9,13 @@
 #include "Core/Types.h"
 
 
+#define PRIVATE_DECLARE_DELEGATE(DelegateName, Functype) \
+	typedef TDelegate<Functype> DelegateName;
+
+#define PRIVATE_DECLARE_MULTICAST_DELEGATE(MulticastDelegateName, Functype) \
+	typedef TMulticastDelegate<Functype> MulticastDelegateName;
+
+
 // Member function pointer rapper
 template <typename Class, typename RetType, typename... ArgTypes>
 struct TMemFunPtrType
@@ -85,8 +92,11 @@ struct FDelegateHandle
 };
 
 
+template<typename FuncType>
+class TDelegate;
+
 template<typename RetType, typename... Args>
-class TDelegate
+class TDelegate<RetType(Args...)>
 {
 public:
 	using FInstance = IBaseDelegateInstance<RetType, Args...>;
@@ -129,11 +139,14 @@ protected:
 	TUniquePtr<FInstance> Instance;
 };
 
+template<typename FuncType>
+class TMulticastDelegate;
+
 template<typename... Args>
-class TMulticastDelegate
+class TMulticastDelegate<void(Args...)>
 {
 public:
-	using FDelegate = TDelegate<void, Args...>;
+	using FDelegate = TDelegate<void(Args...)>;
 
 	// 콜백 함수 등록
 	template<typename FunctorType>
