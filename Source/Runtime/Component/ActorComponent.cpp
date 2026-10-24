@@ -113,7 +113,7 @@ void UActorComponent::Activate(bool bReset)
     if (!bReset && !ShouldActivate()) return;
     SetComponentTickEnabled(true);
     SetActiveFlag(true);
-    //OnComponentActivated.Broadcast(this, bReset);
+    OnComponentActivated.Broadcast(this, bReset);
 }
 
 void UActorComponent::Deactivate()
@@ -121,7 +121,7 @@ void UActorComponent::Deactivate()
     if (ShouldActivate()) return;
     SetComponentTickEnabled(false);
     SetActiveFlag(false);
-    //OnComponentDeactivated.Broadcast(this);
+    OnComponentDeactivated.Broadcast(this);
 }
 
 void UActorComponent::SetAutoActivate(bool bNewAutoActivate)
