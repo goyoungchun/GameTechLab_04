@@ -19,7 +19,7 @@ public:
 	~FScriptSystem() = default;
 	void Init();
 	sol::state& GetLua();
-	
+
 	void Shutdown();
 	
 private:
@@ -30,6 +30,5 @@ private:
 	void RegisterTypes();
 	void RegisterInput();
 	void RegisterFunction();
-
-
+	void LoadCoroutineWait();
 };

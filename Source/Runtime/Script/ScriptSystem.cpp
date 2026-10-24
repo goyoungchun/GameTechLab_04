@@ -8,6 +8,7 @@
 #include "GameFramework/Actor/StaticMeshActor.h"
 #include "Asset/AssetManager.h"
 #include "Component/ScriptComponent.h"
+#include "Core/EngineLog.h"
 
 FScriptSystem::FScriptSystem()
 {
@@ -237,12 +238,26 @@ void FScriptSystem::RegisterInput()
 void FScriptSystem::RegisterFunction()
 {
 	Lua->set_function("RestartLevel", []() {
-			if(GEngine)
-			{
-				GEngine->RequestRestartLevel();
-			}
+		if (GEngine)
+		{
+			GEngine->RequestRestartLevel();
 		}
-	);
+	});
+}
+
+void FScriptSystem::LoadCoroutineWait()
+{
+	const char* ScriptPath = "Assets/Scripts/coroutine_waits.lua";
+	
+	try
+	{
+		Lua->script_file(ScriptPath);
+	}
+	catch (const sol::error& Err)
+	{
+		HTR_LOG(Error, "[FScriptSystem] LoadCoroutineWait failed: {} ({})", ScriptPath, Err.what());
+		return;
+	}
 }
 
 void FScriptSystem::Init()
@@ -262,6 +277,7 @@ void FScriptSystem::Init()
 		"State", "Ready"
 	);
 	bIsInitialized = true;
+	LoadCoroutineWait();
 }
 
 void FScriptSystem::Shutdown()
