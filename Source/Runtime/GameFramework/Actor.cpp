@@ -102,6 +102,16 @@ void AActor::SetActorLocation(FVector InLocation)
     }
 }
 
+void AActor::SetActorRotation(FRotator InRotation)
+{
+    if (RootComponent) RootComponent->SetRelativeRotation(InRotation);
+}
+
+void AActor::SetActorScale3D(FVector InScale)
+{
+    if (RootComponent) RootComponent->SetRelativeScale3D(InScale);
+}
+
 FRotator AActor::GetActorRotation() const
 {
     if (RootComponent)
@@ -237,3 +247,4 @@ void AActor::DuplicateSubobjects(UObject* SourceObject)
         }
     }
 }
+

@@ -155,3 +155,9 @@ FWorldContext& UEngine::CreateNewWorldContext(EWorldType InWorldType)
 	return *WorldContextlist.Last();
 }
 
+bool UEngine::ConsumeRestartLevelRequest()
+{
+	const bool bRequested = bRestartLevelRequested;
+	bRestartLevelRequested = false;
+	return bRequested;
+}

@@ -1,5 +1,13 @@
 #include "EnginePCH.h"
+#include "Input/InputSystem.h"
 #include "ScriptSystem.h"
+#include "Component/TextRenderComponent.h"
+#include "Engine/Engine.h"
+#include "Engine/World.h"
+#include "Engine/Level.h"
+#include "GameFramework/Actor/StaticMeshActor.h"
+#include "Asset/AssetManager.h"
+#include "Component/ScriptComponent.h"
 
 FScriptSystem::FScriptSystem()
 {
@@ -89,10 +97,26 @@ void FScriptSystem::RegisterTypes()
 		"x", &FVector::X,
 		"y", &FVector::Y,
 		"z", &FVector::Z,
+		"Length", &FVector::Length,
+		"Normalized", &FVector::Normalized,
+		"Dot", [](const FVector& a, const FVector& b) { return a.Dot(b); },
+		"Cross", [](const FVector& a, const FVector& b) { return a.Cross(b); },
+		"Distance", [](const FVector& a, const FVector& b) { return FVector::Distance(a, b); },
 		sol::meta_function::addition, [](const FVector& a, const FVector& b) { return FVector(a.X + b.X, a.Y + b.Y, a.Z + b.Z); },
 		sol::meta_function::subtraction, [](const FVector& a, const FVector& b) { return FVector(a.X - b.X, a.Y - b.Y, a.Z - b.Z); },
-		sol::meta_function::multiplication, [](const FVector& v, float f) { return v * f; },
+		sol::meta_function::multiplication, sol::overload(                          // v * 2, 2 * v 둘 다
+			[](const FVector& v, float f) { return v * f; },
+			[](float f, const FVector& v) { return v * f; }),
+		sol::meta_function::division, [](const FVector& v, float f) { return v / f; },
+		sol::meta_function::unary_minus, [](const FVector& v) { return FVector(-v.X, -v.Y, -v.Z); },
+		sol::meta_function::equal_to, [](const FVector& a, const FVector& b) { return a == b; },
 		sol::meta_function::to_string, [](const FVector& v) {return std::format("(X : {:.2f}, Y : {:.2f}, Z : {:.2f})", v.X, v.Y, v.Z);}
+	);
+
+	Lua->new_usertype<FRotator>("Rotator",
+		sol::call_constructor, sol::constructors<FRotator(), FRotator(float, float, float)>(),
+		"Pitch", &FRotator::Pitch, "Yaw", &FRotator::Yaw, "Roll", &FRotator::Roll,
+		sol::meta_function::to_string, [](const FRotator& r) { return std::format("(P : {:.1f}, Y : {:.1f}, R : {:.1f})", r.Pitch, r.Yaw, r.Roll); }
 	);
 
 	Lua->new_usertype<AActor>("Actor",
@@ -100,7 +124,124 @@ void FScriptSystem::RegisterTypes()
 		"UUID", sol::readonly_property(&AActor::GetUUID),
 		"Location", sol::property(&AActor::GetActorLocation, &AActor::SetActorLocation),
 		"PrintLocation", &AActor::PrintLocation,
+		"Name", sol::readonly_property(&AActor::GetName),
+		"Rotation", sol::property(&AActor::GetActorRotation, &AActor::SetActorRotation),
+		"Scale", sol::property(&AActor::GetActorScale3D, &AActor::SetActorScale3D),
+		"IsActorBeingDestroyed", &AActor::IsActorBeingDestroyed,
+		"FindActor", [](AActor& Self, const FString& Name) -> AActor*
+		{
+			UWorld* World = Self.GetWorld();
+			if (!World || !World->GetPersistentLevel()) return nullptr;
+
+			const FName Target(Name);
+			for (AActor* Actor : World->GetPersistentLevel()->GetActors())
+			{
+				if (Actor && !Actor->IsActorBeingDestroyed() && Actor->GetFName() == Target)
+					return Actor;
+			}
+			return nullptr;
+		},
+		"SpawnActor", [](AActor& Self, const FString& ScriptPath, const FVector& Location,
+			sol::optional<FString> MeshName) -> AActor*
+		{
+			UWorld* World = Self.GetWorld();
+			if (!World)
+			{
+				return nullptr;
+			}
+
+			FTransform Transform;
+			Transform.Location = Location;
+			AStaticMeshActor* NewActor = World->SpawnActor<AStaticMeshActor>(NAME_None, &Transform);
+			if (!NewActor)
+			{
+				return nullptr;
+			}
+
+			// 이름을 인자로 넣으면 해당 메시 아니면 호출한 액터의 메시로 초기화한다
+			UStaticMesh* Mesh = nullptr;
+			if (MeshName)
+			{
+				Mesh = UAssetManager::GetMesh(*MeshName);
+			}
+			else if (AStaticMeshActor* SelfMeshActor = Cast<AStaticMeshActor>(&Self))
+			{
+				Mesh = SelfMeshActor->GetStaticMeshComponent()->GetStaticMesh();
+			}
+			if (Mesh)
+			{
+				NewActor->GetStaticMeshComponent()->SetStaticMesh(Mesh);
+			}
+
+			// 스크립트경로를 인자로 넣으면 스크립트컴포넌트를 붙인다. 플레이 중 스폰이라 다음 Tick에 BeginPlay가 호출된다
+			if (!ScriptPath.empty())
+			{
+				UScriptComponent* Script = NewActor->CreateDefaultSubobject<UScriptComponent>("LuaScript");
+				Script->SetScriptPath(ScriptPath);
+				Script->RegisterComponent();
+			}
+			return NewActor;
+		},
+		"SetText", [](AActor& Self, const FString& InText)
+		{
+			for (UActorComponent* Component : Self.GetComponents())
+			{
+				if (UTextRenderComponent* TextComponent = Cast<UTextRenderComponent>(Component))
+				{
+					TextComponent->SetText(InText);
+					return true;
+				}
+			}
+			return false;
+		},
+		"GetText", [](AActor& Self) -> FString
+		{
+			for (UActorComponent* Component : Self.GetComponents())
+			{
+				if (UTextRenderComponent* TextComponent = Cast<UTextRenderComponent>(Component))
+				{
+					return TextComponent->GetText();
+				}
+			}
+			return FString();
+		},
 		sol::meta_function::to_string, [](const AActor& a) {return std::format("(UUID : {}, Name : {})", a.GetUUID(), a.GetName());}
+	);
+}
+
+void FScriptSystem::RegisterInput()
+{
+	Lua->new_enum("Key",
+		"W", EKeyCode::W, "A", EKeyCode::A, "S", EKeyCode::S, "D", EKeyCode::D,
+		"Q", EKeyCode::Q, "E", EKeyCode::E, "R", EKeyCode::R, "F", EKeyCode::F,
+		"Up", EKeyCode::Up, "Down", EKeyCode::Down, "Left", EKeyCode::Left, "Right", EKeyCode::Right,
+		"Space", EKeyCode::Space, "Enter", EKeyCode::Enter, "Escape", EKeyCode::Escape,
+		"Shift", EKeyCode::Shift, "Control", EKeyCode::Control, "Tab", EKeyCode::Tab,
+		"Num0", EKeyCode::Num0, "Num1", EKeyCode::Num1, "Num2", EKeyCode::Num2, "Num3", EKeyCode::Num3,
+		"Num4", EKeyCode::Num4, "Num5", EKeyCode::Num5, "Num6", EKeyCode::Num6, "Num7", EKeyCode::Num7,
+		"Num8", EKeyCode::Num8, "Num9", EKeyCode::Num9
+	);
+
+	Lua->set_function("IsKeyDown", [](EKeyCode Key) { return FInputSystem::IsKeyDown(Key); });
+	Lua->set_function("IsKeyPressed", [](EKeyCode Key) { return FInputSystem::IsKeyPressed(Key); });
+	Lua->set_function("IsKeyReleased", [](EKeyCode Key) { return FInputSystem::IsKeyReleased(Key); });
+
+	Lua->new_enum("Mouse",
+		"Left", EMouseButton::Left, "Right", EMouseButton::Right, "Middle", EMouseButton::Middle
+	);
+	Lua->set_function("IsMouseDown", [](EMouseButton Button) { return FInputSystem::IsMouseDown(Button); });
+	Lua->set_function("IsMousePressed", [](EMouseButton Button) { return FInputSystem::IsMousePressed(Button); });
+	Lua->set_function("IsMouseReleased", [](EMouseButton Button) { return FInputSystem::IsMouseReleased(Button); });
+}
+
+void FScriptSystem::RegisterFunction()
+{
+	Lua->set_function("RestartLevel", []() {
+			if(GEngine)
+			{
+				GEngine->RequestRestartLevel();
+			}
+		}
 	);
 }
 
@@ -113,7 +254,13 @@ void FScriptSystem::Init()
 	Lua = MakeUnique<sol::state>();
 	OpenLibraries();
 	RegisterTypes();
+	RegisterInput();
 	OverridePrint();
+
+	Lua->create_named_table("Game",
+		"Score", 0,
+		"State", "Ready"
+	);
 	bIsInitialized = true;
 }
 

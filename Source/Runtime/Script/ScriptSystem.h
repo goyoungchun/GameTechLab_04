@@ -28,7 +28,8 @@ private:
 	void OpenLibraries();
 	void OverridePrint();
 	void RegisterTypes();
-
+	void RegisterInput();
+	void RegisterFunction();
 
 
 };

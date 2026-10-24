@@ -45,6 +45,8 @@ public:
 	
 	FVector GetActorLocation() const;
 	void SetActorLocation(FVector InLocation);
+	void SetActorRotation(FRotator InRotation);
+	void SetActorScale3D(FVector InScale);
 	FRotator GetActorRotation() const;
 	FVector GetActorScale3D() const;
 	FQuat GetActorQuat() const;           //xx 타입명변경

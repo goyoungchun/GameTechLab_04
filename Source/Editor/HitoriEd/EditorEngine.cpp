@@ -322,6 +322,12 @@ bool UEditorEngine::Init() {
 // 진행한다. 입력·창 메시지는 FEngineLoop가 먼저 처리하고 Present는 호출 직후에
 // 한다.
 void UEditorEngine::Tick(const float DeltaTime) {
+	if (ConsumeRestartLevelRequest() && GetWorldContextFromType(EWorldType::PIE))
+	{
+		StopPIESession();
+		CreatePIESession();
+	}
+
 	BeginFrame(DeltaTime);
 	UpdateViewportState(DeltaTime);
 
