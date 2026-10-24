@@ -1,11 +1,11 @@
 #pragma once
 
-#include <functional>
 #include <vector>
 #include <cstdint>
 #include <algorithm>
 #include <utility>
 #include <type_traits>
+#include <cassert>
 #include "Core/Types.h"
 
 
@@ -16,7 +16,7 @@ struct TMemFunPtrType
 	typedef RetType(Class::* Type)(ArgTypes...);
 };
 
-// 순수가상클래스
+// 추상클래스
 template<typename RetType, typename... ArgTypes>
 struct IBaseDelegateInstance
 {
@@ -133,26 +133,24 @@ template<typename... Args>
 class TMulticastDelegate
 {
 public:
-	using FCallback = std::function<void(Args...)>;
+	using FDelegate = TDelegate<void, Args...>;
 
 	// 콜백 함수 등록
-	FDelegateHandle Add(FCallback InFunc)
+	template<typename FunctorType>
+	FDelegateHandle Add(FunctorType&& InFunctor)
 	{
-		if (!InFunc) return FDelegateHandle{};
-
-		uint64_t NewID = ++NextID;
-		Entries.push_back({ NewID, std::move(InFunc) });
-		return FDelegateHandle{ NewID };
+		auto NewDelegate = MakeShared<FDelegate>();
+		NewDelegate->BindLambda(std::forward<FunctorType>(InFunctor));
+		return AddDelegate(std::move(NewDelegate));
 	}
 
 	// 멤버 함수 등록
 	template<typename UserClass>
 	FDelegateHandle AddRaw(UserClass* InUserObject, void(UserClass::* InMethod)(Args...))
 	{
-		return Add([InUserObject, InMethod](Args... InArgs)
-			{
-				(InUserObject->*InMethod)(std::forward<Args>(InArgs)...);
-			});
+		auto NewDelegate = MakeShared<FDelegate>();
+		NewDelegate->BindRaw(InUserObject, InMethod);
+		return AddDelegate(std::move(NewDelegate));
 	}
 
 	// 특정 핸들러 해제
@@ -179,9 +177,9 @@ public:
 		auto LocalEntries = Entries;
 		for (const auto& Entry : LocalEntries)
 		{
-			if (Entry.Callback)
+			if (Entry.Delegate && Entry.Delegate->IsBound())
 			{
-				Entry.Callback(InArgs...);
+				Entry.Delegate->Execute(InArgs...);
 			}
 		}
 	}
@@ -198,12 +196,24 @@ public:
 	}
 
 private:
+	FDelegateHandle AddDelegate(TSharedPtr<FDelegate> InDelegate)
+	{
+		FEntry NewEntry;
+		
+		uint64_t currID = FDelegateHandle::GetNextID();
+		NewEntry.ID = currID;
+		NewEntry.Delegate = std::move(InDelegate);
+
+		Entries.push_back(std::move(NewEntry));
+		return FDelegateHandle{ currID };
+	}
+
+
 	struct FEntry
 	{
-		uint64_t ID;
-		FCallback Callback;
+		uint64_t ID{};
+		TSharedPtr<FDelegate> Delegate;
 	};
 
 	std::vector<FEntry> Entries;
-	uint64_t NextID = 0;
 };
