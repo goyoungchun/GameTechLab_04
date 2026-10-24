@@ -712,6 +712,86 @@ namespace
 	}
 
 
+	void UpdateScriptReferencesInSceneFiles(FString OldPath, FString NewPath)
+	{
+		std::error_code ErrorCode;
+		fs::exists("Scenes", ErrorCode);
+		if (ErrorCode)
+		{
+			return;
+		}
+
+		for (const fs::directory_entry& Entry : fs::recursive_directory_iterator("Scenes"))
+		{
+			if (Entry.is_regular_file())
+			{
+				const fs::path& Path = Entry.path();
+				if (Path.extension() == ".scene")
+				{
+					bool bChanged = false;
+					std::ifstream InputFile(Path);
+					if (InputFile.is_open())
+					{
+						json Json;
+						try
+						{
+							InputFile >> Json;
+							if (Json.contains("Actors") && Json["Actors"].is_array())
+							{
+								for (json& Actor : Json["Actors"])
+								{
+									if (!Actor.contains("Components") || !Actor["Components"].is_array())
+									{
+										continue;
+									}
+
+									for (json& Component : Actor["Components"])
+									{
+										if (Component.value("Class", "") != "UScriptComponent")
+										{
+											continue;
+										}
+										if (!Component.contains("Properties"))
+										{
+											continue;
+										}
+
+										json& Properties = Component["Properties"];
+										if (Properties.contains("ScriptPath") && Properties["ScriptPath"].is_string() &&
+											Properties["ScriptPath"].get<FString>() == OldPath)
+										{
+											Properties["ScriptPath"] = NewPath;
+											bChanged = true;
+										}
+									}
+								}
+							}
+							
+						}
+						catch (const json::parse_error&)
+						{
+							continue;
+						}
+						InputFile.close();
+
+						// ofstream은 여는 순간 내용을 지우므로, 바뀐 씬만 연다.
+						if (!bChanged)
+							continue;
+
+						std::ofstream OutputFile(Path);
+						if (!OutputFile.is_open())
+						{
+							HTR_LOG(Warning, "[Script] Failed to write scene: {}", Path.generic_string());
+							continue;
+						}
+						OutputFile << Json.dump(4);
+						OutputFile.close();
+					}
+				}
+			}
+		}
+	}
+
 	void UpdateScriptReferencesInWorld(FString InOldPath, FString InNewPath, UWorld *World)
 	{ 
 		if (!World || !World->GetPersistentLevel())
@@ -823,6 +903,7 @@ namespace
 			return false;
 		}
 		UpdateScriptReferencesInWorld(InOldPath, NewPath.generic_string(), World);
+		UpdateScriptReferencesInSceneFiles(InOldPath, NewPath.generic_string());
 		HTR_LOG(Info, "[Script] Rename: '{}' -> '{}'", InOldPath, NewPath.generic_string());
 		return true;
 	}

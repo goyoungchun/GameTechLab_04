@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Engine/World.h"
+#include "Container/StringView.h"
 
 class FEditorFileUtils
 {
