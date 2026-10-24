@@ -2,7 +2,9 @@
 #include "Editor/Details/DetailsPanel.h"
 
 #include "imgui_internal.h"
+#include "Engine/Level.h"
 #include "Editor/HitoriEd/EditorDragDrop.h"
+#include "Editor/HitoriEd/EditorFileUtils.h"
 #include "Component/PrimitiveComponent.h"
 #include "Component/StaticMeshComponent.h"
 #include "Component/TextRenderComponent.h"
@@ -27,6 +29,7 @@
 #include <format>
 #include <iostream>
 #include <string>
+#include <Component/ScriptComponent.h>
 
 namespace
 {
@@ -655,6 +658,370 @@ namespace
 		}
 	}
 
+	bool CreateScriptFromTemplate(const fs::path& TemplatePath, FString& NewPath)
+	{
+		std::error_code Ec;
+
+		if (!fs::exists(TemplatePath, Ec))
+		{
+			HTR_LOG(Error, "Template not found: {}", TemplatePath.string());
+			return false;
+		}
+
+		const fs::path BasePath = NewPath;
+		fs::path Candidate = BasePath;
+		for (int32 Suffix = 1; fs::exists(Candidate, Ec); ++Suffix)
+		{
+			Candidate = BasePath.parent_path() /
+				(BasePath.stem().string() + "_" + std::to_string(Suffix) + BasePath.extension().string());
+		}
+
+		fs::create_directories(Candidate.parent_path(), Ec);   // Assets/Scripts 폴더가 없으면 생성
+
+		if (!fs::copy_file(TemplatePath, Candidate, fs::copy_options::none, Ec))
+		{
+			HTR_LOG(Error, "Failed to create script: {} ({})", Candidate.generic_string(), Ec.message());
+			return false;
+		}
+
+		NewPath = Candidate.generic_string();
+		return true;
+	}
+
+	void OpenScript(FString ScriptPath)
+	{
+		std::filesystem::path Path = std::filesystem::absolute(std::filesystem::u8path(ScriptPath));
+		Path.make_preferred();
+		LPCTSTR LuaFilePath = (Path.c_str());
+
+		// ShellExecute() -> Windows 확장자 연결(Association)에 따라 파일 열기
+		HINSTANCE hInst = ShellExecute(
+			NULL, // 부모 윈도우 핸들 (NULL 사용 가능)
+			_T("open"), // 동작(Verb). "open"이면 등록된 기본 프로그램으로 열기
+			LuaFilePath, // 열고자 하는 파일 경로
+			NULL, // 명령줄 인자 (필요 없다면 NULL)
+			NULL, // 작업 디렉터리 (필요 없다면 NULL)
+			SW_SHOWNORMAL // 열리는 창의 상태
+		);
+
+		// ShellExecute는 성공 시 32보다 큰 값을 반환합니다.
+		// 실패 시 32 이하의 값이 반환되므로 간단히 체크 가능
+		if ((INT_PTR)hInst <= 32) {
+			MessageBox(NULL, _T("파일 열기에 실패했습니다."), _T("Error"), MB_OK | MB_ICONERROR);
+		}
+	}
+
+
+	void UpdateScriptReferencesInSceneFiles(FString OldPath, FString NewPath)
+	{
+		std::error_code ErrorCode;
+		fs::exists("Scenes", ErrorCode);
+		if (ErrorCode)
+		{
+			return;
+		}
+
+		for (const fs::directory_entry& Entry : fs::recursive_directory_iterator("Scenes"))
+		{
+			if (Entry.is_regular_file())
+			{
+				const fs::path& Path = Entry.path();
+				if (Path.extension() == ".scene")
+				{
+					bool bChanged = false;
+					std::ifstream InputFile(Path);
+					if (InputFile.is_open())
+					{
+						json Json;
+						try
+						{
+							InputFile >> Json;
+							if (Json.contains("Actors") && Json["Actors"].is_array())
+							{
+								for (json& Actor : Json["Actors"])
+								{
+									if (!Actor.contains("Components") || !Actor["Components"].is_array())
+									{
+										continue;
+									}
+
+									for (json& Component : Actor["Components"])
+									{
+										if (Component.value("Class", "") != "UScriptComponent")
+										{
+											continue;
+										}
+										if (!Component.contains("Properties"))
+										{
+											continue;
+										}
+
+										json& Properties = Component["Properties"];
+										if (Properties.contains("ScriptPath") && Properties["ScriptPath"].is_string() &&
+											Properties["ScriptPath"].get<FString>() == OldPath)
+										{
+											Properties["ScriptPath"] = NewPath;
+											bChanged = true;
+										}
+									}
+								}
+							}
+							
+						}
+						catch (const json::parse_error&)
+						{
+							continue;
+						}
+						InputFile.close();
+
+						// ofstream은 여는 순간 내용을 지우므로, 바뀐 씬만 연다.
+						if (!bChanged)
+							continue;
+
+						std::ofstream OutputFile(Path);
+						if (!OutputFile.is_open())
+						{
+							HTR_LOG(Warning, "[Script] Failed to write scene: {}", Path.generic_string());
+							continue;
+						}
+						OutputFile << Json.dump(4);
+						OutputFile.close();
+					}
+				}
+			}
+		}
+	}
+
+	void UpdateScriptReferencesInWorld(FString InOldPath, FString InNewPath, UWorld *World)
+	{ 
+		if (!World || !World->GetPersistentLevel())
+		{
+			return;
+		}
+
+		for (AActor* Actor : World->GetPersistentLevel()->GetActors())
+		{
+			if (!Actor)
+			{
+				continue;
+			}
+			for (UActorComponent* ActorComponent : Actor->GetComponents())
+			{
+				if (!ActorComponent)	
+				{ 
+					continue;
+				}
+				if (UScriptComponent * ScriptComponent = Cast<UScriptComponent>(ActorComponent))
+				{
+					if (ScriptComponent->GetScriptPath() == InOldPath)
+					{
+						ScriptComponent->SetScriptPath(InNewPath);
+					}
+				}
+			}
+		}
+	}
+
+	// 드롭된 경로가 연결 가능한 스크립트인지 확인한다.
+	bool IsValidScriptPath(const fs::path& InPath, UScriptComponent* ScriptComponent)
+	{
+		std::error_code ErrorCode;
+		if (InPath.extension() != ".lua" || !fs::is_regular_file(InPath, ErrorCode))
+		{
+			return false;
+		}
+
+		fs::path ScriptFolder = fs::path(FString(ScriptComponent->GetScriptFolderPath())).lexically_normal();
+		if (!ScriptFolder.has_filename())
+		{
+			ScriptFolder = ScriptFolder.parent_path();
+		}
+		const fs::path Relative = InPath.lexically_normal().lexically_relative(ScriptFolder);
+		return !Relative.empty() && *Relative.begin() != "..";
+	}
+
+	bool RenameScriptFile(FString InOldPath, FString InNewPath, UScriptComponent* ScriptComponent, UWorld* World, FString& OutError)
+	{
+		std::error_code ErrorCode;
+		OutError.clear();
+
+		fs::path NewPath = InNewPath;
+
+		const FString NewFileName = NewPath.filename().string();
+		if (NewFileName.empty())
+		{
+			OutError = "파일 이름을 입력하세요.";
+			return false;
+		}
+		// Windows 파일 이름 금지 문자
+		if (NewFileName.find_first_of(":*?\"<>|") != FString::npos)
+		{
+			OutError = "파일 이름에 : * ? \" < > | 를 사용할 수 없습니다.";
+			return false;
+		}
+		if (NewFileName.front() == '.' || NewFileName.back() == '.' || NewFileName.back() == ' ')
+		{
+			OutError = "올바르지 않은 파일 이름입니다.";
+			return false;
+		}
+
+		if (NewPath.extension() != ".lua")
+		{
+			NewPath += ".lua";
+		}
+		if (fs::path(InOldPath) == NewPath)
+		{
+			return true;
+		}
+
+		// 스크립트 폴더 밖으로 나가는 경로는 거부한다. 하위 폴더는 허용.
+		fs::path ScriptFolder = fs::path(FString(ScriptComponent->GetScriptFolderPath())).lexically_normal();
+		if (!ScriptFolder.has_filename())
+		{
+			ScriptFolder = ScriptFolder.parent_path();
+		}
+		const fs::path RelativeToFolder = NewPath.lexically_normal().lexically_relative(ScriptFolder);
+		if (RelativeToFolder.empty() || *RelativeToFolder.begin() == "..")
+		{
+			OutError = ScriptFolder.generic_string() + " 폴더 밖으로 옮길 수 없습니다.";
+			return false;
+		}
+
+		if (fs::exists(NewPath, ErrorCode) && !fs::equivalent(InOldPath, NewPath, ErrorCode))
+		{
+			OutError = "같은 이름의 파일이 이미 있습니다.";
+			return false;
+		}
+		ErrorCode.clear();
+
+		fs::rename(InOldPath, NewPath, ErrorCode);
+		if (ErrorCode)
+		{
+			HTR_LOG(Error, "[Script] Rename failed: '{}' -> '{}' ({})",
+				InOldPath, NewPath.generic_string(), ErrorCode.message());
+			OutError = "이름을 바꾸지 못했습니다: " + ErrorCode.message();
+			return false;
+		}
+		UpdateScriptReferencesInWorld(InOldPath, NewPath.generic_string(), World);
+		UpdateScriptReferencesInSceneFiles(InOldPath, NewPath.generic_string());
+		HTR_LOG(Info, "[Script] Rename: '{}' -> '{}'", InOldPath, NewPath.generic_string());
+		return true;
+	}
+
+	static char RenameBuffer[256] = {};
+	static FString RenameError;
+
+	void DrawRenamePopup(FString OldPath, UScriptComponent* ScriptComponent, UWorld* World)
+	{
+		if (!ImGui::BeginPopupModal("RenameScript", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+		{
+			return;
+		}
+
+		if (ImGui::IsWindowAppearing())
+		{
+			const FString FileName = fs::path(OldPath).filename().string();
+			strncpy_s(RenameBuffer, FileName.c_str(), sizeof(RenameBuffer) - 1);
+			RenameError.clear();
+			ImGui::SetKeyboardFocusHere();
+		}
+
+		const bool bEnter = ImGui::InputText("New Script File Name", RenameBuffer, sizeof(RenameBuffer),
+			ImGuiInputTextFlags_EnterReturnsTrue);
+		if (ImGui::IsItemEdited())
+		{
+			RenameError.clear();
+		}
+
+		if (!RenameError.empty())
+		{
+			ImGui::TextColored(ImVec4(1.0f, 0.35f, 0.35f, 1.0f), "%s", RenameError.c_str());
+		}
+
+		if (ImGui::Button("OK") || bEnter)
+		{
+			const fs::path NewPath = fs::path(OldPath).parent_path() / RenameBuffer;
+			if (RenameScriptFile(OldPath, NewPath.generic_string(), ScriptComponent, World, RenameError))
+			{
+				ImGui::CloseCurrentPopup();
+			}
+		}
+
+		ImGui::SameLine();
+		if (ImGui::Button("Cancel") || ImGui::IsKeyPressed(ImGuiKey_Escape))
+		{
+			ImGui::CloseCurrentPopup();
+		}
+		ImGui::EndPopup();
+		
+	}
+
+	void DrawScriptComponent(UScriptComponent* ScriptComponent, UWorld* World)
+	{
+		ImGui::Separator();
+
+		
+		const bool bHasScript = ScriptComponent->ResolveScriptPath();
+
+		const FString Path = ScriptComponent->GetScriptPath();
+
+		ImGui::BeginDisabled(World->HasBegunPlay());
+		if (ImGui::Button("Create Script"))
+		{
+			const FString ScriptFolderPath = FString(ScriptComponent->GetScriptFolderPath());
+			const FString SceneName = std::filesystem::path(FEditorFileUtils::GetScenePath(World)).stem().string();
+			const FString ActorName = ScriptComponent->GetOwner()->GetName();
+
+			FString NewScriptPath = ScriptFolderPath + SceneName + "_" + ActorName + ".lua";
+			if (CreateScriptFromTemplate(ScriptComponent->GetTemplateScriptPath(), NewScriptPath))
+			{
+				ScriptComponent->SetScriptPath(NewScriptPath);
+			}
+		}
+		ImGui::EndDisabled();
+
+		ImGui::SameLine();
+		ImGui::BeginDisabled(!bHasScript);
+		if (ImGui::Button("Edit Script"))
+		{
+			OpenScript(Path);
+		}
+		ImGui::EndDisabled();
+		
+		ImGui::SameLine();
+		ImGui::BeginDisabled(!bHasScript || World->HasBegunPlay());
+		if (ImGui::Button("Rename Script"))
+		{
+			ImGui::OpenPopup("RenameScript");
+		}
+		ImGui::EndDisabled();
+
+		
+		ImGui::BeginDisabled(World->HasBegunPlay());
+		ImGui::Button("Drop .lua here", ImVec2(-FLT_MIN, 0.0f));
+		if (ImGui::BeginDragDropTarget())
+		{
+			if (const ImGuiPayload* Payload = ImGui::AcceptDragDropPayload(EditorDragDrop::Script))
+			{
+				const FString DroppedPath(static_cast<const char*>(Payload->Data), Payload->DataSize - 1);
+
+				if (IsValidScriptPath(DroppedPath, ScriptComponent))
+				{
+					ScriptComponent->SetScriptPath(fs::path(DroppedPath).generic_string());
+				}
+				else
+				{
+					HTR_LOG(Warning, "[Script] Cannot attach '{}': not a .lua file in {}",
+						DroppedPath, FString(ScriptComponent->GetScriptFolderPath()));
+				}
+			}
+			ImGui::EndDragDropTarget();
+		}
+		ImGui::EndDisabled();
+
+		DrawRenamePopup(Path, ScriptComponent, World);
+	}
+
 	void DrawMaterial(UBillboardComponent* BillboardComponent)
 	{
 		const int32 NumSlots = BillboardComponent->GetNumMaterials();
@@ -924,7 +1291,8 @@ namespace
 			FString* Value = static_cast<FString*>(ValuePtr);
 			char Buffer[256] = {};
 			strncpy_s(Buffer, Value->c_str(), sizeof(Buffer) - 1);
-			bChanged = ImGui::InputText(Label.c_str(), Buffer, sizeof(Buffer));
+			const ImGuiInputTextFlags Flags = Property.bReadOnly ? ImGuiInputTextFlags_ReadOnly : ImGuiInputTextFlags_None;
+			bChanged = ImGui::InputText(Label.c_str(), Buffer, sizeof(Buffer), Flags);
 			if (bChanged) *Value = Buffer;
 			break;
 		}
@@ -1128,6 +1496,10 @@ void FDetailsPanel::OnRender()
 					DrawShadowMapPreviews(ShadowMapPreviews);
 				}
 			}
+			else if (UScriptComponent* ScriptComponent = Cast<UScriptComponent>(SelectedComponent))
+			{
+				DrawScriptComponent(ScriptComponent, World);
+			}
 		}
 	}
 
@@ -1172,6 +1544,7 @@ void FDetailsPanel::DrawComponentTree(USceneComponent* SceneComp)
 
 }
 
+
 void FDetailsPanel::DrawAddComponentPopup(AActor * Owner)
 {
 	if (ImGui::BeginPopup("AddComponentPopup"))
@@ -1180,6 +1553,13 @@ void FDetailsPanel::DrawAddComponentPopup(AActor * Owner)
 		ImGui::Separator();
 		
 		// 추가 가능한 컴포넌트 목록
+		if (ImGui::Selectable("Script Component"))
+		{
+			auto* NewComp = Owner->CreateDefaultSubobject<UScriptComponent>("LuaScript");
+			SelectedComponent = NewComp;
+			NewComp->RegisterComponent();
+			
+		}
 		if (ImGui::Selectable("StaticMesh Component"))
 		{
 			auto* NewComp = Owner->CreateDefaultSubobject<UStaticMeshComponent>("StaticMesh");

@@ -18,6 +18,10 @@ public: \
 #define PROPERTY(PropertyName) \
     InClass->AddProperty<decltype(ThisClass::PropertyName)>(#PropertyName, offsetof(ThisClass, PropertyName));
 
+#define PROPERTY_READONLY(PropertyName) \
+    PROPERTY(PropertyName) \
+    InClass->Properties[InClass->Properties.Num() - 1].bReadOnly = true;
+
 #define PROPERTY_ENUM(PropertyName, ...) \
     InClass->AddProperty<decltype(ThisClass::PropertyName)>(#PropertyName, offsetof(ThisClass, PropertyName), { __VA_ARGS__ });
 

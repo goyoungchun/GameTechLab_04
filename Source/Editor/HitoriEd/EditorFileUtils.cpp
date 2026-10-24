@@ -102,6 +102,15 @@ bool FEditorFileUtils::SaveSceneAs(UWorld* World)
 	return true;
 }
 
+FString FEditorFileUtils::GetScenePath(UWorld* World)
+{
+	if (CurrentScenePath.empty())
+	{
+		SaveSceneAs(World);
+	}
+	return CurrentScenePath;
+}
+
 bool FEditorFileUtils::LoadScene(UWorld* World)
 {
 	if (!World)

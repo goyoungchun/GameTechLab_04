@@ -23,7 +23,9 @@ public:
   virtual void InitializeComponent();
 
   virtual void BeginPlay() {};
+  virtual void EndPlay() {};
   void BeginPlayComponent();
+  void EndPlayComponent();
   bool HasBegunPlay() const { return bHasBegunPlay; }
   virtual void TickComponent(float DeltaTime) {};
 

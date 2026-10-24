@@ -92,6 +92,7 @@ public:
 	// UObject 일괄 정리와 GPU 자원 해제 전에 호출된다.
 	virtual void PreExit() {};
 
+	void RequestRestartLevel() { bRestartLevelRequested = true; }
 	bool IsPlaying() const { return PlayWorld != nullptr; }
 
 	UWorld* GetEditorWorld() const { return EditorWorld; }
@@ -117,11 +118,14 @@ public:
 protected:
 	FEngineLoop& GetEngineLoop() const { return *EngineLoop; }
 
+	bool ConsumeRestartLevelRequest();
+
 	UWorld* EditorWorld = nullptr;
 	UWorld* PlayWorld = nullptr;
 
 private:
 	FEngineLoop* EngineLoop = nullptr;
+	bool bRestartLevelRequested = false;
 };
 
 // FEngineLoop::PreInit에서 설정되고 Exit에서 해제된다.
