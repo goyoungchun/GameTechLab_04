@@ -12,43 +12,49 @@ UScriptComponent::~UScriptComponent()
 
 }
 
-void UScriptComponent::Initialize()
+bool UScriptComponent::LoadScriptFile(sol::environment InEnvironment)
 {
 	if (ScriptPath.empty())
 	{
-		return;
+		return false;
 	}
 	sol::state& Lua = FScriptSystem::Get().GetLua();
-	Environment = sol::environment(Lua, sol::create, Lua.globals());
-	Environment["obj"] = GetOwner();
+	InEnvironment = sol::environment(Lua, sol::create, Lua.globals());
+	InEnvironment["obj"] = GetOwner();
 
-	auto Result = Lua.safe_script_file(ScriptPath, Environment, sol::script_pass_on_error);
+	auto Result = Lua.safe_script_file(ScriptPath, InEnvironment, sol::script_pass_on_error);
 	if (!Result.valid())
 	{
 		sol::error Err = Result;
 		HTR_LOG(Error, "[Script] Load failed: {} ({})", ScriptPath, Err.what());
-		return;
+		return false;
 	}
+
+	LuaBeginPlay = InEnvironment["BeginPlay"];
+	LuaTick = InEnvironment["Tick"];
+	LuaEndPlay = InEnvironment["EndPlay"];
+	LuaOnOverlap = InEnvironment["OnOverlap"];
+	LuaOnHit = InEnvironment["OnHit"];
 
 	std::error_code ErrorCode;
 	LastFileWriteTime = std::filesystem::last_write_time(ScriptPath, ErrorCode);
 	if (ErrorCode)
 	{
 		HTR_LOG(Error, "[Script] Last Write Time Check failed: {} ({})", ScriptPath, ErrorCode.message());
-		return;
 	}
 
-	LuaBeginPlay = Environment["BeginPlay"];
-	LuaTick = Environment["Tick"];
-	LuaEndPlay = Environment["EndPlay"];
-	LuaOnOverlap = Environment["OnOverlap"];
-	LuaOnHit = Environment["OnHit"];
+	Environment = InEnvironment;
+
+	Lua.collect_garbage();
+	return true;
 }
 
 void UScriptComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	Initialize();
+
+	sol::environment NewEnvironment;
+	LoadScriptFile(NewEnvironment);
 
 	if (!LuaBeginPlay.valid() || GetOwner()->IsActorBeingDestroyed())
 	{
@@ -124,40 +130,13 @@ bool UScriptComponent::CheckChangeScriptFile(float DeltaTime)
 
 bool UScriptComponent::HotReloadFile()
 {
-	sol::state &Lua = FScriptSystem::Get().GetLua();
-	sol::load_result LoadResult; 
-	std::error_code ErrorCode;
 	sol::environment NewEnvironment;
 
-	LastFileWriteTime = std::filesystem::last_write_time(ScriptPath, ErrorCode);
-	if (ErrorCode)
+	if (LoadScriptFile(NewEnvironment))
 	{
-		HTR_LOG(Error, "[Script] Last Write Time Check failed: {} ({})", ScriptPath, ErrorCode.message());
-		return false;
+		return true;
 	}
-
-	NewEnvironment = sol::environment(Lua, sol::create, Lua.globals());
-	NewEnvironment["obj"] = GetOwner();
-
-	auto Result = Lua.safe_script_file(ScriptPath, NewEnvironment, sol::script_pass_on_error);
-	if (!Result.valid())
-	{
-		sol::error Err = Result;
-		HTR_LOG(Error, "[Script] HotReload failed: {} ({})", ScriptPath, Err.what());
-		return false;
-	}
-
-	Environment = NewEnvironment;
-
-	Lua.collect_garbage();
-
-	LuaBeginPlay = Environment["BeginPlay"];
-	LuaTick = Environment["Tick"];
-	LuaEndPlay = Environment["EndPlay"];
-	LuaOnOverlap = Environment["OnOverlap"];
-	LuaOnHit = Environment["OnHit"];
-
-	return true;
+	return false;
 }
 
 void UScriptComponent::TickComponent(float DeltaTime)

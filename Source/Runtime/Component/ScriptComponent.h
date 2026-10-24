@@ -25,7 +25,7 @@ public:
 	void OnHit(AActor* InOtherActor);
 	void OnOverlap(AActor* InOtherActor);
 		
-	void Initialize();
+	bool LoadScriptFile(sol::environment InEnvironment);
 
 	void SetScriptPath(FString InScriptPath);
 	FString GetScriptPath();
