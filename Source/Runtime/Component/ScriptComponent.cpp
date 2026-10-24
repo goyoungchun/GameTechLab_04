@@ -22,6 +22,11 @@ bool UScriptComponent::LoadScriptFile(sol::environment InEnvironment)
 	InEnvironment = sol::environment(Lua, sol::create, Lua.globals());
 	InEnvironment["obj"] = GetOwner();
 
+	if (!ResolveScriptPath())
+	{
+		return false;
+	}
+
 	auto Result = Lua.safe_script_file(ScriptPath, InEnvironment, sol::script_pass_on_error);
 	if (!Result.valid())
 	{
@@ -37,7 +42,7 @@ bool UScriptComponent::LoadScriptFile(sol::environment InEnvironment)
 	LuaOnHit = InEnvironment["OnHit"];
 
 	std::error_code ErrorCode;
-	LastFileWriteTime = std::filesystem::last_write_time(ScriptPath, ErrorCode);
+	LastFileWriteTime = fs::last_write_time(ScriptPath, ErrorCode);
 	if (ErrorCode)
 	{
 		HTR_LOG(Error, "[Script] Last Write Time Check failed: {} ({})", ScriptPath, ErrorCode.message());
@@ -89,6 +94,80 @@ void UScriptComponent::EndPlay()
 	Super::EndPlay();
 }
 
+namespace 
+{
+	bool EqualsIgnoreCase(const FString& A, const FString& B)
+	{
+		uint64 Index = 0;
+		for (; Index < A.size() && Index < B.size(); ++Index)
+		{
+			const int Left = std::tolower(static_cast<unsigned char>(A[Index]));
+			const int Right = std::tolower(static_cast<unsigned char>(B[Index]));
+			if (Left != Right)
+				return false;
+		}
+		return Index == A.size() && Index == B.size();
+	}
+}
+
+
+bool UScriptComponent::FindScriptByFileName(fs::path FileName)
+{
+	std::error_code ErrorCode;
+	bool FindScript = false;
+
+	for (const fs::directory_entry& Entry : fs::recursive_directory_iterator(
+		ScriptFolderPath,
+		fs::directory_options::skip_permission_denied,
+		ErrorCode
+	))
+	{
+		if (Entry.is_regular_file())
+		{
+			fs::path Path = Entry.path().generic_string();
+			if (Path.extension() == ".lua" && EqualsIgnoreCase(Path.filename().generic_string(), FileName.generic_string()))
+			{
+				if (!FindScript)
+				{
+					FString FolderPath(ScriptFolderPath);
+					SetScriptPath(FolderPath + fs::relative(Path, ScriptFolderPath, ErrorCode).generic_string());
+					FindScript = true;
+				}
+				else
+				{
+					HTR_LOG(Warning, "[Script] Duplicate script name '{}': using '{}', ignored '{}'", 
+						FileName.generic_string(), ScriptPath, Path.generic_string());
+					return FindScript;
+				}
+			}
+		}
+	}
+	return FindScript;
+}
+
+bool UScriptComponent::ResolveScriptPath()
+{ 
+	std::error_code ErrorCode;
+	fs::path Path = ScriptPath;
+
+	if(Path.empty())
+	{
+		return false;
+	}
+
+
+	if (!fs::exists(Path, ErrorCode) || ErrorCode)
+	{
+		if (bScriptNotFound || !FindScriptByFileName(Path.filename()))
+		{
+			bScriptNotFound = true;
+			return false;
+		}
+	}
+	bScriptNotFound = false;
+	return true;
+}
+
 bool UScriptComponent::CheckChangeScriptFile(float DeltaTime)
 {
 	std::error_code ErrorCode;
@@ -101,19 +180,19 @@ bool UScriptComponent::CheckChangeScriptFile(float DeltaTime)
 
 	HotReloadCheckTimer = 0;
 
-	if (!std::filesystem::exists(ScriptPath, ErrorCode) || ErrorCode)
+	if (!ResolveScriptPath())
 	{
 		return false;
 	}
 
-	uintmax_t FileSize = std::filesystem::file_size(ScriptPath, ErrorCode);
+	uintmax_t FileSize = fs::file_size(ScriptPath, ErrorCode);
 	if (ErrorCode || FileSize == 0)
 	{
 		return false;
 	}
 
-	std::filesystem::file_time_type CurrentFileWriteTime = 
-		std::filesystem::last_write_time(ScriptPath, ErrorCode);
+	fs::file_time_type CurrentFileWriteTime = 
+		fs::last_write_time(ScriptPath, ErrorCode);
 
 	if (ErrorCode)
 	{
@@ -200,6 +279,7 @@ void UScriptComponent::OnOverlap(AActor* InOtherActor)
 void UScriptComponent::SetScriptPath(FString InScriptPath)
 {
 	ScriptPath = InScriptPath;
+	bScriptNotFound = false;
 }
 
 FString UScriptComponent::GetScriptPath()

@@ -26,6 +26,7 @@ public:
 	void OnOverlap(AActor* InOtherActor);
 		
 	bool LoadScriptFile(sol::environment InEnvironment);
+	bool ResolveScriptPath();
 
 	void SetScriptPath(FString InScriptPath);
 	FString GetScriptPath();
@@ -33,15 +34,18 @@ public:
 	const FStringView GetScriptFolderPath();
 
 private:
-	FString ScriptPath;
-	float HotReloadCheckTimer = 0.f;
-	std::filesystem::file_time_type LastFileWriteTime;
+	FString	ScriptPath;
+	float	HotReloadCheckTimer = 0.f;
+	bool	bScriptNotFound = false;
+	fs::file_time_type LastFileWriteTime;
 	sol::environment Environment;
 	sol::safe_function LuaBeginPlay, LuaTick, LuaEndPlay, LuaOnOverlap, LuaOnHit;
 
 
 	bool CheckChangeScriptFile(float DeltaTime);
 	bool HotReloadFile();
+	bool FindScriptByFileName(std::filesystem::path FileName);
+	
 
 	constexpr static FStringView  TemplatePath = "Assets/Scripts/Template/template.lua";
 	constexpr static FStringView  ScriptFolderPath = "Assets/Scripts/";

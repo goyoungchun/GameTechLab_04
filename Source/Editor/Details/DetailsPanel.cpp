@@ -707,15 +707,17 @@ namespace
 	{
 		ImGui::Separator();
 
+		
+		const bool bHasScript = ScriptComponent->ResolveScriptPath();
+
 		const FString& Path = ScriptComponent->GetScriptPath();
-		const bool bHasScript = !Path.empty() && std::filesystem::exists(Path);
 
 		if (ImGui::Button("Create Script"))
 		{
-			FString ScriptPath(ScriptComponent->GetScriptFolderPath());
+			FString ScriptFolderPath = FString(ScriptComponent->GetScriptFolderPath());
 			FString SceneName = std::filesystem::path(FEditorFileUtils::GetScenePath(World)).stem().string();
 			FString ActorName = ScriptComponent->GetOwner()->GetName();
-			ScriptComponent->SetScriptPath(ScriptPath + SceneName + "_" + ActorName + ".lua");
+			ScriptComponent->SetScriptPath(ScriptFolderPath + SceneName + "_" + ActorName + ".lua");
 
 			CreateScriptFromTemplate(ScriptComponent->GetTemplateScriptPath(), ScriptComponent->GetScriptPath());
 		}
