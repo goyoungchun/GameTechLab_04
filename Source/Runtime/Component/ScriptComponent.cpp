@@ -30,6 +30,14 @@ void UScriptComponent::Initialize()
 		return;
 	}
 
+	std::error_code ErrorCode;
+	LastFileWriteTime = std::filesystem::last_write_time(ScriptPath, ErrorCode);
+	if (ErrorCode)
+	{
+		HTR_LOG(Error, "[Script] Last Write Time Check failed: {} ({})", ScriptPath, ErrorCode.message());
+		return;
+	}
+
 	LuaBeginPlay = Environment["BeginPlay"];
 	LuaTick = Environment["Tick"];
 	LuaEndPlay = Environment["EndPlay"];
@@ -75,11 +83,110 @@ void UScriptComponent::EndPlay()
 	Super::EndPlay();
 }
 
+bool UScriptComponent::CheckChangeScriptFile(float DeltaTime)
+{
+	std::error_code ErrorCode;
+
+	HotReloadCheckTimer += DeltaTime;
+	if (HotReloadCheckTimer < 0.5f)
+	{
+		return false;
+	}
+
+	HotReloadCheckTimer = 0;
+
+	if (!std::filesystem::exists(ScriptPath, ErrorCode) || ErrorCode)
+	{
+		return false;
+	}
+
+	uintmax_t FileSize = std::filesystem::file_size(ScriptPath, ErrorCode);
+	if (ErrorCode || FileSize == 0)
+	{
+		return false;
+	}
+
+	std::filesystem::file_time_type CurrentFileWriteTime = 
+		std::filesystem::last_write_time(ScriptPath, ErrorCode);
+
+	if (ErrorCode)
+	{
+		HTR_LOG(Error, "[Script] Last Write Time Check failed: {} ({})", ScriptPath, ErrorCode.message());
+		return false;
+	}
+	
+	if (CurrentFileWriteTime != LastFileWriteTime)
+	{
+		return true;
+	}
+	return false;
+}
+
+bool UScriptComponent::HotReloadFile()
+{
+	sol::state &Lua = FScriptSystem::Get().GetLua();
+	sol::load_result LoadResult; 
+	std::error_code ErrorCode;
+	sol::environment NewEnvironment;
+
+	LastFileWriteTime = std::filesystem::last_write_time(ScriptPath, ErrorCode);
+	if (ErrorCode)
+	{
+		HTR_LOG(Error, "[Script] Last Write Time Check failed: {} ({})", ScriptPath, ErrorCode.message());
+		return false;
+	}
+
+	LoadResult = Lua.load_file(ScriptPath);
+	if (!LoadResult.valid())
+	{
+		sol::error Err = LoadResult;
+		HTR_LOG(Error, "[Script] HotReload failed: {} ({})", ScriptPath, Err.what());
+		return false;
+	}
+	sol::protected_function Chunk = LoadResult;
+
+	NewEnvironment = sol::environment(Lua, sol::create, Lua.globals());
+	NewEnvironment["obj"] = GetOwner();
+
+	NewEnvironment.set_on(Chunk);
+
+	auto RunResult = Chunk();
+	if (!RunResult.valid())
+	{
+		sol::error Err = RunResult;
+		HTR_LOG(Error, "[Script] HotReload failed : {} ({})", ScriptPath, Err.what());
+		return false;
+	}
+
+	Environment = NewEnvironment;
+
+	Lua.collect_garbage();
+
+	LuaBeginPlay = Environment["BeginPlay"];
+	LuaTick = Environment["Tick"];
+	LuaEndPlay = Environment["EndPlay"];
+	LuaOnOverlap = Environment["OnOverlap"];
+	LuaOnHit = Environment["OnHit"];
+
+	return true;
+}
+
 void UScriptComponent::TickComponent(float DeltaTime)
 {
 	Super::TickComponent(DeltaTime);
 
-	if (!LuaTick.valid() || GetOwner()->IsActorBeingDestroyed())
+
+	if (GetOwner()->IsActorBeingDestroyed())
+	{
+		return;
+	}
+
+	if (CheckChangeScriptFile(DeltaTime))
+	{
+		HotReloadFile();
+	}
+
+	if (!LuaTick.valid())
 	{
 		return;
 	}

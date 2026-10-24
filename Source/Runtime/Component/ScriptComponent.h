@@ -2,6 +2,7 @@
 
 #include <shellapi.h>
 #include <tchar.h>
+#include <chrono>
 #include "ActorComponent.h"
 #include "SceneComponent.h"
 #include "Script/ScriptSystem.h"
@@ -33,9 +34,14 @@ public:
 
 private:
 	FString ScriptPath;
+	float HotReloadCheckTimer = 0.f;
+	std::filesystem::file_time_type LastFileWriteTime;
 	sol::environment Environment;
 	sol::safe_function LuaBeginPlay, LuaTick, LuaEndPlay, LuaOnOverlap, LuaOnHit;
 
+
+	bool CheckChangeScriptFile(float DeltaTime);
+	bool HotReloadFile();
 
 	constexpr static FStringView  TemplatePath = "Assets/Scripts/Template/template.lua";
 	constexpr static FStringView  ScriptFolderPath = "Assets/Scripts/";
