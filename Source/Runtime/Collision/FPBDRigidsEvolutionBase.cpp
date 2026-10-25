@@ -42,6 +42,129 @@ namespace
 			&& A.Min.Z <= B.Max.Z && A.Max.Z >= B.Min.Z;
 	}
 
+	struct FCapsuleSegment
+	{
+		FVector Start, End;
+		float Radius = 0.0f;
+	};
+
+	bool GetCapsuleSegment(const UCapsuleComponent* Capsule, const FTransform& Transform, FCapsuleSegment& Out)
+	{
+		if (!Capsule || !IsFinitePhysicsVector(Transform.Location) || !IsFinitePhysicsVector(Transform.Scale))
+			return false;
+		const FVector Scale = Transform.Scale.GetAbs();
+		// Sphere-Capsule과 동일하게 반지름은 최소 절댓값 Scale, 전체 반높이는 Z Scale을 쓴다.
+		Out.Radius = Capsule->GetCapsuleRadius() * std::min({ Scale.X, Scale.Y, Scale.Z });
+		const float HalfHeight = Capsule->GetCapsuleHalfHeight() * Scale.Z;
+		if (!(Out.Radius > 0.0f) || !std::isfinite(Out.Radius) || !std::isfinite(HalfHeight) || HalfHeight < 0.0f)
+			return false;
+		const FVector Axis = Transform.GetOrientation().Normalized().RotateVector(FVector(0.0f, 0.0f, 1.0f));
+		const FVector HalfSegment = Axis * std::max(0.0f, HalfHeight - Out.Radius);
+		Out.Start = Transform.Location - HalfSegment;
+		Out.End = Transform.Location + HalfSegment;
+		return IsFinitePhysicsVector(Out.Start) && IsFinitePhysicsVector(Out.End);
+	}
+
+	using FDoubleVector = std::array<double, 3>;
+
+	FDoubleVector ToDouble(const FVector& V) { return { V.X, V.Y, V.Z }; }
+	FDoubleVector Subtract(const FDoubleVector& A, const FDoubleVector& B)
+	{
+		return { A[0] - B[0], A[1] - B[1], A[2] - B[2] };
+	}
+	double Dot(const FDoubleVector& A, const FDoubleVector& B)
+	{
+		return A[0] * B[0] + A[1] * B[1] + A[2] * B[2];
+	}
+	FDoubleVector Cross(const FDoubleVector& A, const FDoubleVector& B)
+	{
+		return { A[1] * B[2] - A[2] * B[1], A[2] * B[0] - A[0] * B[2], A[0] * B[1] - A[1] * B[0] };
+	}
+	FVector ToFloat(const FDoubleVector& V)
+	{
+		return FVector(static_cast<float>(V[0]), static_cast<float>(V[1]), static_cast<float>(V[2]));
+	}
+	FDoubleVector SegmentPoint(const FDoubleVector& Start, const FDoubleVector& Direction, double T)
+	{
+		return { Start[0] + Direction[0] * T, Start[1] + Direction[1] * T, Start[2] + Direction[2] * T };
+	}
+
+	// f(t) = |P(t) - clamp(P(t), -Extent, Extent)|^2는 볼록 함수다.
+	// f'(t)/2 = D dot (P(t) - clamp(P(t)))가 단조 증가하므로 끝점 또는 미분값의 영점이 최소다.
+	void ClosestSegmentBox(const FVector& Start, const FVector& End, const FVector& Extent,
+		FDoubleVector& OutSegment, FDoubleVector& OutBox)
+	{
+		const FDoubleVector P = ToDouble(Start);
+		const FDoubleVector D = Subtract(ToDouble(End), P);
+		auto Derivative = [&](double T)
+		{
+			const FDoubleVector Point = SegmentPoint(P, D, T);
+			double Value = 0.0;
+			for (int32 Axis = 0; Axis < 3; ++Axis)
+				Value += D[Axis] * (Point[Axis] - std::clamp(Point[Axis], -double(Extent[Axis]), double(Extent[Axis])));
+			return Value;
+		};
+		double T = 0.0;
+		if (Derivative(0.0) < 0.0)
+		{
+			T = 1.0;
+			if (Derivative(1.0) > 0.0)
+			{
+				double Lower = 0.0, Upper = 1.0;
+				for (int32 Iteration = 0; Iteration < 48; ++Iteration)
+				{
+					T = (Lower + Upper) * 0.5;
+					const double Value = Derivative(T);
+					if (Value == 0.0) break;
+					if (Value < 0.0) Lower = T;
+					else Upper = T;
+				}
+			}
+		}
+		OutSegment = SegmentPoint(P, D, T);
+		for (int32 Axis = 0; Axis < 3; ++Axis)
+			OutBox[Axis] = std::clamp(OutSegment[Axis], -double(Extent[Axis]), double(Extent[Axis]));
+	}
+
+	// f(s,t) = |P+sD-Q-tE|^2, 0<=s,t<=1.
+	// R=P-Q라 하면 편미분의 영점은 DD*s-DE*t=-DR, DE*s-EE*t=-ER를 만족한다.
+	// 내부의 정지점과 네 경계의 일변수 최솟값을 비교해 끝점, 평행, 점으로의 퇴화도 처리한다.
+	void ClosestSegments(const FCapsuleSegment& A, const FCapsuleSegment& B,
+		FDoubleVector& OutA, FDoubleVector& OutB)
+	{
+		const FDoubleVector P = ToDouble(A.Start), Q = ToDouble(B.Start);
+		const FDoubleVector D = Subtract(ToDouble(A.End), P), E = Subtract(ToDouble(B.End), Q);
+		const FDoubleVector R = Subtract(P, Q);
+		const double DD = Dot(D, D), EE = Dot(E, E), DE = Dot(D, E);
+		const double DR = Dot(D, R), ER = Dot(E, R);
+		double BestDistanceSquared = std::numeric_limits<double>::infinity();
+		auto Consider = [&](double S, double T)
+		{
+			const FDoubleVector PointA = SegmentPoint(P, D, S), PointB = SegmentPoint(Q, E, T);
+			const FDoubleVector Delta = Subtract(PointB, PointA);
+			const double DistanceSquared = Dot(Delta, Delta);
+			if (DistanceSquared < BestDistanceSquared)
+			{
+				BestDistanceSquared = DistanceSquared;
+				OutA = PointA;
+				OutB = PointB;
+			}
+		};
+		Consider(0.0, EE > 0.0 ? std::clamp(ER / EE, 0.0, 1.0) : 0.0);
+		Consider(1.0, EE > 0.0 ? std::clamp((ER + DE) / EE, 0.0, 1.0) : 0.0);
+		Consider(DD > 0.0 ? std::clamp(-DR / DD, 0.0, 1.0) : 0.0, 0.0);
+		Consider(DD > 0.0 ? std::clamp((DE - DR) / DD, 0.0, 1.0) : 0.0, 1.0);
+		const FDoubleVector N = Cross(D, E);
+		// DD*EE-DE*DE 대신 외적을 사용해 거의 평행할 때의 상쇄 오차를 피한다.
+		const double Determinant = Dot(N, N);
+		if (Determinant > 0.0)
+		{
+			const double S = Dot(Cross(E, R), N) / Determinant;
+			const double T = Dot(Cross(D, R), N) / Determinant;
+			if (S >= 0.0 && S <= 1.0 && T >= 0.0 && T <= 1.0) Consider(S, T);
+		}
+	}
+
 	// 접촉점 계산에 필요한 박스 정보. 두 박스 모두 A 좌표계로 표현한다.
 	struct FContactBox
 	{
@@ -718,15 +841,134 @@ bool FPBDRigidsEvolutionGBF::BBCollisionTest(const UBoxComponent* A, const FTran
 bool FPBDRigidsEvolutionGBF::BCCollisionTest(const UBoxComponent* A, const FTransform& TransformA,
 	const UCapsuleComponent* B, const FTransform& TransformB, FPhysicsCollisionResult& OutResult)
 {
-	// TODO: Box-Capsule 판정 성공 시 OutResult의 접촉점, A -> B 단위 법선, 침투 깊이를 채우고 true를 반환한다.
-	return false;
+	FCapsuleSegment Capsule;
+	if (!A || !GetCapsuleSegment(B, TransformB, Capsule) || !IsFinitePhysicsVector(TransformA.Location))
+		return false;
+	const FVector Extent = A->GetBoxExtent() * TransformA.Scale.GetAbs();
+	if (!IsFinitePhysicsVector(Extent) || Extent.X < 0.0f || Extent.Y < 0.0f || Extent.Z < 0.0f)
+		return false;
+
+	// Scale은 치수에만 반영하고 회전만 제거해 거리와 반지름의 월드 단위를 유지한다.
+	const FQuat Rotation = TransformA.GetOrientation().Normalized();
+	const FVector Start = Rotation.Inverse().RotateVector(Capsule.Start - TransformA.Location);
+	const FVector End = Rotation.Inverse().RotateVector(Capsule.End - TransformA.Location);
+	if (!IsFinitePhysicsVector(Start) || !IsFinitePhysicsVector(End))
+		return false;
+	FDoubleVector PointOnSegment, PointOnBox;
+	ClosestSegmentBox(Start, End, Extent, PointOnSegment, PointOnBox);
+	const FDoubleVector Delta = Subtract(PointOnSegment, PointOnBox);
+	const double DistanceSquared = Dot(Delta, Delta);
+	const double Radius = Capsule.Radius;
+	if (DistanceSquared > Radius * Radius)
+		return false;
+
+	FDoubleVector Normal;
+	double Depth;
+	if (DistanceSquared > 0.0)
+	{
+		const double Distance = std::sqrt(DistanceSquared);
+		for (int32 Axis = 0; Axis < 3; ++Axis) Normal[Axis] = Delta[Axis] / Distance;
+		Depth = std::max(0.0, Radius - Distance);
+	}
+	else
+	{
+		// 축 선분이 박스를 관통하면 최소 거리의 기울기도 0이 된다.
+		// Box + (-Segment)의 면 법선(박스 면 3개, 선분과 모서리의 외적 3개) 중
+		// 캡슐 전체를 분리하는 이동량이 가장 작은 방향을 고른다. 내부 포함도 처리한다.
+		const FDoubleVector P = ToDouble(Start), D = Subtract(ToDouble(End), P);
+		const FDoubleVector Center = SegmentPoint(P, D, 0.5);
+		Depth = std::numeric_limits<double>::infinity();
+		auto ConsiderAxis = [&](FDoubleVector Axis)
+		{
+			const double Length = std::sqrt(Dot(Axis, Axis));
+			if (Length == 0.0) return;
+			for (double& Value : Axis) Value /= Length;
+			const double SignedDistance = Dot(Center, Axis);
+			const double Projection = Extent.X * std::abs(Axis[0]) + Extent.Y * std::abs(Axis[1])
+				+ Extent.Z * std::abs(Axis[2]) + std::abs(Dot(D, Axis)) * 0.5;
+			const double CandidateDepth = std::max(0.0, Projection + Radius - std::abs(SignedDistance));
+			if (CandidateDepth < Depth)
+			{
+				Depth = CandidateDepth;
+				Normal = Axis;
+				if (SignedDistance < 0.0) for (double& Value : Normal) Value = -Value;
+			}
+		};
+		for (int32 Index = 0; Index < 3; ++Index)
+		{
+			FDoubleVector Axis{};
+			Axis[Index] = 1.0;
+			ConsiderAxis(Axis);
+			ConsiderAxis(Cross(D, Axis));
+		}
+		// -Normal 방향의 캡슐 지지점을 접촉점으로 사용한다.
+		const double AlongSegment = Dot(D, Normal);
+		PointOnSegment = SegmentPoint(P, D, AlongSegment > 0.0 ? 0.0 : AlongSegment < 0.0 ? 1.0 : 0.5);
+	}
+	FDoubleVector Contact;
+	for (int32 Axis = 0; Axis < 3; ++Axis) Contact[Axis] = PointOnSegment[Axis] - Normal[Axis] * Radius;
+	OutResult.Normal = Rotation.RotateVector(ToFloat(Normal)).Normalized();
+	OutResult.PenetrationDepth = static_cast<float>(Depth);
+	OutResult.ContactPoint = TransformA.Location + Rotation.RotateVector(ToFloat(Contact));
+	return IsFinitePhysicsVector(OutResult.Normal) && IsFinitePhysicsVector(OutResult.ContactPoint)
+		&& std::isfinite(OutResult.PenetrationDepth);
 }
 
 bool FPBDRigidsEvolutionGBF::CCCollisionTest(const UCapsuleComponent* A, const FTransform& TransformA,
 	const UCapsuleComponent* B, const FTransform& TransformB, FPhysicsCollisionResult& OutResult)
 {
-	// TODO: Capsule-Capsule 판정 성공 시 OutResult의 접촉점, A -> B 단위 법선, 침투 깊이를 채우고 true를 반환한다.
-	return false;
+	FCapsuleSegment SegmentA, SegmentB;
+	if (!GetCapsuleSegment(A, TransformA, SegmentA) || !GetCapsuleSegment(B, TransformB, SegmentB))
+		return false;
+	FDoubleVector PointA, PointB;
+	ClosestSegments(SegmentA, SegmentB, PointA, PointB);
+	const FDoubleVector Delta = Subtract(PointB, PointA);
+	const double DistanceSquared = Dot(Delta, Delta);
+	const double RadiusSum = double(SegmentA.Radius) + SegmentB.Radius;
+	if (DistanceSquared > RadiusSum * RadiusSum)
+		return false;
+
+	const double Distance = std::sqrt(DistanceSquared);
+	FDoubleVector Normal;
+	// 교차점 계산의 double 반올림 잔차를 법선으로 증폭하지 않는다.
+	const bool bZeroDistance = Distance <= 1e-10 * std::max(1.0, RadiusSum);
+	if (!bZeroDistance)
+	{
+		for (int32 Axis = 0; Axis < 3; ++Axis) Normal[Axis] = Delta[Axis] / Distance;
+	}
+	else
+	{
+		const FDoubleVector D = Subtract(ToDouble(SegmentA.End), ToDouble(SegmentA.Start));
+		const FDoubleVector E = Subtract(ToDouble(SegmentB.End), ToDouble(SegmentB.Start));
+		Normal = Cross(D, E);
+		if (Dot(Normal, Normal) == 0.0)
+		{
+			const FDoubleVector& Axis = Dot(D, D) >= Dot(E, E) ? D : E;
+			if (Dot(Axis, Axis) > 0.0)
+			{
+				int32 LeastAligned = 0;
+				for (int32 Index = 1; Index < 3; ++Index)
+					if (std::abs(Axis[Index]) < std::abs(Axis[LeastAligned])) LeastAligned = Index;
+				FDoubleVector Basis{};
+				Basis[LeastAligned] = 1.0;
+				Normal = Cross(Axis, Basis);
+			}
+			else Normal = { 1.0, 0.0, 0.0 }; // 두 선분 모두 점이며 중심도 같다.
+		}
+		const double Length = std::sqrt(Dot(Normal, Normal));
+		for (double& Value : Normal) Value /= Length;
+		if (Dot(Normal, Subtract(ToDouble(TransformB.Location), ToDouble(TransformA.Location))) < 0.0)
+			for (double& Value : Normal) Value = -Value;
+	}
+	FDoubleVector Contact;
+	for (int32 Axis = 0; Axis < 3; ++Axis)
+		Contact[Axis] = (PointA[Axis] + Normal[Axis] * SegmentA.Radius) * 0.5
+			+ (PointB[Axis] - Normal[Axis] * SegmentB.Radius) * 0.5;
+	OutResult.Normal = ToFloat(Normal);
+	OutResult.PenetrationDepth = static_cast<float>(std::max(0.0, RadiusSum - (bZeroDistance ? 0.0 : Distance)));
+	OutResult.ContactPoint = ToFloat(Contact);
+	return IsFinitePhysicsVector(OutResult.Normal) && IsFinitePhysicsVector(OutResult.ContactPoint)
+		&& std::isfinite(OutResult.PenetrationDepth);
 }
 
 void FPBDRigidsEvolutionGBF::ResolveContacts(TArray<FPhysicsBodyState>& InOutBodyStates, float DeltaTime)
