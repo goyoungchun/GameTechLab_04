@@ -7,6 +7,7 @@ class UStaticMeshComponent;
 class UVehicleMovementComponent;
 class UScriptComponent;
 class UCameraComponent;
+struct FVehicleInput;
 
 class AVehiclePawn : public APawn
 {
@@ -19,6 +20,11 @@ public:
 	AVehiclePawn();
 	virtual ~AVehiclePawn() override = default;
 	virtual void BeginPlay() override;
+	void SetVehicleInput(const FVehicleInput& Input);
+	void RequestJump();
+
+	uint32 GetPlayerIndex() const { return PlayerIndex; }
+	UVehicleMovementComponent* GetMovement() const { return Movement; }
 
 private:
 	UBoxComponent* Box = nullptr;

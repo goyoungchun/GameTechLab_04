@@ -9,6 +9,7 @@
 #include "Asset/AssetManager.h"
 #include "Component/ScriptComponent.h"
 #include "Core/EngineLog.h"
+#include "GameFramework/Vehicle/VehicleScriptBindings.h"
 
 FScriptSystem::FScriptSystem()
 {
@@ -330,6 +331,7 @@ void FScriptSystem::Init()
 	RegisterTypes();
 	RegisterInput();
 	RegisterFunction();
+	RegisterVehicleBindings(*Lua);
 	OverridePrint();
 
 	Lua->create_named_table("Game",
