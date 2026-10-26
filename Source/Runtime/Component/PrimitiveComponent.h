@@ -44,6 +44,8 @@ class UPrimitiveComponent :public USceneComponent
 			FEnumEntry(EPhysicsMotionType::Dynamic, "Dynamic"))
 		PROPERTY(Mass)
 		PROPERTY(Acceleration)
+		PROPERTY(COF)
+		PROPERTY_RANGE(Restitution, 0.0f, 1.0f)
 		PROPERTY_ENUM(ObjectChannel,
 			FEnumEntry(ECollisionChannel::WorldStatic, "WorldStatic"),
 			FEnumEntry(ECollisionChannel::WorldDynamic, "WorldDynamic"))
@@ -120,6 +122,10 @@ public:
 	void SetMass(float InMass) { Mass = InMass; OnPropertyChanged("Mass"); }
 	const FVector& GetAcceleration() const { return Acceleration; }
 	void SetAcceleration(const FVector& InAcceleration) { Acceleration = InAcceleration; OnPropertyChanged("Acceleration"); }
+	float GetCOF() const { return COF; }
+	void SetCOF(float InCOF) { COF = InCOF; OnPropertyChanged("COF"); }
+	float GetRestitution() const { return Restitution; }
+	void SetRestitution(float InRestitution) { Restitution = InRestitution; OnPropertyChanged("Restitution"); }
 	ECollisionChannel GetObjectChannel() const { return ObjectChannel; }
 	void SetObjectChannel(ECollisionChannel InObjectChannel) { ObjectChannel = InObjectChannel; OnPropertyChanged("ObjectChannel"); }
 	const FCollisionResponseContainer& GetCollisionResponses() const { return CollisionResponses; }
@@ -164,6 +170,8 @@ private:
 	// 컴포넌트별 질량. 씬에 Mass가 없는 기존 데이터도 기본값 1을 사용한다.
 	float Mass = 1.0f;
 	FVector Acceleration = FVector::ZeroVector;
+	float COF = 0.2f;
+	float Restitution = 1.0f;
 	ECollisionChannel ObjectChannel = ECollisionChannel::WorldStatic;
 	FCollisionResponseContainer CollisionResponses;
 	// 중력 적분은 Dynamic일 때만 이 설정을 사용한다.

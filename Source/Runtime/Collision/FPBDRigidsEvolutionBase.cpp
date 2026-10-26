@@ -398,7 +398,18 @@ void FPBDRigidsEvolutionGBF::ApplyGravityAndIntegrate(TArray<FPhysicsBodyState>&
 
 		// 반암시적 Euler 적분. 중력을 꺼도 기존 속도에 의한 이동은 유지한다.
 		const FVector Acceleration = State.Acceleration + (State.bEnableGravity ? Gravity : FVector::ZeroVector);
-		const FVector Velocity = State.LinearVelocity + Acceleration * DeltaTime;
+		FVector Velocity = State.LinearVelocity + Acceleration * DeltaTime;
+
+		const float Speed = Velocity.Size();
+		const float SpeedDrop = 9.8f * State.COF * DeltaTime;
+
+		if (Speed > 0.0f)
+		{
+			// 바닥 접촉 정보를 가지고 있지 않으므로 우선 X,Y,Z 모두 감속함
+			const float NewSpeed = std::max(0.0f, Speed - SpeedDrop);
+			Velocity *= (NewSpeed / Speed);
+		}
+
 		const FVector Location = State.WorldTransform.Location + Velocity * DeltaTime;
 		if (!IsFinitePhysicsVector(Velocity) || !IsFinitePhysicsVector(Location))
 			continue;
@@ -1026,8 +1037,7 @@ void FPBDRigidsEvolutionGBF::ResolveContacts(TArray<FPhysicsBodyState>& InOutBod
 			const float NormalVelocity = (B.LinearVelocity - A.LinearVelocity).Dot(Normal);
 			if (NormalVelocity < 0.0f)
 			{
-				float Restitution = 1.0f;
-				const FVector Impulse = Normal * (-(1.0f + Restitution) * NormalVelocity / InvMassSum);
+				const FVector Impulse = Normal * ( - ((1.0f + std::sqrt(A.Restitution * B.Restitution)) * NormalVelocity) / InvMassSum);
 				if (InvMassA > 0.0f) A.LinearVelocity -= Impulse * InvMassA;
 				if (InvMassB > 0.0f) B.LinearVelocity += Impulse * InvMassB;
 			}

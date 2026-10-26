@@ -17,6 +17,8 @@ struct FPhysicsBodyState
 	// CapturePhysicsInputs가 매 Step 복사하는 컴포넌트 질량. 
 	float Mass = 1.0f;
 	FVector Acceleration = FVector::ZeroVector;
+	float COF = 0.2f;
+	float Restitution = 1.0f;
 	ECollisionChannel ObjectChannel = ECollisionChannel::WorldStatic;
 	FCollisionResponseContainer CollisionResponses;
 	bool bEnableGravity = true;
