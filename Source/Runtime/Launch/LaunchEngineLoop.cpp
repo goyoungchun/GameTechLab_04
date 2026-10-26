@@ -133,6 +133,8 @@ bool FEngineLoop::Tick()
 	FInputSystem::UpdateInputStates();
 	MainWindow->ProcessMessage(bIsRunning);
 
+	FInputSystem::SyncModifierKeys();
+
 	if (Config.bExitOnEscape && FInputSystem::IsKeyPressed(EKeyCode::Escape))
 	{
 		RequestExit();
