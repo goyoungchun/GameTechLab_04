@@ -8,6 +8,7 @@
 #include "GameFramework/Actor.h"
 #include "UObject/UObjectHash.h"
 #include "GameFramework/Actor/StaticMeshActor.h"
+#include "GameFramework/Vehicle/VehiclePawn.h"
 #include "TypeSerializer.h"
 #include "Asset/AssetManager.h"
 #include "Camera/CameraActor.h"
@@ -250,6 +251,7 @@ bool FJsonArchive::LoadWorld(UWorld* World, const FString& Path)
 
 			Component->Serialize(ComponentJson["Properties"], true);
 		}
+		if (auto* Vehicle = Cast<AVehiclePawn>(Actor)) Vehicle->FitBodyCollision();
 		Actor->RegisterAllComponents();
 	}
 

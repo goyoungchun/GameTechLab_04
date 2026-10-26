@@ -15,6 +15,8 @@ class AVehiclePawn : public APawn
 	DECLARE_CLASS(AVehiclePawn, APawn)
 	REFLECT_START(ClassName)
 	PROPERTY(PlayerIndex)
+	PROPERTY_RANGE(CameraDistanceScale, 2.0f, 10.0f)
+	PROPERTY_RANGE(MinCameraDistance, 1.0f, 100.0f)
 	REFLECT_END()
 
 public:
@@ -35,6 +37,7 @@ public:
 
 	bool SetBody(const FString& MeshName);
 	FString GetBodyName() const;
+	void FitBodyCollision();
 
 private:
 	void RefreshVehicleVisuals();
@@ -59,4 +62,6 @@ private:
 	float BaseFOV = 60.0f;
 	float BoostFOVOffset = 15.0f;
 	float FOVInterpSpeed = 6.0f;
+	float CameraDistanceScale = 5.0f;
+	float MinCameraDistance = 10.0f;
 };
