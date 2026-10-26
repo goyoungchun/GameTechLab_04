@@ -8962,12 +8962,12 @@
                     "Properties": {
                         "Transform": {
                             "Location": [
-                                -13.088959693908691,
+                                -15.706752,
                                 0.0,
                                 3.0
                             ],
                             "Rotation": [
-                                10.848599433898926,
+                                9.180271,
                                 0.0,
                                 0.0
                             ],
@@ -8984,8 +8984,8 @@
                 }
             ],
             "Properties": {
-                "CameraDistanceScale": 5.0,
-                "MinCameraDistance": 10.0,
+                "CameraDistanceScale": 6.0,
+                "MinCameraDistance": 12.0,
                 "PlayerIndex": 0,
                 "bActorEnableCollision": true
             }
@@ -9140,12 +9140,12 @@
                     "Properties": {
                         "Transform": {
                             "Location": [
-                                -13.088959693908691,
+                                -15.706752,
                                 0.0,
                                 3.0
                             ],
                             "Rotation": [
-                                10.848599433898926,
+                                9.180271,
                                 0.0,
                                 0.0
                             ],
@@ -9162,8 +9162,8 @@
                 }
             ],
             "Properties": {
-                "CameraDistanceScale": 5.0,
-                "MinCameraDistance": 10.0,
+                "CameraDistanceScale": 6.0,
+                "MinCameraDistance": 12.0,
                 "PlayerIndex": 1,
                 "bActorEnableCollision": true
             }
@@ -9248,19 +9248,19 @@
                     "Properties": {
                         "Transform": {
                             "Location": [
-                                0.0,
-                                0.0,
-                                0.0
+                                0,
+                                0,
+                                0
                             ],
                             "Rotation": [
-                                0.0,
-                                0.0,
-                                0.0
+                                0,
+                                0,
+                                0
                             ],
                             "Scale": [
-                                1.0,
-                                1.0,
-                                1.0
+                                1,
+                                1,
+                                1
                             ]
                         },
                         "bAutoActivate": true,
@@ -9273,9 +9273,9 @@
                     "Name": "Goal_PostLeft_0",
                     "Properties": {
                         "Acceleration": [
-                            0.0,
-                            0.0,
-                            0.0
+                            0,
+                            0,
+                            0
                         ],
                         "BoxExtent": [
                             0.4,
@@ -9283,16 +9283,16 @@
                             5.627999904155731
                         ],
                         "COF": 0.20000000298023224,
-                        "GravityScale": 1.0,
-                        "Mass": 1.0,
+                        "GravityScale": 1,
+                        "Mass": 1,
                         "MotionType": 0,
                         "ObjectChannel": 0,
                         "Restitution": 0.5,
                         "ShapeColor": [
                             0.20000000298023224,
                             0.699999988079071,
-                            1.0,
-                            1.0
+                            1,
+                            1
                         ],
                         "Transform": {
                             "Location": [
@@ -9301,14 +9301,14 @@
                                 5.627999904155731
                             ],
                             "Rotation": [
-                                0.0,
+                                0,
                                 -94.77583312988281,
-                                0.0
+                                0
                             ],
                             "Scale": [
-                                1.0,
-                                1.0,
-                                1.0
+                                1,
+                                1,
+                                1
                             ]
                         },
                         "WorldDynamic": 2,
@@ -9328,9 +9328,9 @@
                     "Name": "Goal_PostRight_0",
                     "Properties": {
                         "Acceleration": [
-                            0.0,
-                            0.0,
-                            0.0
+                            0,
+                            0,
+                            0
                         ],
                         "BoxExtent": [
                             0.4,
@@ -9338,16 +9338,16 @@
                             5.627999904155731
                         ],
                         "COF": 0.20000000298023224,
-                        "GravityScale": 1.0,
-                        "Mass": 1.0,
+                        "GravityScale": 1,
+                        "Mass": 1,
                         "MotionType": 0,
                         "ObjectChannel": 0,
                         "Restitution": 0.5,
                         "ShapeColor": [
                             0.20000000298023224,
                             0.699999988079071,
-                            1.0,
-                            1.0
+                            1,
+                            1
                         ],
                         "Transform": {
                             "Location": [
@@ -9356,14 +9356,14 @@
                                 5.627999904155731
                             ],
                             "Rotation": [
-                                0.0,
+                                0,
                                 -94.77583312988281,
-                                0.0
+                                0
                             ],
                             "Scale": [
-                                1.0,
-                                1.0,
-                                1.0
+                                1,
+                                1,
+                                1
                             ]
                         },
                         "WorldDynamic": 2,
@@ -9383,26 +9383,26 @@
                     "Name": "Goal_Crossbar_0",
                     "Properties": {
                         "Acceleration": [
-                            0.0,
-                            0.0,
-                            0.0
+                            0,
+                            0,
+                            0
                         ],
                         "BoxExtent": [
                             0.4,
-                            10.0,
+                            10,
                             0.4
                         ],
                         "COF": 0.20000000298023224,
-                        "GravityScale": 1.0,
-                        "Mass": 1.0,
+                        "GravityScale": 1,
+                        "Mass": 1,
                         "MotionType": 0,
                         "ObjectChannel": 0,
                         "Restitution": 0.5,
                         "ShapeColor": [
                             0.20000000298023224,
                             0.699999988079071,
-                            1.0,
-                            1.0
+                            1,
+                            1
                         ],
                         "Transform": {
                             "Location": [
@@ -9411,14 +9411,14 @@
                                 10.855999808311461
                             ],
                             "Rotation": [
-                                0.0,
+                                0,
                                 -94.77583312988281,
-                                0.0
+                                0
                             ],
                             "Scale": [
-                                1.0,
-                                1.0,
-                                1.0
+                                1,
+                                1,
+                                1
                             ]
                         },
                         "WorldDynamic": 2,
@@ -9438,26 +9438,26 @@
                     "Name": "Goal_Roof_0",
                     "Properties": {
                         "Acceleration": [
-                            0.0,
-                            0.0,
-                            0.0
+                            0,
+                            0,
+                            0
                         ],
                         "BoxExtent": [
                             1.4,
-                            10.0,
+                            10,
                             0.3
                         ],
                         "COF": 0.20000000298023224,
-                        "GravityScale": 1.0,
-                        "Mass": 1.0,
+                        "GravityScale": 1,
+                        "Mass": 1,
                         "MotionType": 0,
                         "ObjectChannel": 0,
                         "Restitution": 0.5,
                         "ShapeColor": [
                             0.20000000298023224,
                             0.699999988079071,
-                            1.0,
-                            1.0
+                            1,
+                            1
                         ],
                         "Transform": {
                             "Location": [
@@ -9466,14 +9466,14 @@
                                 11.255999808311461
                             ],
                             "Rotation": [
-                                0.0,
+                                0,
                                 -94.77583312988281,
-                                0.0
+                                0
                             ],
                             "Scale": [
-                                1.0,
-                                1.0,
-                                1.0
+                                1,
+                                1,
+                                1
                             ]
                         },
                         "WorldDynamic": 2,
@@ -9493,26 +9493,26 @@
                     "Name": "Goal_BackNet_0",
                     "Properties": {
                         "Acceleration": [
-                            0.0,
-                            0.0,
-                            0.0
+                            0,
+                            0,
+                            0
                         ],
                         "BoxExtent": [
                             7.367505897141379,
-                            10.0,
+                            10,
                             0.3
                         ],
                         "COF": 0.20000000298023224,
-                        "GravityScale": 1.0,
-                        "Mass": 1.0,
+                        "GravityScale": 1,
+                        "Mass": 1,
                         "MotionType": 0,
                         "ObjectChannel": 0,
                         "Restitution": 0.5,
                         "ShapeColor": [
                             0.20000000298023224,
                             0.699999988079071,
-                            1.0,
-                            1.0
+                            1,
+                            1
                         ],
                         "Transform": {
                             "Location": [
@@ -9523,12 +9523,12 @@
                             "Rotation": [
                                 -42.86587727839966,
                                 -94.77583312988281,
-                                0.0
+                                0
                             ],
                             "Scale": [
-                                1.0,
-                                1.0,
-                                1.0
+                                1,
+                                1,
+                                1
                             ]
                         },
                         "WorldDynamic": 2,
@@ -9548,26 +9548,26 @@
                     "Name": "Goal_BackBottom_0",
                     "Properties": {
                         "Acceleration": [
-                            0.0,
-                            0.0,
-                            0.0
+                            0,
+                            0,
+                            0
                         ],
                         "BoxExtent": [
                             0.3,
-                            10.0,
+                            10,
                             0.6159999895095826
                         ],
                         "COF": 0.20000000298023224,
-                        "GravityScale": 1.0,
-                        "Mass": 1.0,
+                        "GravityScale": 1,
+                        "Mass": 1,
                         "MotionType": 0,
                         "ObjectChannel": 0,
                         "Restitution": 0.5,
                         "ShapeColor": [
                             0.20000000298023224,
                             0.699999988079071,
-                            1.0,
-                            1.0
+                            1,
+                            1
                         ],
                         "Transform": {
                             "Location": [
@@ -9576,14 +9576,14 @@
                                 0.6159999895095826
                             ],
                             "Rotation": [
-                                0.0,
+                                0,
                                 -94.77583312988281,
-                                0.0
+                                0
                             ],
                             "Scale": [
-                                1.0,
-                                1.0,
-                                1.0
+                                1,
+                                1,
+                                1
                             ]
                         },
                         "WorldDynamic": 2,
@@ -9603,9 +9603,9 @@
                     "Name": "Goal_SideLeftFront_0",
                     "Properties": {
                         "Acceleration": [
-                            0.0,
-                            0.0,
-                            0.0
+                            0,
+                            0,
+                            0
                         ],
                         "BoxExtent": [
                             3.4,
@@ -9613,16 +9613,16 @@
                             5.627999904155731
                         ],
                         "COF": 0.20000000298023224,
-                        "GravityScale": 1.0,
-                        "Mass": 1.0,
+                        "GravityScale": 1,
+                        "Mass": 1,
                         "MotionType": 0,
                         "ObjectChannel": 0,
                         "Restitution": 0.5,
                         "ShapeColor": [
                             0.20000000298023224,
                             0.699999988079071,
-                            1.0,
-                            1.0
+                            1,
+                            1
                         ],
                         "Transform": {
                             "Location": [
@@ -9631,14 +9631,14 @@
                                 5.627999904155731
                             ],
                             "Rotation": [
-                                0.0,
+                                0,
                                 -94.77583312988281,
-                                0.0
+                                0
                             ],
                             "Scale": [
-                                1.0,
-                                1.0,
-                                1.0
+                                1,
+                                1,
+                                1
                             ]
                         },
                         "WorldDynamic": 2,
@@ -9658,9 +9658,9 @@
                     "Name": "Goal_SideRightFront_0",
                     "Properties": {
                         "Acceleration": [
-                            0.0,
-                            0.0,
-                            0.0
+                            0,
+                            0,
+                            0
                         ],
                         "BoxExtent": [
                             3.4,
@@ -9668,16 +9668,16 @@
                             5.627999904155731
                         ],
                         "COF": 0.20000000298023224,
-                        "GravityScale": 1.0,
-                        "Mass": 1.0,
+                        "GravityScale": 1,
+                        "Mass": 1,
                         "MotionType": 0,
                         "ObjectChannel": 0,
                         "Restitution": 0.5,
                         "ShapeColor": [
                             0.20000000298023224,
                             0.699999988079071,
-                            1.0,
-                            1.0
+                            1,
+                            1
                         ],
                         "Transform": {
                             "Location": [
@@ -9686,14 +9686,14 @@
                                 5.627999904155731
                             ],
                             "Rotation": [
-                                0.0,
+                                0,
                                 -94.77583312988281,
-                                0.0
+                                0
                             ],
                             "Scale": [
-                                1.0,
-                                1.0,
-                                1.0
+                                1,
+                                1,
+                                1
                             ]
                         },
                         "WorldDynamic": 2,
@@ -9713,42 +9713,42 @@
                     "Name": "Goal_SideLeftBack_0",
                     "Properties": {
                         "Acceleration": [
-                            0.0,
-                            0.0,
-                            0.0
+                            0,
+                            0,
+                            0
                         ],
                         "BoxExtent": [
                             3.4,
                             0.3,
-                            3.0
+                            3
                         ],
                         "COF": 0.20000000298023224,
-                        "GravityScale": 1.0,
-                        "Mass": 1.0,
+                        "GravityScale": 1,
+                        "Mass": 1,
                         "MotionType": 0,
                         "ObjectChannel": 0,
                         "Restitution": 0.5,
                         "ShapeColor": [
                             0.20000000298023224,
                             0.699999988079071,
-                            1.0,
-                            1.0
+                            1,
+                            1
                         ],
                         "Transform": {
                             "Location": [
                                 -9.758396064564122,
                                 48.1755970139779,
-                                3.0
+                                3
                             ],
                             "Rotation": [
-                                0.0,
+                                0,
                                 -94.77583312988281,
-                                0.0
+                                0
                             ],
                             "Scale": [
-                                1.0,
-                                1.0,
-                                1.0
+                                1,
+                                1,
+                                1
                             ]
                         },
                         "WorldDynamic": 2,
@@ -9768,42 +9768,207 @@
                     "Name": "Goal_SideRightBack_0",
                     "Properties": {
                         "Acceleration": [
-                            0.0,
-                            0.0,
-                            0.0
+                            0,
+                            0,
+                            0
                         ],
                         "BoxExtent": [
                             3.4,
                             0.3,
-                            3.0
+                            3
                         ],
                         "COF": 0.20000000298023224,
-                        "GravityScale": 1.0,
-                        "Mass": 1.0,
+                        "GravityScale": 1,
+                        "Mass": 1,
                         "MotionType": 0,
                         "ObjectChannel": 0,
                         "Restitution": 0.5,
                         "ShapeColor": [
                             0.20000000298023224,
                             0.699999988079071,
-                            1.0,
-                            1.0
+                            1,
+                            1
                         ],
                         "Transform": {
                             "Location": [
                                 10.172165239547452,
                                 46.51044653938097,
-                                3.0
+                                3
                             ],
                             "Rotation": [
-                                0.0,
+                                0,
                                 -94.77583312988281,
-                                0.0
+                                0
                             ],
                             "Scale": [
-                                1.0,
-                                1.0,
-                                1.0
+                                1,
+                                1,
+                                1
+                            ]
+                        },
+                        "WorldDynamic": 2,
+                        "WorldStatic": 2,
+                        "bAutoActivate": true,
+                        "bBackfaceDepth": false,
+                        "bCastShadow": false,
+                        "bDrawShape": false,
+                        "bEnableGravity": false,
+                        "bHiddenInGame": true,
+                        "bReceiveShadow": false,
+                        "bVisible": false
+                    }
+                },
+                {
+                    "Class": "UBoxComponent",
+                    "Name": "Goal_UpperBarrier",
+                    "Properties": {
+                        "Acceleration": [
+                            0,
+                            0,
+                            0
+                        ],
+                        "BoxExtent": [
+                            1.5,
+                            10,
+                            19.62200009584427
+                        ],
+                        "COF": 0.20000000298023224,
+                        "GravityScale": 1,
+                        "Mass": 1,
+                        "MotionType": 0,
+                        "ObjectChannel": 0,
+                        "Restitution": 0.5,
+                        "ShapeColor": [
+                            0.20000000298023224,
+                            0.699999988079071,
+                            1,
+                            1
+                        ],
+                        "Transform": {
+                            "Location": [
+                                -0.609039145060827,
+                                37.577046737664766,
+                                30.87799990415573
+                            ],
+                            "Rotation": [
+                                0,
+                                -94.77583312988281,
+                                0
+                            ],
+                            "Scale": [
+                                1,
+                                1,
+                                1
+                            ]
+                        },
+                        "WorldDynamic": 2,
+                        "WorldStatic": 2,
+                        "bAutoActivate": true,
+                        "bBackfaceDepth": false,
+                        "bCastShadow": false,
+                        "bDrawShape": false,
+                        "bEnableGravity": false,
+                        "bHiddenInGame": true,
+                        "bReceiveShadow": false,
+                        "bVisible": false
+                    }
+                },
+                {
+                    "Class": "UBoxComponent",
+                    "Name": "Goal_LeftBarrier",
+                    "Properties": {
+                        "Acceleration": [
+                            0,
+                            0,
+                            0
+                        ],
+                        "BoxExtent": [
+                            1.5,
+                            16,
+                            25.5
+                        ],
+                        "COF": 0.20000000298023224,
+                        "GravityScale": 1,
+                        "Mass": 1,
+                        "MotionType": 0,
+                        "ObjectChannel": 0,
+                        "Restitution": 0.5,
+                        "ShapeColor": [
+                            0.20000000298023224,
+                            0.699999988079071,
+                            1,
+                            1
+                        ],
+                        "Transform": {
+                            "Location": [
+                                -26.518768840405873,
+                                39.74174235464076,
+                                25
+                            ],
+                            "Rotation": [
+                                0,
+                                -94.77583312988281,
+                                0
+                            ],
+                            "Scale": [
+                                1,
+                                1,
+                                1
+                            ]
+                        },
+                        "WorldDynamic": 2,
+                        "WorldStatic": 2,
+                        "bAutoActivate": true,
+                        "bBackfaceDepth": false,
+                        "bCastShadow": false,
+                        "bDrawShape": false,
+                        "bEnableGravity": false,
+                        "bHiddenInGame": true,
+                        "bReceiveShadow": false,
+                        "bVisible": false
+                    }
+                },
+                {
+                    "Class": "UBoxComponent",
+                    "Name": "Goal_RightBarrier",
+                    "Properties": {
+                        "Acceleration": [
+                            0,
+                            0,
+                            0
+                        ],
+                        "BoxExtent": [
+                            1.5,
+                            16,
+                            25.5
+                        ],
+                        "COF": 0.20000000298023224,
+                        "GravityScale": 1,
+                        "Mass": 1,
+                        "MotionType": 0,
+                        "ObjectChannel": 0,
+                        "Restitution": 0.5,
+                        "ShapeColor": [
+                            0.20000000298023224,
+                            0.699999988079071,
+                            1,
+                            1
+                        ],
+                        "Transform": {
+                            "Location": [
+                                25.30069055028422,
+                                35.41235112068877,
+                                25
+                            ],
+                            "Rotation": [
+                                0,
+                                -94.77583312988281,
+                                0
+                            ],
+                            "Scale": [
+                                1,
+                                1,
+                                1
                             ]
                         },
                         "WorldDynamic": 2,

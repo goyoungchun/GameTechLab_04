@@ -20,7 +20,7 @@ ABallActor::ABallActor()
 	Collision->SetEnableGravity(true);
 	Collision->SetMass(0.45f);
 	Collision->SetCOF(0.05f);
-	Collision->SetRestitution(0.6f);
+	Collision->SetRestitution(0.8f);
 	Collision->SetDrawShape(false);
 	Collision->OnComponentHit.AddRaw(this, &ABallActor::HandleHit);
 

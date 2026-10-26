@@ -3,7 +3,8 @@ Game.Config = {
     TotalTurns     = 4,
     CountdownTime  = 3,
     ResultShowTime = 2,
-    BoostSeconds   = 3,
+    BoostSeconds   = 6,
+    BoostRechargeSeconds = 30,
     CarNames = { "armor", "coupe", "fenyr", "ghini", "italia", "jeep", "kamaro", "lamb", "mobil", "police" },
     BackKey = Key.Backspace,
     MainMenuItems = { "Play", "Help", "Credit", "Exit" },
@@ -14,11 +15,14 @@ Game.Config = {
         { Name = "황혜진" },
     },
     StartSpots = {
-        Attacker     = { Location = Vector(0, 2, 1),  Yaw = 90 },
-        Defender     = { Location = Vector(0, 24, 1), Yaw = -90 },
-        SuddenDeath1 = { Location = Vector(-8, 2, 1), Yaw = 90 },
-        SuddenDeath2 = { Location = Vector(8, 2, 1),  Yaw = 90 },
-        Ball         = Vector(0, 14, 2),
+        -- Location.z는 바닥 높이. 차량/공의 실제 크기는 배치할 때 반영한다.
+        Attacker     = { Location = Vector(0, -10, 0) },
+        Defender     = { Location = Vector(0, 32, 0) },
+        Goal         = Vector(0, 38, 0),
+        SuddenDeath1 = { Location = Vector(-8, -10, 0) },
+        SuddenDeath2 = { Location = Vector(8, -10, 0) },
+        Ball         = Vector(0, 0, 0),
+        BallClearance = 0.5,
     },
     DefaultCarNames = { "coupe", "jeep" },
     GoTextTime = 0.7,
@@ -60,7 +64,7 @@ local function ResetMatchState()
 end
 
 local function SpawnTurnBall(Location)
-    return obj:SpawnBall(Location)
+    return obj:SpawnBall(Location, Game.Config.StartSpots.BallClearance)
 end
 
 local function ClearTurnBall()
@@ -78,11 +82,17 @@ local function WrapVehicle(PlayerIndex, VehicleActor)
         end,
         RefillBoost      = function()
             Vehicle:SetBoostCapacity(Game.Config.BoostSeconds)
+            Vehicle:SetBoostRechargeTime(Game.Config.BoostRechargeSeconds)
             Vehicle:RefillBoost()
         end,
         SetInfiniteBoost = function(bInfinite) Vehicle:SetInfiniteBoost(bInfinite) end,
         GetBoostRatio    = function() return Vehicle.BoostRatio end,
-        ResetTo          = function(Location, Yaw) Vehicle:ResetTo(Location, Yaw) end,
+        ResetTo          = function(Location, Yaw)
+            VehicleActor.Rotation = Rotator(0, Yaw, 0)
+            VehicleActor:PlaceOnSurface(Location)
+            -- 최종 접지 위치에서 속도를 초기화해 높이 보정을 이동 속도로 추정하지 않게 한다.
+            Vehicle:ResetTo(VehicleActor.Location, Yaw)
+        end,
     }
 end
 
@@ -201,13 +211,19 @@ local function StopTurnResult()
     end
 end
 
+local function ResetCarFacing(PlayerIndex, Spot, Target)
+    local From = Spot.Location
+    local Yaw = math.deg(math.atan2(Target.y - From.y, Target.x - From.x))
+    Game.Cars[PlayerIndex].ResetTo(From, Yaw)
+end
+
 local function StartTurn()
     local Spots = Game.Config.StartSpots
 
     if Game.bIsSuddenDeath then
         Game.AttackerIndex = nil
-        Game.Cars[1].ResetTo(Spots.SuddenDeath1.Location, Spots.SuddenDeath1.Yaw)
-        Game.Cars[2].ResetTo(Spots.SuddenDeath2.Location, Spots.SuddenDeath2.Yaw)
+        ResetCarFacing(1, Spots.SuddenDeath1, Spots.Ball)
+        ResetCarFacing(2, Spots.SuddenDeath2, Spots.Ball)
         for PlayerIndex = 1, 2 do
             Game.Cars[PlayerIndex].SetInfiniteBoost(true)
         end
@@ -216,8 +232,8 @@ local function StartTurn()
         local DefenderIndex = GetDefenderIndex(AttackerIndex)
         Game.AttackerIndex = AttackerIndex
 
-        Game.Cars[AttackerIndex].ResetTo(Spots.Attacker.Location, Spots.Attacker.Yaw)
-        Game.Cars[DefenderIndex].ResetTo(Spots.Defender.Location, Spots.Defender.Yaw)
+        ResetCarFacing(AttackerIndex, Spots.Attacker, Spots.Goal)
+        ResetCarFacing(DefenderIndex, Spots.Defender, Spots.Attacker.Location)
         for PlayerIndex = 1, 2 do
             Game.Cars[PlayerIndex].RefillBoost()
             Game.Cars[PlayerIndex].SetInfiniteBoost(false)

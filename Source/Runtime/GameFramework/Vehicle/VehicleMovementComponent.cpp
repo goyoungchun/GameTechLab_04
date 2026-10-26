@@ -50,13 +50,22 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
 {
 	Super::TickComponent(DeltaTime);
 
+	if (!std::isfinite(DeltaTime) || DeltaTime <= 0.0f)
+		return;
+
 	FVehicleInput Input = PendingInput;
 	PendingInput = {};
-	if (!bInfiniteBoost && BoostRemaining <= 0.0f)
-		Input.bBoost = false;
-	bBoosting = Input.bBoost && Input.Throttle > 0.0f;
-	if (bBoosting && !bInfiniteBoost)
-		BoostRemaining = std::max(0.0f, BoostRemaining - DeltaTime);
+	const bool bBoostRequested = Input.bBoost && Input.Throttle > 0.0f;
+	bBoosting = bBoostRequested && (bInfiniteBoost || BoostRemaining > 0.0f);
+	Input.bBoost = bBoosting;
+	if (!bInfiniteBoost)
+	{
+		if (bBoosting)
+			BoostRemaining = std::max(0.0f, BoostRemaining - DeltaTime);
+		else if (!bBoostRequested)
+			BoostRemaining = std::min(BoostCapacity, BoostRemaining + BoostCapacity / BoostRechargeTime * DeltaTime);
+		// 소진된 채 키를 계속 누르면 충전과 사용이 매 프레임 번갈아 일어나지 않게 한다.
+	}
 	SteeringInput = Input.Steer;
 
 	UpdateVelocityEstimate(DeltaTime);
@@ -255,6 +264,11 @@ void UVehicleMovementComponent::SetBoostCapacity(float Seconds)
 {
 	BoostCapacity = std::isfinite(Seconds) ? std::max(0.0f, Seconds) : 0.0f;
 	BoostRemaining = std::min(BoostRemaining, BoostCapacity);
+}
+
+void UVehicleMovementComponent::SetBoostRechargeTime(float Seconds)
+{
+	BoostRechargeTime = std::isfinite(Seconds) && Seconds > 0.0f ? Seconds : 30.0f;
 }
 
 float UVehicleMovementComponent::GetBoostRatio() const

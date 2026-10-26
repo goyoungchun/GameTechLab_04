@@ -56,6 +56,22 @@ namespace
 
 void RegisterVehicleBindings(sol::state& Lua)
 {
+	// 선택 UI와 차량 Lua가 네이티브의 동일한 분류/주행 설정을 참조한다.
+	sol::table Catalog = Lua.create_table();
+	for (EVehicleCategory Category : { EVehicleCategory::Speed, EVehicleCategory::Balanced, EVehicleCategory::Heavy })
+	{
+		const auto& Info = GetVehicleCategoryInfo(Category);
+		const auto Tuning = MakeVehicleCategoryTuning(Category);
+		sol::table Data = Lua.create_table_with("Id", Info.Id, "Label", Info.Label, "Mass", Info.Mass,
+			"SpeedWeight", Info.SpeedWeight, "Tuning", Lua.create_table_with(
+				"MaxForwardSpeed", Tuning.MaxForwardSpeed, "MaxReverseSpeed", Tuning.MaxReverseSpeed,
+				"BoostMaxSpeed", Tuning.BoostMaxSpeed, "Acceleration", Tuning.Acceleration));
+		Catalog[Info.Id] = Data;
+	}
+	Catalog["Default"] = Catalog["Balanced"];
+	for (const auto& Model : GetVehicleModelCatalog()) Catalog[Model.Name] = Catalog[GetVehicleCategoryInfo(Model.Category).Id];
+	Lua["VehicleCatalog"] = Catalog;
+
 	Lua.new_usertype<AVehiclePawn>(
 		"Vehicle",
 		sol::no_constructor,
@@ -92,6 +108,8 @@ void RegisterVehicleBindings(sol::state& Lua)
 			{ const auto* M = Self.GetMovement(); return M ? M->GetBoostRatio() : 0.0f; }),
 		"SetBoostCapacity", [](AVehiclePawn& Self, float Seconds)
 			{ if (auto* M = Self.GetMovement()) M->SetBoostCapacity(Seconds); },
+		"SetBoostRechargeTime", [](AVehiclePawn& Self, float Seconds)
+			{ if (auto* M = Self.GetMovement()) M->SetBoostRechargeTime(Seconds); },
 		"RefillBoost", [](AVehiclePawn& Self)
 			{ if (auto* M = Self.GetMovement()) M->RefillBoost(); },
 		"SetInfiniteBoost", [](AVehiclePawn& Self, bool bInfinite)

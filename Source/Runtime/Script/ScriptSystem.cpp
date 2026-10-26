@@ -9,6 +9,7 @@
 #include "GameFramework/Actor/BallActor.h"
 #include "Asset/AssetManager.h"
 #include "Component/ScriptComponent.h"
+#include "Component/SphereComponent.h"
 #include "Core/EngineLog.h"
 #include "GameFramework/Vehicle/VehicleScriptBindings.h"
 #include "GameFramework/Vehicle/VehiclePawn.h"
@@ -257,7 +258,7 @@ void FScriptSystem::RegisterTypes()
 			return NewActor;
 		},
 		// 새 BodyId로 생성하므로 이전 턴의 속도나 접촉 상태를 이어받지 않는다.
-		"SpawnBall", [](AActor& Self, const FVector& Location) -> AActor*
+		"SpawnBall", [](AActor& Self, const FVector& Location, sol::optional<float> GroundClearance) -> AActor*
 		{
 			UWorld* World = Self.GetWorld();
 			if (!World)
@@ -267,6 +268,15 @@ void FScriptSystem::RegisterTypes()
 			ABallActor* Ball = World->SpawnActor<ABallActor>(NAME_None, &Transform);
 			if (Ball)
 			{
+				// 두 번째 인자를 주면 Location을 바닥 좌표로 보고 실제 구 반지름 위로 띄운다.
+				// 인자가 없는 기존 호출은 중심 좌표를 그대로 사용한다.
+				if (GroundClearance)
+				{
+					const float Clearance = std::isfinite(*GroundClearance) ? std::max(0.0f, *GroundClearance) : 0.0f;
+					FVector Center = Location;
+					Center.Z += Ball->GetCollisionComponent()->GetCollisionRadius() + Clearance;
+					Ball->SetActorLocation(Center);
+				}
 				Ball->SetFlags(EObjectFlags::RF_Transient);
 				ClearMatchBalls(*World, Ball);
 			}

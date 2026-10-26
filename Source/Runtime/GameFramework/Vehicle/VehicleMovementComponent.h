@@ -42,6 +42,7 @@ public:
 	void ResetMotion();
 
 	void SetBoostCapacity(float Seconds);
+	void SetBoostRechargeTime(float Seconds);
 	void RefillBoost() { BoostRemaining = BoostCapacity; }
 	void SetInfiniteBoost(bool bInfinite) { bInfiniteBoost = bInfinite; }
 	bool IsInfiniteBoost() const { return bInfiniteBoost; }
@@ -85,8 +86,10 @@ private:
 	float LastLandingSpeed = 0.0f;
 	float LastAirborneVerticalSpeed = 0.0f;
 
-	float BoostCapacity = 3.0f;
-	float BoostRemaining = 3.0f;
+	// 잔량은 연속 사용 가능한 초 단위, 충전 시간은 빈 상태에서 완충까지 걸리는 시간이다.
+	float BoostCapacity = 6.0f;
+	float BoostRemaining = 6.0f;
+	float BoostRechargeTime = 30.0f;
 	bool bInfiniteBoost = true;
 
 	float MaxGroundSlopeDegrees = 45.0f;

@@ -144,6 +144,18 @@ FString AVehiclePawn::GetBodyName() const
 void AVehiclePawn::FitBodyCollision()
 {
 	if (!StaticMesh || !Box || !StaticMesh->GetMeshData()) return;
+	const EVehicleCategory Category = GetVehicleCategory(GetBodyName());
+	Box->SetMass(GetVehicleCategoryInfo(Category).Mass);
+	if (Movement)
+	{
+		FVehicleTuning Tuning = Movement->GetTuning();
+		const FVehicleTuning ClassTuning = MakeVehicleCategoryTuning(Category);
+		Tuning.MaxForwardSpeed = ClassTuning.MaxForwardSpeed;
+		Tuning.MaxReverseSpeed = ClassTuning.MaxReverseSpeed;
+		Tuning.BoostMaxSpeed = ClassTuning.BoostMaxSpeed;
+		Tuning.Acceleration = ClassTuning.Acceleration;
+		Movement->SetTuning(Tuning);
+	}
 	// 피벗 오프셋을 Box 크기에 더하면 바퀴 아래에 빈 충돌 영역이 생긴다.
 	// 메시를 Box 중심에 맞추고, 회전/스케일이 반영된 크기의 절반을 사용한다.
 	FTransform Shape = StaticMesh->GetTransform();

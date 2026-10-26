@@ -125,20 +125,22 @@ local function DrawCarSelectPanel(PlayerIndex)
     local CenterX = GetPanelCenterX(PlayerIndex)
     local PanelWidth = GetPanelWidth()
     local CarName = Game.SelectedCarNames and Game.SelectedCarNames[PlayerIndex] or ""
+    local CarClass = VehicleCatalog[CarName] or VehicleCatalog.Default
     local bIsReady = Game.CarSelectReady and Game.CarSelectReady[PlayerIndex]
 
     UI.BeginPlayer(PlayerIndex)
     UI.Text(CenterX, 0.18, "P" .. PlayerIndex, 64, PlayerColors[PlayerIndex], Align.Center, "CookieRun")
 
-    UI.Rect(CenterX - PanelWidth * 0.4, 0.70, PanelWidth * 0.8, 0.12, Color(0, 0, 0, 0.5))
+    UI.Rect(CenterX - PanelWidth * 0.4, 0.70, PanelWidth * 0.8, 0.18, Color(0, 0, 0, 0.5))
     UI.Text(CenterX, 0.785, string.upper(CarName), 56, Color.White, Align.Center, "CookieRun")
+    UI.Text(CenterX, 0.845, CarClass.Label, 30, Color.Yellow, Align.Center, "CookieRun")
 
     if bIsReady then
-        UI.Text(CenterX, 0.90, "READY", 48, Color.Green, Align.Center, "CookieRun")
+        UI.Text(CenterX, 0.925, "READY", 36, Color.Green, Align.Center, "CookieRun")
     else
         UI.Text(CenterX - PanelWidth * 0.32, 0.785, "<", 56, Color.Yellow, Align.Center)
         UI.Text(CenterX + PanelWidth * 0.32, 0.785, ">", 56, Color.Yellow, Align.Center)
-        UI.Text(CenterX, 0.89, CarSelectHintTexts[PlayerIndex], 36, Color.White, Align.Center)
+        UI.Text(CenterX, 0.925, CarSelectHintTexts[PlayerIndex], 30, Color.White, Align.Center)
     end
     UI.EndPlayer()
 end
@@ -194,7 +196,7 @@ StateDrawHandlers.CarSelect = function()
     UI.Text(0.5, 0.07, "SELECT YOUR CAR", 48, Color.White, Align.Center, "CookieRun")
     DrawCarSelectPanel(1)
     DrawCarSelectPanel(2)
-    UI.Text(0.5, 0.97, BackHintText, 30, Color.White, Align.Center)
+    UI.Text(0.5, 0.985, BackHintText, 24, Color.White, Align.Center)
 end
 
 StateDrawHandlers.Countdown = function()
