@@ -26,7 +26,7 @@ struct FUIDrawCmd
 class FGameUIBuffer
 {
 public:
-	void AddText(FVector2 InPosition, const FString& InText, float InFontSize, const FVector4& InColor, ETextAlign InAlign, const FString& InFontName);
+	void AddText(FVector2 InPosition, const FString& InText, float InFontSize, const FVector4& InColor, ETextAlign InAlign, const FString& InFontName = "");
 	void AddRect(FVector2 InPosition, FVector2 InSize, const FVector4& InColor);
 	void AddBar(FVector2 InPosition, FVector2 InSize, float InRatio, const FVector4& InColor, const FVector4& InBackgroundColor);
 	void BeginPlayer(int32 InPlayerIndex);

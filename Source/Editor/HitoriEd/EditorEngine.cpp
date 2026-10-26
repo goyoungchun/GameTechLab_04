@@ -199,6 +199,7 @@ bool UEditorEngine::Init() {
 
 	TextRenderer = MakeUnique<FTextRenderer>();
 	TextRenderer->Init();
+	ScreenUIRenderer.Init();
 
 	// 화면 나눔 비율 설정 가져오기
 	ViewportSplitRatio = {SettingsPanel->GetSettings().MultipleViewportsHorizontal,

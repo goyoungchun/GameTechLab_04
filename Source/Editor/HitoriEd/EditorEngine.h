@@ -40,6 +40,7 @@
 #include "Text/TextRenderer.h"
 #include "Editor/Viewports/EditorViewportClient.h"
 #include "Container/Array.h"
+#include "UI/ScreenUIRenderer.h"
 
 class FForwardEditorViewportClient;
 struct FForwardViewTargets;
@@ -183,6 +184,7 @@ private:
 	FGameViewportClient* FindPIEGameClient(int32 PIEInstance) const;
 	
 	bool bIsSIEMode = false;
+	FScreenUIRenderer ScreenUIRenderer;
 
 	TMap<UWorld*, TArray<FSceneView>> WorldViews;
 };
