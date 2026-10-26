@@ -92,6 +92,9 @@ function BeginPlay()
 	obj:AddAsPlayer()
 	print(string.format("[Vehicle] %s PlayerIndex = %d", obj.Name, Car.PlayerIndex))
 
+	Game.Vehicles = Game.Vehicles or {}
+	Game.Vehicles[Car.PlayerIndex + 1] = obj
+
 end
 
 function EndPlay()
@@ -109,6 +112,12 @@ function Tick(dt)
 
 	local Keys = KeyBindings[Car.PlayerIndex]
 	if not Keys then return end
+
+	local InputEnabled = Game.CarInputEnabled and Game.CarInputEnabled[Car.PlayerIndex + 1]
+	if InputEnabled == false then
+		Car:SetInput(0, 0, false)
+		return
+	end
 
 	Car:SetInput(Axis(Keys.Forward, Keys.Backward), Axis(Keys.Right, Keys.Left), IsKeyDown(Keys.Boost))
 

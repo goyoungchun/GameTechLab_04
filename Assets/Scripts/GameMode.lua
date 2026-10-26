@@ -14,10 +14,10 @@ Game.Config = {
         { Name = "황혜진" },
     },
     StartSpots = {
-        Attacker     = { Location = Vector(0, 2, 0),  Yaw = 90 },
-        Defender     = { Location = Vector(0, 36, 0), Yaw = -90 },
-        SuddenDeath1 = { Location = Vector(-8, 2, 0), Yaw = 90 },
-        SuddenDeath2 = { Location = Vector(8, 2, 0),  Yaw = 90 },
+        Attacker     = { Location = Vector(0, 2, 1),  Yaw = 90 },
+        Defender     = { Location = Vector(0, 24, 1), Yaw = -90 },
+        SuddenDeath1 = { Location = Vector(-8, 2, 1), Yaw = 90 },
+        SuddenDeath2 = { Location = Vector(8, 2, 1),  Yaw = 90 },
         Ball         = Vector(0, 14, 2),
     },
     DefaultCarNames = { "coupe", "jeep" },
@@ -47,10 +47,6 @@ Game.Menu = Game.Menu or {
     SelectedIndex = 1,
 }
 
-if Game.bShowDebug == nil then
-    Game.bShowDebug = true
-end
-
 local function ResetMatchState()
     Game.Turn = 0
     Game.bIsSuddenDeath = false
@@ -71,10 +67,35 @@ local function ClearTurnBall()
     obj:ClearBalls()
 end
 
+local function WrapVehicle(PlayerIndex, VehicleActor)
+    local Vehicle = VehicleActor:AsVehicle()
+    return {
+        bIsStub          = false,
+        Actor            = VehicleActor,
+        SetInputEnabled  = function(bEnabled)
+            Game.CarInputEnabled = Game.CarInputEnabled or {}
+            Game.CarInputEnabled[PlayerIndex] = bEnabled
+        end,
+        RefillBoost      = function()
+            Vehicle:SetBoostCapacity(Game.Config.BoostSeconds)
+            Vehicle:RefillBoost()
+        end,
+        SetInfiniteBoost = function(bInfinite) Vehicle:SetInfiniteBoost(bInfinite) end,
+        GetBoostRatio    = function() return Vehicle.BoostRatio end,
+        ResetTo          = function(Location, Yaw) Vehicle:ResetTo(Location, Yaw) end,
+    }
+end
+
 local function EnsureCarsAndBall()
     Game.Cars = Game.Cars or {}
     for PlayerIndex = 1, 2 do
-        if not Game.Cars[PlayerIndex] then
+        local VehicleActor = Game.Vehicles and Game.Vehicles[PlayerIndex]
+        local CurrentCar = Game.Cars[PlayerIndex]
+        if VehicleActor and (not CurrentCar or CurrentCar.Actor ~= VehicleActor) then
+            Game.Cars[PlayerIndex] = WrapVehicle(PlayerIndex, VehicleActor)
+            Game.Cars[PlayerIndex].SetInputEnabled(Game.State == "Playing")
+            print("[GameMode] Car" .. PlayerIndex .. " connected to real vehicle")
+        elseif not CurrentCar then
             local BoostRatio = 1
             Game.Cars[PlayerIndex] = {
                 bIsStub          = true,
@@ -266,7 +287,10 @@ local function StartMatch()
     ResetMatchState()
     Game.FirstAttackerIndex = math.random(1, 2)
     for PlayerIndex = 1, 2 do
-        Game.Cars[PlayerIndex].SetCarModel(Game.SelectedCarNames[PlayerIndex])
+        local SetCarModel = Game.Cars[PlayerIndex].SetCarModel
+        if SetCarModel then
+            SetCarModel(Game.SelectedCarNames[PlayerIndex])
+        end
     end
     print("[GameMode] Match start. First attacker: P" .. Game.FirstAttackerIndex)
     Game.Turn = 1
@@ -458,7 +482,15 @@ end
 
 StateTickHandlers.Countdown = function(DeltaTime) end
 
+local function UpdateLastTouch()
+    local TouchIndex = obj:GetBallLastTouchIndex()
+    if TouchIndex >= 0 then
+        Game.LastTouchIndex = TouchIndex + 1
+    end
+end
+
 StateTickHandlers.Playing = function(DeltaTime)
+    UpdateLastTouch()
     if Game.bIsSuddenDeath then return end
     Game.RemainTime = math.max(0, Game.RemainTime - DeltaTime)
     if Game.RemainTime <= 0 then
@@ -483,6 +515,7 @@ StateTickHandlers.Defended = function(DeltaTime) end
 
 Game.OnGoal = function()
     if Game.State ~= "Playing" then return end
+    UpdateLastTouch()
 
     local ScorerIndex = Game.AttackerIndex
     if Game.bIsSuddenDeath then
@@ -521,29 +554,6 @@ StateTickHandlers.Result = function(DeltaTime)
     end
 end
 
-local DebugKeyActions = {
-    [1] = function() SetState("MainMenu") end,
-    [2] = function() SetState("CarSelect") end,
-    [3] = function()
-        if not Game.FirstAttackerIndex then return end
-        EndTurn()
-    end,
-    [4] = function() Game.LastTouchIndex = Game.AttackerIndex or 1; Game.OnGoal() end,
-    [5] = function() Game.RemainTime = 0 end,
-    [6] = function() Game.LastTouchIndex = 2; Game.OnGoal() end,
-}
-
-local function HandleDebugKeys()
-    if IsKeyPressed(Key.Tab) then
-        Game.bShowDebug = not Game.bShowDebug
-    end
-    for KeyNumber, Action in pairs(DebugKeyActions) do
-        if IsKeyPressed(Key["Num" .. KeyNumber]) then
-            Action()
-        end
-    end
-end
-
 function BeginPlay()
     ResetMatchState()
     EnsureCarsAndBall()
@@ -559,6 +569,4 @@ function Tick(DeltaTime)
     else
         LogWarning("[GameMode] Unknown state: " .. tostring(Game.State))
     end
-
-    HandleDebugKeys()
 end

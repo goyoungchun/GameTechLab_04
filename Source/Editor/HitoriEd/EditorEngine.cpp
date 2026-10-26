@@ -1012,9 +1012,8 @@ void UEditorEngine::RenderGameUI(FGameViewportClient* GameClient, uint32 Width, 
 	if (!World)
 		return;
 
-	TArray<FRect> PlayerRects; // 나중에 뷰포트 2개로 바뀌면 여기 바꾸기
-
-	ScreenUIRenderer.Render(World->GetGameUIBuffer(), Width, Height, PlayerRects);
+	const int32 SplitCount = World->IsSplitScreenEnabled() ? std::max(1, static_cast<int32>(World->GetPlayerCount())) : 1;
+	ScreenUIRenderer.Render(World->GetGameUIBuffer(), Width, Height, GameClient->GetPlayerIndex(), SplitCount);
 }
 
 bool UEditorEngine::RenderSceneFrameDeferred(FDeferredViewTargets& Targets, const FSceneView& SceneView,

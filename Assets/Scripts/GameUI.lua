@@ -143,20 +143,6 @@ local function DrawCarSelectPanel(PlayerIndex)
     UI.EndPlayer()
 end
 
-local function DrawDebugOverlay()
-    if not Game.bShowDebug then return end
-
-    UI.Rect(0.72, 0.01, 0.27, 0.16, Color(0, 0, 0, 0.6))
-    UI.Text(0.73, 0.045, "State: " .. tostring(Game.State), 24, Color.Yellow)
-    UI.Text(0.73, 0.08, string.format("Turn %d  Attacker %s  SD %s",
-        Game.Turn or 0, tostring(Game.AttackerIndex), tostring(Game.bIsSuddenDeath)), 20)
-    UI.Text(0.73, 0.11, string.format("Score %d : %d  Time %.1f",
-        Game.Score[1], Game.Score[2], Game.RemainTime or 0), 20)
-
-    local bUsingStub = (Game.Cars and Game.Cars[1] and Game.Cars[1].bIsStub) or (Game.Ball and Game.Ball.bIsStub)
-    UI.Text(0.73, 0.14, "Cars/Ball: " .. (bUsingStub and "STUB" or "REAL"), 20, Color(0.7, 0.7, 0.7))
-end
-
 local ControlKeyRows = {
     { Action = "전진",   P1Key = "W",      P2Key = "Up Arrow" },
     { Action = "후진",   P1Key = "S",      P2Key = "Down Arrow" },
@@ -255,6 +241,4 @@ function Tick(DeltaTime)
     if StateDrawHandler then
         StateDrawHandler()
     end
-
-    DrawDebugOverlay()
 end

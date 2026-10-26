@@ -27,6 +27,17 @@ namespace
 		for (ABallActor* Ball : Balls)
 			Ball->Retire();
 	}
+
+	ABallActor* FindMatchBall(UWorld& World)
+	{
+		ULevel* Level = World.GetPersistentLevel();
+		if (!Level)
+			return nullptr;
+		for (AActor* Actor : Level->GetActors())
+			if (ABallActor* Ball = Cast<ABallActor>(Actor); Ball && !Ball->IsActorBeingDestroyed())
+				return Ball;
+		return nullptr;
+	}
 }
 
 FScriptSystem::FScriptSystem()
@@ -265,6 +276,21 @@ void FScriptSystem::RegisterTypes()
 		{
 			if (UWorld* World = Self.GetWorld())
 				ClearMatchBalls(*World);
+		},
+		"IsBall", [](AActor& Self) { return Cast<ABallActor>(&Self) != nullptr; },
+		"GetBallLocation", [](AActor& Self) -> sol::optional<FVector>
+		{
+			UWorld* World = Self.GetWorld();
+			ABallActor* Ball = World ? FindMatchBall(*World) : nullptr;
+			if (!Ball)
+				return sol::nullopt;
+			return Ball->GetActorLocation();
+		},
+		"GetBallLastTouchIndex", [](AActor& Self) -> int32
+		{
+			UWorld* World = Self.GetWorld();
+			ABallActor* Ball = World ? FindMatchBall(*World) : nullptr;
+			return Ball ? Ball->GetLastTouchPlayerIndex() : -1;
 		},
 		// 이미 있는 StaticMeshActor의 메시를 이름으로 바꾼다
 		"SetMesh", [](AActor& Self, const FString& MeshName) -> bool

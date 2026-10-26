@@ -9167,6 +9167,661 @@
                 "PlayerIndex": 1,
                 "bActorEnableCollision": true
             }
+        },
+        {
+            "Class": "AActor",
+            "Components": [
+                {
+                    "Class": "UBoxComponent",
+                    "Name": "GoalTrigger_0",
+                    "Properties": {
+                        "Acceleration": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "BoxExtent": [
+                            8.5,
+                            1.75,
+                            3.0
+                        ],
+                        "COF": 0.20000000298023224,
+                        "GravityScale": 1.0,
+                        "Mass": 1.0,
+                        "MotionType": 0,
+                        "ObjectChannel": 0,
+                        "Restitution": 1.0,
+                        "ShapeColor": [
+                            0.20000000298023224,
+                            0.699999988079071,
+                            1.0,
+                            1.0
+                        ],
+                        "Transform": {
+                            "Location": [
+                                0.0,
+                                43.25,
+                                3.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        },
+                        "WorldDynamic": 1,
+                        "WorldStatic": 0,
+                        "bAutoActivate": true,
+                        "bBackfaceDepth": false,
+                        "bCastShadow": false,
+                        "bDrawShape": false,
+                        "bEnableGravity": false,
+                        "bHiddenInGame": true,
+                        "bReceiveShadow": false,
+                        "bVisible": false
+                    }
+                },
+                {
+                    "Class": "UScriptComponent",
+                    "Name": "GoalTriggerScript_0",
+                    "Properties": {
+                        "ScriptPath": "Assets/Scripts/GoalTrigger.lua",
+                        "bAutoActivate": true
+                    }
+                }
+            ],
+            "Properties": {
+                "bActorEnableCollision": true
+            }
+        },
+        {
+            "Class": "AActor",
+            "Components": [
+                {
+                    "Class": "USceneComponent",
+                    "Name": "Goal_Collision_0",
+                    "Properties": {
+                        "Transform": {
+                            "Location": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        },
+                        "bAutoActivate": true,
+                        "bHiddenInGame": false,
+                        "bVisible": true
+                    }
+                },
+                {
+                    "Class": "UBoxComponent",
+                    "Name": "Goal_PostLeft_0",
+                    "Properties": {
+                        "Acceleration": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "BoxExtent": [
+                            0.4,
+                            0.4,
+                            5.627999904155731
+                        ],
+                        "COF": 0.20000000298023224,
+                        "GravityScale": 1.0,
+                        "Mass": 1.0,
+                        "MotionType": 0,
+                        "ObjectChannel": 0,
+                        "Restitution": 0.5,
+                        "ShapeColor": [
+                            0.20000000298023224,
+                            0.699999988079071,
+                            1.0,
+                            1.0
+                        ],
+                        "Transform": {
+                            "Location": [
+                                -10.17570857103438,
+                                38.37631896547129,
+                                5.627999904155731
+                            ],
+                            "Rotation": [
+                                0.0,
+                                -94.77583312988281,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        },
+                        "WorldDynamic": 2,
+                        "WorldStatic": 2,
+                        "bAutoActivate": true,
+                        "bBackfaceDepth": false,
+                        "bCastShadow": false,
+                        "bDrawShape": false,
+                        "bEnableGravity": false,
+                        "bHiddenInGame": true,
+                        "bReceiveShadow": false,
+                        "bVisible": false
+                    }
+                },
+                {
+                    "Class": "UBoxComponent",
+                    "Name": "Goal_PostRight_0",
+                    "Properties": {
+                        "Acceleration": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "BoxExtent": [
+                            0.4,
+                            0.4,
+                            5.627999904155731
+                        ],
+                        "COF": 0.20000000298023224,
+                        "GravityScale": 1.0,
+                        "Mass": 1.0,
+                        "MotionType": 0,
+                        "ObjectChannel": 0,
+                        "Restitution": 0.5,
+                        "ShapeColor": [
+                            0.20000000298023224,
+                            0.699999988079071,
+                            1.0,
+                            1.0
+                        ],
+                        "Transform": {
+                            "Location": [
+                                8.957630280912728,
+                                36.77777450985824,
+                                5.627999904155731
+                            ],
+                            "Rotation": [
+                                0.0,
+                                -94.77583312988281,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        },
+                        "WorldDynamic": 2,
+                        "WorldStatic": 2,
+                        "bAutoActivate": true,
+                        "bBackfaceDepth": false,
+                        "bCastShadow": false,
+                        "bDrawShape": false,
+                        "bEnableGravity": false,
+                        "bHiddenInGame": true,
+                        "bReceiveShadow": false,
+                        "bVisible": false
+                    }
+                },
+                {
+                    "Class": "UBoxComponent",
+                    "Name": "Goal_Crossbar_0",
+                    "Properties": {
+                        "Acceleration": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "BoxExtent": [
+                            0.4,
+                            10.0,
+                            0.4
+                        ],
+                        "COF": 0.20000000298023224,
+                        "GravityScale": 1.0,
+                        "Mass": 1.0,
+                        "MotionType": 0,
+                        "ObjectChannel": 0,
+                        "Restitution": 0.5,
+                        "ShapeColor": [
+                            0.20000000298023224,
+                            0.699999988079071,
+                            1.0,
+                            1.0
+                        ],
+                        "Transform": {
+                            "Location": [
+                                -0.609039145060827,
+                                37.577046737664766,
+                                10.855999808311461
+                            ],
+                            "Rotation": [
+                                0.0,
+                                -94.77583312988281,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        },
+                        "WorldDynamic": 2,
+                        "WorldStatic": 2,
+                        "bAutoActivate": true,
+                        "bBackfaceDepth": false,
+                        "bCastShadow": false,
+                        "bDrawShape": false,
+                        "bEnableGravity": false,
+                        "bHiddenInGame": true,
+                        "bReceiveShadow": false,
+                        "bVisible": false
+                    }
+                },
+                {
+                    "Class": "UBoxComponent",
+                    "Name": "Goal_Roof_0",
+                    "Properties": {
+                        "Acceleration": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "BoxExtent": [
+                            1.4,
+                            10.0,
+                            0.3
+                        ],
+                        "COF": 0.20000000298023224,
+                        "GravityScale": 1.0,
+                        "Mass": 1.0,
+                        "MotionType": 0,
+                        "ObjectChannel": 0,
+                        "Restitution": 0.5,
+                        "ShapeColor": [
+                            0.20000000298023224,
+                            0.699999988079071,
+                            1.0,
+                            1.0
+                        ],
+                        "Transform": {
+                            "Location": [
+                                -0.5257816213309809,
+                                38.57357480287034,
+                                11.255999808311461
+                            ],
+                            "Rotation": [
+                                0.0,
+                                -94.77583312988281,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        },
+                        "WorldDynamic": 2,
+                        "WorldStatic": 2,
+                        "bAutoActivate": true,
+                        "bBackfaceDepth": false,
+                        "bCastShadow": false,
+                        "bDrawShape": false,
+                        "bEnableGravity": false,
+                        "bHiddenInGame": true,
+                        "bReceiveShadow": false,
+                        "bVisible": false
+                    }
+                },
+                {
+                    "Class": "UBoxComponent",
+                    "Name": "Goal_BackNet_0",
+                    "Properties": {
+                        "Acceleration": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "BoxExtent": [
+                            7.367505897141379,
+                            10.0,
+                            0.3
+                        ],
+                        "COF": 0.20000000298023224,
+                        "GravityScale": 1.0,
+                        "Mass": 1.0,
+                        "MotionType": 0,
+                        "ObjectChannel": 0,
+                        "Restitution": 0.5,
+                        "ShapeColor": [
+                            0.20000000298023224,
+                            0.699999988079071,
+                            1.0,
+                            1.0
+                        ],
+                        "Transform": {
+                            "Location": [
+                                0.04036954003197288,
+                                45.34996564626828,
+                                6.243999893665313
+                            ],
+                            "Rotation": [
+                                -42.86587727839966,
+                                -94.77583312988281,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        },
+                        "WorldDynamic": 2,
+                        "WorldStatic": 2,
+                        "bAutoActivate": true,
+                        "bBackfaceDepth": false,
+                        "bCastShadow": false,
+                        "bDrawShape": false,
+                        "bEnableGravity": false,
+                        "bHiddenInGame": true,
+                        "bReceiveShadow": false,
+                        "bVisible": false
+                    }
+                },
+                {
+                    "Class": "UBoxComponent",
+                    "Name": "Goal_BackBottom_0",
+                    "Properties": {
+                        "Acceleration": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "BoxExtent": [
+                            0.3,
+                            10.0,
+                            0.6159999895095826
+                        ],
+                        "COF": 0.20000000298023224,
+                        "GravityScale": 1.0,
+                        "Mass": 1.0,
+                        "MotionType": 0,
+                        "ObjectChannel": 0,
+                        "Restitution": 0.5,
+                        "ShapeColor": [
+                            0.20000000298023224,
+                            0.699999988079071,
+                            1.0,
+                            1.0
+                        ],
+                        "Transform": {
+                            "Location": [
+                                0.48996016817314203,
+                                50.7312171983784,
+                                0.6159999895095826
+                            ],
+                            "Rotation": [
+                                0.0,
+                                -94.77583312988281,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        },
+                        "WorldDynamic": 2,
+                        "WorldStatic": 2,
+                        "bAutoActivate": true,
+                        "bBackfaceDepth": false,
+                        "bCastShadow": false,
+                        "bDrawShape": false,
+                        "bEnableGravity": false,
+                        "bHiddenInGame": true,
+                        "bReceiveShadow": false,
+                        "bVisible": false
+                    }
+                },
+                {
+                    "Class": "UBoxComponent",
+                    "Name": "Goal_SideLeftFront_0",
+                    "Properties": {
+                        "Acceleration": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "BoxExtent": [
+                            3.4,
+                            0.3,
+                            5.627999904155731
+                        ],
+                        "COF": 0.20000000298023224,
+                        "GravityScale": 1.0,
+                        "Mass": 1.0,
+                        "MotionType": 0,
+                        "ObjectChannel": 0,
+                        "Restitution": 0.5,
+                        "ShapeColor": [
+                            0.20000000298023224,
+                            0.699999988079071,
+                            1.0,
+                            1.0
+                        ],
+                        "Transform": {
+                            "Location": [
+                                -10.324547225927075,
+                                41.399206170579966,
+                                5.627999904155731
+                            ],
+                            "Rotation": [
+                                0.0,
+                                -94.77583312988281,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        },
+                        "WorldDynamic": 2,
+                        "WorldStatic": 2,
+                        "bAutoActivate": true,
+                        "bBackfaceDepth": false,
+                        "bCastShadow": false,
+                        "bDrawShape": false,
+                        "bEnableGravity": false,
+                        "bHiddenInGame": true,
+                        "bReceiveShadow": false,
+                        "bVisible": false
+                    }
+                },
+                {
+                    "Class": "UBoxComponent",
+                    "Name": "Goal_SideRightFront_0",
+                    "Properties": {
+                        "Acceleration": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "BoxExtent": [
+                            3.4,
+                            0.3,
+                            5.627999904155731
+                        ],
+                        "COF": 0.20000000298023224,
+                        "GravityScale": 1.0,
+                        "Mass": 1.0,
+                        "MotionType": 0,
+                        "ObjectChannel": 0,
+                        "Restitution": 0.5,
+                        "ShapeColor": [
+                            0.20000000298023224,
+                            0.699999988079071,
+                            1.0,
+                            1.0
+                        ],
+                        "Transform": {
+                            "Location": [
+                                9.606014078184499,
+                                39.73405569598304,
+                                5.627999904155731
+                            ],
+                            "Rotation": [
+                                0.0,
+                                -94.77583312988281,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        },
+                        "WorldDynamic": 2,
+                        "WorldStatic": 2,
+                        "bAutoActivate": true,
+                        "bBackfaceDepth": false,
+                        "bCastShadow": false,
+                        "bDrawShape": false,
+                        "bEnableGravity": false,
+                        "bHiddenInGame": true,
+                        "bReceiveShadow": false,
+                        "bVisible": false
+                    }
+                },
+                {
+                    "Class": "UBoxComponent",
+                    "Name": "Goal_SideLeftBack_0",
+                    "Properties": {
+                        "Acceleration": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "BoxExtent": [
+                            3.4,
+                            0.3,
+                            3.0
+                        ],
+                        "COF": 0.20000000298023224,
+                        "GravityScale": 1.0,
+                        "Mass": 1.0,
+                        "MotionType": 0,
+                        "ObjectChannel": 0,
+                        "Restitution": 0.5,
+                        "ShapeColor": [
+                            0.20000000298023224,
+                            0.699999988079071,
+                            1.0,
+                            1.0
+                        ],
+                        "Transform": {
+                            "Location": [
+                                -9.758396064564122,
+                                48.1755970139779,
+                                3.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                -94.77583312988281,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        },
+                        "WorldDynamic": 2,
+                        "WorldStatic": 2,
+                        "bAutoActivate": true,
+                        "bBackfaceDepth": false,
+                        "bCastShadow": false,
+                        "bDrawShape": false,
+                        "bEnableGravity": false,
+                        "bHiddenInGame": true,
+                        "bReceiveShadow": false,
+                        "bVisible": false
+                    }
+                },
+                {
+                    "Class": "UBoxComponent",
+                    "Name": "Goal_SideRightBack_0",
+                    "Properties": {
+                        "Acceleration": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "BoxExtent": [
+                            3.4,
+                            0.3,
+                            3.0
+                        ],
+                        "COF": 0.20000000298023224,
+                        "GravityScale": 1.0,
+                        "Mass": 1.0,
+                        "MotionType": 0,
+                        "ObjectChannel": 0,
+                        "Restitution": 0.5,
+                        "ShapeColor": [
+                            0.20000000298023224,
+                            0.699999988079071,
+                            1.0,
+                            1.0
+                        ],
+                        "Transform": {
+                            "Location": [
+                                10.172165239547452,
+                                46.51044653938097,
+                                3.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                -94.77583312988281,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        },
+                        "WorldDynamic": 2,
+                        "WorldStatic": 2,
+                        "bAutoActivate": true,
+                        "bBackfaceDepth": false,
+                        "bCastShadow": false,
+                        "bDrawShape": false,
+                        "bEnableGravity": false,
+                        "bHiddenInGame": true,
+                        "bReceiveShadow": false,
+                        "bVisible": false
+                    }
+                }
+            ],
+            "Properties": {
+                "bActorEnableCollision": true
+            }
         }
     ],
     "Version": 2

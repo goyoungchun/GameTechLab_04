@@ -4,6 +4,7 @@
 #include "Asset/AssetManager.h"
 #include "Component/SphereComponent.h"
 #include "Component/StaticMeshComponent.h"
+#include "GameFramework/Vehicle/VehiclePawn.h"
 
 #include <algorithm>
 #include <cmath>
@@ -21,6 +22,7 @@ ABallActor::ABallActor()
 	Collision->SetCOF(0.05f);
 	Collision->SetRestitution(0.6f);
 	Collision->SetDrawShape(false);
+	Collision->OnComponentHit.AddRaw(this, &ABallActor::HandleHit);
 
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>("BallMesh");
 	Mesh->SetupAttachment(Collision);
@@ -48,6 +50,13 @@ ABallActor::ABallActor()
 		if (RadiusSquared > 0.0f)
 			Collision->SetSphereRadius(std::sqrt(RadiusSquared) * MeshScale);
 	}
+}
+
+void ABallActor::HandleHit(UPrimitiveComponent* Self, AActor* OtherActor, UPrimitiveComponent* Other,
+	FVector NormalImpulse, const FHitResult& Hit)
+{
+	if (const AVehiclePawn* Vehicle = Cast<AVehiclePawn>(OtherActor))
+		LastTouchPlayerIndex = Vehicle->GetPlayerIndex();
 }
 
 void ABallActor::Retire()

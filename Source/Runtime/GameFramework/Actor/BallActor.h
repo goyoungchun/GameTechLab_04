@@ -20,7 +20,13 @@ public:
 	UStaticMeshComponent* GetMeshComponent() const { return Mesh; }
 	void Retire();
 
+	int32 GetLastTouchPlayerIndex() const { return LastTouchPlayerIndex; }
+
 private:
+	void HandleHit(UPrimitiveComponent* Self, AActor* OtherActor, UPrimitiveComponent* Other,
+		FVector NormalImpulse, const FHitResult& Hit);
+
 	USphereComponent* Collision = nullptr;
 	UStaticMeshComponent* Mesh = nullptr;
+	int32 LastTouchPlayerIndex = -1;
 };

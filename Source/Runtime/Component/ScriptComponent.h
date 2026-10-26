@@ -8,8 +8,11 @@
 #include "Script/ScriptSystem.h"
 #include "Container/StringView.h"
 #include "Script/CoroutineTypes.h"
+#include "Core/Delegate.h"
 
 class FGameUIBuffer;
+class UPrimitiveComponent;
+struct FHitResult;
 
 class UScriptComponent : public UActorComponent
 {
@@ -48,6 +51,13 @@ private:
 	void ClearScriptCallbacks();
 	void ClearCoroutines();
 
+	void BindCollisionEvents();
+	void UnbindCollisionEvents();
+	void HandleBeginOverlap(UPrimitiveComponent* Self, AActor* OtherActor, UPrimitiveComponent* Other,
+		int32 OtherBodyIndex, bool bFromSweep, const FHitResult& Hit);
+	void HandleHit(UPrimitiveComponent* Self, AActor* OtherActor, UPrimitiveComponent* Other,
+		FVector NormalImpulse, const FHitResult& Hit);
+
 	template<typename... Args>
 	void ResumeRecord(FCoroutineRecord& Record, Args&&... InArgs);
 
@@ -73,6 +83,14 @@ private:
 	uint32 NextCoroutineId = 1;
 	int32 FrameCounter = 0;
 	bool bAcceptCoroutines = false;
+
+	struct FCollisionBinding
+	{
+		UPrimitiveComponent* Component = nullptr;
+		FDelegateHandle OverlapHandle;
+		FDelegateHandle HitHandle;
+	};
+	TArray<FCollisionBinding> CollisionBindings;
 
 	bool CheckChangeScriptFile(float DeltaTime);
 	bool HotReloadFile();

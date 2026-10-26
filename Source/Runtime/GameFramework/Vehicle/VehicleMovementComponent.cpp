@@ -3,6 +3,8 @@
 #include "Component/BoxComponent.h"
 #include "GameFramework/Actor.h"
 #include "VehicleTypes.h"
+#include "Engine/World.h"
+#include "Collision/FPhysSceneChaos.h"
 
 namespace
 {
@@ -48,9 +50,13 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
 {
 	Super::TickComponent(DeltaTime);
 
-	const FVehicleInput Input = PendingInput;
+	FVehicleInput Input = PendingInput;
 	PendingInput = {};
+	if (!bInfiniteBoost && BoostRemaining <= 0.0f)
+		Input.bBoost = false;
 	bBoosting = Input.bBoost && Input.Throttle > 0.0f;
+	if (bBoosting && !bInfiniteBoost)
+		BoostRemaining = std::max(0.0f, BoostRemaining - DeltaTime);
 	SteeringInput = Input.Steer;
 
 	UpdateVelocityEstimate(DeltaTime);
@@ -222,6 +228,40 @@ void UVehicleMovementComponent::UpdateDrive(const FVehicleInput& Input, float De
 
 	if (Body->GetAcceleration() != Accel)
 		Body->SetAcceleration(Accel);
+}
+
+void UVehicleMovementComponent::ResetMotion()
+{
+	PendingInput = {};
+	bBoosting = false;
+	SteeringInput = 0.0f;
+	Velocity = FVector::ZeroVector;
+	PreviousDeltaTime = 0.0f;
+	bGroundContactThisStep = false;
+	LastAirborneVerticalSpeed = 0.0f;
+
+	UBoxComponent* Body = GetBody();
+	if (!Body)
+		return;
+
+	PreviousLocation = Body->GetWorldLocation();
+	bHasPreviousLocation = true;
+	Body->SetAcceleration(FVector::ZeroVector);
+	if (UWorld* World = Body->GetWorld())
+		World->GetPhysicsScene().ResetPrimitiveVelocity(Body);
+}
+
+void UVehicleMovementComponent::SetBoostCapacity(float Seconds)
+{
+	BoostCapacity = std::isfinite(Seconds) ? std::max(0.0f, Seconds) : 0.0f;
+	BoostRemaining = std::min(BoostRemaining, BoostCapacity);
+}
+
+float UVehicleMovementComponent::GetBoostRatio() const
+{
+	if (bInfiniteBoost)
+		return 1.0f;
+	return BoostCapacity > 0.0f ? BoostRemaining / BoostCapacity : 0.0f;
 }
 
 float UVehicleMovementComponent::GetSpeed() const

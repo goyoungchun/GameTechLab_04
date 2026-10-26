@@ -39,6 +39,14 @@ public:
 	const FVehicleTuning& GetTuning() const { return Tuning; }
 	void SetTuning(const FVehicleTuning& InTuning);
 
+	void ResetMotion();
+
+	void SetBoostCapacity(float Seconds);
+	void RefillBoost() { BoostRemaining = BoostCapacity; }
+	void SetInfiniteBoost(bool bInfinite) { bInfiniteBoost = bInfinite; }
+	bool IsInfiniteBoost() const { return bInfiniteBoost; }
+	float GetBoostRatio() const;
+
 public:
 	FOnVehicleLanded OnLanded;
 
@@ -76,6 +84,10 @@ private:
 	float TimeSinceGrounded = 0.0f;
 	float LastLandingSpeed = 0.0f;
 	float LastAirborneVerticalSpeed = 0.0f;
+
+	float BoostCapacity = 3.0f;
+	float BoostRemaining = 3.0f;
+	bool bInfiniteBoost = true;
 
 	float MaxGroundSlopeDegrees = 45.0f;
 	float MaxTeleportSpeed = 100.0f;

@@ -29,6 +29,7 @@ public:
 	void RegisterBody(uint64 BodyId, UPrimitiveComponent* Component);
 	void UnregisterBody(uint64 BodyId);
 	void SetBodyStates(const TArray<FPhysicsBodyState>& InBodyStates);
+	void ResetBodyVelocity(uint64 BodyId);
 
 	void AdvanceSolverBy(float DeltaTime);
 
