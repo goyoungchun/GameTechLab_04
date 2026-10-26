@@ -148,11 +148,11 @@ LRESULT FWindow::HandleMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam
 		break;
 
 	case WM_KEYDOWN:
-		FInputSystem::OnKeyDown(wParam);
+		FInputSystem::OnRawKeyDown(static_cast<uint64>(wParam), static_cast<int64>(lParam));
 		break;
 
 	case WM_KEYUP:
-		FInputSystem::OnKeyUp(wParam);
+		FInputSystem::OnRawKeyUp(static_cast<uint64>(wParam), static_cast<int64>(lParam));
 		break;
 
 	// 포커스를 잃으면 이후의 KeyUp/ButtonUp 메시지가 이 창으로 오지 않으므로

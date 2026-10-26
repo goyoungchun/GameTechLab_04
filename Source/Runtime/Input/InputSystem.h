@@ -29,6 +29,12 @@ public:
     static void OnKeyUp(int VirtualKey);
     static void OnMouseUp(EMouseButton MouseButton);
     static void OnKeyDown(int VirtualKey);
+
+    // Lctrl Rctrl / Lshift Rshift 구별위함
+    static void OnRawKeyDown(uint64 WParam, int64 LParam);
+    static void OnRawKeyUp(uint64 WParam, int64 LParam);
+    static void SyncModifierKeys();
+
     static void OnMouseDown(EMouseButton MouseButton);
     static void OnMouseMove(int32 x, int32 y);
     static void OnMouseWheelDelta(int32 Wheel);
@@ -48,6 +54,13 @@ public:
 
 private:
     FInputSystem() = delete;
+
+    // Lctrl Rctrl / Lshift Rshift 구별위한 보정 함수
+    static int ResolveVirtualKey(uint64 WParam, int64 LParam);
+
+    // 한쪽이라도 눌러지면 범용키도 눌린 판정
+    // LShiftDown -> LShift/Shift 둘다 눌린 판정
+    static void CombineCtrShiftKeys();
 
     static inline bool bMouseStates[5] = {};
     static inline bool bPrevMouseStates[5] = {};

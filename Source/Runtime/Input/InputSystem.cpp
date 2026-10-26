@@ -61,6 +61,45 @@ void FInputSystem::OnKeyDown(int VirtualKey)
     }
 }
 
+void FInputSystem::OnRawKeyDown(uint64 WParam, int64 LParam)
+{
+    OnKeyDown(ResolveVirtualKey(WParam, LParam));
+    CombineCtrShiftKeys();
+}
+
+void FInputSystem::OnRawKeyUp(uint64 WParam, int64 LParam)
+{
+    OnKeyUp(ResolveVirtualKey(WParam, LParam));
+    CombineCtrShiftKeys();
+}
+
+void FInputSystem::SyncModifierKeys()
+{
+    auto IsOsDown = [](int Vk)
+        {
+            return (GetAsyncKeyState(Vk) & 0x8000) != 0;
+        };
+
+    if (bKeyStates[VK_LSHIFT] && !IsOsDown(VK_LSHIFT))
+    {
+        bKeyStates[VK_LSHIFT] = false;
+    }
+    if (bKeyStates[VK_RSHIFT] && !IsOsDown(VK_RSHIFT))
+    {
+        bKeyStates[VK_RSHIFT] = false;
+    }
+    if (bKeyStates[VK_LCONTROL] && !IsOsDown(VK_LCONTROL))
+    {
+        bKeyStates[VK_LCONTROL] = false;
+    }
+    if (bKeyStates[VK_RCONTROL] && !IsOsDown(VK_RCONTROL) && !IsOsDown(VK_HANJA))
+    {
+        bKeyStates[VK_RCONTROL] = false;
+    }
+
+    CombineCtrShiftKeys();
+}
+
 void FInputSystem::OnMouseDown(EMouseButton MouseButton)
 {
     unsigned int Index = static_cast<int>(MouseButton);
@@ -94,6 +133,31 @@ void FInputSystem::OnMouseMove(int32 x, int32 y)
 void FInputSystem::OnMouseWheelDelta(int32 Wheel)
 {
     WheelDelta = Wheel;
+}
+
+int FInputSystem::ResolveVirtualKey(uint64 WParam, int64 LParam)
+{
+    const UINT ScanCode = static_cast<UINT>((LParam >> 16) & 0xFF);
+    const bool bExtended = (LParam & (1 << 24)) != 0;
+
+    switch (WParam)
+    {
+    case VK_SHIFT:
+        return static_cast<int>(MapVirtualKeyW(ScanCode, MAPVK_VSC_TO_VK_EX));
+    case VK_CONTROL:
+        return bExtended ? VK_RCONTROL : VK_LCONTROL;
+    case VK_HANJA:
+        // 한자키와 우측 컨트롤키가 같은 경우를 위한 처리
+        return VK_RCONTROL;
+    default:
+        return static_cast<int>(WParam);
+    }
+}
+
+void FInputSystem::CombineCtrShiftKeys()
+{
+    bKeyStates[VK_SHIFT] = bKeyStates[VK_LSHIFT] || bKeyStates[VK_RSHIFT];
+    bKeyStates[VK_CONTROL] = bKeyStates[VK_LCONTROL] || bKeyStates[VK_RCONTROL];
 }
 
 void FInputSystem::SyncMousePosition(int32 x, int32 y)
