@@ -218,6 +218,7 @@ void FScriptSystem::RegisterInput()
 		"Up", EKeyCode::Up, "Down", EKeyCode::Down, "Left", EKeyCode::Left, "Right", EKeyCode::Right,
 		"Space", EKeyCode::Space, "Enter", EKeyCode::Enter, "Escape", EKeyCode::Escape,
 		"Shift", EKeyCode::Shift, "Control", EKeyCode::Control, "Tab", EKeyCode::Tab,
+		"LShift", EKeyCode::LShift, "RShift", EKeyCode::RShift, "LControl", EKeyCode::LControl, "RControl", EKeyCode::RControl,
 		"Num0", EKeyCode::Num0, "Num1", EKeyCode::Num1, "Num2", EKeyCode::Num2, "Num3", EKeyCode::Num3,
 		"Num4", EKeyCode::Num4, "Num5", EKeyCode::Num5, "Num6", EKeyCode::Num6, "Num7", EKeyCode::Num7,
 		"Num8", EKeyCode::Num8, "Num9", EKeyCode::Num9
