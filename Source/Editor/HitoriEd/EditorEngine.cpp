@@ -719,8 +719,19 @@ void UEditorEngine::GatherActiveSceneViews()
 						CurrentWorld = WorldContextlist[WorldIdx]->World();
 					}
 
-					SceneView = GameClient->CalcSceneView(ViewRect);
-					WorldViews[CurrentWorld].Add(SceneView);
+					/*SceneView = GameClient->CalcSceneView(ViewRect);
+					WorldViews[CurrentWorld].Add(SceneView);*/
+					const int32 SplitCount = GameClient->GetSplitCount();
+					for (int32 Split = 0; Split < SplitCount; ++Split)
+					{
+						if (FGameViewportClient* SplitClient = GameClient->GetSplitClient(Split))
+						{
+							WorldViews[CurrentWorld].Add(SplitClient->CalcSceneView(
+								FGameViewportClient::GetSplitRect(ViewRect, Split, SplitCount)
+							));
+						}
+					}
+
 					break;
 				}
 			}
@@ -776,6 +787,11 @@ void UEditorEngine::GatherActiveSceneViews()
 // 뷰포트 클라이언트를 순회하며 씬 렌더러를 통해 렌더링한다
 void UEditorEngine::RenderViewports() 
 {
+	if (FGameViewportClient* GameClient = FindPIEGameClient(0))
+	{
+		GameClient->SyncSplitClients();
+	}
+	
 	GatherActiveSceneViews();
 
 	Renderer->SetShadowEnabled(SettingsPanel->GetSettings().bShadowEnabled);
@@ -836,10 +852,23 @@ void UEditorEngine::RenderViewports()
 				continue;
 			if (GameClient->GetWorld())
 				CurrentWorld = GameClient->GetWorld();
-			FSceneView SceneView = GameClient->CalcSceneView(ViewRect);
-			FSceneRenderer SceneRenderer(CurrentWorld, SceneView, GameClient->GetRenderData());
-			SceneRenderer.InitViews(Renderer);
-			RenderGameFrame(GameClient, SceneView, SceneRenderer, bIsSIEMode);
+
+			// 플레이어 마다 렌더한다
+			const int32 SplitCount = GameClient->GetSplitCount();
+			for (int32 i = 0; i < SplitCount; ++i)
+			{
+				FGameViewportClient* SplitClient = GameClient->GetSplitClient(i);
+				if (!SplitClient)
+				{
+					continue;
+				}
+
+				FSceneView SceneView = GameClient->CalcSceneView(
+					FGameViewportClient::GetSplitRect(ViewRect, i, SplitCount));
+				FSceneRenderer SceneRenderer(CurrentWorld, SceneView, GameClient->GetRenderData());
+				SceneRenderer.InitViews(Renderer);
+				RenderGameFrame(GameClient, SceneView, SceneRenderer, bIsSIEMode);
+			}
 		}
 		else
 		{
