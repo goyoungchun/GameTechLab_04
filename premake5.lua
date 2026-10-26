@@ -15,6 +15,7 @@ workspace "Hitori"
 		"ObjViewer",
 		"Benchmark",
 		"Benchmark_Debug",
+		"Game",
 	}
 
 	multiprocessorcompile "On"
@@ -27,6 +28,9 @@ IncludeDir["stb"]   = "Source/ThirdParty/stb"
 IncludeDir["json"]  = "Source/ThirdParty/json"
 IncludeDir["LuaJIT"] = "Source/ThirdParty/LuaJIT/include"
 IncludeDir["sol2"]   = "Source/ThirdParty/sol2"
+
+-- %{wks.location}이 프로젝트 폴더 기준 상대 경로로 풀려 복사가 실패하므로 절대 경로를 쓴다.
+LuaDllPath = path.translate(path.getabsolute("Source/ThirdParty/LuaJIT/lib/lua51.dll"), "\\")
 
 -- premake의 filter는 project()를 만나면 초기화된다.
 -- 두 프로젝트가 같은 런타임(/MDd vs /MD)으로 컴파일되지 않으면 링크가 실패하므로
@@ -74,6 +78,13 @@ function CommonSettings()
 	-- 에디터 없이 OBJ 파일만 열어보는 Viewer 빌드
 	filter "configurations:ObjViewer"
 		defines  { "ENGINE_RELEASE", "NDEBUG", "OBJ_VIEWER" }
+		runtime  "Release"
+		optimize "on"
+		symbols  "on"
+
+	-- 에디터 없이 RocketArena를 바로 플레이하는 게임 빌드
+	filter "configurations:Game"
+		defines  { "ENGINE_RELEASE", "NDEBUG", "GAME_BUILD" }
 		runtime  "Release"
 		optimize "on"
 		symbols  "on"
@@ -216,7 +227,7 @@ project "HitoriEditor"
 	}
 
 	libdirs { "Source/ThirdParty/LuaJIT/lib" }
-	postbuildcommands { '{COPYFILE} "%{wks.location}Source/ThirdParty/LuaJIT/lib/lua51.dll" "%{cfg.targetdir}"' }
+	postbuildcommands { '{COPYFILE} "' .. LuaDllPath .. '" "%{cfg.targetdir}"' }
 
 	filter "files:**.manifest"
 		buildaction "Manifest"
@@ -229,6 +240,9 @@ project "HitoriEditor"
 
 	filter "configurations:Benchmark_Debug"
 		targetname "Benchmark_Debug"
+
+	filter "configurations:Game"
+		targetname "HitoriGame"
 
 	filter {}
 
@@ -247,5 +261,5 @@ if _OPTIONS["physics-tests"] then
 		}
 		links { "HitoriEngine", "ImGui", "lua51.lib", "ole32.lib", "shell32.lib", "uuid.lib" }
 		libdirs { "Source/ThirdParty/LuaJIT/lib" }
-		postbuildcommands { '{COPYFILE} "%{wks.location}Source/ThirdParty/LuaJIT/lib/lua51.dll" "%{cfg.targetdir}"' }
+		postbuildcommands { '{COPYFILE} "' .. LuaDllPath .. '" "%{cfg.targetdir}"' }
 end
