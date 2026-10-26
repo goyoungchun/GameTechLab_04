@@ -62,6 +62,9 @@ private:
     // LShiftDown -> LShift/Shift 둘다 눌린 판정
     static void CombineCtrShiftKeys();
 
+    // 한자키 고질적인 문제 위함   --> 윈도우에서 한자키 누르고 바로 false 로 주기 때문에 게임에서 감지 못 할수도 있음.
+    static inline bool bHanjaReleasePending = false;
+
     static inline bool bMouseStates[5] = {};
     static inline bool bPrevMouseStates[5] = {};
 
