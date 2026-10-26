@@ -2,6 +2,7 @@
 #include "VehicleMovementComponent.h"
 #include "Component/BoxComponent.h"
 #include "GameFramework/Actor.h"
+#include "VehicleTypes.h"
 
 namespace
 {
@@ -24,6 +25,7 @@ UVehicleMovementComponent::~UVehicleMovementComponent()
 void UVehicleMovementComponent::BeginPlay()
 {
 	Super::BeginPlay();
+
 
 	if (UBoxComponent* Body = GetBody())
 	{

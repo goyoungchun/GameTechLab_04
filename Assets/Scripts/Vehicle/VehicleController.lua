@@ -1,3 +1,4 @@
+
 _G.KeyBindings = _G.KeyBindings or {
 	[0] = { Forward = Key.W, Backward = Key.S, Left = Key.A, Right = Key.D, Boost = Key.LShift, Jump = Key.LControl },
 	[1] = { Forward = Key.Up, Backward = Key.Down, Left = Key.Left, Right = Key.Right, Boost = Key.RShift, Jump = Key.RControl },
@@ -75,7 +76,9 @@ function BeginPlay()
 		LogError("VehicleController.lua: not attached to a vehicle - " .. obj.Name)
 		return
 	end
+	obj:AddAsPlayer()
 	print(string.format("[Vehicle] %s PlayerIndex = %d", obj.Name, Car.PlayerIndex))
+
 end
 
 function EndPlay()
@@ -83,6 +86,7 @@ print("[EndPlay] " .. obj.UUID)
 end
 
 function Tick(dt)
+
 	if not Car then return end
 
 	-- 누가 SetBody로 차체를 바꿨든(차량 선택 등) 그 차체의 프리셋을 맞춘다.

@@ -16,6 +16,7 @@ enum class EVehicleMoveMode : uint8
 	Airborne
 };
 
+
 struct FVehicleTuning
 {
 	float MaxForwardSpeed = 20.0f;	// u/s

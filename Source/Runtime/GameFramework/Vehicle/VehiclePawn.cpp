@@ -29,13 +29,21 @@ AVehiclePawn::AVehiclePawn()
 	StaticMesh->SetupAttachment(Box);
 	StaticMesh->SetCollisionResponseToChannel(ECollisionChannel::WorldDynamic, ECollisionResponse::Ignore);
 	StaticMesh->SetCollisionResponseToChannel(ECollisionChannel::WorldStatic, ECollisionResponse::Ignore);
+
+
+	const FStaticMeshData* MeshData = StaticMesh->GetMeshData();
+	if (MeshData)
+		Box->SetBoxExtent(MeshData->AABB.Max);
+
 	SetBody("italia");
 
 	Script->SetScriptPath("Assets/Scripts/Vehicle/VehicleController.lua");
 
 	Camera->SetupAttachment(Box);
+
 	Camera->SetRelativeLocation({ -4, 0, 4 });
 	Camera->SetRelativeRotation({ 20, 0, 0 });
+
 	Camera->SetExternalInputManaged(true);
 }
 

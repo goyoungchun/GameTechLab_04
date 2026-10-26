@@ -22,6 +22,11 @@ public:
 protected:
 	virtual void ResetViewTargets() override { ViewTargets.Reset(); }
 
+	virtual TSharedPtr<FGameViewportClient> CreateSplitClient() const override
+	{
+		return MakeShared<FForwardGameViewportClient>();
+	}
+
 private:
 	FForwardViewTargets ViewTargets;
 };

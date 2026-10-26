@@ -20,10 +20,14 @@ public:
 	AVehiclePawn();
 	virtual ~AVehiclePawn() override = default;
 	virtual void BeginPlay() override;
+
+
+	int32 GetPlayerIndex() const { return static_cast<int32>(PlayerIndex); }
+	void SetPlayerIndex(int32 InPlayerIndex) { PlayerIndex = static_cast<int32>(InPlayerIndex); }
+
 	void SetVehicleInput(const FVehicleInput& Input);
 	void RequestJump();
 
-	uint32 GetPlayerIndex() const { return PlayerIndex; }
 	UVehicleMovementComponent* GetMovement() const { return Movement; }
 
 	bool SetBody(const FString& MeshName);

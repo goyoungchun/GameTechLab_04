@@ -3,6 +3,7 @@
 
 #include "Engine.h"
 #include "Camera/ViewportCameraMovement.h"
+#include "Math/EngineMath.h"
 
 namespace
 {
@@ -42,6 +43,7 @@ void FGameViewportClient::Init(const FWorldContext& InWorldContext, UEngine* InE
 void FGameViewportClient::SetWorld(UWorld* InWorld)
 {
 	if (World == InWorld) return;
+	CachedPawn = nullptr;
 	EndSIEMode();
 	LostFocus();
 	RenderData.ResetScene();
@@ -116,7 +118,7 @@ bool FGameViewportClient::InputAxis(FViewport* Viewport, int32 ControllerId, EGa
 FSceneView FGameViewportClient::CalcSceneView(const FRect& InViewRect)
 {
 	FSceneView OutView;
-	OutView.ViewIndex = 0;
+	OutView.ViewIndex = PlayerIndex;
 	OutView.bGameView = !bSIEMode;
 	OutView.ViewRect = InViewRect;
 
@@ -127,6 +129,16 @@ FSceneView FGameViewportClient::CalcSceneView(const FRect& InViewRect)
 
 	const float Aspect = static_cast<float>(Width) / static_cast<float>(Height);
 
+	// Pawn 이 바뀐 경우 확인
+	if (World && !bSIEMode)
+	{
+		APawn* CurrentPawn = World->GetPlayerPawn(static_cast<uint32>(PlayerIndex));
+		if (CurrentPawn != CachedPawn)
+		{
+			CachedPawn = CurrentPawn;
+			CameraComponent = nullptr;
+		}
+	}
 
 	if (!CameraComponent && World)
 	{
@@ -183,6 +195,15 @@ FSceneView FGameViewportClient::CalcSceneView(const FRect& InViewRect)
 
 void FGameViewportClient::Reset()
 {
+	for (TSharedPtr<FGameViewportClient>& Client: SplitClients)
+	{
+		if (Client)
+		{
+			Client->Reset();
+		}
+	}
+	SplitClients.Reset();
+	CachedPawn = nullptr;
 	RenderData.ResetScene();
 	EndSIEMode();
 	LostFocus();
@@ -282,10 +303,53 @@ void FGameViewportClient::TickSIEInput(float DeltaTime, float MoveSpeed, float M
 	SIEMouseDeltaX = SIEMouseDeltaY = SIEWheelDelta = 0.0f;
 }
 
+void FGameViewportClient::SyncSplitClients()
+{
+	const bool bSplit = World && World->IsSplitScreenEnabled();
+
+	const int32 PlayerCount = bSplit ? static_cast<int32>(World->GetPlayerCount()) : 0;
+	const int32 Wanted = std::max(1, PlayerCount) - 1;	// 2인 테스트하려면 1 넣어주세요
+
+	while (static_cast<int32>(SplitClients.Num()) > Wanted)
+	{
+		const int32 Last = static_cast<int32>(SplitClients.Num()) - 1;
+		SplitClients[Last]->Reset();
+		SplitClients.RemoveAt(Last, 1);
+	}
+
+	while (static_cast<int32>(SplitClients.Num()) < Wanted)
+	{
+		TSharedPtr<FGameViewportClient> Client = CreateSplitClient();
+		if (!Client) break;
+
+		Client->SetPlayerIndex(static_cast<int32>(SplitClients.Num()) + 1);
+		Client->SetWorld(World);
+		Client->SetGameInstance(GameInstance);
+		SplitClients.Add(Client);
+	}
+}
+
+FGameViewportClient* FGameViewportClient::GetSplitClient(int32 Index)
+{
+	if (Index == 0)return this;
+	const int32 Child = Index - 1;
+	if (Child < 0 || Child >= static_cast<int32>(SplitClients.Num())) return nullptr;
+	return SplitClients[Child].get();
+}
+
+FRect FGameViewportClient::GetSplitRect(const FRect& FullRect, int32 Index, int32 Count)
+{
+	if (Count <= 1) return FullRect;
+
+	const float Left = std::floor(FullRect.Width * Index / Count);
+	const float Right = std::floor(FullRect.Width * (Index + 1) / Count);
+	return FRect{ FullRect.X + Left, FullRect.Y, Right - Left, FullRect.Height };
+}
+
 UCameraComponent* FGameViewportClient::FindPlayerCamera() const
 {
 	if (!World) return nullptr;
-	if (APawn* Pawn = World->GetPlayerPawn())
+	if (APawn* Pawn = World->GetPlayerPawn(static_cast<uint32>(PlayerIndex)))
 	{
 		if (ADefaultPawn* DefaultPawn = Cast<ADefaultPawn>(Pawn))
 			if (UCameraComponent* Camera = DefaultPawn->GetCameraComponent()) return Camera;

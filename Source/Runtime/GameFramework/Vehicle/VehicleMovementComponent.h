@@ -14,12 +14,12 @@ class UVehicleMovementComponent : public UActorComponent
 {
 	DECLARE_CLASS(UVehicleMovementComponent, UActorComponent)
 
+
 public:
 	UVehicleMovementComponent();
 	virtual ~UVehicleMovementComponent() override;
 
 	virtual void BeginPlay() override;
-	virtual void EndPlay() override;
 	virtual void TickComponent(float DeltaTime) override;
 
 	void SetInput(float Throttle, float Steer, bool bBoost);
@@ -32,6 +32,7 @@ public:
 	float GetLastLandingSpeed() const { return LastLandingSpeed; }
 	bool IsGrounded() const { return MoveMode == EVehicleMoveMode::Grounded; }
 	bool HasLandedThisFrame() const { return bLandedThisFrame; }
+	void EndPlay() override;
 
 	const FVehicleTuning& GetTuning() const { return Tuning; }
 	void SetTuning(const FVehicleTuning& InTuning);
