@@ -1025,7 +1025,8 @@ void FPBDRigidsEvolutionGBF::ResolveContacts(TArray<FPhysicsBodyState>& InOutBod
 			const float NormalVelocity = (B.LinearVelocity - A.LinearVelocity).Dot(Normal);
 			if (NormalVelocity < 0.0f)
 			{
-				const FVector Impulse = Normal * (-NormalVelocity / InvMassSum);
+				float Restitution = 1.0f;
+				const FVector Impulse = Normal * (-(1.0f + Restitution) * NormalVelocity / InvMassSum);
 				if (InvMassA > 0.0f) A.LinearVelocity -= Impulse * InvMassA;
 				if (InvMassB > 0.0f) B.LinearVelocity += Impulse * InvMassB;
 			}

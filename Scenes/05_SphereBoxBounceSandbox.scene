@@ -1,0 +1,4672 @@
+{
+  "Version": 2,
+  "Actors": [
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": true
+      },
+      "Components": [
+        {
+          "Class": "UBoxComponent",
+          "Name": "Arena_Floor",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                14,
+                0,
+                -0.4
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 2,
+            "WorldDynamic": 2,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "BoxExtent": [
+              20,
+              15,
+              0.4
+            ],
+            "ShapeColor": [
+              0.075,
+              0.105,
+              0.15,
+              1
+            ],
+            "bDrawShape": false
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "Arena_Floor_Visual",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                0,
+                0,
+                0
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                40,
+                30,
+                0.8
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.075,
+                  0.105,
+                  0.15,
+                  1
+                ],
+                "SpecularColor": [
+                  0.12,
+                  0.12,
+                  0.12
+                ],
+                "Shininess": 24,
+                "Textures": [
+                  "WhiteTexture"
+                ],
+                "PSOType": 0,
+                "SamplerState": "LinearClamp",
+                "UVScrollSpeed": [
+                  0,
+                  0
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": true
+      },
+      "Components": [
+        {
+          "Class": "UBoxComponent",
+          "Name": "Arena_FarWall",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                33.5,
+                0,
+                2
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 2,
+            "WorldDynamic": 2,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "BoxExtent": [
+              0.35,
+              14.7,
+              2
+            ],
+            "ShapeColor": [
+              0.18,
+              0.23,
+              0.31,
+              1
+            ],
+            "bDrawShape": false
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "Arena_FarWall_Visual",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                0,
+                0,
+                0
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                0.7,
+                29.4,
+                4
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.18,
+                  0.23,
+                  0.31,
+                  1
+                ],
+                "SpecularColor": [
+                  0.12,
+                  0.12,
+                  0.12
+                ],
+                "Shininess": 24,
+                "Textures": [
+                  "WhiteTexture"
+                ],
+                "PSOType": 0,
+                "SamplerState": "LinearClamp",
+                "UVScrollSpeed": [
+                  0,
+                  0
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": true
+      },
+      "Components": [
+        {
+          "Class": "UBoxComponent",
+          "Name": "Arena_BackWall",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                14,
+                14.5,
+                2
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 2,
+            "WorldDynamic": 2,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "BoxExtent": [
+              19.5,
+              0.35,
+              2
+            ],
+            "ShapeColor": [
+              0.18,
+              0.23,
+              0.31,
+              1
+            ],
+            "bDrawShape": false
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "Arena_BackWall_Visual",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                0,
+                0,
+                0
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                39.0,
+                0.7,
+                4
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.18,
+                  0.23,
+                  0.31,
+                  1
+                ],
+                "SpecularColor": [
+                  0.12,
+                  0.12,
+                  0.12
+                ],
+                "Shininess": 24,
+                "Textures": [
+                  "WhiteTexture"
+                ],
+                "PSOType": 0,
+                "SamplerState": "LinearClamp",
+                "UVScrollSpeed": [
+                  0,
+                  0
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": true
+      },
+      "Components": [
+        {
+          "Class": "UBoxComponent",
+          "Name": "Arena_FrontRail",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                14,
+                -14.5,
+                0.55
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 2,
+            "WorldDynamic": 2,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "BoxExtent": [
+              19.5,
+              0.2,
+              0.55
+            ],
+            "ShapeColor": [
+              0.18,
+              0.23,
+              0.31,
+              1
+            ],
+            "bDrawShape": false
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "Arena_FrontRail_Visual",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                0,
+                0,
+                0
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                39.0,
+                0.4,
+                1.1
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.18,
+                  0.23,
+                  0.31,
+                  1
+                ],
+                "SpecularColor": [
+                  0.12,
+                  0.12,
+                  0.12
+                ],
+                "Shininess": 24,
+                "Textures": [
+                  "WhiteTexture"
+                ],
+                "PSOType": 0,
+                "SamplerState": "LinearClamp",
+                "UVScrollSpeed": [
+                  0,
+                  0
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": true
+      },
+      "Components": [
+        {
+          "Class": "UBoxComponent",
+          "Name": "Arena_LeftRail",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                -5.5,
+                0,
+                0.55
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 2,
+            "WorldDynamic": 2,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "BoxExtent": [
+              0.2,
+              14.7,
+              0.55
+            ],
+            "ShapeColor": [
+              0.18,
+              0.23,
+              0.31,
+              1
+            ],
+            "bDrawShape": false
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "Arena_LeftRail_Visual",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                0,
+                0,
+                0
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                0.4,
+                29.4,
+                1.1
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.18,
+                  0.23,
+                  0.31,
+                  1
+                ],
+                "SpecularColor": [
+                  0.12,
+                  0.12,
+                  0.12
+                ],
+                "Shininess": 24,
+                "Textures": [
+                  "WhiteTexture"
+                ],
+                "PSOType": 0,
+                "SamplerState": "LinearClamp",
+                "UVScrollSpeed": [
+                  0,
+                  0
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": false
+      },
+      "Components": [
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "Arena_Divider",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                18,
+                -0.3,
+                0.015
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                0.08,
+                27,
+                0.03
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.12,
+                  0.8,
+                  0.62,
+                  1
+                ],
+                "SpecularColor": [
+                  0.12,
+                  0.12,
+                  0.12
+                ],
+                "Shininess": 24,
+                "Textures": [
+                  "WhiteTexture"
+                ],
+                "PSOType": 0,
+                "SamplerState": "LinearClamp",
+                "UVScrollSpeed": [
+                  0,
+                  0
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": false
+      },
+      "Components": [
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "Bay_Line_-4",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                8,
+                -4,
+                0.015
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                19,
+                0.06,
+                0.03
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.18,
+                  0.23,
+                  0.31,
+                  1
+                ],
+                "SpecularColor": [
+                  0.12,
+                  0.12,
+                  0.12
+                ],
+                "Shininess": 24,
+                "Textures": [
+                  "WhiteTexture"
+                ],
+                "PSOType": 0,
+                "SamplerState": "LinearClamp",
+                "UVScrollSpeed": [
+                  0,
+                  0
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": false
+      },
+      "Components": [
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "Bay_Line_4",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                8,
+                4,
+                0.015
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                19,
+                0.06,
+                0.03
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.18,
+                  0.23,
+                  0.31,
+                  1
+                ],
+                "SpecularColor": [
+                  0.12,
+                  0.12,
+                  0.12
+                ],
+                "Shininess": 24,
+                "Textures": [
+                  "WhiteTexture"
+                ],
+                "PSOType": 0,
+                "SamplerState": "LinearClamp",
+                "UVScrollSpeed": [
+                  0,
+                  0
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": false
+      },
+      "Components": [
+        {
+          "Class": "UTextRenderComponent",
+          "Name": "Arena_Title",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                11,
+                -13,
+                12.4
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": false,
+            "bBackfaceDepth": false,
+            "Text": "SPHERE x BOX | BOUNCE SANDBOX",
+            "TextSize": 0.85,
+            "Font": "Fonts/CookieRun.json"
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": false
+      },
+      "Components": [
+        {
+          "Class": "UTextRenderComponent",
+          "Name": "Arena_Controls",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                11,
+                -13,
+                11.2
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": false,
+            "bBackfaceDepth": false,
+            "Text": "Play | F8 inspect + edit | Pause / Step | Stop + Play reset",
+            "TextSize": 0.4,
+            "Font": "Fonts/CookieRun.json"
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": false
+      },
+      "Components": [
+        {
+          "Class": "UTextRenderComponent",
+          "Name": "Arena_Legend",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                12,
+                13,
+                5.2
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": false,
+            "bBackfaceDepth": false,
+            "Text": "ORANGE: dynamic sphere | BLUE: fixed box | GREEN: movable box",
+            "TextSize": 0.42,
+            "Font": "Fonts/CookieRun.json"
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": true
+      },
+      "Components": [
+        {
+          "Class": "UBoxComponent",
+          "Name": "Drop_3m_Pad",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                2,
+                -8,
+                0.3
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 2,
+            "WorldDynamic": 2,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "BoxExtent": [
+              2,
+              2,
+              0.3
+            ],
+            "ShapeColor": [
+              0.15,
+              0.45,
+              0.8,
+              1
+            ],
+            "bDrawShape": false
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "Drop_3m_Pad_Visual",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                0,
+                0,
+                0
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                4,
+                4,
+                0.6
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.15,
+                  0.45,
+                  0.8,
+                  1
+                ],
+                "SpecularColor": [
+                  0.12,
+                  0.12,
+                  0.12
+                ],
+                "Shininess": 24,
+                "Textures": [
+                  "WhiteTexture"
+                ],
+                "PSOType": 0,
+                "SamplerState": "LinearClamp",
+                "UVScrollSpeed": [
+                  0,
+                  0
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": true
+      },
+      "Components": [
+        {
+          "Class": "USphereComponent",
+          "Name": "Drop_3m_Sphere",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                2,
+                -8,
+                4.2
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 2,
+            "ObjectChannel": 1,
+            "WorldStatic": 2,
+            "WorldDynamic": 2,
+            "bEnableGravity": true,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "SphereRadius": 0.6,
+            "ShapeColor": [
+              1,
+              0.43,
+              0.12,
+              1
+            ],
+            "bDrawShape": false
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "Drop_3m_Sphere_Visual",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                0,
+                0,
+                0
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                0.6,
+                0.6,
+                0.6
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Sphere",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  1,
+                  0.43,
+                  0.12,
+                  1
+                ],
+                "SpecularColor": [
+                  0.12,
+                  0.12,
+                  0.12
+                ],
+                "Shininess": 24,
+                "Textures": [
+                  "WhiteTexture"
+                ],
+                "PSOType": 0,
+                "SamplerState": "LinearClamp",
+                "UVScrollSpeed": [
+                  0,
+                  0
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": false
+      },
+      "Components": [
+        {
+          "Class": "UTextRenderComponent",
+          "Name": "Drop_3m_Label",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                2,
+                -10.2,
+                0.65
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": false,
+            "bBackfaceDepth": false,
+            "Text": "3 m DROP | r = 0.6",
+            "TextSize": 0.34,
+            "Font": "Fonts/CookieRun.json"
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": false
+      },
+      "Components": [
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "Drop_3m_ReleaseLine",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                2,
+                -10.4,
+                4.2
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                3.8,
+                0.045,
+                0.045
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.95,
+                  0.73,
+                  0.2,
+                  1
+                ],
+                "SpecularColor": [
+                  0.12,
+                  0.12,
+                  0.12
+                ],
+                "Shininess": 24,
+                "Textures": [
+                  "WhiteTexture"
+                ],
+                "PSOType": 0,
+                "SamplerState": "LinearClamp",
+                "UVScrollSpeed": [
+                  0,
+                  0
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": false
+      },
+      "Components": [
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "Drop_3m_Gauge",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                4.2,
+                -10.4,
+                2.1
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                0.04,
+                0.04,
+                4.2
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.95,
+                  0.73,
+                  0.2,
+                  1
+                ],
+                "SpecularColor": [
+                  0.12,
+                  0.12,
+                  0.12
+                ],
+                "Shininess": 24,
+                "Textures": [
+                  "WhiteTexture"
+                ],
+                "PSOType": 0,
+                "SamplerState": "LinearClamp",
+                "UVScrollSpeed": [
+                  0,
+                  0
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": true
+      },
+      "Components": [
+        {
+          "Class": "UBoxComponent",
+          "Name": "Drop_6m_Pad",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                8,
+                -8,
+                0.3
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 2,
+            "WorldDynamic": 2,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "BoxExtent": [
+              2,
+              2,
+              0.3
+            ],
+            "ShapeColor": [
+              0.15,
+              0.45,
+              0.8,
+              1
+            ],
+            "bDrawShape": false
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "Drop_6m_Pad_Visual",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                0,
+                0,
+                0
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                4,
+                4,
+                0.6
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.15,
+                  0.45,
+                  0.8,
+                  1
+                ],
+                "SpecularColor": [
+                  0.12,
+                  0.12,
+                  0.12
+                ],
+                "Shininess": 24,
+                "Textures": [
+                  "WhiteTexture"
+                ],
+                "PSOType": 0,
+                "SamplerState": "LinearClamp",
+                "UVScrollSpeed": [
+                  0,
+                  0
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": true
+      },
+      "Components": [
+        {
+          "Class": "USphereComponent",
+          "Name": "Drop_6m_Sphere",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                8,
+                -8,
+                7.2
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 2,
+            "ObjectChannel": 1,
+            "WorldStatic": 2,
+            "WorldDynamic": 2,
+            "bEnableGravity": true,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "SphereRadius": 0.6,
+            "ShapeColor": [
+              1,
+              0.43,
+              0.12,
+              1
+            ],
+            "bDrawShape": false
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "Drop_6m_Sphere_Visual",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                0,
+                0,
+                0
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                0.6,
+                0.6,
+                0.6
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Sphere",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  1,
+                  0.43,
+                  0.12,
+                  1
+                ],
+                "SpecularColor": [
+                  0.12,
+                  0.12,
+                  0.12
+                ],
+                "Shininess": 24,
+                "Textures": [
+                  "WhiteTexture"
+                ],
+                "PSOType": 0,
+                "SamplerState": "LinearClamp",
+                "UVScrollSpeed": [
+                  0,
+                  0
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": false
+      },
+      "Components": [
+        {
+          "Class": "UTextRenderComponent",
+          "Name": "Drop_6m_Label",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                8,
+                -10.2,
+                0.65
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": false,
+            "bBackfaceDepth": false,
+            "Text": "6 m DROP | r = 0.6",
+            "TextSize": 0.34,
+            "Font": "Fonts/CookieRun.json"
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": false
+      },
+      "Components": [
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "Drop_6m_ReleaseLine",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                8,
+                -10.4,
+                7.2
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                3.8,
+                0.045,
+                0.045
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.95,
+                  0.73,
+                  0.2,
+                  1
+                ],
+                "SpecularColor": [
+                  0.12,
+                  0.12,
+                  0.12
+                ],
+                "Shininess": 24,
+                "Textures": [
+                  "WhiteTexture"
+                ],
+                "PSOType": 0,
+                "SamplerState": "LinearClamp",
+                "UVScrollSpeed": [
+                  0,
+                  0
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": false
+      },
+      "Components": [
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "Drop_6m_Gauge",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                10.2,
+                -10.4,
+                3.6
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                0.04,
+                0.04,
+                7.2
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.95,
+                  0.73,
+                  0.2,
+                  1
+                ],
+                "SpecularColor": [
+                  0.12,
+                  0.12,
+                  0.12
+                ],
+                "Shininess": 24,
+                "Textures": [
+                  "WhiteTexture"
+                ],
+                "PSOType": 0,
+                "SamplerState": "LinearClamp",
+                "UVScrollSpeed": [
+                  0,
+                  0
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": true
+      },
+      "Components": [
+        {
+          "Class": "UBoxComponent",
+          "Name": "Drop_9m_Pad",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                14,
+                -8,
+                0.3
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 2,
+            "WorldDynamic": 2,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "BoxExtent": [
+              2,
+              2,
+              0.3
+            ],
+            "ShapeColor": [
+              0.15,
+              0.45,
+              0.8,
+              1
+            ],
+            "bDrawShape": false
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "Drop_9m_Pad_Visual",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                0,
+                0,
+                0
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                4,
+                4,
+                0.6
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.15,
+                  0.45,
+                  0.8,
+                  1
+                ],
+                "SpecularColor": [
+                  0.12,
+                  0.12,
+                  0.12
+                ],
+                "Shininess": 24,
+                "Textures": [
+                  "WhiteTexture"
+                ],
+                "PSOType": 0,
+                "SamplerState": "LinearClamp",
+                "UVScrollSpeed": [
+                  0,
+                  0
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": true
+      },
+      "Components": [
+        {
+          "Class": "USphereComponent",
+          "Name": "Drop_9m_Sphere",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                14,
+                -8,
+                10.2
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 2,
+            "ObjectChannel": 1,
+            "WorldStatic": 2,
+            "WorldDynamic": 2,
+            "bEnableGravity": true,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "SphereRadius": 0.6,
+            "ShapeColor": [
+              1,
+              0.43,
+              0.12,
+              1
+            ],
+            "bDrawShape": false
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "Drop_9m_Sphere_Visual",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                0,
+                0,
+                0
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                0.6,
+                0.6,
+                0.6
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Sphere",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  1,
+                  0.43,
+                  0.12,
+                  1
+                ],
+                "SpecularColor": [
+                  0.12,
+                  0.12,
+                  0.12
+                ],
+                "Shininess": 24,
+                "Textures": [
+                  "WhiteTexture"
+                ],
+                "PSOType": 0,
+                "SamplerState": "LinearClamp",
+                "UVScrollSpeed": [
+                  0,
+                  0
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": false
+      },
+      "Components": [
+        {
+          "Class": "UTextRenderComponent",
+          "Name": "Drop_9m_Label",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                14,
+                -10.2,
+                0.65
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": false,
+            "bBackfaceDepth": false,
+            "Text": "9 m DROP | r = 0.6",
+            "TextSize": 0.34,
+            "Font": "Fonts/CookieRun.json"
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": false
+      },
+      "Components": [
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "Drop_9m_ReleaseLine",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                14,
+                -10.4,
+                10.2
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                3.8,
+                0.045,
+                0.045
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.95,
+                  0.73,
+                  0.2,
+                  1
+                ],
+                "SpecularColor": [
+                  0.12,
+                  0.12,
+                  0.12
+                ],
+                "Shininess": 24,
+                "Textures": [
+                  "WhiteTexture"
+                ],
+                "PSOType": 0,
+                "SamplerState": "LinearClamp",
+                "UVScrollSpeed": [
+                  0,
+                  0
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": false
+      },
+      "Components": [
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "Drop_9m_Gauge",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                16.2,
+                -10.4,
+                5.1
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                0.04,
+                0.04,
+                10.2
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.95,
+                  0.73,
+                  0.2,
+                  1
+                ],
+                "SpecularColor": [
+                  0.12,
+                  0.12,
+                  0.12
+                ],
+                "Shininess": 24,
+                "Textures": [
+                  "WhiteTexture"
+                ],
+                "PSOType": 0,
+                "SamplerState": "LinearClamp",
+                "UVScrollSpeed": [
+                  0,
+                  0
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": false
+      },
+      "Components": [
+        {
+          "Class": "UTextRenderComponent",
+          "Name": "Drop_Title",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                8,
+                -8,
+                11.8
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": false,
+            "bBackfaceDepth": false,
+            "Text": "01 | DROP HEIGHT / REBOUND",
+            "TextSize": 0.48,
+            "Font": "Fonts/CookieRun.json"
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": true
+      },
+      "Components": [
+        {
+          "Class": "UBoxComponent",
+          "Name": "Angle_15_Ramp",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                2,
+                0,
+                1.4
+              ],
+              "Rotation": [
+                15,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 2,
+            "WorldDynamic": 2,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "BoxExtent": [
+              1.8,
+              1.7,
+              0.25
+            ],
+            "ShapeColor": [
+              0.15,
+              0.45,
+              0.8,
+              1
+            ],
+            "bDrawShape": false
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "Angle_15_Ramp_Visual",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                0,
+                0,
+                0
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                3.6,
+                3.4,
+                0.5
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.15,
+                  0.45,
+                  0.8,
+                  1
+                ],
+                "SpecularColor": [
+                  0.12,
+                  0.12,
+                  0.12
+                ],
+                "Shininess": 24,
+                "Textures": [
+                  "WhiteTexture"
+                ],
+                "PSOType": 0,
+                "SamplerState": "LinearClamp",
+                "UVScrollSpeed": [
+                  0,
+                  0
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": true
+      },
+      "Components": [
+        {
+          "Class": "USphereComponent",
+          "Name": "Angle_15_Sphere",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                2,
+                0,
+                6.5
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 2,
+            "ObjectChannel": 1,
+            "WorldStatic": 2,
+            "WorldDynamic": 2,
+            "bEnableGravity": true,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "SphereRadius": 0.6,
+            "ShapeColor": [
+              1,
+              0.43,
+              0.12,
+              1
+            ],
+            "bDrawShape": false
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "Angle_15_Sphere_Visual",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                0,
+                0,
+                0
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                0.6,
+                0.6,
+                0.6
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Sphere",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  1,
+                  0.43,
+                  0.12,
+                  1
+                ],
+                "SpecularColor": [
+                  0.12,
+                  0.12,
+                  0.12
+                ],
+                "Shininess": 24,
+                "Textures": [
+                  "WhiteTexture"
+                ],
+                "PSOType": 0,
+                "SamplerState": "LinearClamp",
+                "UVScrollSpeed": [
+                  0,
+                  0
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": false
+      },
+      "Components": [
+        {
+          "Class": "UTextRenderComponent",
+          "Name": "Angle_15_Label",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                2,
+                -2.4,
+                0.3
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": false,
+            "bBackfaceDepth": false,
+            "Text": "15 deg BOX",
+            "TextSize": 0.34,
+            "Font": "Fonts/CookieRun.json"
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": true
+      },
+      "Components": [
+        {
+          "Class": "UBoxComponent",
+          "Name": "Angle_30_Ramp",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                8,
+                0,
+                1.4
+              ],
+              "Rotation": [
+                30,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 2,
+            "WorldDynamic": 2,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "BoxExtent": [
+              1.8,
+              1.7,
+              0.25
+            ],
+            "ShapeColor": [
+              0.15,
+              0.45,
+              0.8,
+              1
+            ],
+            "bDrawShape": false
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "Angle_30_Ramp_Visual",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                0,
+                0,
+                0
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                3.6,
+                3.4,
+                0.5
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.15,
+                  0.45,
+                  0.8,
+                  1
+                ],
+                "SpecularColor": [
+                  0.12,
+                  0.12,
+                  0.12
+                ],
+                "Shininess": 24,
+                "Textures": [
+                  "WhiteTexture"
+                ],
+                "PSOType": 0,
+                "SamplerState": "LinearClamp",
+                "UVScrollSpeed": [
+                  0,
+                  0
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": true
+      },
+      "Components": [
+        {
+          "Class": "USphereComponent",
+          "Name": "Angle_30_Sphere",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                8,
+                0,
+                6.5
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 2,
+            "ObjectChannel": 1,
+            "WorldStatic": 2,
+            "WorldDynamic": 2,
+            "bEnableGravity": true,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "SphereRadius": 0.6,
+            "ShapeColor": [
+              1,
+              0.43,
+              0.12,
+              1
+            ],
+            "bDrawShape": false
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "Angle_30_Sphere_Visual",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                0,
+                0,
+                0
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                0.6,
+                0.6,
+                0.6
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Sphere",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  1,
+                  0.43,
+                  0.12,
+                  1
+                ],
+                "SpecularColor": [
+                  0.12,
+                  0.12,
+                  0.12
+                ],
+                "Shininess": 24,
+                "Textures": [
+                  "WhiteTexture"
+                ],
+                "PSOType": 0,
+                "SamplerState": "LinearClamp",
+                "UVScrollSpeed": [
+                  0,
+                  0
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": false
+      },
+      "Components": [
+        {
+          "Class": "UTextRenderComponent",
+          "Name": "Angle_30_Label",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                8,
+                -2.4,
+                0.3
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": false,
+            "bBackfaceDepth": false,
+            "Text": "30 deg BOX",
+            "TextSize": 0.34,
+            "Font": "Fonts/CookieRun.json"
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": true
+      },
+      "Components": [
+        {
+          "Class": "UBoxComponent",
+          "Name": "Angle_45_Ramp",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                14,
+                0,
+                1.4
+              ],
+              "Rotation": [
+                45,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 2,
+            "WorldDynamic": 2,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "BoxExtent": [
+              1.8,
+              1.7,
+              0.25
+            ],
+            "ShapeColor": [
+              0.15,
+              0.45,
+              0.8,
+              1
+            ],
+            "bDrawShape": false
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "Angle_45_Ramp_Visual",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                0,
+                0,
+                0
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                3.6,
+                3.4,
+                0.5
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.15,
+                  0.45,
+                  0.8,
+                  1
+                ],
+                "SpecularColor": [
+                  0.12,
+                  0.12,
+                  0.12
+                ],
+                "Shininess": 24,
+                "Textures": [
+                  "WhiteTexture"
+                ],
+                "PSOType": 0,
+                "SamplerState": "LinearClamp",
+                "UVScrollSpeed": [
+                  0,
+                  0
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": true
+      },
+      "Components": [
+        {
+          "Class": "USphereComponent",
+          "Name": "Angle_45_Sphere",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                14,
+                0,
+                6.5
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 2,
+            "ObjectChannel": 1,
+            "WorldStatic": 2,
+            "WorldDynamic": 2,
+            "bEnableGravity": true,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "SphereRadius": 0.6,
+            "ShapeColor": [
+              1,
+              0.43,
+              0.12,
+              1
+            ],
+            "bDrawShape": false
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "Angle_45_Sphere_Visual",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                0,
+                0,
+                0
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                0.6,
+                0.6,
+                0.6
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Sphere",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  1,
+                  0.43,
+                  0.12,
+                  1
+                ],
+                "SpecularColor": [
+                  0.12,
+                  0.12,
+                  0.12
+                ],
+                "Shininess": 24,
+                "Textures": [
+                  "WhiteTexture"
+                ],
+                "PSOType": 0,
+                "SamplerState": "LinearClamp",
+                "UVScrollSpeed": [
+                  0,
+                  0
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": false
+      },
+      "Components": [
+        {
+          "Class": "UTextRenderComponent",
+          "Name": "Angle_45_Label",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                14,
+                -2.4,
+                0.3
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": false,
+            "bBackfaceDepth": false,
+            "Text": "45 deg BOX",
+            "TextSize": 0.34,
+            "Font": "Fonts/CookieRun.json"
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": false
+      },
+      "Components": [
+        {
+          "Class": "UTextRenderComponent",
+          "Name": "Angle_Title",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                8,
+                0,
+                9
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": false,
+            "bBackfaceDepth": false,
+            "Text": "02 | CHANGE THE REFLECTION ANGLE",
+            "TextSize": 0.48,
+            "Font": "Fonts/CookieRun.json"
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": true
+      },
+      "Components": [
+        {
+          "Class": "UBoxComponent",
+          "Name": "Momentum_FloatingBox",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                3,
+                8,
+                2.2
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 2,
+            "ObjectChannel": 1,
+            "WorldStatic": 2,
+            "WorldDynamic": 2,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "BoxExtent": [
+              0.85,
+              0.85,
+              0.85
+            ],
+            "ShapeColor": [
+              0.12,
+              0.8,
+              0.62,
+              1
+            ],
+            "bDrawShape": false
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "Momentum_FloatingBox_Visual",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                0,
+                0,
+                0
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1.7,
+                1.7,
+                1.7
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.12,
+                  0.8,
+                  0.62,
+                  1
+                ],
+                "SpecularColor": [
+                  0.12,
+                  0.12,
+                  0.12
+                ],
+                "Shininess": 24,
+                "Textures": [
+                  "WhiteTexture"
+                ],
+                "PSOType": 0,
+                "SamplerState": "LinearClamp",
+                "UVScrollSpeed": [
+                  0,
+                  0
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": true
+      },
+      "Components": [
+        {
+          "Class": "USphereComponent",
+          "Name": "Momentum_Floating_Sphere",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                3,
+                8,
+                7
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 2,
+            "ObjectChannel": 1,
+            "WorldStatic": 2,
+            "WorldDynamic": 2,
+            "bEnableGravity": true,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "SphereRadius": 0.6,
+            "ShapeColor": [
+              1,
+              0.43,
+              0.12,
+              1
+            ],
+            "bDrawShape": false
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "Momentum_Floating_Sphere_Visual",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                0,
+                0,
+                0
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                0.6,
+                0.6,
+                0.6
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Sphere",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  1,
+                  0.43,
+                  0.12,
+                  1
+                ],
+                "SpecularColor": [
+                  0.12,
+                  0.12,
+                  0.12
+                ],
+                "Shininess": 24,
+                "Textures": [
+                  "WhiteTexture"
+                ],
+                "PSOType": 0,
+                "SamplerState": "LinearClamp",
+                "UVScrollSpeed": [
+                  0,
+                  0
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": false
+      },
+      "Components": [
+        {
+          "Class": "UTextRenderComponent",
+          "Name": "Momentum_Floating_Label",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                3,
+                5.8,
+                0.3
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": false,
+            "bBackfaceDepth": false,
+            "Text": "FREE BOX | gravity OFF",
+            "TextSize": 0.34,
+            "Font": "Fonts/CookieRun.json"
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": true
+      },
+      "Components": [
+        {
+          "Class": "UBoxComponent",
+          "Name": "Momentum_GroundedBox",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                11,
+                8,
+                0.85
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 2,
+            "ObjectChannel": 1,
+            "WorldStatic": 2,
+            "WorldDynamic": 2,
+            "bEnableGravity": true,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "BoxExtent": [
+              0.85,
+              0.85,
+              0.85
+            ],
+            "ShapeColor": [
+              0.12,
+              0.8,
+              0.62,
+              1
+            ],
+            "bDrawShape": false
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "Momentum_GroundedBox_Visual",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                0,
+                0,
+                0
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1.7,
+                1.7,
+                1.7
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.12,
+                  0.8,
+                  0.62,
+                  1
+                ],
+                "SpecularColor": [
+                  0.12,
+                  0.12,
+                  0.12
+                ],
+                "Shininess": 24,
+                "Textures": [
+                  "WhiteTexture"
+                ],
+                "PSOType": 0,
+                "SamplerState": "LinearClamp",
+                "UVScrollSpeed": [
+                  0,
+                  0
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": true
+      },
+      "Components": [
+        {
+          "Class": "USphereComponent",
+          "Name": "Momentum_Grounded_Sphere",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                11,
+                8,
+                7
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 2,
+            "ObjectChannel": 1,
+            "WorldStatic": 2,
+            "WorldDynamic": 2,
+            "bEnableGravity": true,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "SphereRadius": 0.6,
+            "ShapeColor": [
+              1,
+              0.43,
+              0.12,
+              1
+            ],
+            "bDrawShape": false
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "Momentum_Grounded_Sphere_Visual",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                0,
+                0,
+                0
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                0.6,
+                0.6,
+                0.6
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Sphere",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  1,
+                  0.43,
+                  0.12,
+                  1
+                ],
+                "SpecularColor": [
+                  0.12,
+                  0.12,
+                  0.12
+                ],
+                "Shininess": 24,
+                "Textures": [
+                  "WhiteTexture"
+                ],
+                "PSOType": 0,
+                "SamplerState": "LinearClamp",
+                "UVScrollSpeed": [
+                  0,
+                  0
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": false
+      },
+      "Components": [
+        {
+          "Class": "UTextRenderComponent",
+          "Name": "Momentum_Grounded_Label",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                11,
+                5.8,
+                0.3
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": false,
+            "bBackfaceDepth": false,
+            "Text": "BOX + FLOOR CONTACT",
+            "TextSize": 0.34,
+            "Font": "Fonts/CookieRun.json"
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": false
+      },
+      "Components": [
+        {
+          "Class": "UTextRenderComponent",
+          "Name": "Momentum_Title",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                8,
+                8,
+                9
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": false,
+            "bBackfaceDepth": false,
+            "Text": "03 | MOVABLE BOX / MOMENTUM",
+            "TextSize": 0.48,
+            "Font": "Fonts/CookieRun.json"
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": true
+      },
+      "Components": [
+        {
+          "Class": "UBoxComponent",
+          "Name": "Free_Ramp",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                22,
+                7,
+                1.4
+              ],
+              "Rotation": [
+                25,
+                25,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 2,
+            "WorldDynamic": 2,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "BoxExtent": [
+              2.4,
+              2,
+              0.3
+            ],
+            "ShapeColor": [
+              0.15,
+              0.45,
+              0.8,
+              1
+            ],
+            "bDrawShape": false
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "Free_Ramp_Visual",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                0,
+                0,
+                0
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                4.8,
+                4,
+                0.6
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.15,
+                  0.45,
+                  0.8,
+                  1
+                ],
+                "SpecularColor": [
+                  0.12,
+                  0.12,
+                  0.12
+                ],
+                "Shininess": 24,
+                "Textures": [
+                  "WhiteTexture"
+                ],
+                "PSOType": 0,
+                "SamplerState": "LinearClamp",
+                "UVScrollSpeed": [
+                  0,
+                  0
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": true
+      },
+      "Components": [
+        {
+          "Class": "UBoxComponent",
+          "Name": "Free_Wall",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                29,
+                5,
+                1.5
+              ],
+              "Rotation": [
+                0,
+                25,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 2,
+            "WorldDynamic": 2,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "BoxExtent": [
+              0.6,
+              2.5,
+              1.5
+            ],
+            "ShapeColor": [
+              0.15,
+              0.45,
+              0.8,
+              1
+            ],
+            "bDrawShape": false
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "Free_Wall_Visual",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                0,
+                0,
+                0
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1.2,
+                5.0,
+                3.0
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.15,
+                  0.45,
+                  0.8,
+                  1
+                ],
+                "SpecularColor": [
+                  0.12,
+                  0.12,
+                  0.12
+                ],
+                "Shininess": 24,
+                "Textures": [
+                  "WhiteTexture"
+                ],
+                "PSOType": 0,
+                "SamplerState": "LinearClamp",
+                "UVScrollSpeed": [
+                  0,
+                  0
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": true
+      },
+      "Components": [
+        {
+          "Class": "UBoxComponent",
+          "Name": "Free_DynamicBox_A",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                25,
+                -6,
+                0.85
+              ],
+              "Rotation": [
+                0,
+                20,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 2,
+            "ObjectChannel": 1,
+            "WorldStatic": 2,
+            "WorldDynamic": 2,
+            "bEnableGravity": true,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "BoxExtent": [
+              0.85,
+              0.85,
+              0.85
+            ],
+            "ShapeColor": [
+              0.12,
+              0.8,
+              0.62,
+              1
+            ],
+            "bDrawShape": false
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "Free_DynamicBox_A_Visual",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                0,
+                0,
+                0
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1.7,
+                1.7,
+                1.7
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.12,
+                  0.8,
+                  0.62,
+                  1
+                ],
+                "SpecularColor": [
+                  0.12,
+                  0.12,
+                  0.12
+                ],
+                "Shininess": 24,
+                "Textures": [
+                  "WhiteTexture"
+                ],
+                "PSOType": 0,
+                "SamplerState": "LinearClamp",
+                "UVScrollSpeed": [
+                  0,
+                  0
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": true
+      },
+      "Components": [
+        {
+          "Class": "UBoxComponent",
+          "Name": "Free_DynamicBox_B",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                29,
+                -1,
+                0.6
+              ],
+              "Rotation": [
+                0,
+                -20,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 2,
+            "ObjectChannel": 1,
+            "WorldStatic": 2,
+            "WorldDynamic": 2,
+            "bEnableGravity": true,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "BoxExtent": [
+              1.1,
+              0.65,
+              0.6
+            ],
+            "ShapeColor": [
+              0.12,
+              0.8,
+              0.62,
+              1
+            ],
+            "bDrawShape": false
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "Free_DynamicBox_B_Visual",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                0,
+                0,
+                0
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                2.2,
+                1.3,
+                1.2
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.12,
+                  0.8,
+                  0.62,
+                  1
+                ],
+                "SpecularColor": [
+                  0.12,
+                  0.12,
+                  0.12
+                ],
+                "Shininess": 24,
+                "Textures": [
+                  "WhiteTexture"
+                ],
+                "PSOType": 0,
+                "SamplerState": "LinearClamp",
+                "UVScrollSpeed": [
+                  0,
+                  0
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": true
+      },
+      "Components": [
+        {
+          "Class": "USphereComponent",
+          "Name": "Free_Sphere_A",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                25,
+                -6,
+                5
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 2,
+            "ObjectChannel": 1,
+            "WorldStatic": 2,
+            "WorldDynamic": 2,
+            "bEnableGravity": true,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "SphereRadius": 0.8,
+            "ShapeColor": [
+              1,
+              0.43,
+              0.12,
+              1
+            ],
+            "bDrawShape": false
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "Free_Sphere_A_Visual",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                0,
+                0,
+                0
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                0.8,
+                0.8,
+                0.8
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Sphere",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  1,
+                  0.43,
+                  0.12,
+                  1
+                ],
+                "SpecularColor": [
+                  0.12,
+                  0.12,
+                  0.12
+                ],
+                "Shininess": 24,
+                "Textures": [
+                  "WhiteTexture"
+                ],
+                "PSOType": 0,
+                "SamplerState": "LinearClamp",
+                "UVScrollSpeed": [
+                  0,
+                  0
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": true
+      },
+      "Components": [
+        {
+          "Class": "USphereComponent",
+          "Name": "Free_Sphere_B",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                22,
+                7,
+                6.5
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 2,
+            "ObjectChannel": 1,
+            "WorldStatic": 2,
+            "WorldDynamic": 2,
+            "bEnableGravity": true,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "SphereRadius": 0.6,
+            "ShapeColor": [
+              1,
+              0.43,
+              0.12,
+              1
+            ],
+            "bDrawShape": false
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "Free_Sphere_B_Visual",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                0,
+                0,
+                0
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                0.6,
+                0.6,
+                0.6
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Sphere",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  1,
+                  0.43,
+                  0.12,
+                  1
+                ],
+                "SpecularColor": [
+                  0.12,
+                  0.12,
+                  0.12
+                ],
+                "Shininess": 24,
+                "Textures": [
+                  "WhiteTexture"
+                ],
+                "PSOType": 0,
+                "SamplerState": "LinearClamp",
+                "UVScrollSpeed": [
+                  0,
+                  0
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": true
+      },
+      "Components": [
+        {
+          "Class": "USphereComponent",
+          "Name": "Free_Sphere_C",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                24,
+                1,
+                4.5
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 2,
+            "ObjectChannel": 1,
+            "WorldStatic": 2,
+            "WorldDynamic": 2,
+            "bEnableGravity": true,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "SphereRadius": 0.45,
+            "ShapeColor": [
+              1,
+              0.43,
+              0.12,
+              1
+            ],
+            "bDrawShape": false
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "Free_Sphere_C_Visual",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                0,
+                0,
+                0
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                0.45,
+                0.45,
+                0.45
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Sphere",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  1,
+                  0.43,
+                  0.12,
+                  1
+                ],
+                "SpecularColor": [
+                  0.12,
+                  0.12,
+                  0.12
+                ],
+                "Shininess": 24,
+                "Textures": [
+                  "WhiteTexture"
+                ],
+                "PSOType": 0,
+                "SamplerState": "LinearClamp",
+                "UVScrollSpeed": [
+                  0,
+                  0
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": false
+      },
+      "Components": [
+        {
+          "Class": "UTextRenderComponent",
+          "Name": "Free_Title",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                26,
+                -3,
+                10
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": false,
+            "bBackfaceDepth": false,
+            "Text": "04 | FREE PLAY AREA",
+            "TextSize": 0.6,
+            "Font": "Fonts/CookieRun.json"
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": false
+      },
+      "Components": [
+        {
+          "Class": "UTextRenderComponent",
+          "Name": "Free_Hint",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                25,
+                -10,
+                1.6
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": false,
+            "bBackfaceDepth": false,
+            "Text": "Reposition balls / rotate boxes / try different sizes",
+            "TextSize": 0.36,
+            "Font": "Fonts/CookieRun.json"
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": false
+      },
+      "Components": [
+        {
+          "Class": "UAmbientLightComponent",
+          "Name": "Sandbox_Ambient",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                14,
+                0,
+                18
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "Intensity": 0.32,
+            "LightColor": [
+              0.88,
+              0.93,
+              1
+            ],
+            "bEnabled": true,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "CascadeCount": 3,
+            "CascadeExponential": 3,
+            "CascadeBlendRange": 3,
+            "bCascadeDebug": false
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": false
+      },
+      "Components": [
+        {
+          "Class": "UDirectionalLightComponent",
+          "Name": "Sandbox_Sun",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                14,
+                0,
+                18
+              ],
+              "Rotation": [
+                55,
+                -35,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "Intensity": 1.6,
+            "LightColor": [
+              1,
+              0.96,
+              0.9
+            ],
+            "bEnabled": true,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "CascadeCount": 3,
+            "CascadeExponential": 3,
+            "CascadeBlendRange": 3,
+            "bCascadeDebug": false
+          }
+        }
+      ]
+    },
+    {
+      "Class": "APawn",
+      "Properties": {
+        "bActorEnableCollision": false
+      },
+      "Components": [
+        {
+          "Class": "USceneComponent",
+          "Name": "RootComponent_0",
+          "Properties": {
+            "bAutoActivate": true,
+            "Transform": {
+              "Location": [
+                -26,
+                -29,
+                27
+              ],
+              "Rotation": [
+                26,
+                36,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "bHiddenInGame": false,
+            "bVisible": true
+          }
+        },
+        {
+          "Class": "UCameraComponent",
+          "Name": "BounceSandbox_OverviewCamera",
+          "Properties": {
+            "bAutoActivate": true,
+            "Transform": {
+              "Location": [
+                0,
+                0,
+                0
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "bHiddenInGame": false,
+            "bVisible": true
+          }
+        }
+      ]
+    }
+  ]
+}
