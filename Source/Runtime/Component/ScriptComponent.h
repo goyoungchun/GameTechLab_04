@@ -67,6 +67,7 @@ private:
 	fs::file_time_type LastFileWriteTime;
 	sol::environment Environment;
 	sol::safe_function LuaBeginPlay, LuaTick, LuaEndPlay, LuaOnOverlap, LuaOnHit;
+	FString LastTickError;
 
 	TArray<TUniquePtr<FCoroutineRecord>> CoroutineRecords;
 	uint32 NextCoroutineId = 1;

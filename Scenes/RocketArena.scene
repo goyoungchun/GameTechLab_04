@@ -47,6 +47,22 @@
                         "bReceiveShadow": true,
                         "bVisible": true
                     }
+                },
+                {
+                    "Class": "UScriptComponent",
+                    "Name": "LuaScript_0_0",
+                    "Properties": {
+                        "ScriptPath": "Assets/Scripts/GameMode.lua",
+                        "bAutoActivate": true
+                    }
+                },
+                {
+                    "Class": "UScriptComponent",
+                    "Name": "LuaScript_0",
+                    "Properties": {
+                        "ScriptPath": "Assets/Scripts/GameUI.lua",
+                        "bAutoActivate": true
+                    }
                 }
             ],
             "Properties": {
@@ -1191,7 +1207,7 @@
                         "ObjectChannel": 0,
                         "OverrideMaterials": [],
                         "Restitution": 1.0,
-                        "StaticMesh": "Sphere",
+                        "StaticMesh": "Models/SoccerBall/ball.obj",
                         "Transform": {
                             "Location": [
                                 0.0,
@@ -1204,9 +1220,9 @@
                                 0.0
                             ],
                             "Scale": [
-                                2.0,
-                                2.0,
-                                2.0
+                                2.5,
+                                2.5,
+                                2.5
                             ]
                         },
                         "WorldDynamic": 2,

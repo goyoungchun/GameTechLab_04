@@ -244,7 +244,7 @@ void FScriptSystem::RegisterInput()
 		"Shift", EKeyCode::Shift, "Control", EKeyCode::Control, "Tab", EKeyCode::Tab,
 		"Num0", EKeyCode::Num0, "Num1", EKeyCode::Num1, "Num2", EKeyCode::Num2, "Num3", EKeyCode::Num3,
 		"Num4", EKeyCode::Num4, "Num5", EKeyCode::Num5, "Num6", EKeyCode::Num6, "Num7", EKeyCode::Num7,
-		"Num8", EKeyCode::Num8, "Num9", EKeyCode::Num9
+		"Num8", EKeyCode::Num8, "Num9", EKeyCode::Num9, "Backspace", EKeyCode::Backspace
 	);
 
 	Lua->set_function("IsKeyDown", [](EKeyCode Key) { return FInputSystem::IsKeyDown(Key); });

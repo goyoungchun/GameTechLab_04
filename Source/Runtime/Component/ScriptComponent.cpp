@@ -454,8 +454,12 @@ void UScriptComponent::TickComponent(float DeltaTime)
 		auto Result = LuaTick(DeltaTime);
 		if (!Result.valid())
 		{
-			sol::error Err = Result;
-			HTR_LOG(Error, "[Script] LuaTick failed: {} ({})", ScriptPath, Err.what());
+			sol::error Error = Result;
+			if (!(FString(Error.what()) == LastTickError))
+			{
+				HTR_LOG(Error, "[Script] LuaTick failed: {} ({})", ScriptPath, Error.what());
+				LastTickError = FString(Error.what());
+			}
 		}
 	}
 	
