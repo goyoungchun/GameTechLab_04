@@ -69,6 +69,13 @@ void FInputSystem::OnRawKeyDown(uint64 WParam, int64 LParam)
 
 void FInputSystem::OnRawKeyUp(uint64 WParam, int64 LParam)
 {
+    // 한자키= 우측컨트롤 일 때 고질적인 문제 해결 위함
+    if (WParam == VK_HANJA)
+    {
+        bHanjaReleasePending = true;    // 다음 프레임에 떼도록 함. (1번은 눌리게 함)
+        return;
+    }
+
     OnKeyUp(ResolveVirtualKey(WParam, LParam));
     CombineCtrShiftKeys();
 }
@@ -92,7 +99,7 @@ void FInputSystem::SyncModifierKeys()
     {
         bKeyStates[VK_LCONTROL] = false;
     }
-    if (bKeyStates[VK_RCONTROL] && !IsOsDown(VK_RCONTROL) && !IsOsDown(VK_HANJA))
+    if (bKeyStates[VK_RCONTROL] && !bHanjaReleasePending && !IsOsDown(VK_RCONTROL) && !IsOsDown(VK_HANJA))
     {
         bKeyStates[VK_RCONTROL] = false;
     }
@@ -180,6 +187,8 @@ void FInputSystem::ClearAllStates()
     WheelDelta = 0;
     DeltaX = 0;
     DeltaY = 0;
+
+    bHanjaReleasePending = false;
 }
 
 void FInputSystem::UpdateInputStates()
@@ -193,5 +202,13 @@ void FInputSystem::UpdateInputStates()
     DeltaY = 0;
     PrevMouseX = MouseX;
     PrevMouseY = MouseY;
+
+    // 한자키는 한 프레임은 무조건 눌리게 함
+    if (bHanjaReleasePending)
+    {
+        bKeyStates[VK_RCONTROL] = false;
+        bHanjaReleasePending = false;
+        CombineCtrShiftKeys();
+    }
 }
 
