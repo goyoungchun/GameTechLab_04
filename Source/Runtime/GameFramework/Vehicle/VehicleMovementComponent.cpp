@@ -47,6 +47,7 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
 
 	const FVehicleInput Input = PendingInput;
 	PendingInput = {};
+	bBoosting = Input.bBoost && Input.Throttle > 0.0f;
 
 	UpdateVelocityEstimate(DeltaTime);
 	UpdateGround(DeltaTime);

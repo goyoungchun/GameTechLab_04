@@ -42,6 +42,21 @@ AVehiclePawn::AVehiclePawn()
 void AVehiclePawn::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (Camera)
+		BaseFOV = Camera->GetFieldOfView();
+}
+
+void AVehiclePawn::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (!Camera || !Movement)
+		return;
+
+	const float TargetFOV = Movement->IsBoosting() ? BaseFOV + BoostFOVOffset : BaseFOV;
+	const float CurrentFOV = Camera->GetFieldOfView();
+	Camera->SetFieldOfView(CurrentFOV + (TargetFOV - CurrentFOV) * std::min(DeltaTime * FOVInterpSpeed, 1.0f));
 }
 
 void AVehiclePawn::SetVehicleInput(const FVehicleInput& Input)

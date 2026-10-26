@@ -32,6 +32,7 @@ public:
 	float GetLastLandingSpeed() const { return LastLandingSpeed; }
 	bool IsGrounded() const { return MoveMode == EVehicleMoveMode::Grounded; }
 	bool HasLandedThisFrame() const { return bLandedThisFrame; }
+	bool IsBoosting() const { return bBoosting; }
 
 	const FVehicleTuning& GetTuning() const { return Tuning; }
 	void SetTuning(const FVehicleTuning& InTuning);
@@ -55,6 +56,7 @@ private:
 
 private:
 	FVehicleInput PendingInput;
+	bool bBoosting = false;
 
 	FVector Velocity = FVector::ZeroVector;
 	FVector PreviousLocation = FVector::ZeroVector;

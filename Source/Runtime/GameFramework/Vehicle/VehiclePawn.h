@@ -20,6 +20,7 @@ public:
 	AVehiclePawn();
 	virtual ~AVehiclePawn() override = default;
 	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaTime) override;
 	void SetVehicleInput(const FVehicleInput& Input);
 	void RequestJump();
 
@@ -37,4 +38,8 @@ private:
 	UCameraComponent* Camera = nullptr;
 
 	uint32 PlayerIndex = 0;
+
+	float BaseFOV = 60.0f;
+	float BoostFOVOffset = 15.0f;
+	float FOVInterpSpeed = 6.0f;
 };
