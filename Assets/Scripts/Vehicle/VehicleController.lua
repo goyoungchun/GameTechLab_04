@@ -68,6 +68,19 @@ local function ApplyPreset()
 	print(string.format("[Vehicle] P%d preset: %s%s", Car.PlayerIndex, AppliedBody, Note))
 end
 
+local function SetCarModel(CarName)
+	if not Car:SetBody(CarName) then
+		LogWarning("[Vehicle] Unknown car model: " .. tostring(CarName))
+	end
+end
+
+local function BindCarModel()
+	local Slot = Game.Cars and Game.Cars[Car.PlayerIndex + 1]
+	if Slot and Slot.SetCarModel ~= SetCarModel then
+		Slot.SetCarModel = SetCarModel
+	end
+end
+
 -- 처음 로드할 때와 핫 리로드할 때마다 다시 적용한다. (BeginPlay는 핫 리로드 때 다시 불리지 않는다)
 if Car then ApplyPreset() end
 
@@ -88,6 +101,8 @@ end
 function Tick(dt)
 
 	if not Car then return end
+
+	BindCarModel()
 
 	-- 누가 SetBody로 차체를 바꿨든(차량 선택 등) 그 차체의 프리셋을 맞춘다.
 	if Car.BodyName ~= AppliedBody then ApplyPreset() end
