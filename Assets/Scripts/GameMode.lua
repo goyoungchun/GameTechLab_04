@@ -15,7 +15,7 @@ Game.Config = {
     },
     StartSpots = {
         Attacker     = { Location = Vector(0, 2, 1),  Yaw = 90 },
-        Defender     = { Location = Vector(0, 36, 1), Yaw = -90 },
+        Defender     = { Location = Vector(0, 24, 1), Yaw = -90 },
         SuddenDeath1 = { Location = Vector(-8, 2, 1), Yaw = 90 },
         SuddenDeath2 = { Location = Vector(8, 2, 1),  Yaw = 90 },
         Ball         = Vector(0, 14, 2),
@@ -46,10 +46,6 @@ Game.Menu = Game.Menu or {
     Items = {},
     SelectedIndex = 1,
 }
-
-if Game.bShowDebug == nil then
-    Game.bShowDebug = true
-end
 
 local function ResetMatchState()
     Game.Turn = 0
@@ -558,29 +554,6 @@ StateTickHandlers.Result = function(DeltaTime)
     end
 end
 
-local DebugKeyActions = {
-    [1] = function() SetState("MainMenu") end,
-    [2] = function() SetState("CarSelect") end,
-    [3] = function()
-        if not Game.FirstAttackerIndex then return end
-        EndTurn()
-    end,
-    [4] = function() Game.LastTouchIndex = Game.AttackerIndex or 1; Game.OnGoal() end,
-    [5] = function() Game.RemainTime = 0 end,
-    [6] = function() Game.LastTouchIndex = 2; Game.OnGoal() end,
-}
-
-local function HandleDebugKeys()
-    if IsKeyPressed(Key.Tab) then
-        Game.bShowDebug = not Game.bShowDebug
-    end
-    for KeyNumber, Action in pairs(DebugKeyActions) do
-        if IsKeyPressed(Key["Num" .. KeyNumber]) then
-            Action()
-        end
-    end
-end
-
 function BeginPlay()
     ResetMatchState()
     EnsureCarsAndBall()
@@ -596,6 +569,4 @@ function Tick(DeltaTime)
     else
         LogWarning("[GameMode] Unknown state: " .. tostring(Game.State))
     end
-
-    HandleDebugKeys()
 end
