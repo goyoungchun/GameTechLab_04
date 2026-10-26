@@ -47,6 +47,7 @@ private:
 		FVector NormalImpulse,
 		const FHitResult& Hit
 	);
+	void UpdateSteering(const FVehicleInput& Input, float DeltaTime);
 
 private:
 	FVehicleInput PendingInput;
@@ -69,4 +70,7 @@ private:
 
 	float MaxGroundSlopeDegrees = 45.0f;
 	float MaxTeleportSpeed = 100.0f;
+
+	float TurnRate = 100.0f;
+	float FullTurnSpeed = 5.0f;
 };

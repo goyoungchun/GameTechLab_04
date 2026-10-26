@@ -50,6 +50,7 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
 
 	UpdateVelocityEstimate(DeltaTime);
 	UpdateGround(DeltaTime);
+	UpdateSteering(Input, DeltaTime);
 }
 
 UBoxComponent* UVehicleMovementComponent::GetBody() const
@@ -138,6 +139,25 @@ void UVehicleMovementComponent::UpdateGround(float DeltaTime)
 	}
 
 	bGroundStateValid = true;
+}
+
+void UVehicleMovementComponent::UpdateSteering(const FVehicleInput& Input, float DeltaTime)
+{
+	UBoxComponent* Body = GetBody();
+	if (!Body || Input.Steer == 0.0f || !IsGrounded())
+		return;
+
+	const float ForwardSpeed = GetForwardSpeed();
+	const float SpeedRatio = FullTurnSpeed > 0.0f
+		? std::clamp(std::abs(ForwardSpeed) / FullTurnSpeed, 0.0f, 1.0f)
+		: 1.0f;
+	const float Direction = ForwardSpeed < 0.0f ? -1.0f : 1.0f;
+	const float YawDelta = Input.Steer * TurnRate * SpeedRatio * Direction * DeltaTime;
+	if (YawDelta == 0.0f)
+		return;
+
+	const float CurrentYaw = Body->GetRelativeRotation().Yaw;
+	Body->SetRelativeRotation({ 0.0f, CurrentYaw + YawDelta, 0.0f });
 }
 
 float UVehicleMovementComponent::GetSpeed() const
