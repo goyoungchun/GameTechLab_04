@@ -3,6 +3,7 @@
     <BuildType Name="Benchmark" />
     <BuildType Name="Benchmark_Debug" />
     <BuildType Name="Debug" />
+    <BuildType Name="Game" />
     <BuildType Name="ObjViewer" />
     <BuildType Name="Release" />
     <Platform Name="x64" />

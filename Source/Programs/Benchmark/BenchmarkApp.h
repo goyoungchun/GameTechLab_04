@@ -32,6 +32,10 @@ public:
 	void Tick(float DeltaTime) override;
 	void PreExit() override;
 
+protected:
+	// 씬은 직접 열고 그리므로 UGameEngine의 게임 세션은 쓰지 않는다.
+	bool ShouldRunGameSession() const override { return false; }
+
 private:
 	// ImGui로 프로파일링 오버레이를 그린다.
 	void DrawProfileOverlay();
