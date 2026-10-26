@@ -397,7 +397,19 @@ void FPBDRigidsEvolutionGBF::ApplyGravityAndIntegrate(TArray<FPhysicsBodyState>&
 			continue;
 
 		// 반암시적 Euler 적분. 중력을 꺼도 기존 속도에 의한 이동은 유지한다.
-		const FVector Velocity = State.LinearVelocity + (State.bEnableGravity ? Gravity * DeltaTime : FVector::ZeroVector);
+		const FVector Acceleration = State.Acceleration + (State.bEnableGravity ? Gravity * State.GravityScale : FVector::ZeroVector);
+		FVector Velocity = State.LinearVelocity + Acceleration * DeltaTime;
+
+		const float Speed = Velocity.Size();
+		const float SpeedDrop = 9.8f * State.COF * DeltaTime;
+
+		if (Speed > 0.0f)
+		{
+			// 바닥 접촉 정보를 가지고 있지 않으므로 우선 X,Y,Z 모두 감속함
+			const float NewSpeed = std::max(0.0f, Speed - SpeedDrop);
+			Velocity *= (NewSpeed / Speed);
+		}
+
 		const FVector Location = State.WorldTransform.Location + Velocity * DeltaTime;
 		if (!IsFinitePhysicsVector(Velocity) || !IsFinitePhysicsVector(Location))
 			continue;
@@ -1004,8 +1016,8 @@ void FPBDRigidsEvolutionGBF::ResolveContacts(TArray<FPhysicsBodyState>& InOutBod
 			FPhysicsBodyState& A = InOutBodyStates[*IndexA];
 			FPhysicsBodyState& B = InOutBodyStates[*IndexB];
 			// 질량 설정이 없는 현재 단계에서는 모든 Dynamic을 동일 질량으로 취급한다.
-			const float InvMassA = A.MotionType == EPhysicsMotionType::Dynamic ? 1.0f : 0.0f;
-			const float InvMassB = B.MotionType == EPhysicsMotionType::Dynamic ? 1.0f : 0.0f;
+			const float InvMassA = A.MotionType == EPhysicsMotionType::Dynamic ? 1.0f / A.Mass : 0.0f;
+			const float InvMassB = B.MotionType == EPhysicsMotionType::Dynamic ? 1.0f / B.Mass : 0.0f;
 			const float InvMassSum = InvMassA + InvMassB;
 			const float NormalLengthSquared = Contact.Normal.Dot(Contact.Normal);
 			if (InvMassSum == 0.0f || !std::isfinite(NormalLengthSquared) || NormalLengthSquared <= 1e-8f)
@@ -1025,7 +1037,7 @@ void FPBDRigidsEvolutionGBF::ResolveContacts(TArray<FPhysicsBodyState>& InOutBod
 			const float NormalVelocity = (B.LinearVelocity - A.LinearVelocity).Dot(Normal);
 			if (NormalVelocity < 0.0f)
 			{
-				const FVector Impulse = Normal * (-NormalVelocity / InvMassSum);
+				const FVector Impulse = Normal * ( - ((1.0f + std::sqrt(A.Restitution * B.Restitution)) * NormalVelocity) / InvMassSum);
 				if (InvMassA > 0.0f) A.LinearVelocity -= Impulse * InvMassA;
 				if (InvMassB > 0.0f) B.LinearVelocity += Impulse * InvMassB;
 			}

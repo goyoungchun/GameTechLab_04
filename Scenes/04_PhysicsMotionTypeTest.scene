@@ -1,0 +1,1318 @@
+{
+  "Version": 2,
+  "Actors": [
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": true
+      },
+      "Components": [
+        {
+          "Class": "UBoxComponent",
+          "Name": "DD_Static_Floor",
+          "Properties": {
+            "Transform": {
+              "Location": [4,-6,-0.2],
+              "Rotation": [0,0,0],
+              "Scale": [1,1,1]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 2,
+            "WorldDynamic": 2,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "ShapeColor": [0.28,0.21,0.15,1],
+            "bDrawShape": true,
+            "BoxExtent": [3,2.6,0.2]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "DD_Static_Floor_Visual",
+          "Properties": {
+            "Transform": {
+              "Location": [0,0,0],
+              "Rotation": [0,0,0],
+              "Scale": [6,5.2,0.4]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [0.28,0.21,0.15,1],
+                "SpecularColor": [0.15,0.15,0.15],
+                "Shininess": 20
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UTextRenderComponent",
+          "Name": "DD_Title",
+          "Properties": {
+            "Transform": {
+              "Location": [2.3,0,4.05],
+              "Rotation": [0,0,0],
+              "Scale": [1,1,1]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": false,
+            "bBackfaceDepth": false,
+            "Text": "1 | DYNAMIC / DYNAMIC",
+            "TextSize": 0.31,
+            "Font": "Fonts/CookieRun.json"
+          }
+        },
+        {
+          "Class": "UTextRenderComponent",
+          "Name": "DD_Hint",
+          "Properties": {
+            "Transform": {
+              "Location": [2.3,0,3.6],
+              "Rotation": [0,0,0],
+              "Scale": [1,1,1]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": false,
+            "bBackfaceDepth": false,
+            "Text": "Both bodies simulated | fall + stack",
+            "TextSize": 0.24,
+            "Font": "Fonts/CookieRun.json"
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": true
+      },
+      "Components": [
+        {
+          "Class": "UBoxComponent",
+          "Name": "KD_Static_Floor",
+          "Properties": {
+            "Transform": {
+              "Location": [4,0,-0.2],
+              "Rotation": [0,0,0],
+              "Scale": [1,1,1]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 2,
+            "WorldDynamic": 2,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "ShapeColor": [0.12,0.23,0.27,1],
+            "bDrawShape": true,
+            "BoxExtent": [3,2.6,0.2]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "KD_Static_Floor_Visual",
+          "Properties": {
+            "Transform": {
+              "Location": [0,0,0],
+              "Rotation": [0,0,0],
+              "Scale": [6,5.2,0.4]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [0.12,0.23,0.27,1],
+                "SpecularColor": [0.15,0.15,0.15],
+                "Shininess": 20
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UTextRenderComponent",
+          "Name": "KD_Title",
+          "Properties": {
+            "Transform": {
+              "Location": [2.3,0,4.05],
+              "Rotation": [0,0,0],
+              "Scale": [1,1,1]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": false,
+            "bBackfaceDepth": false,
+            "Text": "2 | KINEMATIC / DYNAMIC",
+            "TextSize": 0.31,
+            "Font": "Fonts/CookieRun.json"
+          }
+        },
+        {
+          "Class": "UTextRenderComponent",
+          "Name": "KD_Hint",
+          "Properties": {
+            "Transform": {
+              "Location": [2.3,0,3.6],
+              "Rotation": [0,0,0],
+              "Scale": [1,1,1]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": false,
+            "bBackfaceDepth": false,
+            "Text": "Blue drives green | only green yields",
+            "TextSize": 0.24,
+            "Font": "Fonts/CookieRun.json"
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": true
+      },
+      "Components": [
+        {
+          "Class": "UBoxComponent",
+          "Name": "KK_Static_Floor",
+          "Properties": {
+            "Transform": {
+              "Location": [4,6,-0.2],
+              "Rotation": [0,0,0],
+              "Scale": [1,1,1]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 2,
+            "WorldDynamic": 2,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "ShapeColor": [0.23,0.15,0.29,1],
+            "bDrawShape": true,
+            "BoxExtent": [3,2.6,0.2]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "KK_Static_Floor_Visual",
+          "Properties": {
+            "Transform": {
+              "Location": [0,0,0],
+              "Rotation": [0,0,0],
+              "Scale": [6,5.2,0.4]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [0.23,0.15,0.29,1],
+                "SpecularColor": [0.15,0.15,0.15],
+                "Shininess": 20
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UTextRenderComponent",
+          "Name": "KK_Title",
+          "Properties": {
+            "Transform": {
+              "Location": [2.3,0,4.05],
+              "Rotation": [0,0,0],
+              "Scale": [1,1,1]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": false,
+            "bBackfaceDepth": false,
+            "Text": "3 | KINEMATIC / KINEMATIC",
+            "TextSize": 0.31,
+            "Font": "Fonts/CookieRun.json"
+          }
+        },
+        {
+          "Class": "UTextRenderComponent",
+          "Name": "KK_Hint",
+          "Properties": {
+            "Transform": {
+              "Location": [2.3,0,3.6],
+              "Rotation": [0,0,0],
+              "Scale": [1,1,1]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": false,
+            "bBackfaceDepth": false,
+            "Text": "Both Block | contact, paths unchanged",
+            "TextSize": 0.24,
+            "Font": "Fonts/CookieRun.json"
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": true
+      },
+      "Components": [
+        {
+          "Class": "UBoxComponent",
+          "Name": "DD_Dynamic_Lower",
+          "Properties": {
+            "Transform": {
+              "Location": [4,-6,0.55],
+              "Rotation": [0,0,0],
+              "Scale": [1,1,1]
+            },
+            "MotionType": 2,
+            "ObjectChannel": 1,
+            "WorldStatic": 2,
+            "WorldDynamic": 2,
+            "bEnableGravity": true,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "ShapeColor": [1,0.5,0.12,1],
+            "bDrawShape": true,
+            "BoxExtent": [0.55,0.55,0.55]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "DD_Dynamic_Lower_Visual",
+          "Properties": {
+            "Transform": {
+              "Location": [0,0,0],
+              "Rotation": [0,0,0],
+              "Scale": [1.1,1.1,1.1]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [1,0.5,0.12,1],
+                "SpecularColor": [0.15,0.15,0.15],
+                "Shininess": 20
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": true
+      },
+      "Components": [
+        {
+          "Class": "UBoxComponent",
+          "Name": "DD_Dynamic_Drop",
+          "Properties": {
+            "Transform": {
+              "Location": [4,-6,3.4],
+              "Rotation": [0,0,0],
+              "Scale": [1,1,1]
+            },
+            "MotionType": 2,
+            "ObjectChannel": 1,
+            "WorldStatic": 2,
+            "WorldDynamic": 2,
+            "bEnableGravity": true,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "ShapeColor": [1,0.82,0.22,1],
+            "bDrawShape": true,
+            "BoxExtent": [0.55,0.55,0.55]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "DD_Dynamic_Drop_Visual",
+          "Properties": {
+            "Transform": {
+              "Location": [0,0,0],
+              "Rotation": [0,0,0],
+              "Scale": [1.1,1.1,1.1]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [1,0.82,0.22,1],
+                "SpecularColor": [0.15,0.15,0.15],
+                "Shininess": 20
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": true
+      },
+      "Components": [
+        {
+          "Class": "USphereComponent",
+          "Name": "KD_Kinematic_Pusher",
+          "Properties": {
+            "Transform": {
+              "Location": [5.4,0,0.6],
+              "Rotation": [0,0,0],
+              "Scale": [1,1,1]
+            },
+            "MotionType": 1,
+            "ObjectChannel": 1,
+            "WorldStatic": 2,
+            "WorldDynamic": 2,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "ShapeColor": [0.12,0.5,1,1],
+            "bDrawShape": true,
+            "SphereRadius": 0.6
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "KD_Kinematic_Pusher_Visual",
+          "Properties": {
+            "Transform": {
+              "Location": [0,0,0],
+              "Rotation": [0,0,0],
+              "Scale": [0.6,0.6,0.6]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Sphere",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [0.12,0.5,1,1],
+                "SpecularColor": [0.15,0.15,0.15],
+                "Shininess": 20
+              }
+            ]
+          }
+        },
+        {
+          "Class": "RotatingMovementComponent",
+          "Name": "KD_Kinematic_Pusher_Orbit",
+          "Properties": {
+            "RotationRate": [0,45,0],
+            "PivotTranslation": [-1.4,0,0],
+            "bRotateLocal": true,
+            "MaxSpeed": 100,
+            "bAutoActivate": true
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": true
+      },
+      "Components": [
+        {
+          "Class": "USphereComponent",
+          "Name": "KD_Dynamic_Ball",
+          "Properties": {
+            "Transform": {
+              "Location": [4,1.4,0.6],
+              "Rotation": [0,0,0],
+              "Scale": [1,1,1]
+            },
+            "MotionType": 2,
+            "ObjectChannel": 1,
+            "WorldStatic": 2,
+            "WorldDynamic": 2,
+            "bEnableGravity": true,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "ShapeColor": [0.28,0.92,0.36,1],
+            "bDrawShape": true,
+            "SphereRadius": 0.6
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "KD_Dynamic_Ball_Visual",
+          "Properties": {
+            "Transform": {
+              "Location": [0,0,0],
+              "Rotation": [0,0,0],
+              "Scale": [0.6,0.6,0.6]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Sphere",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [0.28,0.92,0.36,1],
+                "SpecularColor": [0.15,0.15,0.15],
+                "Shininess": 20
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": true
+      },
+      "Components": [
+        {
+          "Class": "UBoxComponent",
+          "Name": "KD_Static_Retainer_Back",
+          "Properties": {
+            "Transform": {
+              "Location": [6.9,0,0.4],
+              "Rotation": [0,0,0],
+              "Scale": [1,1,1]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 2,
+            "WorldDynamic": 2,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "ShapeColor": [0.25,0.36,0.4,1],
+            "bDrawShape": true,
+            "BoxExtent": [0.1,2.6,0.4]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "KD_Static_Retainer_Back_Visual",
+          "Properties": {
+            "Transform": {
+              "Location": [0,0,0],
+              "Rotation": [0,0,0],
+              "Scale": [0.2,5.2,0.8]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [0.25,0.36,0.4,1],
+                "SpecularColor": [0.15,0.15,0.15],
+                "Shininess": 20
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": true
+      },
+      "Components": [
+        {
+          "Class": "UBoxComponent",
+          "Name": "KD_Static_Retainer_Front",
+          "Properties": {
+            "Transform": {
+              "Location": [1.1,0,0.4],
+              "Rotation": [0,0,0],
+              "Scale": [1,1,1]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 2,
+            "WorldDynamic": 2,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "ShapeColor": [0.25,0.36,0.4,1],
+            "bDrawShape": true,
+            "BoxExtent": [0.1,2.6,0.4]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "KD_Static_Retainer_Front_Visual",
+          "Properties": {
+            "Transform": {
+              "Location": [0,0,0],
+              "Rotation": [0,0,0],
+              "Scale": [0.2,5.2,0.8]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [0.25,0.36,0.4,1],
+                "SpecularColor": [0.15,0.15,0.15],
+                "Shininess": 20
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": true
+      },
+      "Components": [
+        {
+          "Class": "UBoxComponent",
+          "Name": "KD_Static_Retainer_Left",
+          "Properties": {
+            "Transform": {
+              "Location": [4,-2.5,0.4],
+              "Rotation": [0,0,0],
+              "Scale": [1,1,1]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 2,
+            "WorldDynamic": 2,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "ShapeColor": [0.25,0.36,0.4,1],
+            "bDrawShape": true,
+            "BoxExtent": [2.8,0.1,0.4]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "KD_Static_Retainer_Left_Visual",
+          "Properties": {
+            "Transform": {
+              "Location": [0,0,0],
+              "Rotation": [0,0,0],
+              "Scale": [5.6,0.2,0.8]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [0.25,0.36,0.4,1],
+                "SpecularColor": [0.15,0.15,0.15],
+                "Shininess": 20
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": true
+      },
+      "Components": [
+        {
+          "Class": "UBoxComponent",
+          "Name": "KD_Static_Retainer_Right",
+          "Properties": {
+            "Transform": {
+              "Location": [4,2.5,0.4],
+              "Rotation": [0,0,0],
+              "Scale": [1,1,1]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 2,
+            "WorldDynamic": 2,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "ShapeColor": [0.25,0.36,0.4,1],
+            "bDrawShape": true,
+            "BoxExtent": [2.8,0.1,0.4]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "KD_Static_Retainer_Right_Visual",
+          "Properties": {
+            "Transform": {
+              "Location": [0,0,0],
+              "Rotation": [0,0,0],
+              "Scale": [5.6,0.2,0.8]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [0.25,0.36,0.4,1],
+                "SpecularColor": [0.15,0.15,0.15],
+                "Shininess": 20
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": true
+      },
+      "Components": [
+        {
+          "Class": "USphereComponent",
+          "Name": "KK_Kinematic_A",
+          "Properties": {
+            "Transform": {
+              "Location": [4.65,6,0.65],
+              "Rotation": [0,0,0],
+              "Scale": [1,1,1]
+            },
+            "MotionType": 1,
+            "ObjectChannel": 1,
+            "WorldStatic": 2,
+            "WorldDynamic": 2,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "ShapeColor": [0.76,0.3,1,1],
+            "bDrawShape": true,
+            "SphereRadius": 0.55
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "KK_Kinematic_A_Visual",
+          "Properties": {
+            "Transform": {
+              "Location": [0,0,0],
+              "Rotation": [0,0,0],
+              "Scale": [0.55,0.55,0.55]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Sphere",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [0.76,0.3,1,1],
+                "SpecularColor": [0.15,0.15,0.15],
+                "Shininess": 20
+              }
+            ]
+          }
+        },
+        {
+          "Class": "RotatingMovementComponent",
+          "Name": "KK_Kinematic_A_Orbit",
+          "Properties": {
+            "RotationRate": [0,45,0],
+            "PivotTranslation": [-1.3,0,0],
+            "bRotateLocal": true,
+            "MaxSpeed": 100,
+            "bAutoActivate": true
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": true
+      },
+      "Components": [
+        {
+          "Class": "USphereComponent",
+          "Name": "KK_Kinematic_B",
+          "Properties": {
+            "Transform": {
+              "Location": [3.35,6,0.65],
+              "Rotation": [0,180,0],
+              "Scale": [1,1,1]
+            },
+            "MotionType": 1,
+            "ObjectChannel": 1,
+            "WorldStatic": 2,
+            "WorldDynamic": 2,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "ShapeColor": [0.16,0.9,0.95,1],
+            "bDrawShape": true,
+            "SphereRadius": 0.55
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "KK_Kinematic_B_Visual",
+          "Properties": {
+            "Transform": {
+              "Location": [0,0,0],
+              "Rotation": [0,0,0],
+              "Scale": [0.55,0.55,0.55]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Sphere",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [0.16,0.9,0.95,1],
+                "SpecularColor": [0.15,0.15,0.15],
+                "Shininess": 20
+              }
+            ]
+          }
+        },
+        {
+          "Class": "RotatingMovementComponent",
+          "Name": "KK_Kinematic_B_Orbit",
+          "Properties": {
+            "RotationRate": [0,-45,0],
+            "PivotTranslation": [-1.3,0,0],
+            "bRotateLocal": true,
+            "MaxSpeed": 100,
+            "bAutoActivate": true
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": false
+      },
+      "Components": [
+        {
+          "Class": "USceneComponent",
+          "Name": "Orbit_Guides",
+          "Properties": {
+            "Transform": {
+              "Location": [0,0,0],
+              "Rotation": [0,0,0],
+              "Scale": [1,1,1]
+            },
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "KD_Pivot",
+          "Properties": {
+            "Transform": {
+              "Location": [4,0,0.025],
+              "Rotation": [0,0,0],
+              "Scale": [0.085,0.085,0.05]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Cylinder",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [0.12,0.35,0.55,1],
+                "SpecularColor": [0.15,0.15,0.15],
+                "Shininess": 20
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "KD_Orbit_Path",
+          "Properties": {
+            "Transform": {
+              "Location": [4,0,0.02],
+              "Rotation": [0,0,0],
+              "Scale": [1.4,1.4,0.4]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Ring",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [0.12,0.35,0.55,1],
+                "SpecularColor": [0.15,0.15,0.15],
+                "Shininess": 20
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "KK_A_Pivot",
+          "Properties": {
+            "Transform": {
+              "Location": [3.35,6,0.025],
+              "Rotation": [0,0,0],
+              "Scale": [0.085,0.085,0.05]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Cylinder",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [0.4,0.18,0.5,1],
+                "SpecularColor": [0.15,0.15,0.15],
+                "Shininess": 20
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "KK_A_Orbit_Path",
+          "Properties": {
+            "Transform": {
+              "Location": [3.35,6,0.02],
+              "Rotation": [0,0,0],
+              "Scale": [1.3,1.3,0.4]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Ring",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [0.4,0.18,0.5,1],
+                "SpecularColor": [0.15,0.15,0.15],
+                "Shininess": 20
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "KK_B_Pivot",
+          "Properties": {
+            "Transform": {
+              "Location": [4.65,6,0.025],
+              "Rotation": [0,0,0],
+              "Scale": [0.085,0.085,0.05]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Cylinder",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [0.12,0.4,0.43,1],
+                "SpecularColor": [0.15,0.15,0.15],
+                "Shininess": 20
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "KK_B_Orbit_Path",
+          "Properties": {
+            "Transform": {
+              "Location": [4.65,6,0.02],
+              "Rotation": [0,0,0],
+              "Scale": [1.3,1.3,0.4]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "bBackfaceDepth": false,
+            "StaticMesh": "Ring",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [0.12,0.4,0.43,1],
+                "SpecularColor": [0.15,0.15,0.15],
+                "Shininess": 20
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": false
+      },
+      "Components": [
+        {
+          "Class": "UAmbientLightComponent",
+          "Name": "PhysicsTest_Ambient",
+          "Properties": {
+            "Transform": {
+              "Location": [3,0,5],
+              "Rotation": [0,0,0],
+              "Scale": [1,1,1]
+            },
+            "Intensity": 0.22,
+            "LightColor": [1,1,1],
+            "bEnabled": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bAutoActivate": true
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": false
+      },
+      "Components": [
+        {
+          "Class": "UDirectionalLightComponent",
+          "Name": "PhysicsTest_Sun",
+          "Properties": {
+            "Transform": {
+              "Location": [0,0,7],
+              "Rotation": [55,-35,0],
+              "Scale": [1,1,1]
+            },
+            "Intensity": 1.6,
+            "LightColor": [1,0.96,0.9],
+            "bEnabled": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bAutoActivate": true,
+            "CascadeCount": 3,
+            "CascadeExponential": 3,
+            "CascadeBlendRange": 3,
+            "bCascadeDebug": false
+          }
+        }
+      ]
+    },
+    {
+      "Class": "APawn",
+      "Properties": {
+        "bActorEnableCollision": false
+      },
+      "Components": [
+        {
+          "Class": "USceneComponent",
+          "Name": "RootComponent_0",
+          "Properties": {
+            "Transform": {
+              "Location": [-15,-0.5,14],
+              "Rotation": [33.32,1.51,0],
+              "Scale": [1,1,1]
+            },
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bAutoActivate": true
+          }
+        },
+        {
+          "Class": "UCameraComponent",
+          "Name": "MotionTypeTest_OverviewCamera",
+          "Properties": {
+            "Transform": {
+              "Location": [0,0,0],
+              "Rotation": [0,0,0],
+              "Scale": [1,1,1]
+            },
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bAutoActivate": true
+          }
+        }
+      ]
+    }
+  ]
+}

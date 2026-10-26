@@ -42,10 +42,15 @@ class UPrimitiveComponent :public USceneComponent
 			FEnumEntry(EPhysicsMotionType::Static, "Static"),
 			FEnumEntry(EPhysicsMotionType::Kinematic, "Kinematic"),
 			FEnumEntry(EPhysicsMotionType::Dynamic, "Dynamic"))
+		PROPERTY(Mass)
+		PROPERTY(Acceleration)
+		PROPERTY(COF)
+		PROPERTY_RANGE(Restitution, 0.0f, 1.0f)
 		PROPERTY_ENUM(ObjectChannel,
 			FEnumEntry(ECollisionChannel::WorldStatic, "WorldStatic"),
 			FEnumEntry(ECollisionChannel::WorldDynamic, "WorldDynamic"))
 		PROPERTY(bEnableGravity)
+		PROPERTY(GravityScale)
 		// 구조체 내부의 채널별 응답을 기존 Details/직렬화/복사 경로에 등록한다.
 		InClass->AddProperty<ECollisionResponse>("WorldStatic",
 			offsetof(ThisClass, CollisionResponses) + offsetof(FCollisionResponseContainer, WorldStatic),
@@ -114,6 +119,14 @@ public:
 
 	EPhysicsMotionType GetMotionType() const { return MotionType; }
 	void SetMotionType(EPhysicsMotionType InMotionType) { MotionType = InMotionType; OnPropertyChanged("MotionType"); }
+	float GetMass() const { return Mass; }
+	void SetMass(float InMass) { Mass = InMass; OnPropertyChanged("Mass"); }
+	const FVector& GetAcceleration() const { return Acceleration; }
+	void SetAcceleration(const FVector& InAcceleration) { Acceleration = InAcceleration; OnPropertyChanged("Acceleration"); }
+	float GetCOF() const { return COF; }
+	void SetCOF(float InCOF) { COF = InCOF; OnPropertyChanged("COF"); }
+	float GetRestitution() const { return Restitution; }
+	void SetRestitution(float InRestitution) { Restitution = InRestitution; OnPropertyChanged("Restitution"); }
 	ECollisionChannel GetObjectChannel() const { return ObjectChannel; }
 	void SetObjectChannel(ECollisionChannel InObjectChannel) { ObjectChannel = InObjectChannel; OnPropertyChanged("ObjectChannel"); }
 	const FCollisionResponseContainer& GetCollisionResponses() const { return CollisionResponses; }
@@ -138,6 +151,8 @@ public:
 	}
 	bool IsGravityEnabled() const { return bEnableGravity; }
 	void SetEnableGravity(bool bInEnableGravity) { bEnableGravity = bInEnableGravity; OnPropertyChanged("bEnableGravity"); }
+	float GetGravityScale() const { return GravityScale; }
+	void SetGravityScale(float InGravityScale) { GravityScale = InGravityScale; OnPropertyChanged("GravityScale"); }
 
 protected:
 	bool ShouldCreateRenderState() const override { return true; }
@@ -155,8 +170,14 @@ private:
 	bool bBackfaceDepth = false;
 
 	EPhysicsMotionType MotionType = EPhysicsMotionType::Static;
+	// 컴포넌트별 질량. 씬에 Mass가 없는 기존 데이터도 기본값 1을 사용한다.
+	float Mass = 1.0f;
+	FVector Acceleration = FVector::ZeroVector;
+	float COF = 0.2f;
+	float Restitution = 1.0f;
 	ECollisionChannel ObjectChannel = ECollisionChannel::WorldStatic;
 	FCollisionResponseContainer CollisionResponses;
 	// 중력 적분은 Dynamic일 때만 이 설정을 사용한다.
 	bool bEnableGravity = true;
+	float GravityScale = 1.0f;
 };

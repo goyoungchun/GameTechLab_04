@@ -1364,6 +1364,9 @@ namespace
 			{
 				for (const FProperty& Property : Class->GetProperties())
 				{
+					// Acceleration은 입력/물리 코드로 제어하되 직렬화와 복제에는 유지한다.
+					if (Property.Name == "Acceleration" && Cast<UPrimitiveComponent>(Object))
+						continue;
 					if (Property.Name == "ShadowMapResolution")
 					{
 						ULightComponent* Light = Cast<ULightComponent>(Object);
