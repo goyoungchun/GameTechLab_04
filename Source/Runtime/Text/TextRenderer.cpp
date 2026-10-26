@@ -281,8 +281,8 @@ void FTextRenderer::OnRenderScreen(const FString& Text, float PixelX, float Pixe
 	// 메시 세로(+Z)는 위쪽인데 화면 픽셀 y는 아래로 커지므로 Z를 뒤집는다.
 	FMatrix World = FMatrix::Identity;
 	World.M[2][2] = -1.0f;
-	World.M[3][1] = PixelX + AlignOffset;   // 가로 위치
-	World.M[3][2] = PixelY;                 // 세로 위치 = 기준선
+	World.M[3][1] = PixelX + AlignOffset;
+	World.M[3][2] = PixelY;
 
 	DrawTextRender(Text, World, PixelSize, Atlas, ScreenProjection, Color, ScreenPipelineState);
 }
