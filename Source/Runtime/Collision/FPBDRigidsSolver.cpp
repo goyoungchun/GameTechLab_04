@@ -52,6 +52,14 @@ void FPBDRigidsSolver::SetBodyStates(const TArray<FPhysicsBodyState>& InBodyStat
 	ResultTransforms.Reset();
 }
 
+void FPBDRigidsSolver::ResetBodyVelocity(uint64 BodyId)
+{
+	for (FPhysicsBodyState& State : BodyStates)
+		if (State.BodyId == BodyId)
+			State.LinearVelocity = FVector::ZeroVector;
+	PreviousKinematicLocations.Remove(BodyId);
+}
+
 void FPBDRigidsSolver::AdvanceSolverBy(float DeltaTime)
 {
 	if (std::isfinite(DeltaTime) && DeltaTime > 0.0f)

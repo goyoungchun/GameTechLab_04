@@ -146,7 +146,7 @@ end
 local function DrawDebugOverlay()
     if not Game.bShowDebug then return end
 
-    UI.Rect(0.72, 0.01, 0.27, 0.16, Color(0, 0, 0, 0.6))
+    UI.Rect(0.72, 0.01, 0.27, 0.19, Color(0, 0, 0, 0.6))
     UI.Text(0.73, 0.045, "State: " .. tostring(Game.State), 24, Color.Yellow)
     UI.Text(0.73, 0.08, string.format("Turn %d  Attacker %s  SD %s",
         Game.Turn or 0, tostring(Game.AttackerIndex), tostring(Game.bIsSuddenDeath)), 20)
@@ -155,6 +155,12 @@ local function DrawDebugOverlay()
 
     local bUsingStub = (Game.Cars and Game.Cars[1] and Game.Cars[1].bIsStub) or (Game.Ball and Game.Ball.bIsStub)
     UI.Text(0.73, 0.14, "Cars/Ball: " .. (bUsingStub and "STUB" or "REAL"), 20, Color(0.7, 0.7, 0.7))
+
+    local BallLocation = obj:GetBallLocation()
+    local BallText = BallLocation
+        and string.format("Ball %.1f, %.1f, %.1f  Touch P%s", BallLocation.x, BallLocation.y, BallLocation.z, tostring(Game.LastTouchIndex))
+        or "Ball none"
+    UI.Text(0.73, 0.17, BallText, 20, Color(0.7, 0.7, 0.7))
 end
 
 local ControlKeyRows = {

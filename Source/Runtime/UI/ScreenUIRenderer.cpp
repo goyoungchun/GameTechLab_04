@@ -10,8 +10,7 @@ void FScreenUIRenderer::Init()
 	TextRenderer.Init(512);
 }
 
-// PlayerRects는 0~1 비율 영역. 비어 있으면 플레이어 명령도 전체 화면 기준으로 그린다.
-void FScreenUIRenderer::Render(const FGameUIBuffer& Buffer, uint32 ScreenW, uint32 ScreenH, const TArray<FRect>& PlayerRects)
+void FScreenUIRenderer::Render(const FGameUIBuffer& Buffer, uint32 ScreenW, uint32 ScreenH, int32 InSplitIndex, int32 InSplitCount)
 {
 	const TArray<FUIDrawCmd>& Commands = Buffer.GetCommands();
 	if (Commands.IsEmpty() || ScreenW == 0 || ScreenH == 0)
@@ -19,11 +18,18 @@ void FScreenUIRenderer::Render(const FGameUIBuffer& Buffer, uint32 ScreenW, uint
 
 	ScreenWidth = ScreenW;
 	ScreenHeight = ScreenH;
-	CurrentPlayerRects = &PlayerRects;
+	SplitCount = std::max(1, InSplitCount);
+	SplitIndex = std::clamp(InSplitIndex, 0, SplitCount - 1);
 	CurrentArea = -1;
+
+	RenderCommand::SetViewport(0, 0, ScreenW, ScreenH);
+	QuadRenderer.BeginFrame(ScreenW, ScreenH);
 
 	for (const FUIDrawCmd& Cmd : Commands)
 	{
+		if (!ShouldDraw(Cmd.PlayerIndex))
+			continue;
+
 		BeginArea(Cmd.PlayerIndex);
 		switch (Cmd.Type)
 		{
@@ -35,47 +41,41 @@ void FScreenUIRenderer::Render(const FGameUIBuffer& Buffer, uint32 ScreenW, uint
 	}
 
 	QuadRenderer.Flush();
-	RenderCommand::SetViewport(0, 0, ScreenW, ScreenH);
-	CurrentPlayerRects = nullptr;
 }
 
-// 명령의 PlayerIndex에 맞는 영역으로 뷰포트, 직교 행렬, 배율을 바꾼다.
+bool FScreenUIRenderer::ShouldDraw(int32 PlayerIndex) const
+{
+	if (SplitCount <= 1 || PlayerIndex <= 0)
+		return true;
+	return PlayerIndex == SplitIndex + 1;
+}
+
 void FScreenUIRenderer::BeginArea(int32 PlayerIndex)
 {
-	// 플레이어 영역이 없으면 전체 화면으로 취급한다.
-	const bool bHasPlayerRect = PlayerIndex > 0 && CurrentPlayerRects && PlayerIndex <= CurrentPlayerRects->Num();
-	const int32 Area = bHasPlayerRect ? PlayerIndex : 0;
+	const int32 Area = (SplitCount > 1 && PlayerIndex > 0) ? 1 : 0;
 	if (Area == CurrentArea)
 		return;
 
 	QuadRenderer.Flush();
 	CurrentArea = Area;
 
+	AreaHeight = static_cast<float>(ScreenHeight);
 	if (Area == 0)
 	{
-		AreaX = 0.0f;
-		AreaY = 0.0f;
-		AreaWidth = static_cast<float>(ScreenWidth);
-		AreaHeight = static_cast<float>(ScreenHeight);
+		AreaWidth = static_cast<float>(ScreenWidth) * SplitCount;
+		AreaOffsetX = static_cast<float>(ScreenWidth) * SplitIndex;
 	}
 	else
 	{
-		const FRect& Rect = (*CurrentPlayerRects)[Area - 1];
-		AreaX = std::round(Rect.X * ScreenWidth);
-		AreaY = std::round(Rect.Y * ScreenHeight);
-		AreaWidth = std::round((Rect.X + Rect.Width) * ScreenWidth) - AreaX;
-		AreaHeight = std::round((Rect.Y + Rect.Height) * ScreenHeight) - AreaY;
+		AreaWidth = static_cast<float>(ScreenWidth);
+		AreaOffsetX = 0.0f;
 	}
-
-	RenderCommand::SetViewport(static_cast<uint32>(AreaX), static_cast<uint32>(AreaY),
-		static_cast<uint32>(AreaWidth), static_cast<uint32>(AreaHeight));
-	QuadRenderer.BeginFrame(static_cast<uint32>(AreaWidth), static_cast<uint32>(AreaHeight));
 	Scale = AreaHeight / ReferenceHeight;
 }
 
-void FScreenUIRenderer::DrawRect(const FUIDrawCmd& Cmd) 
+void FScreenUIRenderer::DrawRect(const FUIDrawCmd& Cmd)
 {
-	float PixelX = Cmd.Position.X * AreaWidth;
+	float PixelX = Cmd.Position.X * AreaWidth - AreaOffsetX;
 	float PixelY = Cmd.Position.Y * AreaHeight;
 	float Width = Cmd.Size.X * AreaWidth;
 	float Height = Cmd.Size.Y * AreaHeight;
@@ -85,7 +85,7 @@ void FScreenUIRenderer::DrawRect(const FUIDrawCmd& Cmd)
 
 void FScreenUIRenderer::DrawBar(const FUIDrawCmd& Cmd)
 {
-	float PixelX = Cmd.Position.X * AreaWidth;
+	float PixelX = Cmd.Position.X * AreaWidth - AreaOffsetX;
 	float PixelY = Cmd.Position.Y * AreaHeight;
 	float Width = Cmd.Size.X * AreaWidth;
 	float Height = Cmd.Size.Y * AreaHeight;
@@ -103,7 +103,7 @@ void FScreenUIRenderer::DrawTextRender(const FUIDrawCmd& Cmd)
 {
 	QuadRenderer.Flush();
 
-	float PixelX = Cmd.Position.X * AreaWidth;
+	float PixelX = Cmd.Position.X * AreaWidth - AreaOffsetX;
 	float PixelY = Cmd.Position.Y * AreaHeight;
 	float Fontsize = Cmd.FontSize * Scale;
 
@@ -112,7 +112,7 @@ void FScreenUIRenderer::DrawTextRender(const FUIDrawCmd& Cmd)
 		return;
 
 	TextRenderer.OnRenderScreen(Cmd.Text, PixelX, PixelY, Fontsize, *Font,
-		static_cast<uint32>(AreaWidth), static_cast<uint32>(AreaHeight), Cmd.Color, Cmd.Align);
+		ScreenWidth, ScreenHeight, Cmd.Color, Cmd.Align);
 }
 
 void FScreenUIRenderer::DrawImage(const FUIDrawCmd& Cmd)
@@ -120,7 +120,7 @@ void FScreenUIRenderer::DrawImage(const FUIDrawCmd& Cmd)
 	if (!Cmd.Texture)
 		return;
 
-	float PixelX = Cmd.Position.X * AreaWidth;
+	float PixelX = Cmd.Position.X * AreaWidth - AreaOffsetX;
 	float PixelY = Cmd.Position.Y * AreaHeight;
 	float Width = Cmd.Size.X * AreaWidth;
 	float Height = Cmd.Size.Y * AreaHeight;

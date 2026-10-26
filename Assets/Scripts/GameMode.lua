@@ -14,10 +14,10 @@ Game.Config = {
         { Name = "황혜진" },
     },
     StartSpots = {
-        Attacker     = { Location = Vector(0, 2, 0),  Yaw = 90 },
-        Defender     = { Location = Vector(0, 36, 0), Yaw = -90 },
-        SuddenDeath1 = { Location = Vector(-8, 2, 0), Yaw = 90 },
-        SuddenDeath2 = { Location = Vector(8, 2, 0),  Yaw = 90 },
+        Attacker     = { Location = Vector(0, 2, 1),  Yaw = 90 },
+        Defender     = { Location = Vector(0, 36, 1), Yaw = -90 },
+        SuddenDeath1 = { Location = Vector(-8, 2, 1), Yaw = 90 },
+        SuddenDeath2 = { Location = Vector(8, 2, 1),  Yaw = 90 },
         Ball         = Vector(0, 14, 2),
     },
     DefaultCarNames = { "coupe", "jeep" },
@@ -70,10 +70,38 @@ local function ClearTurnBall()
     obj:ClearBalls()
 end
 
+local function WrapVehicle(PlayerIndex, VehicleActor)
+    local Vehicle = VehicleActor:AsVehicle()
+    return {
+        bIsStub          = false,
+        Actor            = VehicleActor,
+        SetInputEnabled  = function(bEnabled)
+            Game.CarInputEnabled = Game.CarInputEnabled or {}
+            Game.CarInputEnabled[PlayerIndex] = bEnabled
+        end,
+        RefillBoost      = function()
+            Vehicle:SetBoostCapacity(Game.Config.BoostSeconds)
+            Vehicle:RefillBoost()
+        end,
+        SetInfiniteBoost = function(bInfinite) Vehicle:SetInfiniteBoost(bInfinite) end,
+        GetBoostRatio    = function() return Vehicle.BoostRatio end,
+        ResetTo          = function(Location, Yaw) Vehicle:ResetTo(Location, Yaw) end,
+        SetCarModel      = function(CarName)
+            if CarName then Vehicle:SetBody(CarName) end
+        end,
+    }
+end
+
 local function EnsureCarsAndBall()
     Game.Cars = Game.Cars or {}
     for PlayerIndex = 1, 2 do
-        if not Game.Cars[PlayerIndex] then
+        local VehicleActor = Game.Vehicles and Game.Vehicles[PlayerIndex]
+        local CurrentCar = Game.Cars[PlayerIndex]
+        if VehicleActor and (not CurrentCar or CurrentCar.Actor ~= VehicleActor) then
+            Game.Cars[PlayerIndex] = WrapVehicle(PlayerIndex, VehicleActor)
+            Game.Cars[PlayerIndex].SetInputEnabled(Game.State == "Playing")
+            print("[GameMode] Car" .. PlayerIndex .. " connected to real vehicle")
+        elseif not CurrentCar then
             local BoostRatio = 1
             Game.Cars[PlayerIndex] = {
                 bIsStub          = true,
@@ -456,7 +484,15 @@ end
 
 StateTickHandlers.Countdown = function(DeltaTime) end
 
+local function UpdateLastTouch()
+    local TouchIndex = obj:GetBallLastTouchIndex()
+    if TouchIndex >= 0 then
+        Game.LastTouchIndex = TouchIndex + 1
+    end
+end
+
 StateTickHandlers.Playing = function(DeltaTime)
+    UpdateLastTouch()
     if Game.bIsSuddenDeath then return end
     Game.RemainTime = math.max(0, Game.RemainTime - DeltaTime)
     if Game.RemainTime <= 0 then
@@ -481,6 +517,7 @@ StateTickHandlers.Defended = function(DeltaTime) end
 
 Game.OnGoal = function()
     if Game.State ~= "Playing" then return end
+    UpdateLastTouch()
 
     local ScorerIndex = Game.AttackerIndex
     if Game.bIsSuddenDeath then

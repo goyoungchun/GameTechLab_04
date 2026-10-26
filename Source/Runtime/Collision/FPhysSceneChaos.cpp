@@ -121,6 +121,13 @@ UPrimitiveComponent* FPhysSceneChaos::FindPrimitive(uint64 BodyId) const
 	return Found ? (*Found)->Component : nullptr;
 }
 
+void FPhysSceneChaos::ResetPrimitiveVelocity(const UPrimitiveComponent* Primitive)
+{
+	for (const FPrimitiveTransformSnapshot* Snapshot : PrimitiveSnapShots)
+		if (Snapshot->Component == Primitive)
+			Solver->ResetBodyVelocity(Snapshot->BodyId);
+}
+
 void FPhysSceneChaos::GatherSweepCandidates(const FBox& Bounds, TArray<UPrimitiveComponent*>& OutCandidates) const
 {
 	OutCandidates.Reset();

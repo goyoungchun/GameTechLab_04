@@ -7,6 +7,8 @@
 #include "Asset/AssetManager.h"
 #include "Render/Texture/Texture2D.h"
 #include "Container/Set.h"
+#include "Component/PrimitiveComponent.h"
+#include "Collision/HitResult.h"
 
 namespace
 {
@@ -268,6 +270,7 @@ void UScriptComponent::BeginPlay()
 	bAcceptCoroutines = true;
 	sol::environment NewEnvironment;
 	LoadScriptFile(NewEnvironment);
+	BindCollisionEvents();
 
 	if (!LuaBeginPlay.valid() || GetOwner()->IsActorBeingDestroyed())
 	{
@@ -285,6 +288,7 @@ void UScriptComponent::BeginPlay()
 void UScriptComponent::EndPlay()
 {	
 	bAcceptCoroutines = false;
+	UnbindCollisionEvents();
 
 	if (LuaEndPlay.valid())
 	{
@@ -494,6 +498,53 @@ void UScriptComponent::OnOverlap(AActor* InOtherActor)
 		HTR_LOG(Error, "[Script] LuaOnOverlap failed: {} ({})", ScriptPath, Err.what());
 		return;
 	}
+}
+
+void UScriptComponent::BindCollisionEvents()
+{
+	UnbindCollisionEvents();
+	AActor* Owner = GetOwner();
+	if (!Owner)
+		return;
+
+	for (UActorComponent* Component : Owner->GetComponents())
+	{
+		UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component);
+		if (!Primitive)
+			continue;
+
+		FCollisionBinding Binding;
+		Binding.Component = Primitive;
+		Binding.OverlapHandle = Primitive->OnComponentBeginOverlap.AddRaw(this, &UScriptComponent::HandleBeginOverlap);
+		Binding.HitHandle = Primitive->OnComponentHit.AddRaw(this, &UScriptComponent::HandleHit);
+		CollisionBindings.Add(Binding);
+	}
+}
+
+void UScriptComponent::UnbindCollisionEvents()
+{
+	for (FCollisionBinding& Binding : CollisionBindings)
+	{
+		if (!Binding.Component)
+			continue;
+		Binding.Component->OnComponentBeginOverlap.Remove(Binding.OverlapHandle);
+		Binding.Component->OnComponentHit.Remove(Binding.HitHandle);
+	}
+	CollisionBindings.Reset();
+}
+
+void UScriptComponent::HandleBeginOverlap(UPrimitiveComponent* Self, AActor* OtherActor, UPrimitiveComponent* Other,
+	int32 OtherBodyIndex, bool bFromSweep, const FHitResult& Hit)
+{
+	if (OtherActor)
+		OnOverlap(OtherActor);
+}
+
+void UScriptComponent::HandleHit(UPrimitiveComponent* Self, AActor* OtherActor, UPrimitiveComponent* Other,
+	FVector NormalImpulse, const FHitResult& Hit)
+{
+	if (OtherActor)
+		OnHit(OtherActor);
 }
 
 void UScriptComponent::SetScriptPath(FString InScriptPath)

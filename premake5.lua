@@ -57,7 +57,7 @@ function CommonSettings()
 
 	filter "system:windows"
 		systemversion "latest"
-		buildoptions { "/utf-8" }
+		buildoptions { "/utf-8", "/bigobj" }
 		defines { "ENGINE_PLATFORM_WINDOWS" }
 
 	filter "configurations:Debug"

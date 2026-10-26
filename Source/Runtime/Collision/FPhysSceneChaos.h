@@ -41,6 +41,7 @@ public:
 	FPBDRigidsSolver& GetSolver() { return *Solver; }
 	int32 GetNumPrimitives() const { return PrimitiveSnapShots.Num(); }
 	UPrimitiveComponent* FindPrimitive(uint64 BodyId) const;
+	void ResetPrimitiveVelocity(const UPrimitiveComponent* Primitive);
 	// 렌더링 표시 여부와 독립적으로 현재 Component Pose의 Sweep 후보를 수집한다.
 	void GatherSweepCandidates(const FBox& Bounds, TArray<UPrimitiveComponent*>& OutCandidates) const;
 	void RecordSweepResult(UPrimitiveComponent* MovingComponent, const FHitResult& Hit, float Radius);

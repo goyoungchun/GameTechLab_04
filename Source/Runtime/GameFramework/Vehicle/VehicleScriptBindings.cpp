@@ -81,7 +81,21 @@ void RegisterVehicleBindings(sol::state& Lua)
 		"BodyName", sol::readonly_property(&AVehiclePawn::GetBodyName),
 		"SetBody", &AVehiclePawn::SetBody,
 		"SetTuning", [](AVehiclePawn& Self, sol::table Table)
-			{ if (auto* M = Self.GetMovement()) M->SetTuning(ReadTuning(Table)); }
+			{ if (auto* M = Self.GetMovement()) M->SetTuning(ReadTuning(Table)); },
+		"ResetTo", [](AVehiclePawn& Self, const FVector& Location, float Yaw)
+			{
+				Self.SetActorLocation(Location);
+				Self.SetActorRotation(FRotator(0.0f, Yaw, 0.0f));
+				if (auto* M = Self.GetMovement()) M->ResetMotion();
+			},
+		"BoostRatio", sol::readonly_property([](const AVehiclePawn& Self)
+			{ const auto* M = Self.GetMovement(); return M ? M->GetBoostRatio() : 0.0f; }),
+		"SetBoostCapacity", [](AVehiclePawn& Self, float Seconds)
+			{ if (auto* M = Self.GetMovement()) M->SetBoostCapacity(Seconds); },
+		"RefillBoost", [](AVehiclePawn& Self)
+			{ if (auto* M = Self.GetMovement()) M->RefillBoost(); },
+		"SetInfiniteBoost", [](AVehiclePawn& Self, bool bInfinite)
+			{ if (auto* M = Self.GetMovement()) M->SetInfiniteBoost(bInfinite); }
 	);
 
 	sol::usertype<AActor> ActorType = Lua["Actor"];
