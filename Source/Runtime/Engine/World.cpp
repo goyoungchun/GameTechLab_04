@@ -200,8 +200,7 @@ void UWorld::ClearWorld()
 	}
 	Scene.RemoveAllPrimitives();
 	Scene.RemoveAllLights();
-	PlayerPawn = nullptr;
-	PlayerController = nullptr;
+	PlayerControllers.Reset();
 	DestroyList.Reset();
 	HTR_LOG(Info, "{} : ", PersistentLevel->GetActorNum());
 }
@@ -483,6 +482,7 @@ void UWorld::BeginPlay()
 	// 플레이 모드 폰 및 컨트롤러 준비
 	if (WorldType == EWorldType::PIE)
 	{
+		APawn* PlayerPawn = nullptr;
 		if (!PlayerPawn)
 		{
 			for (ULevel* Level : Levels)
@@ -517,15 +517,7 @@ void UWorld::BeginPlay()
 			PlayerPawn = SpawnActor<ADefaultPawn>(NAME_None, SpawnTransform);
 		}
 
-		if (!PlayerController)
-		{
-			PlayerController = SpawnActor<APlayerController>();
-		}
-
-		if (PlayerController && PlayerPawn && !PlayerController->GetPawn())
-		{
-			PlayerController->Possess(PlayerPawn);
-		}
+		RegisterPlayer(PlayerPawn);
 	}
 
     // BeginPlay can spawn actors (for example the Pawn's projectile pool).
@@ -737,4 +729,50 @@ bool UWorld::DuplicateWorld(UWorld* Source)
 		HTR_LOG(Error, "World duplication failed: {}", Error.what());
 		return Rollback();
 	}
+}
+
+int32 UWorld::RegisterPlayer(APawn* InPawnPtr)
+{
+	if (!InPawnPtr)
+	{
+		HTR_LOG(Warning, "nullptr can't registered");
+		return -1;
+	}
+
+	for (int32 i = 0; i < PlayerControllers.Num(); ++i)
+	{
+		if (PlayerControllers[i]->GetPawn() == InPawnPtr)
+		{
+			// 이미 등록된 Pawn의 경우 해당 인덱스 return 
+			HTR_LOG(Info, "Already registered Pawn - index {}", i);
+			return i;
+		}
+	}
+
+	APlayerController* PC = SpawnActor<APlayerController>();
+	PC->Possess(InPawnPtr);
+	PlayerControllers.Add(PC);
+	return PlayerControllers.Num() - 1;
+}
+
+APlayerController* UWorld::GetPlayerController(uint32 Index) const
+{
+	if (Index < PlayerControllers.Num())
+	{
+		return PlayerControllers[Index];
+	}
+	return nullptr;
+}
+
+APawn* UWorld::GetPlayerPawn(uint32 Index) const
+{
+	if (Index < PlayerControllers.Num())
+	{
+		if (PlayerControllers[Index])
+		{
+			return PlayerControllers[Index]->GetPawn();
+		}
+		return nullptr;
+	}
+	return nullptr;
 }

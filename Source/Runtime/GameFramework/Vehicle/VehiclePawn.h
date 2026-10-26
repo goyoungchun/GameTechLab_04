@@ -20,6 +20,9 @@ public:
 	virtual ~AVehiclePawn() override = default;
 	virtual void BeginPlay() override;
 
+	int32 GetPlayerIndex() const { return static_cast<int32>(PlayerIndex); }
+	void SetPlayerIndex(int32 InPlayerIndex) { PlayerIndex = static_cast<int32>(InPlayerIndex); }
+
 private:
 	UBoxComponent* Box = nullptr;
 	UStaticMeshComponent* StaticMesh = nullptr;
