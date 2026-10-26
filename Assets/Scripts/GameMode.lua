@@ -30,6 +30,7 @@ Game.Config = {
         { Prev = Key.Left, Next = Key.Right, Confirm = Key.RShift },
     },
     Showroom = {
+        -- 차량 중심이 아니라 받침대 윗면의 위치. 모델별 하단 높이는 배치할 때 계산한다.
         CarLocations = { Vector(-48, -8, 0.6), Vector(-48, 8, 0.6) },
         CameraSpots = {
             { Location = Vector(-60, -8, 3.5), Rotation = Rotator(10, 0, 0) },
@@ -86,9 +87,6 @@ local function WrapVehicle(PlayerIndex, VehicleActor)
         SetInfiniteBoost = function(bInfinite) Vehicle:SetInfiniteBoost(bInfinite) end,
         GetBoostRatio    = function() return Vehicle.BoostRatio end,
         ResetTo          = function(Location, Yaw) Vehicle:ResetTo(Location, Yaw) end,
-        SetCarModel      = function(CarName)
-            if CarName then Vehicle:SetBody(CarName) end
-        end,
     }
 end
 
@@ -293,7 +291,10 @@ local function StartMatch()
     ResetMatchState()
     Game.FirstAttackerIndex = math.random(1, 2)
     for PlayerIndex = 1, 2 do
-        Game.Cars[PlayerIndex].SetCarModel(Game.SelectedCarNames[PlayerIndex])
+        local SetCarModel = Game.Cars[PlayerIndex].SetCarModel
+        if SetCarModel then
+            SetCarModel(Game.SelectedCarNames[PlayerIndex])
+        end
     end
     print("[GameMode] Match start. First attacker: P" .. Game.FirstAttackerIndex)
     Game.Turn = 1
@@ -362,7 +363,7 @@ local function EnterShowroom()
         local Car = GetShowroomCar(PlayerIndex)
         if Car then
             Car:SetMesh(Game.SelectedCarNames[PlayerIndex])
-            Car.Location = Game.Config.Showroom.CarLocations[PlayerIndex]
+            Car:PlaceOnSurface(Game.Config.Showroom.CarLocations[PlayerIndex])
         end
     end
     SetShowroomCameras()
@@ -400,6 +401,7 @@ local function ChangeCar(PlayerIndex, Direction)
     local Car = Game.ShowroomCars and Game.ShowroomCars[PlayerIndex]
     if Car then
         Car:SetMesh(CarNames[CarIndex])
+        Car:PlaceOnSurface(Game.Config.Showroom.CarLocations[PlayerIndex])
     end
 end
 

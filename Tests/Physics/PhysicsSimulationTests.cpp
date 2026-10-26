@@ -12,6 +12,7 @@
 #include "Engine/Level.h"
 #include "GameFramework/Vehicle/VehiclePawn.h"
 #include "GameFramework/Vehicle/VehicleMovementComponent.h"
+#include "GameFramework/Actor/StaticMeshActor.h"
 #include "Collision/FPhysSceneChaos.h"
 #include "Collision/FPBDRigidsSolver.h"
 #include "Render/GeometryGenerator.h"
@@ -330,6 +331,8 @@ void VehicleVisualCases()
     for (auto* Component : Car->GetComponents())
         if (auto* Script = Cast<UScriptComponent>(Component)) Script->SetScriptPath("");
     Require(Car->SetBody("lamb"), "Editor model selection applies");
+    Car->GetBodyMeshComponent()->SetRelativeLocation(FVector(0.4f,-0.2f,-0.8f));
+    Cast<UBoxComponent>(Car->GetRootComponent())->SetBoxExtent(FVector(5,4,3));
     const auto ScenePath = (Temporary / "vehicle.scene").generic_string();
     Require(FJsonArchive::SaveWorld(&World, ScenePath), "Selected car saves");
     json Saved; std::ifstream(ScenePath) >> Saved;
@@ -338,6 +341,9 @@ void VehicleVisualCases()
     Require(FJsonArchive::LoadWorld(&World, ScenePath), "Selected car reloads");
     Car = Cast<AVehiclePawn>(World.GetPersistentLevel()->GetActors()[0]);
     Require(Car && Car->GetBodyName() == "lamb", "Reload preserves the selected original car name for Lua presets");
+    Near(Car->GetBodyMeshComponent()->GetRelativeLocation().Length(),0,"Loading recenters an offset mesh inside the collision box");
+    Near((Car->GetRootComponent()->CalcBounds().Min-Car->GetBodyMeshComponent()->CalcBounds().Min).Length(),0,
+        "Loading replaces stale serialized collision dimensions",0.0001);
     {
         UWorld Copy;
         Require(Copy.DuplicateWorld(&World), "PIE world duplicates selected vehicle");
@@ -366,6 +372,9 @@ void VehicleVisualCases()
         }
     }
     Require(Camera && BodyVisual && std::all_of(Wheels.begin(),Wheels.end(),[](auto* W){return W != nullptr;}), "Pawn owns camera and all visual components");
+    auto* Preview = World.SpawnActor<AStaticMeshActor>();
+    auto& Lua = FScriptSystem::Get().GetLua();
+    Lua["PlacementPreview"] = static_cast<AActor*>(Preview);
     int Index = 0;
     for (const char* Name : Cars)
     {
@@ -390,9 +399,18 @@ void VehicleVisualCases()
         Near((Bounds.Min-Original.Min).Length(),0,"Split model minimum bounds match original",0.0001);
         Near((Bounds.Max-Original.Max).Length(),0,"Split model maximum bounds match original",0.0001);
         Require(Indices == Source->GetMeshData()->Indices.Num(), "Every original triangle is displayed exactly once");
+        Near((Body->CalcBounds().Min-Source->CalcBounds().Min).Length(),0,"Collision minimum matches the complete vehicle",0.0001);
+        Near((Body->CalcBounds().Max-Source->CalcBounds().Max).Length(),0,"Collision maximum matches the complete vehicle",0.0001);
         const FVector Forward = Car->GetActorRotation().Quaternion().GetForwardVector();
-        Require((Camera->GetWorldLocation()-Car->GetActorLocation()).Dot(Forward)<-5, "Camera stays behind the selected car at every yaw");
+        const float ExpectedDistance = std::max(10.0f,(Original.Max.X-Original.Min.X)*0.5f*Source->GetWorldScale3D().X*5.0f);
+        Near((Camera->GetWorldLocation()-Car->GetActorLocation()).Dot(Forward),-ExpectedDistance,"Camera uses the increased model-aware distance",0.0001);
         Require(Camera->GetWorldRotation().Quaternion().GetForwardVector().Dot(Forward)>.9f, "Camera looks in the driving direction");
+        Preview->GetStaticMeshComponent()->SetStaticMesh(Car->GetBodyMeshComponent()->GetStaticMesh());
+        Preview->SetActorScale3D(FVector(1.5f));
+        Preview->SetActorRotation(FRotator(0,Index*25.0f,0));
+        auto Placed = Lua.safe_script("PlacementPreview:PlaceOnSurface(Vector(-48,-8,0.6))",sol::script_pass_on_error);
+        Require(Placed.valid(),"Showroom surface placement is callable from Lua");
+        Near(Preview->GetRootComponent()->CalcBounds().Min.Z,0.61,"Every selected model rests above the pedestal instead of intersecting it",0.0001);
     }
     Car->SetActorRotation(FRotator()); Car->SetBody("ghini");
     auto States = World.GetPhysicsScene().CapturePhysicsInputs();
@@ -422,10 +440,37 @@ void VehicleVisualCases()
     }
     for (int I=0; I<60; ++I) World.Tick(EWorldTick::All,1.0f/60.0f);
     Near(Wheels[0]->GetRelativeRotationQuat().RotateVector(FVector(0,1,0)).Y,1,"Releasing steering centers the front wheels",0.0001);
+    Lua["PlacementPreview"] = sol::nil;
     World.EndPlay();
     Require(Car->GetBodyMeshComponent()->IsVisible() && !Wheels[0]->IsVisible(),"Stopping restores the editable original model");
     World.ClearWorld();
-    std::cout << "PASS: fresh OBJ cache, all 12 car selections, shared parts, geometry/material preservation, save/load, scaled wheel roll, front steering and rear chase camera\n";
+    {
+        UWorld Ground;
+        Require(Ground.Init(),"Ground contact world initializes");
+        Ground.GetMainCamera()->GetCameraComponent()->SetExternalInputManaged(true);
+        auto* FloorActor = Ground.SpawnActor<AActor>();
+        auto* Floor = FloorActor->CreateDefaultSubobject<UBoxComponent>("Floor");
+        FloorActor->SetRootComponent(Floor);
+        Floor->SetBoxExtent(FVector(100,100,0.5f)); Floor->SetWorldLocation(FVector(0,0,-0.5f));
+        Floor->SetCollisionResponseToChannel(ECollisionChannel::WorldDynamic,ECollisionResponse::Block);
+        Floor->RegisterComponent();
+        auto* FallingCar = Ground.SpawnActor<AVehiclePawn>();
+        for (auto* C : FallingCar->GetComponents()) if (auto* Script = Cast<UScriptComponent>(C)) Script->SetScriptPath("");
+        Ground.BeginPlay();
+        for (const char* Name : Cars)
+        {
+            Require(FallingCar->SetBody(Name),"Grounded model selection applies");
+            auto* Collision = Cast<UBoxComponent>(FallingCar->GetRootComponent());
+            Collision->UnregisterComponent();
+            FallingCar->SetActorScale3D(FVector(2)); FallingCar->SetActorLocation(FVector(0,0,6));
+            Collision->RegisterComponentWithWorld(&Ground);
+            for (int I=0; I<180; ++I) Ground.Tick(EWorldTick::All,1.0f/60.0f);
+            Near(Collision->CalcBounds().Min.Z,0,"Fitted collision rests on the floor",0.002);
+            Near(FallingCar->GetBodyMeshComponent()->CalcBounds().Min.Z,0,"Vehicle wheels reach the floor without a floating gap",0.002);
+        }
+        Ground.EndPlay(); Ground.ClearWorld();
+    }
+    std::cout << "PASS: fresh OBJ cache, all 12 car selections, stale bounds repair, pedestal height, gravity settling, shared parts, save/load, scaled wheel roll, front steering and wider chase camera\n";
 }
 
 int main(int argc, char** argv)

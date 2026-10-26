@@ -304,6 +304,16 @@ void FScriptSystem::RegisterTypes()
 			MeshActor->GetStaticMeshComponent()->SetStaticMesh(Mesh);
 			return true;
 		},
+		// SurfaceLocation.Z를 표면 높이로 사용해 모델 크기/스케일에 맞춰 하단을 올린다.
+		"PlaceOnSurface", [](AActor& Self, const FVector& SurfaceLocation)
+		{
+			USceneComponent* Root = Self.GetRootComponent();
+			if (!Root) return;
+			Self.SetActorLocation(SurfaceLocation);
+			FVector Location = Self.GetActorLocation();
+			Location.Z += SurfaceLocation.Z + 0.01f - Root->CalcBounds().Min.Z;
+			Self.SetActorLocation(Location);
+		},
 		"SetViewCamera", [](AActor& Self, int32 PlayerIndex, const FVector& Location, const FRotator& Rotation)
 		{
 			if (UWorld* World = Self.GetWorld())
