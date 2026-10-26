@@ -13,12 +13,6 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FOnVehicleLanded, float);
 class UVehicleMovementComponent : public UActorComponent
 {
 	DECLARE_CLASS(UVehicleMovementComponent, UActorComponent)
-	REFLECT_START(ClassName)
-		PROPERTY(MaxForwardSpeed) PROPERTY(MaxReverseSpeed) PROPERTY(BoostMaxSpeed)
-		PROPERTY(Acceleration) PROPERTY(Deceleration) PROPERTY(Grip)
-		PROPERTY(TurnRate) PROPERTY(FullTurnSpeed)
-		PROPERTY(JumpSpeed)
-	REFLECT_END()
 
 
 public:
@@ -39,6 +33,9 @@ public:
 	bool IsGrounded() const { return MoveMode == EVehicleMoveMode::Grounded; }
 	bool HasLandedThisFrame() const { return bLandedThisFrame; }
 	void EndPlay() override;
+
+	const FVehicleTuning& GetTuning() const { return Tuning; }
+	void SetTuning(const FVehicleTuning& InTuning);
 
 public:
 	FOnVehicleLanded OnLanded;
@@ -79,15 +76,5 @@ private:
 	float MaxGroundSlopeDegrees = 45.0f;
 	float MaxTeleportSpeed = 100.0f;
 
-	float TurnRate = 100.0f;
-	float FullTurnSpeed = 5.0f;
-
-	float MaxForwardSpeed = 20.0f;
-	float MaxReverseSpeed = 8.0f;
-	float BoostMaxSpeed = 30.0f;
-	float Acceleration = 15.0f;
-	float Deceleration = 20.0f;
-	float Grip = 10.0f;
-
-	float JumpSpeed = 6.0f;
+	FVehicleTuning Tuning;
 };

@@ -78,6 +78,27 @@ void UVehicleMovementComponent::RequestJump()
 	PendingInput.bJumpRequested = true;
 }
 
+void UVehicleMovementComponent::SetTuning(const FVehicleTuning& InTuning)
+{
+	Tuning = InTuning;
+
+	for (float* Value : { &Tuning.MaxForwardSpeed, &Tuning.MaxReverseSpeed, &Tuning.BoostMaxSpeed,
+		&Tuning.Acceleration, &Tuning.Deceleration, &Tuning.Grip,
+		&Tuning.TurnRate, &Tuning.FullTurnSpeed, &Tuning.JumpSpeed })
+	{
+		*Value = std::isfinite(*Value) ? std::max(0.0f, *Value) : 0.0f;
+	}
+
+	Tuning.BoostMaxSpeed = std::max(Tuning.BoostMaxSpeed, Tuning.MaxForwardSpeed);
+
+	// 속도 추정은 MaxTeleportSpeed보다 빠른 이동을 순간이동으로 보고 버린다.
+	if (Tuning.BoostMaxSpeed >= MaxTeleportSpeed)
+	{
+		HTR_LOG(Warning, "[Vehicle] BoostMaxSpeed({}) >= MaxTeleportSpeed({}): speed estimate will drop to 0",
+			Tuning.BoostMaxSpeed, MaxTeleportSpeed);
+	}
+}
+
 void UVehicleMovementComponent::UpdateVelocityEstimate(float DeltaTime)
 {
 	const UBoxComponent* Body = GetBody();
@@ -151,11 +172,11 @@ void UVehicleMovementComponent::UpdateSteering(const FVehicleInput& Input, float
 		return;
 
 	const float ForwardSpeed = GetForwardSpeed();
-	const float SpeedRatio = FullTurnSpeed > 0.0f
-		? std::clamp(std::abs(ForwardSpeed) / FullTurnSpeed, 0.0f, 1.0f)
+	const float SpeedRatio = Tuning.FullTurnSpeed > 0.0f
+		? std::clamp(std::abs(ForwardSpeed) / Tuning.FullTurnSpeed, 0.0f, 1.0f)
 		: 1.0f;
 	const float Direction = ForwardSpeed < 0.0f ? -1.0f : 1.0f;
-	const float YawDelta = Input.Steer * TurnRate * SpeedRatio * Direction * DeltaTime;
+	const float YawDelta = Input.Steer * Tuning.TurnRate * SpeedRatio * Direction * DeltaTime;
 	if (YawDelta == 0.0f)
 		return;
 
@@ -181,19 +202,19 @@ void UVehicleMovementComponent::UpdateDrive(const FVehicleInput& Input, float De
 
 		float TargetSpeed = 0.0f;
 		if (Input.Throttle > 0.0f)
-			TargetSpeed = Input.Throttle * (Input.bBoost ? BoostMaxSpeed : MaxForwardSpeed);
+			TargetSpeed = Input.Throttle * (Input.bBoost ? Tuning.BoostMaxSpeed : Tuning.MaxForwardSpeed);
 		else if (Input.Throttle < 0.0f)
-			TargetSpeed = Input.Throttle * MaxReverseSpeed;
-		
+			TargetSpeed = Input.Throttle * Tuning.MaxReverseSpeed;
+
 		const bool bSpeedingUp = TargetSpeed * ForwardSpeed >= 0.0f && std::abs(TargetSpeed) > std::abs(ForwardSpeed);
-		const float Rate = bSpeedingUp ? Acceleration : Deceleration;
+		const float Rate = bSpeedingUp ? Tuning.Acceleration : Tuning.Deceleration;
 		const float ForwardAccel = std::clamp((TargetSpeed - ForwardSpeed) / DeltaTime, -Rate, Rate);
-		const float LateralAccel = -LateralSpeed * std::min(Grip, 1.0f / DeltaTime);
+		const float LateralAccel = -LateralSpeed * std::min(Tuning.Grip, 1.0f / DeltaTime);
 
 		Accel = Forward * ForwardAccel + Right * LateralAccel;
 
 		if (Input.bJumpRequested)
-			Accel.Z += JumpSpeed / DeltaTime;
+			Accel.Z += Tuning.JumpSpeed / DeltaTime;
 	}
 
 	if (Body->GetAcceleration() != Accel)

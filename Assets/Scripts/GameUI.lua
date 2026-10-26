@@ -45,7 +45,6 @@ local function DrawTurnBanner()
 end
 
 local PlayerColors = { Color.Orange, Color.Blue }
-local LowBoostRatio = 0.2
 
 local function DrawTimer()
     local Seconds = math.ceil(Game.RemainTime or 0)
@@ -72,25 +71,41 @@ local function GetBoostRatio(PlayerIndex)
     return Car.GetBoostRatio() or 0
 end
 
-local function DrawPlayerPanel(PlayerIndex, PanelX, TextAlign, TextX)
+local function DrawBoostGauge(PlayerIndex, BoostRatio)
+    if PlayerIndex == 1 then
+        UI.Bar(0.043, 0.928, 0.254, 0.025, BoostRatio, Color(1, 0.57, 0.05))
+        UI.Image(0.01, 0.852, 0.30, 0.178, "Assets/Image/LeftBoostGauge.png")
+    else
+        local BarX, BarY, BarW, BarH = 0.704, 0.928, 0.250, 0.025
+        local FillW = BarW * BoostRatio
+        UI.Rect(BarX, BarY, BarW, BarH, Color(0, 0, 0, 0.5))
+        UI.Rect(BarX + BarW - FillW, BarY, FillW, BarH, Color(0.05, 0.6, 0.95))
+        UI.Image(0.69, 0.852, 0.30, 0.178, "Assets/Image/RightBoostGauge.png")
+    end
+end
+
+local function DrawPlayerPanel(PlayerIndex)
+    local TextX = (PlayerIndex == 1) and 0.043 or 0.954
+    local TextAlign = (PlayerIndex == 1) and Align.Left or Align.Right
+
+    local BoostRatio = Game.bIsSuddenDeath and 1 or GetBoostRatio(PlayerIndex)
+    DrawBoostGauge(PlayerIndex, BoostRatio)
+
+    local BoostLabel = Game.bIsSuddenDeath and "BOOST MAX" or "BOOST"
+    UI.Text(TextX, 0.911, string.format("P%d  %s", PlayerIndex, BoostLabel), 30, PlayerColors[PlayerIndex], TextAlign)
+
     if Game.AttackerIndex then
         local bIsAttacker = (Game.AttackerIndex == PlayerIndex)
         local RoleText = bIsAttacker and "ATTACK" or "DEFEND"
         local RoleColor = bIsAttacker and Color.Red or Color.Green
-        UI.Text(TextX, 0.86, RoleText, 32, RoleColor, TextAlign, "CookieRun")
+        UI.Text(TextX, 0.873, RoleText, 50, RoleColor, TextAlign, "CookieRun")
     end
-
-    local BoostRatio = Game.bIsSuddenDeath and 1 or GetBoostRatio(PlayerIndex)
-    local BoostLabel = Game.bIsSuddenDeath and "BOOST MAX" or "BOOST"
-    local BarColor = (BoostRatio <= LowBoostRatio) and Color.Red or Color.Yellow
-    UI.Text(TextX, 0.905, string.format("P%d  %s", PlayerIndex, BoostLabel), 30, PlayerColors[PlayerIndex], TextAlign)
-    UI.Bar(PanelX, 0.92, 0.20, 0.025, BoostRatio, BarColor)
 end
 
 local function DrawHUD()
     DrawScoreBoard()
-    DrawPlayerPanel(1, 0.03, Align.Left, 0.03)
-    DrawPlayerPanel(2, 0.77, Align.Right, 0.97)
+    DrawPlayerPanel(1)
+    DrawPlayerPanel(2)
 end
 
 local CarSelectHintTexts = { "A/D 변경 · LShift 선택", "Left/Right 변경 · RShift 선택" }
@@ -167,8 +182,8 @@ StateDrawHandlers.Controls = function()
     UI.Image(0, 0, 1, 1, LobbyImagePath)
     DrawBackground()
     UI.Text(0.5, 0.18, "조작키", 64, Color.White, Align.Center)
-    UI.Text(0.45, 0.28, "P1", 36, Color.Blue, Align.Center)
-    UI.Text(0.65, 0.28, "P2", 36, Color.Orange, Align.Center)
+    UI.Text(0.45, 0.28, "P1", 36, Color.Orange, Align.Center)
+    UI.Text(0.65, 0.28, "P2", 36, Color.Blue, Align.Center)
     for RowIndex, KeyRow in ipairs(ControlKeyRows) do
         local RowY = 0.28 + RowIndex * 0.07
         UI.Text(0.30, RowY, KeyRow.Action, 32, Color.White, Align.Center)

@@ -30,6 +30,8 @@ public:
 
 	UVehicleMovementComponent* GetMovement() const { return Movement; }
 
+	bool SetBody(const FString& MeshName);
+	FString GetBodyName() const;
 
 private:
 	UBoxComponent* Box = nullptr;
