@@ -26,6 +26,9 @@ public:
 	uint32 GetPlayerIndex() const { return PlayerIndex; }
 	UVehicleMovementComponent* GetMovement() const { return Movement; }
 
+	bool SetBody(const FString& MeshName);
+	FString GetBodyName() const;
+
 private:
 	UBoxComponent* Box = nullptr;
 	UStaticMeshComponent* StaticMesh = nullptr;

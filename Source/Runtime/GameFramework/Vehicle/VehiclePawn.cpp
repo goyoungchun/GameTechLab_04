@@ -26,14 +26,10 @@ AVehiclePawn::AVehiclePawn()
 	Box->SetRestitution(0.0f);
 	SetRootComponent(Box);
 
-	StaticMesh->SetStaticMesh(UAssetManager::GetMesh("italia"));
 	StaticMesh->SetupAttachment(Box);
 	StaticMesh->SetCollisionResponseToChannel(ECollisionChannel::WorldDynamic, ECollisionResponse::Ignore);
 	StaticMesh->SetCollisionResponseToChannel(ECollisionChannel::WorldStatic, ECollisionResponse::Ignore);
-
-	const FStaticMeshData* MeshData = StaticMesh->GetMeshData();
-	if (MeshData)
-		Box->SetBoxExtent(MeshData->AABB.Max);
+	SetBody("italia");
 
 	Script->SetScriptPath("Assets/Scripts/Vehicle/VehicleController.lua");
 
@@ -65,4 +61,27 @@ void AVehiclePawn::RequestJump()
 		return;
 
 	Movement->RequestJump();
+}
+
+bool AVehiclePawn::SetBody(const FString& MeshName)
+{
+	UStaticMesh* Mesh = UAssetManager::GetMesh(MeshName);
+	if (!Mesh || !StaticMesh || !Box)
+		return false;
+
+	StaticMesh->SetStaticMesh(Mesh);
+
+	if (const FStaticMeshData* MeshData = StaticMesh->GetMeshData())
+		Box->SetBoxExtent(MeshData->AABB.Max);
+
+	return true;
+}
+
+FString AVehiclePawn::GetBodyName() const
+{
+	const UStaticMesh* Mesh = StaticMesh ? StaticMesh->GetStaticMesh() : nullptr;
+	if (!Mesh)
+		return FString();
+
+	return fs::path(Mesh->GetPath()).stem().string();
 }
