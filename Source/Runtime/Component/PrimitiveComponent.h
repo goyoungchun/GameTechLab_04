@@ -42,6 +42,8 @@ class UPrimitiveComponent :public USceneComponent
 			FEnumEntry(EPhysicsMotionType::Static, "Static"),
 			FEnumEntry(EPhysicsMotionType::Kinematic, "Kinematic"),
 			FEnumEntry(EPhysicsMotionType::Dynamic, "Dynamic"))
+		PROPERTY(Mass)
+		PROPERTY(Acceleration)
 		PROPERTY_ENUM(ObjectChannel,
 			FEnumEntry(ECollisionChannel::WorldStatic, "WorldStatic"),
 			FEnumEntry(ECollisionChannel::WorldDynamic, "WorldDynamic"))
@@ -114,6 +116,10 @@ public:
 
 	EPhysicsMotionType GetMotionType() const { return MotionType; }
 	void SetMotionType(EPhysicsMotionType InMotionType) { MotionType = InMotionType; OnPropertyChanged("MotionType"); }
+	float GetMass() const { return Mass; }
+	void SetMass(float InMass) { Mass = InMass; OnPropertyChanged("Mass"); }
+	const FVector& GetAcceleration() const { return Acceleration; }
+	void SetAcceleration(const FVector& InAcceleration) { Acceleration = InAcceleration; OnPropertyChanged("Acceleration"); }
 	ECollisionChannel GetObjectChannel() const { return ObjectChannel; }
 	void SetObjectChannel(ECollisionChannel InObjectChannel) { ObjectChannel = InObjectChannel; OnPropertyChanged("ObjectChannel"); }
 	const FCollisionResponseContainer& GetCollisionResponses() const { return CollisionResponses; }
@@ -155,6 +161,9 @@ private:
 	bool bBackfaceDepth = false;
 
 	EPhysicsMotionType MotionType = EPhysicsMotionType::Static;
+	// 컴포넌트별 질량. 씬에 Mass가 없는 기존 데이터도 기본값 1을 사용한다.
+	float Mass = 1.0f;
+	FVector Acceleration = FVector::ZeroVector;
 	ECollisionChannel ObjectChannel = ECollisionChannel::WorldStatic;
 	FCollisionResponseContainer CollisionResponses;
 	// 중력 적분은 Dynamic일 때만 이 설정을 사용한다.

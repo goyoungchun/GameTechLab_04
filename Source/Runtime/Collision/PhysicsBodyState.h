@@ -14,6 +14,9 @@ struct FPhysicsBodyState
 
 	// Scene에서 입력 상태를 구성할 때 Component의 설정을 값으로 복사한다.
 	EPhysicsMotionType MotionType = EPhysicsMotionType::Static;
+	// CapturePhysicsInputs가 매 Step 복사하는 컴포넌트 질량. 
+	float Mass = 1.0f;
+	FVector Acceleration = FVector::ZeroVector;
 	ECollisionChannel ObjectChannel = ECollisionChannel::WorldStatic;
 	FCollisionResponseContainer CollisionResponses;
 	bool bEnableGravity = true;

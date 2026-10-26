@@ -10,6 +10,8 @@
 #include "Engine/World.h"
 #include "Collision/FPhysSceneChaos.h"
 
+#include <cmath>
+
 namespace
 {
 	FString PrimitiveTypeToString(EPrimitiveType Type)
@@ -122,6 +124,9 @@ bool UPrimitiveComponent::TraceMeshLocal(const FRay& LocalRay, const FStaticMesh
 
 void UPrimitiveComponent::OnPropertyChanged(const FString& PropertyName)
 {
+	// Details 편집, 직렬화 로드, SetMass 모두 동일한 검증 경로를 사용한다.
+	if (PropertyName == "Mass" && (!std::isfinite(Mass) || Mass <= 0.0f))
+		Mass = 1.0f;
 	Super::OnPropertyChanged(PropertyName);
 	if (PropertyName == "Transform") return;
 	// Visibility, geometry, text and material changes may affect cached rendering and bounds.

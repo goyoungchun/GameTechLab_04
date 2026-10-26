@@ -397,7 +397,8 @@ void FPBDRigidsEvolutionGBF::ApplyGravityAndIntegrate(TArray<FPhysicsBodyState>&
 			continue;
 
 		// 반암시적 Euler 적분. 중력을 꺼도 기존 속도에 의한 이동은 유지한다.
-		const FVector Velocity = State.LinearVelocity + (State.bEnableGravity ? Gravity * DeltaTime : FVector::ZeroVector);
+		const FVector Acceleration = State.Acceleration + (State.bEnableGravity ? Gravity : FVector::ZeroVector);
+		const FVector Velocity = State.LinearVelocity + Acceleration * DeltaTime;
 		const FVector Location = State.WorldTransform.Location + Velocity * DeltaTime;
 		if (!IsFinitePhysicsVector(Velocity) || !IsFinitePhysicsVector(Location))
 			continue;
@@ -1004,8 +1005,8 @@ void FPBDRigidsEvolutionGBF::ResolveContacts(TArray<FPhysicsBodyState>& InOutBod
 			FPhysicsBodyState& A = InOutBodyStates[*IndexA];
 			FPhysicsBodyState& B = InOutBodyStates[*IndexB];
 			// 질량 설정이 없는 현재 단계에서는 모든 Dynamic을 동일 질량으로 취급한다.
-			const float InvMassA = A.MotionType == EPhysicsMotionType::Dynamic ? 1.0f : 0.0f;
-			const float InvMassB = B.MotionType == EPhysicsMotionType::Dynamic ? 1.0f : 0.0f;
+			const float InvMassA = A.MotionType == EPhysicsMotionType::Dynamic ? 1.0f / A.Mass : 0.0f;
+			const float InvMassB = B.MotionType == EPhysicsMotionType::Dynamic ? 1.0f / B.Mass : 0.0f;
 			const float InvMassSum = InvMassA + InvMassB;
 			const float NormalLengthSquared = Contact.Normal.Dot(Contact.Normal);
 			if (InvMassSum == 0.0f || !std::isfinite(NormalLengthSquared) || NormalLengthSquared <= 1e-8f)

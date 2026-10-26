@@ -189,9 +189,11 @@ TArray<FPhysicsBodyState> FPhysSceneChaos::CapturePhysicsInputs()
 		State.BodyId = Snapshot->BodyId;
 		State.WorldTransform = Snapshot->WorldTransformBeforeUpdate;
 		State.MotionType = Component->GetMotionType();
+		State.Mass = Component->GetMass();
 		State.ObjectChannel = Component->GetObjectChannel();
 		State.CollisionResponses = Component->GetCollisionResponses();
 		State.bEnableGravity = Component->IsGravityEnabled();
+		State.Acceleration = Component->GetAcceleration();
 		// MovementComponent가 같은 Component나 부모를 이동하면 물리가 중복 적분하지 않는다.
 		if (const AActor* Owner = Component->GetOwner())
 		{
