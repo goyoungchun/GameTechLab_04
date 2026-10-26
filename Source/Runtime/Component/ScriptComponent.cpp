@@ -2,6 +2,8 @@
 #include "ScriptComponent.h"
 #include "GameFramework/Actor.h"
 #include "Core/EngineLog.h"
+#include "Engine/World.h"
+#include "UI/GameUIBuffer.h"
 
 UScriptComponent::UScriptComponent()
 {
@@ -75,6 +77,7 @@ void UScriptComponent::BindScriptAPI(sol::environment& InEnvironment)
 {
 	InEnvironment["obj"] = GetOwner();
 	BindCoroutineAPI(InEnvironment);
+	BindUIAPI(InEnvironment);
 }
 
 void UScriptComponent::BindCoroutineAPI(sol::environment& InEnvironment)
@@ -95,12 +98,84 @@ void UScriptComponent::BindCoroutineAPI(sol::environment& InEnvironment)
 	InEnvironment.set_function("StopAllCoroutines", [this]() { StopAllRecords(); });
 }
 
+FGameUIBuffer* UScriptComponent::GetGameUIBuffer() const
+{
+	AActor* Owner = GetOwner();
+	UWorld* World = Owner ? Owner->GetWorld() : nullptr;
+	return World ? &World->GetGameUIBuffer() : nullptr;
+}
+
+void UScriptComponent::BindUIAPI(sol::environment& InEnvironment)
+{
+	sol::state& Lua = FScriptSystem::Get().GetLua();
+	sol::table UITable = Lua.create_table();
+
+	// UI.Text(x, y, text, [size], [color], [align], [font]) — y는 글자 기준선
+	UITable.set_function("Text", [this](float X, float Y, const FString& Text,
+		sol::optional<float> Size, sol::optional<FVector4> Color, sol::optional<ETextAlign> Align, sol::optional<FString> Font)
+		{
+			if (FGameUIBuffer* Buffer = GetGameUIBuffer())
+			{
+				Buffer->AddText({ X, Y }, Text, Size.value_or(32.0f), Color.value_or(FVector4(1, 1, 1, 1)),
+					Align.value_or(ETextAlign::Left), Font.value_or(FString()));
+			}
+		});
+
+	// UI.Rect(x, y, w, h, [color]) — (x, y)는 왼쪽 위
+	UITable.set_function("Rect", [this](float X, float Y, float SizeX, float SizeY, sol::optional<FVector4> Color)
+		{
+			if (FGameUIBuffer* Buffer = GetGameUIBuffer())
+			{
+				Buffer->AddRect({ X, Y }, { SizeX, SizeY }, Color.value_or(FVector4(1, 1, 1, 1)));
+			}
+		});
+
+	// UI.Bar(x, y, w, h, ratio, [color], [bgColor]) — ratio는 0~1
+	UITable.set_function("Bar", [this](float X, float Y, float SizeX, float SizeY, float Ratio,
+		sol::optional<FVector4> Color, sol::optional<FVector4> BackgroundColor)
+		{
+			if (FGameUIBuffer* Buffer = GetGameUIBuffer())
+			{
+				Buffer->AddBar({ X, Y }, { SizeX, SizeY }, Ratio, Color.value_or(FVector4(1, 1, 1, 1)),
+					BackgroundColor.value_or(FVector4(0, 0, 0, 0.5f)));
+			}
+		});
+
+	// UI.BeginPlayer(index) ~ UI.EndPlayer() 사이의 명령은 해당 플레이어 화면 기준으로 그린다.
+	UITable.set_function("BeginPlayer", [this](int32 PlayerIndex)
+		{
+			if (FGameUIBuffer* Buffer = GetGameUIBuffer())
+			{
+				Buffer->BeginPlayer(PlayerIndex);
+			}
+		});
+
+	UITable.set_function("EndPlayer", [this]()
+		{
+			if (FGameUIBuffer* Buffer = GetGameUIBuffer())
+			{
+				Buffer->EndPlayer();
+			}
+		});
+
+	InEnvironment["UI"] = UITable;
+}
+
+void UScriptComponent::UnbindUIAPI(sol::environment& InEnvironment)
+{
+	if (!InEnvironment.valid())
+		return;
+
+	InEnvironment["UI"] = sol::lua_nil;
+}
+
 void UScriptComponent::UnbindScriptAPI(sol::environment& InEnvironment)
 {
 	if (!InEnvironment.valid())
 		return;
 
 	UnbindCoroutineAPI(InEnvironment);
+	UnbindUIAPI(InEnvironment);
 	InEnvironment["obj"] = sol::lua_nil;
 }
 

@@ -9,6 +9,8 @@
 #include "Container/StringView.h"
 #include "Script/CoroutineTypes.h"
 
+class FGameUIBuffer;
+
 class UScriptComponent : public UActorComponent
 {
 	DECLARE_CLASS(UScriptComponent, UActorComponent)
@@ -37,9 +39,12 @@ public:
 private:
 	void BindScriptAPI(sol::environment& InEnvironment);
 	void BindCoroutineAPI(sol::environment& InEnvironment);
+	void BindUIAPI(sol::environment& InEnvironment);
+	void UnbindUIAPI(sol::environment& InEnvironment);
 	void UnbindScriptAPI(sol::environment& InEnvironment);
 	void UnbindCoroutineAPI(sol::environment& InEnvironment);
 	void CacheScriptCallbacks(sol::environment& Env);
+	FGameUIBuffer* GetGameUIBuffer() const;
 	void ClearScriptCallbacks();
 	void ClearCoroutines();
 

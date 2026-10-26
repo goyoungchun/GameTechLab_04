@@ -84,6 +84,7 @@ private:
 	void GatherActiveSceneViews();
 	void RenderGameFrameDeferred(FDeferredGameViewportClient* GameClient, const FSceneView& SceneView, FSceneRenderer& SceneRenderer, bool bIsSIEMode = false);
 	void RenderGameFrameForward(FForwardGameViewportClient* GameClient, const FSceneView& SceneView, FSceneRenderer& SceneRenderer, bool bIsSIEMode = false);
+	void RenderGameUI(FGameViewportClient* GameClient, uint32 Width, uint32 Height);
 
 	struct FSceneRenderOptions
 	{
