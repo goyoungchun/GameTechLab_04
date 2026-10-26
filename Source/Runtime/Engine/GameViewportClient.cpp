@@ -347,7 +347,7 @@ FRect FGameViewportClient::GetSplitRect(const FRect& FullRect, int32 Index, int3
 UCameraComponent* FGameViewportClient::FindPlayerCamera() const
 {
 	if (!World) return nullptr;
-	if (APawn* Pawn = World->GetPlayerPawn())
+	if (APawn* Pawn = World->GetPlayerPawn(static_cast<uint32>(PlayerIndex)))
 	{
 		if (ADefaultPawn* DefaultPawn = Cast<ADefaultPawn>(Pawn))
 			if (UCameraComponent* Camera = DefaultPawn->GetCameraComponent()) return Camera;

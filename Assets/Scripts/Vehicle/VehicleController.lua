@@ -18,6 +18,7 @@ function BeginPlay()
 		LogError("VehicleController.lua: not attached to a vehicle - " .. obj.Name)
 		return
 	end
+	obj:AddAsPlayer()
 	print(string.format("[Vehicle] %s PlayerIndex = %d", obj.Name, Car.PlayerIndex))
 
 end

@@ -868,11 +868,11 @@ void UEditorEngine::RenderViewports()
 					continue;
 				}
 
-				FSceneView SceneView = GameClient->CalcSceneView(
+				FSceneView SceneView = SplitClient->CalcSceneView(
 					FGameViewportClient::GetSplitRect(ViewRect, i, SplitCount));
-				FSceneRenderer SceneRenderer(CurrentWorld, SceneView, GameClient->GetRenderData());
+				FSceneRenderer SceneRenderer(CurrentWorld, SceneView, SplitClient->GetRenderData());
 				SceneRenderer.InitViews(Renderer);
-				RenderGameFrame(GameClient, SceneView, SceneRenderer, bIsSIEMode);
+				RenderGameFrame(SplitClient, SceneView, SceneRenderer, bIsSIEMode && i == 0);
 			}
 		}
 		else

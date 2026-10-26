@@ -10,6 +10,7 @@
 #include "Component/ScriptComponent.h"
 #include "Core/EngineLog.h"
 #include "GameFramework/Vehicle/VehicleScriptBindings.h"
+#include "GameFramework/Vehicle/VehiclePawn.h"
 
 FScriptSystem::FScriptSystem()
 {
@@ -151,6 +152,23 @@ void FScriptSystem::RegisterTypes()
 		"Rotation", sol::property(&AActor::GetActorRotation, &AActor::SetActorRotation),
 		"Scale", sol::property(&AActor::GetActorScale3D, &AActor::SetActorScale3D),
 		"IsActorBeingDestroyed", &AActor::IsActorBeingDestroyed,
+		// 이 액터를 플레이어로 등록한다(컨트롤러 생성 + Possess). 등록 순서대로 0(P1), 1(P2)을 돌려주고, 실패하면 -1
+		"AddAsPlayer", [](AActor& Self) -> int32
+		{
+			APawn* Pawn = Cast<APawn>(&Self);
+			UWorld* World = Self.GetWorld();
+			if (!Pawn || !World) return -1;
+
+			const int32 Index = World->RegisterPlayer(Pawn);
+
+			// 화면 순서와 키 매핑(KeyBindings[Car.PlayerIndex])이 항상 같도록 차의 번호를 맞춘다.
+			if (AVehiclePawn* Vehicle = Cast<AVehiclePawn>(Pawn))
+			{
+				if (Index >= 0) Vehicle->SetPlayerIndex(Index);
+			}
+
+			return Index;
+		},
 		"FindActor", [](AActor& Self, const FString& Name) -> AActor*
 		{
 			UWorld* World = Self.GetWorld();
