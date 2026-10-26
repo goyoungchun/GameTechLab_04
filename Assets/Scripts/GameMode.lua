@@ -112,9 +112,17 @@ end
 local StateEnterHandlers = {}
 local StateTickHandlers = {}
 
+local SplitScreenStates = 
+{
+    Countdown = true, Playing = true, GoalScored =true , Defended = true,
+}
+
 local function SetState(NewState)
     print(string.format("[GameMode] %s -> %s", tostring(Game.State), NewState))
     Game.State = NewState
+    obj:SetSplitScreen(SplitScreenStates[NewState] == true 
+        or (NewState == "CarSelect" and Game.Config.bSplitScreen))
+
     local EnterHandler = StateEnterHandlers[NewState]
     if EnterHandler then
         EnterHandler()
