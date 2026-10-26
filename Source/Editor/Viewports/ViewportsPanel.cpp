@@ -168,13 +168,37 @@ void FViewportsPanel::OnRender() {
 			continue;
 		}
 
-		FTexture2D* DisplayTarget = bGameViewport
-			? GameViewportClient->GetColorTarget()
-			: Client->GetColorTarget();
-		if (!DisplayTarget || !DisplayTarget->GetSRV())
-			continue;
+		if (bGameViewport)
+		{
+			const int32 SplitCount = GameViewportClient->GetSplitCount();
+			for (int32 i = 0; i < SplitCount; ++i)
+			{
+				FGameViewportClient* SplitClient = GameViewportClient->GetSplitClient(i);
+				FTexture2D* SplitTarget = SplitClient ? SplitClient->GetColorTarget() : nullptr;
+				if (!SplitTarget || !SplitTarget->GetSRV())
+				{
+					continue;
+				}
 
-		DrawList->AddImage(DisplayTarget->GetSRV(), ViewMin, ViewMax);
+				const FRect SplitRect = FGameViewportClient::GetSplitRect(Rect, i, SplitCount);
+				const ImVec2 SplitMin{ ContentOrigin.x + SplitRect.X, ContentOrigin.y + SplitRect.Y };
+				const ImVec2 SplitMax{ SplitMin.x + SplitRect.Width, SplitMin.y + SplitRect.Height };
+				DrawList->AddImage(SplitTarget->GetSRV(), SplitMin, SplitMax);
+
+				if (i > 0)
+				{
+					DrawList->AddLine(SplitMin, { SplitMin.x, SplitMax.y }, IM_COL32(0, 0, 0, 255), 3.0f);
+				}
+			}
+		}
+		else
+		{
+			FTexture2D* DisplayTarget = Client->GetColorTarget();
+			if (!DisplayTarget || !DisplayTarget->GetSRV())
+				continue;
+
+			DrawList->AddImage(DisplayTarget->GetSRV(), ViewMin, ViewMax);
+		}		
 
 		// 마우스 클릭 시 활성 뷰포트 설정
 		const bool bViewHovered = bHovered && ImGui::IsMouseHoveringRect(ViewMin, ViewMax);

@@ -81,12 +81,6 @@ public:
 	void ClearViewCameraOverride(int32 PlayerIndex);
 	UCameraComponent* GetViewCameraOverride(int32 PlayerIndex) const;
 
-	// 플레이어 폰 및 컨트롤러
-	void SetPlayerPawn(APawn* InPawn) { PlayerPawn = InPawn; }
-	APawn* GetPlayerPawn() const { return PlayerPawn; }
-	void SetPlayerController(APlayerController* InController) { PlayerController = InController; }
-	APlayerController* GetPlayerController() const { return PlayerController; }
-
 	// Level
 	ULevel* GetPersistentLevel() const { return PersistentLevel; }
 	TArray<ULevel*> GetLevel()  { return Levels; }
@@ -134,6 +128,17 @@ public:
 	// Duplicate into an uninitialized world; restore internal references before proxy registration.
 	bool DuplicateWorld(UWorld* SrcWorld);
 
+	// 컨트롤러에 Pawn 등록
+	int32 RegisterPlayer(APawn* InPawnPtr);
+
+	uint32 GetPlayerCount() const { return static_cast<uint32>(PlayerControllers.Num()); }
+	APlayerController* GetPlayerController(uint32 Index = 0) const;
+	APawn* GetPlayerPawn(uint32 Index = 0) const;
+
+	// 화면 분할
+	void SetSplitScreenEnable(bool bEnable) { bSplitScreenEnabled = bEnable; }
+	bool IsSplitScreenEnabled() const { return bSplitScreenEnabled; }
+
 private:
 	// 등록된 Tick 함수만 실행한다. Actor보다 먼저 사라져도 남은 함수와의 연결을 스스로 끊는다.
 	FTickTaskManager TickTaskManager;
@@ -150,8 +155,13 @@ private:
 	bool bViewCameraOverrideActive[MaxViewCameraOverrides] = {};
 
 	// 플레이어 폰 및 컨트롤러
-	APawn* PlayerPawn = nullptr;
-	APlayerController* PlayerController = nullptr;
+	//APawn* PlayerPawn = nullptr;
+	//APlayerController* PlayerController = nullptr;
+
+	// 1월드 다중 플레이어 위함
+	TArray<APlayerController*> PlayerControllers;
+	// 원래 언리얼에서는 PlayerController 만 갖고있음.
+	// Controller 를 통해서 pawn에 접근하는 방식.
 
 	FPathTracker PathTracker;
 
@@ -167,4 +177,7 @@ private:
 	TUniquePtr<FPhysSceneChaos> PhysicsScene;
 
 	FGameUIBuffer GameUIBuffer;
+
+	// 뷰포트 분할 여부
+	bool bSplitScreenEnabled = false;
 };
