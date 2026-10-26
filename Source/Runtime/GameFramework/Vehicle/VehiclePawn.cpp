@@ -22,23 +22,48 @@ AVehiclePawn::AVehiclePawn()
 	Box->SetEnableGravity(true);
 	Box->SetObjectChannel(ECollisionChannel::WorldDynamic);
 	Box->SetCollisionResponseToChannel(ECollisionChannel::WorldDynamic, ECollisionResponse::Block);
+	Box->SetCOF(0.0f);
+	Box->SetRestitution(0.0f);
 	SetRootComponent(Box);
 
 	StaticMesh->SetStaticMesh(UAssetManager::GetMesh("italia"));
 	StaticMesh->SetupAttachment(Box);
 	StaticMesh->SetCollisionResponseToChannel(ECollisionChannel::WorldDynamic, ECollisionResponse::Ignore);
 	StaticMesh->SetCollisionResponseToChannel(ECollisionChannel::WorldStatic, ECollisionResponse::Ignore);
-	Box->SetBoxExtent(StaticMesh->GetMeshData()->AABB.Max);
 
+	const FStaticMeshData* MeshData = StaticMesh->GetMeshData();
+	if (MeshData)
+		Box->SetBoxExtent(MeshData->AABB.Max);
 	Script->SetScriptPath("Assets/Scripts/Vehicle/VehicleController.lua");
 
 	Camera->SetupAttachment(Box);
-	Camera->SetRelativeLocation({ -2.5, 0, 4 });
-	Camera->SetRelativeRotation({ 30, 0, 0 });
+
+	Camera->SetRelativeLocation({ -4, 0, 4 });
+	Camera->SetRelativeRotation({ 20, 0, 0 });
+
 	Camera->SetExternalInputManaged(true);
 }
 
 void AVehiclePawn::BeginPlay()
 {
 	Super::BeginPlay();
+}
+
+void AVehiclePawn::SetVehicleInput(const FVehicleInput& Input)
+{
+	if (!Movement)
+		return;
+
+	Movement->SetInput(Input.Throttle, Input.Steer, Input.bBoost);
+	
+	if (Input.bJumpRequested)
+		Movement->RequestJump();
+}
+
+void AVehiclePawn::RequestJump()
+{
+	if (!Movement)
+		return;
+
+	Movement->RequestJump();
 }

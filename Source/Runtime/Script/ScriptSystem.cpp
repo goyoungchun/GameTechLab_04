@@ -9,6 +9,7 @@
 #include "Asset/AssetManager.h"
 #include "Component/ScriptComponent.h"
 #include "Core/EngineLog.h"
+#include "GameFramework/Vehicle/VehicleScriptBindings.h"
 
 FScriptSystem::FScriptSystem()
 {
@@ -120,6 +121,27 @@ void FScriptSystem::RegisterTypes()
 		sol::meta_function::to_string, [](const FRotator& r) { return std::format("(P : {:.1f}, Y : {:.1f}, R : {:.1f})", r.Pitch, r.Yaw, r.Roll); }
 	);
 
+	// 화면 UI 색. Color(r, g, b) 또는 Color(r, g, b, a), 값은 0~1.
+	Lua->new_usertype<FVector4>("Color",
+		sol::call_constructor, sol::factories(
+			[](float R, float G, float B) { return FVector4(R, G, B, 1.0f); },
+			[](float R, float G, float B, float A) { return FVector4(R, G, B, A); }
+		),
+		"r", &FVector4::X, "g", &FVector4::Y, "b", &FVector4::Z, "a", &FVector4::W,
+		sol::meta_function::to_string, [](const FVector4& Color) 
+		{ return std::format("(R : {:.2f}, G : {:.2f}, B : {:.2f}, A : {:.2f})", Color.X, Color.Y, Color.Z, Color.W); }
+	);
+
+	sol::table ColorTable = (*Lua)["Color"];
+	ColorTable["White"] = FVector4(1.0f, 1.0f, 1.0f, 1.0f);
+	ColorTable["Black"] = FVector4(0.0f, 0.0f, 0.0f, 1.0f);
+	ColorTable["Red"] = FVector4(1.0f, 0.2f, 0.2f, 1.0f);
+	ColorTable["Green"] = FVector4(0.2f, 1.0f, 0.2f, 1.0f);
+	ColorTable["Blue"] = FVector4(0.2f, 0.6f, 1.0f, 1.0f);
+	ColorTable["Yellow"] = FVector4(1.0f, 0.9f, 0.1f, 1.0f);
+	ColorTable["Orange"] = FVector4(1.0f, 0.6f, 0.0f, 1.0f);
+	ColorTable["Transparent"] = FVector4(0.0f, 0.0f, 0.0f, 0.0f);
+
 	Lua->new_usertype<AActor>("Actor",
 		sol::no_constructor,
 		"UUID", sol::readonly_property(&AActor::GetUUID),
@@ -183,6 +205,32 @@ void FScriptSystem::RegisterTypes()
 			}
 			return NewActor;
 		},
+		// 이미 있는 StaticMeshActor의 메시를 이름으로 바꾼다
+		"SetMesh", [](AActor& Self, const FString& MeshName) -> bool
+		{
+			AStaticMeshActor* MeshActor = Cast<AStaticMeshActor>(&Self);
+			UStaticMesh* Mesh = UAssetManager::GetMesh(MeshName);
+			if (!MeshActor || !Mesh)
+			{
+				return false;
+			}
+			MeshActor->GetStaticMeshComponent()->SetStaticMesh(Mesh);
+			return true;
+		},
+		"SetViewCamera", [](AActor& Self, int32 PlayerIndex, const FVector& Location, const FRotator& Rotation)
+		{
+			if (UWorld* World = Self.GetWorld())
+			{
+				World->SetViewCameraOverride(PlayerIndex - 1, Location, Rotation);
+			}
+		},
+		"ClearViewCamera", [](AActor& Self, int32 PlayerIndex)
+		{
+			if (UWorld* World = Self.GetWorld())
+			{
+				World->ClearViewCameraOverride(PlayerIndex - 1);
+			}
+		},
 		"SetText", [](AActor& Self, const FString& InText)
 		{
 			for (UActorComponent* Component : Self.GetComponents())
@@ -208,6 +256,9 @@ void FScriptSystem::RegisterTypes()
 		},
 		sol::meta_function::to_string, [](const AActor& a) {return std::format("(UUID : {}, Name : {})", a.GetUUID(), a.GetName());}
 	);
+
+	// UI.Text의 가로 정렬. 기준점(x)이 글자의 왼쪽 끝·가운데·오른쪽 끝에 온다.
+	Lua->new_enum("Align", "Left", ETextAlign::Left, "Center", ETextAlign::Center, "Right", ETextAlign::Right);
 }
 
 void FScriptSystem::RegisterInput()
@@ -221,7 +272,7 @@ void FScriptSystem::RegisterInput()
 		"LShift", EKeyCode::LShift, "RShift", EKeyCode::RShift, "LControl", EKeyCode::LControl, "RControl", EKeyCode::RControl,
 		"Num0", EKeyCode::Num0, "Num1", EKeyCode::Num1, "Num2", EKeyCode::Num2, "Num3", EKeyCode::Num3,
 		"Num4", EKeyCode::Num4, "Num5", EKeyCode::Num5, "Num6", EKeyCode::Num6, "Num7", EKeyCode::Num7,
-		"Num8", EKeyCode::Num8, "Num9", EKeyCode::Num9
+		"Num8", EKeyCode::Num8, "Num9", EKeyCode::Num9, "Backspace", EKeyCode::Backspace
 	);
 
 	Lua->set_function("IsKeyDown", [](EKeyCode Key) { return FInputSystem::IsKeyDown(Key); });
@@ -242,6 +293,14 @@ void FScriptSystem::RegisterFunction()
 		if (GEngine)
 		{
 			GEngine->RequestRestartLevel();
+		}
+	});
+
+	// 에디터에서는 PIE만 끝나고, 게임 실행 파일에서는 프로그램이 종료된다.
+	Lua->set_function("QuitGame", []() {
+		if (GEngine)
+		{
+			GEngine->RequestQuitGame();
 		}
 	});
 }
@@ -271,6 +330,8 @@ void FScriptSystem::Init()
 	OpenLibraries();
 	RegisterTypes();
 	RegisterInput();
+	RegisterFunction();
+	RegisterVehicleBindings(*Lua);
 	OverridePrint();
 
 	Lua->create_named_table("Game",

@@ -161,3 +161,10 @@ bool UEngine::ConsumeRestartLevelRequest()
 	bRestartLevelRequested = false;
 	return bRequested;
 }
+
+bool UEngine::ConsumeQuitGameRequest()
+{
+	const bool bRequested = bQuitGameRequested;
+	bQuitGameRequested = false;
+	return bRequested;
+}

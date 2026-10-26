@@ -40,6 +40,7 @@
 #include "Text/TextRenderer.h"
 #include "Editor/Viewports/EditorViewportClient.h"
 #include "Container/Array.h"
+#include "UI/ScreenUIRenderer.h"
 
 class FForwardEditorViewportClient;
 struct FForwardViewTargets;
@@ -83,6 +84,7 @@ private:
 	void GatherActiveSceneViews();
 	void RenderGameFrameDeferred(FDeferredGameViewportClient* GameClient, const FSceneView& SceneView, FSceneRenderer& SceneRenderer, bool bIsSIEMode = false);
 	void RenderGameFrameForward(FForwardGameViewportClient* GameClient, const FSceneView& SceneView, FSceneRenderer& SceneRenderer, bool bIsSIEMode = false);
+	void RenderGameUI(FGameViewportClient* GameClient, uint32 Width, uint32 Height);
 
 	struct FSceneRenderOptions
 	{
@@ -183,6 +185,7 @@ private:
 	FGameViewportClient* FindPIEGameClient(int32 PIEInstance) const;
 	
 	bool bIsSIEMode = false;
+	FScreenUIRenderer ScreenUIRenderer;
 
 	TMap<UWorld*, TArray<FSceneView>> WorldViews;
 };

@@ -199,6 +199,7 @@ bool UEditorEngine::Init() {
 
 	TextRenderer = MakeUnique<FTextRenderer>();
 	TextRenderer->Init();
+	ScreenUIRenderer.Init();
 
 	// 화면 나눔 비율 설정 가져오기
 	ViewportSplitRatio = {SettingsPanel->GetSettings().MultipleViewportsHorizontal,
@@ -326,6 +327,10 @@ void UEditorEngine::Tick(const float DeltaTime) {
 	{
 		StopPIESession();
 		CreatePIESession();
+	}
+	if (ConsumeQuitGameRequest() && GetWorldContextFromType(EWorldType::PIE))
+	{
+		StopPIESession();
 	}
 
 	BeginFrame(DeltaTime);
@@ -951,6 +956,12 @@ void UEditorEngine::RenderGameFrameDeferred(FDeferredGameViewportClient* GameCli
 				!SceneView.bIsPerspective);
 		}
 	}
+
+	if (!bIsSIEMode)
+	{
+		RenderGameUI(GameClient, Width, Height);
+	}
+
 	RenderCommand::EndRenderPass();
 }
 
@@ -987,7 +998,23 @@ void UEditorEngine::RenderGameFrameForward(FForwardGameViewportClient* GameClien
 		}
 	}
 
+	if (!bIsSIEMode)
+	{
+		RenderGameUI(GameClient, Width, Height);
+	}
+
 	RenderCommand::EndRenderPass();
+}
+
+void UEditorEngine::RenderGameUI(FGameViewportClient* GameClient, uint32 Width, uint32 Height)
+{
+	UWorld* World = GameClient ? GameClient->GetWorld() : nullptr;
+	if (!World)
+		return;
+
+	TArray<FRect> PlayerRects; // 나중에 뷰포트 2개로 바뀌면 여기 바꾸기
+
+	ScreenUIRenderer.Render(World->GetGameUIBuffer(), Width, Height, PlayerRects);
 }
 
 bool UEditorEngine::RenderSceneFrameDeferred(FDeferredViewTargets& Targets, const FSceneView& SceneView,

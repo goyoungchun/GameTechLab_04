@@ -55,6 +55,10 @@ void FTextRenderer::Init(uint32 InMaxCharacters)
 
 	PipelineState.Shader = TextShader;
 	PipelineState.Topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+	ScreenPipelineState = PipelineState;
+	ScreenPipelineState.DepthStencilState = EDepthStencilState::Disabled;
+	ScreenPipelineState.BlendState = EBlendState::AlphaBlend;
+	ScreenPipelineState.RasterizerState = ERasterizerState::SolidNone;
 }
 
 // Atlas 글리프 위치·UV로 문자별 사각형 Mesh를 만든다.
@@ -170,16 +174,24 @@ bool FTextRenderer::ComputeTextBounds(const FString& Text, float TextSize, const
 	return true;
 }
 
-// 카메라 ViewProjection을 명시적 행렬 렌더 경로로 전달한다.
-void FTextRenderer::OnRender(const FString& Text, const FMatrix& WorldMatrix, float TextSize,
-	const UFont& Atlas, UCameraComponent* CameraComponent)
+float FTextRenderer::MeasureTextWidth(const FString& Text, float TextSize, const UFont& Atlas)
 {
-	OnRender(Text, WorldMatrix, TextSize, Atlas, CameraComponent->GetViewProjectionMatrix());
+	float TotalWidth = 0.0f;
+
+	TArray<uint32> CodePoints = DecodeUTF8(Text);
+
+	for (uint32 CP : CodePoints)
+	{
+		if (const FGlyphInfo* Glyph = Atlas.GlyphMap.FindOrNull(CP))
+		{
+			TotalWidth += Glyph->Advance * TextSize;
+		}
+	}
+	return TotalWidth;
 }
 
-// ViewProjection과 MSDF 상수로 텍스트 Mesh를 그린다.
-void FTextRenderer::OnRender(const FString& Text, const FMatrix& WorldMatrix, float TextSize,
-	const UFont& Atlas, const FMatrix& ViewProjection)
+void FTextRenderer::DrawTextRender(const FString& Text, const FMatrix& WorldMatrix, float TextSize,
+	const UFont& Atlas, const FMatrix& ViewProjection, const FVector4 Color, const FPipelineState& State)
 {
 	if (Text.empty() || !Atlas.AtlasTexture)
 	{
@@ -212,8 +224,9 @@ void FTextRenderer::OnRender(const FString& Text, const FMatrix& WorldMatrix, fl
 
 	MSDFData MSDFData;
 	MSDFData.ScreenPx = Atlas.DistanceRange;
+	MSDFData.Color = Color;
 
-	RenderCommand::BindPipelineState(PipelineState);
+	RenderCommand::BindPipelineState(State);
 	RenderCommand::BindShaderResource(0, Atlas.AtlasTexture, EShaderBindFlagBits::Pixel);
 	RenderCommand::UpdateBufferData(MVP.get(), &TransData, sizeof(TextTransformData));
 	RenderCommand::UpdateBufferData(ScreenPx.get(), &MSDFData, sizeof(MSDFData));
@@ -227,6 +240,51 @@ void FTextRenderer::OnRender(const FString& Text, const FMatrix& WorldMatrix, fl
 
 	Vertices.Reset();
 	Indices.Reset();
+}
+
+// 카메라 ViewProjection을 명시적 행렬 렌더 경로로 전달한다.
+void FTextRenderer::OnRender(const FString& Text, const FMatrix& WorldMatrix, float TextSize,
+	const UFont& Atlas, UCameraComponent* CameraComponent)
+{
+	OnRender(Text, WorldMatrix, TextSize, Atlas, CameraComponent->GetViewProjectionMatrix());
+}
+
+// ViewProjection과 MSDF 상수로 텍스트 Mesh를 그린다.
+void FTextRenderer::OnRender(const FString& Text, const FMatrix& WorldMatrix, float TextSize,
+	const UFont& Atlas, const FMatrix& ViewProjection)
+{
+	DrawTextRender(Text, WorldMatrix, TextSize, Atlas, ViewProjection, FVector4(1, 1, 1, 1), PipelineState);
+}
+
+void FTextRenderer::OnRenderScreen(const FString& Text, float PixelX, float PixelY, float PixelSize, const UFont& Atlas,
+	uint32 ScreenW, uint32 ScreenH, FVector4 Color, ETextAlign Align)
+{
+	FMatrix ScreenProjection = FMatrix::MakeOrthographic(0.0f, static_cast<float>(ScreenW), static_cast<float>(ScreenH), 0.0f, -1.0f, 1.0f);
+
+	float AlignOffset = 0.0f;
+	float TotalWidth = MeasureTextWidth(Text, PixelSize, Atlas);
+
+	if (Align == ETextAlign::Left)
+	{
+		AlignOffset = TotalWidth / 2;
+	}
+	else if (Align == ETextAlign::Right)
+	{
+		AlignOffset = -(TotalWidth / 2);
+	}
+	else if (Align == ETextAlign::Center)
+	{
+		AlignOffset = 0;
+	}
+
+
+	// 메시 세로(+Z)는 위쪽인데 화면 픽셀 y는 아래로 커지므로 Z를 뒤집는다.
+	FMatrix World = FMatrix::Identity;
+	World.M[2][2] = -1.0f;
+	World.M[3][1] = PixelX + AlignOffset;
+	World.M[3][2] = PixelY;
+
+	DrawTextRender(Text, World, PixelSize, Atlas, ScreenProjection, Color, ScreenPipelineState);
 }
 
 // 카메라를 향하는 Billboard 행렬을 구성해 텍스트를 그린다.

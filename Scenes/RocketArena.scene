@@ -1,0 +1,1747 @@
+{
+    "Actors": [
+        {
+            "Class": "AStaticMeshActor",
+            "Components": [
+                {
+                    "Class": "UStaticMeshComponent",
+                    "Name": "UPrimitiveComponent_0",
+                    "Properties": {
+                        "Acceleration": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "COF": 0.20000000298023224,
+                        "GravityScale": 1.0,
+                        "Mass": 1.0,
+                        "MotionType": 0,
+                        "ObjectChannel": 0,
+                        "OverrideMaterials": [],
+                        "Restitution": 1.0,
+                        "StaticMesh": "Models/SoccerField/model.obj",
+                        "Transform": {
+                            "Location": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        },
+                        "WorldDynamic": 2,
+                        "WorldStatic": 2,
+                        "bAutoActivate": true,
+                        "bBackfaceDepth": false,
+                        "bCastShadow": false,
+                        "bEnableGravity": true,
+                        "bHiddenInGame": false,
+                        "bReceiveShadow": true,
+                        "bVisible": true
+                    }
+                },
+                {
+                    "Class": "UScriptComponent",
+                    "Name": "LuaScript_0_0",
+                    "Properties": {
+                        "ScriptPath": "Assets/Scripts/GameMode.lua",
+                        "bAutoActivate": true
+                    }
+                },
+                {
+                    "Class": "UScriptComponent",
+                    "Name": "LuaScript_0",
+                    "Properties": {
+                        "ScriptPath": "Assets/Scripts/GameUI.lua",
+                        "bAutoActivate": true
+                    }
+                }
+            ],
+            "Properties": {
+                "bActorEnableCollision": true
+            }
+        },
+        {
+            "Class": "AStaticMeshActor",
+            "Components": [
+                {
+                    "Class": "UStaticMeshComponent",
+                    "Name": "UPrimitiveComponent_0",
+                    "Properties": {
+                        "Acceleration": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "COF": 0.20000000298023224,
+                        "GravityScale": 1.0,
+                        "Mass": 1.0,
+                        "MotionType": 0,
+                        "ObjectChannel": 0,
+                        "OverrideMaterials": [],
+                        "Restitution": 1.0,
+                        "StaticMesh": "Models/SoccerGoal/Soccergoal.obj",
+                        "Transform": {
+                            "Location": [
+                                -0.0761909931898117,
+                                43.95482635498047,
+                                0.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                -94.77583312988281,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                0.699999988079071
+                            ]
+                        },
+                        "WorldDynamic": 2,
+                        "WorldStatic": 2,
+                        "bAutoActivate": true,
+                        "bBackfaceDepth": false,
+                        "bCastShadow": true,
+                        "bEnableGravity": true,
+                        "bHiddenInGame": false,
+                        "bReceiveShadow": true,
+                        "bVisible": true
+                    }
+                }
+            ],
+            "Properties": {
+                "bActorEnableCollision": true
+            }
+        },
+        {
+            "Class": "ADirectionalLightActor",
+            "Components": [
+                {
+                    "Class": "UBillboardComponent",
+                    "Name": "UBillboardComponent_0",
+                    "Properties": {
+                        "Acceleration": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "COF": 0.20000000298023224,
+                        "GravityScale": 1.0,
+                        "Mass": 1.0,
+                        "Material": {
+                            "Base": "BillboardMaterial",
+                            "BaseColor": [
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "PSOType": 14,
+                            "SamplerState": "LinearClamp",
+                            "Shininess": 16.0,
+                            "SpecularColor": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "Textures": [
+                                "Editor/Icon/S_LightDirectional.png"
+                            ],
+                            "UVScrollSpeed": [
+                                0.0,
+                                0.0
+                            ]
+                        },
+                        "MotionType": 0,
+                        "ObjectChannel": 0,
+                        "Restitution": 1.0,
+                        "Transform": {
+                            "Location": [
+                                0.0,
+                                -20.0,
+                                40.0
+                            ],
+                            "Rotation": [
+                                50.0,
+                                60.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        },
+                        "WorldDynamic": 2,
+                        "WorldStatic": 2,
+                        "bAutoActivate": true,
+                        "bBackfaceDepth": false,
+                        "bCastShadow": false,
+                        "bEnableGravity": true,
+                        "bHiddenInGame": false,
+                        "bReceiveShadow": false,
+                        "bVisible": true
+                    }
+                },
+                {
+                    "Class": "UDirectionalLightComponent",
+                    "Name": "UDirectionalLightComponent_0",
+                    "Properties": {
+                        "CascadeBlendRange": 5.0,
+                        "CascadeCount": 5,
+                        "CascadeExponential": 3,
+                        "Intensity": 1.2000000476837158,
+                        "LightColor": [
+                            1.0,
+                            0.9599999785423279,
+                            0.8799999952316284
+                        ],
+                        "ShadowAngularDiameter": 2.0,
+                        "ShadowBias": 0.5,
+                        "ShadowMapResolution": 1024,
+                        "ShadowSlopeBias": 0.5,
+                        "ShadowSourceRadius": 0.11999999731779099,
+                        "Transform": {
+                            "Location": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        },
+                        "bAutoActivate": true,
+                        "bCascadeDebug": false,
+                        "bEnabled": true,
+                        "bHiddenInGame": false,
+                        "bShowLightBounds": true,
+                        "bVisible": true
+                    }
+                }
+            ],
+            "Properties": {
+                "bActorEnableCollision": true
+            }
+        },
+        {
+            "Class": "AAmbientLightActor",
+            "Components": [
+                {
+                    "Class": "UBillboardComponent",
+                    "Name": "UBillboardComponent_0",
+                    "Properties": {
+                        "Acceleration": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "COF": 0.20000000298023224,
+                        "GravityScale": 1.0,
+                        "Mass": 1.0,
+                        "Material": {
+                            "Base": "BillboardMaterial",
+                            "BaseColor": [
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "PSOType": 14,
+                            "SamplerState": "LinearClamp",
+                            "Shininess": 16.0,
+                            "SpecularColor": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "Textures": [
+                                "Editor/Icon/SkyLight.png"
+                            ],
+                            "UVScrollSpeed": [
+                                0.0,
+                                0.0
+                            ]
+                        },
+                        "MotionType": 0,
+                        "ObjectChannel": 0,
+                        "Restitution": 1.0,
+                        "Transform": {
+                            "Location": [
+                                0.0,
+                                0.0,
+                                10.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        },
+                        "WorldDynamic": 2,
+                        "WorldStatic": 2,
+                        "bAutoActivate": true,
+                        "bBackfaceDepth": false,
+                        "bCastShadow": true,
+                        "bEnableGravity": true,
+                        "bHiddenInGame": false,
+                        "bReceiveShadow": true,
+                        "bVisible": true
+                    }
+                },
+                {
+                    "Class": "UAmbientLightComponent",
+                    "Name": "UAmbientLightComponent_0",
+                    "Properties": {
+                        "Intensity": 0.30000001192092896,
+                        "LightColor": [
+                            0.8500000238418579,
+                            0.8999999761581421,
+                            1.0
+                        ],
+                        "ShadowBias": 0.5,
+                        "ShadowMapResolution": 512,
+                        "ShadowSlopeBias": 0.5,
+                        "ShadowSourceRadius": 0.14000000059604645,
+                        "Transform": {
+                            "Location": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        },
+                        "bAutoActivate": true,
+                        "bEnabled": true,
+                        "bHiddenInGame": false,
+                        "bShowLightBounds": true,
+                        "bVisible": true
+                    }
+                }
+            ],
+            "Properties": {
+                "bActorEnableCollision": true
+            }
+        },
+        {
+            "Class": "APointLightActor",
+            "Components": [
+                {
+                    "Class": "UBillboardComponent",
+                    "Name": "UBillboardComponent_0",
+                    "Properties": {
+                        "Acceleration": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "COF": 0.20000000298023224,
+                        "GravityScale": 1.0,
+                        "Mass": 1.0,
+                        "Material": {
+                            "Base": "BillboardMaterial",
+                            "BaseColor": [
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "PSOType": 14,
+                            "SamplerState": "LinearClamp",
+                            "Shininess": 16.0,
+                            "SpecularColor": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "Textures": [
+                                "Editor/Icon/PointLight.png"
+                            ],
+                            "UVScrollSpeed": [
+                                0.0,
+                                0.0
+                            ]
+                        },
+                        "MotionType": 0,
+                        "ObjectChannel": 0,
+                        "Restitution": 1.0,
+                        "Transform": {
+                            "Location": [
+                                -22.0,
+                                4.0,
+                                18.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        },
+                        "WorldDynamic": 2,
+                        "WorldStatic": 2,
+                        "bAutoActivate": true,
+                        "bBackfaceDepth": false,
+                        "bCastShadow": true,
+                        "bEnableGravity": true,
+                        "bHiddenInGame": false,
+                        "bReceiveShadow": true,
+                        "bVisible": true
+                    }
+                },
+                {
+                    "Class": "UPointLightComponent",
+                    "Name": "UPointLightComponent_0",
+                    "Properties": {
+                        "AttenuationRadius": 45.0,
+                        "Intensity": 6.0,
+                        "LightColor": [
+                            0.8999999761581421,
+                            0.949999988079071,
+                            1.0
+                        ],
+                        "ShadowBias": 0.5,
+                        "ShadowMapResolution": 512,
+                        "ShadowSlopeBias": 0.5,
+                        "ShadowSourceRadius": 0.14000000059604645,
+                        "Transform": {
+                            "Location": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        },
+                        "bAutoActivate": true,
+                        "bEnabled": true,
+                        "bHiddenInGame": false,
+                        "bShowLightBounds": true,
+                        "bVisible": true
+                    }
+                }
+            ],
+            "Properties": {
+                "bActorEnableCollision": true
+            }
+        },
+        {
+            "Class": "APointLightActor",
+            "Components": [
+                {
+                    "Class": "UBillboardComponent",
+                    "Name": "UBillboardComponent_0",
+                    "Properties": {
+                        "Acceleration": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "COF": 0.20000000298023224,
+                        "GravityScale": 1.0,
+                        "Mass": 1.0,
+                        "Material": {
+                            "Base": "BillboardMaterial",
+                            "BaseColor": [
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "PSOType": 14,
+                            "SamplerState": "LinearClamp",
+                            "Shininess": 16.0,
+                            "SpecularColor": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "Textures": [
+                                "Editor/Icon/PointLight.png"
+                            ],
+                            "UVScrollSpeed": [
+                                0.0,
+                                0.0
+                            ]
+                        },
+                        "MotionType": 0,
+                        "ObjectChannel": 0,
+                        "Restitution": 1.0,
+                        "Transform": {
+                            "Location": [
+                                22.0,
+                                4.0,
+                                18.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        },
+                        "WorldDynamic": 2,
+                        "WorldStatic": 2,
+                        "bAutoActivate": true,
+                        "bBackfaceDepth": false,
+                        "bCastShadow": true,
+                        "bEnableGravity": true,
+                        "bHiddenInGame": false,
+                        "bReceiveShadow": true,
+                        "bVisible": true
+                    }
+                },
+                {
+                    "Class": "UPointLightComponent",
+                    "Name": "UPointLightComponent_0",
+                    "Properties": {
+                        "AttenuationRadius": 45.0,
+                        "Intensity": 6.0,
+                        "LightColor": [
+                            0.8999999761581421,
+                            0.949999988079071,
+                            1.0
+                        ],
+                        "ShadowBias": 0.5,
+                        "ShadowMapResolution": 512,
+                        "ShadowSlopeBias": 0.5,
+                        "ShadowSourceRadius": 0.14000000059604645,
+                        "Transform": {
+                            "Location": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        },
+                        "bAutoActivate": true,
+                        "bEnabled": true,
+                        "bHiddenInGame": false,
+                        "bShowLightBounds": true,
+                        "bVisible": true
+                    }
+                }
+            ],
+            "Properties": {
+                "bActorEnableCollision": true
+            }
+        },
+        {
+            "Class": "APointLightActor",
+            "Components": [
+                {
+                    "Class": "UBillboardComponent",
+                    "Name": "UBillboardComponent_0",
+                    "Properties": {
+                        "Acceleration": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "COF": 0.20000000298023224,
+                        "GravityScale": 1.0,
+                        "Mass": 1.0,
+                        "Material": {
+                            "Base": "BillboardMaterial",
+                            "BaseColor": [
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "PSOType": 14,
+                            "SamplerState": "LinearClamp",
+                            "Shininess": 16.0,
+                            "SpecularColor": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "Textures": [
+                                "Editor/Icon/PointLight.png"
+                            ],
+                            "UVScrollSpeed": [
+                                0.0,
+                                0.0
+                            ]
+                        },
+                        "MotionType": 0,
+                        "ObjectChannel": 0,
+                        "Restitution": 1.0,
+                        "Transform": {
+                            "Location": [
+                                -22.0,
+                                46.0,
+                                18.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        },
+                        "WorldDynamic": 2,
+                        "WorldStatic": 2,
+                        "bAutoActivate": true,
+                        "bBackfaceDepth": false,
+                        "bCastShadow": true,
+                        "bEnableGravity": true,
+                        "bHiddenInGame": false,
+                        "bReceiveShadow": true,
+                        "bVisible": true
+                    }
+                },
+                {
+                    "Class": "UPointLightComponent",
+                    "Name": "UPointLightComponent_0",
+                    "Properties": {
+                        "AttenuationRadius": 45.0,
+                        "Intensity": 6.0,
+                        "LightColor": [
+                            0.8999999761581421,
+                            0.949999988079071,
+                            1.0
+                        ],
+                        "ShadowBias": 0.5,
+                        "ShadowMapResolution": 512,
+                        "ShadowSlopeBias": 0.5,
+                        "ShadowSourceRadius": 0.14000000059604645,
+                        "Transform": {
+                            "Location": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        },
+                        "bAutoActivate": true,
+                        "bEnabled": true,
+                        "bHiddenInGame": false,
+                        "bShowLightBounds": true,
+                        "bVisible": true
+                    }
+                }
+            ],
+            "Properties": {
+                "bActorEnableCollision": true
+            }
+        },
+        {
+            "Class": "APointLightActor",
+            "Components": [
+                {
+                    "Class": "UBillboardComponent",
+                    "Name": "UBillboardComponent_0",
+                    "Properties": {
+                        "Acceleration": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "COF": 0.20000000298023224,
+                        "GravityScale": 1.0,
+                        "Mass": 1.0,
+                        "Material": {
+                            "Base": "BillboardMaterial",
+                            "BaseColor": [
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "PSOType": 14,
+                            "SamplerState": "LinearClamp",
+                            "Shininess": 16.0,
+                            "SpecularColor": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "Textures": [
+                                "Editor/Icon/PointLight.png"
+                            ],
+                            "UVScrollSpeed": [
+                                0.0,
+                                0.0
+                            ]
+                        },
+                        "MotionType": 0,
+                        "ObjectChannel": 0,
+                        "Restitution": 1.0,
+                        "Transform": {
+                            "Location": [
+                                22.0,
+                                46.0,
+                                18.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        },
+                        "WorldDynamic": 2,
+                        "WorldStatic": 2,
+                        "bAutoActivate": true,
+                        "bBackfaceDepth": false,
+                        "bCastShadow": true,
+                        "bEnableGravity": true,
+                        "bHiddenInGame": false,
+                        "bReceiveShadow": true,
+                        "bVisible": true
+                    }
+                },
+                {
+                    "Class": "UPointLightComponent",
+                    "Name": "UPointLightComponent_0",
+                    "Properties": {
+                        "AttenuationRadius": 45.0,
+                        "Intensity": 6.0,
+                        "LightColor": [
+                            0.8999999761581421,
+                            0.949999988079071,
+                            1.0
+                        ],
+                        "ShadowBias": 0.5,
+                        "ShadowMapResolution": 512,
+                        "ShadowSlopeBias": 0.5,
+                        "ShadowSourceRadius": 0.14000000059604645,
+                        "Transform": {
+                            "Location": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        },
+                        "bAutoActivate": true,
+                        "bEnabled": true,
+                        "bHiddenInGame": false,
+                        "bShowLightBounds": true,
+                        "bVisible": true
+                    }
+                }
+            ],
+            "Properties": {
+                "bActorEnableCollision": true
+            }
+        },
+        {
+            "Class": "APointLightActor",
+            "Components": [
+                {
+                    "Class": "UBillboardComponent",
+                    "Name": "UBillboardComponent_0",
+                    "Properties": {
+                        "Acceleration": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "COF": 0.20000000298023224,
+                        "GravityScale": 1.0,
+                        "Mass": 1.0,
+                        "Material": {
+                            "Base": "BillboardMaterial",
+                            "BaseColor": [
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "PSOType": 14,
+                            "SamplerState": "LinearClamp",
+                            "Shininess": 16.0,
+                            "SpecularColor": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "Textures": [
+                                "Editor/Icon/PointLight.png"
+                            ],
+                            "UVScrollSpeed": [
+                                0.0,
+                                0.0
+                            ]
+                        },
+                        "MotionType": 0,
+                        "ObjectChannel": 0,
+                        "Restitution": 1.0,
+                        "Transform": {
+                            "Location": [
+                                0.0,
+                                44.0,
+                                10.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        },
+                        "WorldDynamic": 2,
+                        "WorldStatic": 2,
+                        "bAutoActivate": true,
+                        "bBackfaceDepth": false,
+                        "bCastShadow": true,
+                        "bEnableGravity": true,
+                        "bHiddenInGame": false,
+                        "bReceiveShadow": true,
+                        "bVisible": true
+                    }
+                },
+                {
+                    "Class": "UPointLightComponent",
+                    "Name": "UPointLightComponent_0",
+                    "Properties": {
+                        "AttenuationRadius": 22.0,
+                        "Intensity": 5.0,
+                        "LightColor": [
+                            1.0,
+                            0.75,
+                            0.44999998807907104
+                        ],
+                        "ShadowBias": 0.5,
+                        "ShadowMapResolution": 512,
+                        "ShadowSlopeBias": 0.5,
+                        "ShadowSourceRadius": 0.14000000059604645,
+                        "Transform": {
+                            "Location": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        },
+                        "bAutoActivate": true,
+                        "bEnabled": true,
+                        "bHiddenInGame": false,
+                        "bShowLightBounds": true,
+                        "bVisible": true
+                    }
+                }
+            ],
+            "Properties": {
+                "bActorEnableCollision": true
+            }
+        },
+        {
+            "Class": "AStaticMeshActor",
+            "Components": [
+                {
+                    "Class": "UStaticMeshComponent",
+                    "Name": "UPrimitiveComponent_0",
+                    "Properties": {
+                        "Acceleration": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "COF": 0.20000000298023224,
+                        "GravityScale": 1.0,
+                        "Mass": 1.0,
+                        "MotionType": 0,
+                        "ObjectChannel": 0,
+                        "OverrideMaterials": [],
+                        "Restitution": 1.0,
+                        "StaticMesh": "Cube",
+                        "Transform": {
+                            "Location": [
+                                -24.5,
+                                0.0,
+                                21.447296142578125
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                100.0,
+                                50.0
+                            ]
+                        },
+                        "WorldDynamic": 2,
+                        "WorldStatic": 2,
+                        "bAutoActivate": true,
+                        "bBackfaceDepth": false,
+                        "bCastShadow": false,
+                        "bEnableGravity": true,
+                        "bHiddenInGame": false,
+                        "bReceiveShadow": false,
+                        "bVisible": true
+                    }
+                }
+            ],
+            "Properties": {
+                "bActorEnableCollision": true
+            }
+        },
+        {
+            "Class": "AStaticMeshActor",
+            "Components": [
+                {
+                    "Class": "UStaticMeshComponent",
+                    "Name": "UPrimitiveComponent_0",
+                    "Properties": {
+                        "Acceleration": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "COF": 0.20000000298023224,
+                        "GravityScale": 1.0,
+                        "Mass": 1.0,
+                        "MotionType": 0,
+                        "ObjectChannel": 0,
+                        "OverrideMaterials": [],
+                        "Restitution": 1.0,
+                        "StaticMesh": "Cube",
+                        "Transform": {
+                            "Location": [
+                                24.5,
+                                0.0,
+                                21.450000762939453
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                100.0,
+                                50.0
+                            ]
+                        },
+                        "WorldDynamic": 2,
+                        "WorldStatic": 2,
+                        "bAutoActivate": true,
+                        "bBackfaceDepth": false,
+                        "bCastShadow": false,
+                        "bEnableGravity": true,
+                        "bHiddenInGame": false,
+                        "bReceiveShadow": false,
+                        "bVisible": true
+                    }
+                }
+            ],
+            "Properties": {
+                "bActorEnableCollision": true
+            }
+        },
+        {
+            "Class": "AStaticMeshActor",
+            "Components": [
+                {
+                    "Class": "UStaticMeshComponent",
+                    "Name": "UPrimitiveComponent_0",
+                    "Properties": {
+                        "Acceleration": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "COF": 0.20000000298023224,
+                        "GravityScale": 1.0,
+                        "Mass": 1.0,
+                        "MotionType": 0,
+                        "ObjectChannel": 0,
+                        "OverrideMaterials": [],
+                        "Restitution": 1.0,
+                        "StaticMesh": "Cube",
+                        "Transform": {
+                            "Location": [
+                                0.0,
+                                -50.557857513427734,
+                                21.450000762939453
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                50.0,
+                                1.0,
+                                50.0
+                            ]
+                        },
+                        "WorldDynamic": 2,
+                        "WorldStatic": 2,
+                        "bAutoActivate": true,
+                        "bBackfaceDepth": false,
+                        "bCastShadow": false,
+                        "bEnableGravity": true,
+                        "bHiddenInGame": false,
+                        "bReceiveShadow": false,
+                        "bVisible": true
+                    }
+                }
+            ],
+            "Properties": {
+                "bActorEnableCollision": true
+            }
+        },
+        {
+            "Class": "AStaticMeshActor",
+            "Components": [
+                {
+                    "Class": "UStaticMeshComponent",
+                    "Name": "UPrimitiveComponent_0",
+                    "Properties": {
+                        "Acceleration": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "COF": 0.20000000298023224,
+                        "GravityScale": 1.0,
+                        "Mass": 1.0,
+                        "MotionType": 0,
+                        "ObjectChannel": 0,
+                        "OverrideMaterials": [],
+                        "Restitution": 1.0,
+                        "StaticMesh": "Cube",
+                        "Transform": {
+                            "Location": [
+                                0.0,
+                                50.46424102783203,
+                                21.5
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                50.0,
+                                1.0,
+                                50.0
+                            ]
+                        },
+                        "WorldDynamic": 2,
+                        "WorldStatic": 2,
+                        "bAutoActivate": true,
+                        "bBackfaceDepth": false,
+                        "bCastShadow": false,
+                        "bEnableGravity": true,
+                        "bHiddenInGame": false,
+                        "bReceiveShadow": false,
+                        "bVisible": true
+                    }
+                }
+            ],
+            "Properties": {
+                "bActorEnableCollision": true
+            }
+        },
+        {
+            "Class": "AStaticMeshActor",
+            "Components": [
+                {
+                    "Class": "UStaticMeshComponent",
+                    "Name": "UPrimitiveComponent_0",
+                    "Properties": {
+                        "Acceleration": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "COF": 0.20000000298023224,
+                        "GravityScale": 1.0,
+                        "Mass": 1.0,
+                        "MotionType": 0,
+                        "ObjectChannel": 0,
+                        "OverrideMaterials": [],
+                        "Restitution": 1.0,
+                        "StaticMesh": "Models/Cars/lamb.obj",
+                        "Transform": {
+                            "Location": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                -90.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        },
+                        "WorldDynamic": 2,
+                        "WorldStatic": 2,
+                        "bAutoActivate": true,
+                        "bBackfaceDepth": false,
+                        "bCastShadow": true,
+                        "bEnableGravity": true,
+                        "bHiddenInGame": false,
+                        "bReceiveShadow": true,
+                        "bVisible": true
+                    }
+                }
+            ],
+            "Properties": {
+                "bActorEnableCollision": true
+            }
+        },
+        {
+            "Class": "AStaticMeshActor",
+            "Components": [
+                {
+                    "Class": "UStaticMeshComponent",
+                    "Name": "UPrimitiveComponent_0",
+                    "Properties": {
+                        "Acceleration": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "COF": 0.20000000298023224,
+                        "GravityScale": 1.0,
+                        "Mass": 1.0,
+                        "MotionType": 0,
+                        "ObjectChannel": 0,
+                        "OverrideMaterials": [],
+                        "Restitution": 1.0,
+                        "StaticMesh": "Models/SoccerBall/ball.obj",
+                        "Transform": {
+                            "Location": [
+                                0.0,
+                                18.353317260742188,
+                                4.801218032836914
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                2.5,
+                                2.5,
+                                2.5
+                            ]
+                        },
+                        "WorldDynamic": 2,
+                        "WorldStatic": 2,
+                        "bAutoActivate": true,
+                        "bBackfaceDepth": false,
+                        "bCastShadow": true,
+                        "bEnableGravity": true,
+                        "bHiddenInGame": false,
+                        "bReceiveShadow": true,
+                        "bVisible": true
+                    }
+                }
+            ],
+            "Properties": {
+                "bActorEnableCollision": true
+            }
+        },
+        {
+            "Class": "AStaticMeshActor",
+            "Components": [
+                {
+                    "Class": "UStaticMeshComponent",
+                    "Name": "UPrimitiveComponent_0",
+                    "Properties": {
+                        "Acceleration": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "COF": 0.20000000298023224,
+                        "GravityScale": 1.0,
+                        "Mass": 1.0,
+                        "MotionType": 0,
+                        "ObjectChannel": 0,
+                        "OverrideMaterials": [],
+                        "Restitution": 1.0,
+                        "StaticMesh": "Cube",
+                        "Transform": {
+                            "Location": [
+                                -45.0,
+                                0.0,
+                                -0.5
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                40.0,
+                                40.0,
+                                1.0
+                            ]
+                        },
+                        "WorldDynamic": 2,
+                        "WorldStatic": 2,
+                        "bAutoActivate": true,
+                        "bBackfaceDepth": false,
+                        "bCastShadow": false,
+                        "bEnableGravity": true,
+                        "bHiddenInGame": false,
+                        "bReceiveShadow": true,
+                        "bVisible": true
+                    }
+                }
+            ],
+            "Properties": {
+                "bActorEnableCollision": true
+            }
+        },
+        {
+            "Class": "AStaticMeshActor",
+            "Components": [
+                {
+                    "Class": "UStaticMeshComponent",
+                    "Name": "UPrimitiveComponent_0",
+                    "Properties": {
+                        "Acceleration": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "COF": 0.20000000298023224,
+                        "GravityScale": 1.0,
+                        "Mass": 1.0,
+                        "MotionType": 0,
+                        "ObjectChannel": 0,
+                        "OverrideMaterials": [],
+                        "Restitution": 1.0,
+                        "StaticMesh": "Cylinder",
+                        "Transform": {
+                            "Location": [
+                                -48.0,
+                                -8.0,
+                                0.3
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                4.0,
+                                4.0,
+                                0.6
+                            ]
+                        },
+                        "WorldDynamic": 2,
+                        "WorldStatic": 2,
+                        "bAutoActivate": true,
+                        "bBackfaceDepth": false,
+                        "bCastShadow": false,
+                        "bEnableGravity": true,
+                        "bHiddenInGame": false,
+                        "bReceiveShadow": true,
+                        "bVisible": true
+                    }
+                }
+            ],
+            "Properties": {
+                "bActorEnableCollision": true
+            }
+        },
+        {
+            "Class": "AStaticMeshActor",
+            "Components": [
+                {
+                    "Class": "UStaticMeshComponent",
+                    "Name": "UPrimitiveComponent_0",
+                    "Properties": {
+                        "Acceleration": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "COF": 0.20000000298023224,
+                        "GravityScale": 1.0,
+                        "Mass": 1.0,
+                        "MotionType": 0,
+                        "ObjectChannel": 0,
+                        "OverrideMaterials": [],
+                        "Restitution": 1.0,
+                        "StaticMesh": "Cylinder",
+                        "Transform": {
+                            "Location": [
+                                -48.0,
+                                8.0,
+                                0.3
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                4.0,
+                                4.0,
+                                0.6
+                            ]
+                        },
+                        "WorldDynamic": 2,
+                        "WorldStatic": 2,
+                        "bAutoActivate": true,
+                        "bBackfaceDepth": false,
+                        "bCastShadow": false,
+                        "bEnableGravity": true,
+                        "bHiddenInGame": false,
+                        "bReceiveShadow": true,
+                        "bVisible": true
+                    }
+                }
+            ],
+            "Properties": {
+                "bActorEnableCollision": true
+            }
+        },
+        {
+            "Class": "APointLightActor",
+            "Components": [
+                {
+                    "Class": "UBillboardComponent",
+                    "Name": "UBillboardComponent_0",
+                    "Properties": {
+                        "Acceleration": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "COF": 0.20000000298023224,
+                        "GravityScale": 1.0,
+                        "Mass": 1.0,
+                        "Material": {
+                            "Base": "BillboardMaterial",
+                            "BaseColor": [
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "PSOType": 14,
+                            "SamplerState": "LinearClamp",
+                            "Shininess": 16.0,
+                            "SpecularColor": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "Textures": [
+                                "Editor/Icon/PointLight.png"
+                            ],
+                            "UVScrollSpeed": [
+                                0.0,
+                                0.0
+                            ]
+                        },
+                        "MotionType": 0,
+                        "ObjectChannel": 0,
+                        "Restitution": 1.0,
+                        "Transform": {
+                            "Location": [
+                                -49.0,
+                                -8.0,
+                                8.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        },
+                        "WorldDynamic": 2,
+                        "WorldStatic": 2,
+                        "bAutoActivate": true,
+                        "bBackfaceDepth": false,
+                        "bCastShadow": true,
+                        "bEnableGravity": true,
+                        "bHiddenInGame": false,
+                        "bReceiveShadow": true,
+                        "bVisible": true
+                    }
+                },
+                {
+                    "Class": "UPointLightComponent",
+                    "Name": "UPointLightComponent_0",
+                    "Properties": {
+                        "AttenuationRadius": 20.0,
+                        "Intensity": 8.0,
+                        "LightColor": [
+                            1.0,
+                            0.95,
+                            0.9
+                        ],
+                        "ShadowBias": 0.5,
+                        "ShadowMapResolution": 512,
+                        "ShadowSlopeBias": 0.5,
+                        "ShadowSourceRadius": 0.14000000059604645,
+                        "Transform": {
+                            "Location": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        },
+                        "bAutoActivate": true,
+                        "bEnabled": true,
+                        "bHiddenInGame": false,
+                        "bShowLightBounds": true,
+                        "bVisible": true
+                    }
+                }
+            ],
+            "Properties": {
+                "bActorEnableCollision": true
+            }
+        },
+        {
+            "Class": "APointLightActor",
+            "Components": [
+                {
+                    "Class": "UBillboardComponent",
+                    "Name": "UBillboardComponent_0",
+                    "Properties": {
+                        "Acceleration": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "COF": 0.20000000298023224,
+                        "GravityScale": 1.0,
+                        "Mass": 1.0,
+                        "Material": {
+                            "Base": "BillboardMaterial",
+                            "BaseColor": [
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "PSOType": 14,
+                            "SamplerState": "LinearClamp",
+                            "Shininess": 16.0,
+                            "SpecularColor": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "Textures": [
+                                "Editor/Icon/PointLight.png"
+                            ],
+                            "UVScrollSpeed": [
+                                0.0,
+                                0.0
+                            ]
+                        },
+                        "MotionType": 0,
+                        "ObjectChannel": 0,
+                        "Restitution": 1.0,
+                        "Transform": {
+                            "Location": [
+                                -49.0,
+                                8.0,
+                                8.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        },
+                        "WorldDynamic": 2,
+                        "WorldStatic": 2,
+                        "bAutoActivate": true,
+                        "bBackfaceDepth": false,
+                        "bCastShadow": true,
+                        "bEnableGravity": true,
+                        "bHiddenInGame": false,
+                        "bReceiveShadow": true,
+                        "bVisible": true
+                    }
+                },
+                {
+                    "Class": "UPointLightComponent",
+                    "Name": "UPointLightComponent_0",
+                    "Properties": {
+                        "AttenuationRadius": 20.0,
+                        "Intensity": 8.0,
+                        "LightColor": [
+                            1.0,
+                            0.95,
+                            0.9
+                        ],
+                        "ShadowBias": 0.5,
+                        "ShadowMapResolution": 512,
+                        "ShadowSlopeBias": 0.5,
+                        "ShadowSourceRadius": 0.14000000059604645,
+                        "Transform": {
+                            "Location": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        },
+                        "bAutoActivate": true,
+                        "bEnabled": true,
+                        "bHiddenInGame": false,
+                        "bShowLightBounds": true,
+                        "bVisible": true
+                    }
+                }
+            ],
+            "Properties": {
+                "bActorEnableCollision": true
+            }
+        },
+        {
+            "Class": "APointLightActor",
+            "Components": [
+                {
+                    "Class": "UBillboardComponent",
+                    "Name": "UBillboardComponent_0",
+                    "Properties": {
+                        "Acceleration": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "COF": 0.20000000298023224,
+                        "GravityScale": 1.0,
+                        "Mass": 1.0,
+                        "Material": {
+                            "Base": "BillboardMaterial",
+                            "BaseColor": [
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "PSOType": 14,
+                            "SamplerState": "LinearClamp",
+                            "Shininess": 16.0,
+                            "SpecularColor": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "Textures": [
+                                "Editor/Icon/PointLight.png"
+                            ],
+                            "UVScrollSpeed": [
+                                0.0,
+                                0.0
+                            ]
+                        },
+                        "MotionType": 0,
+                        "ObjectChannel": 0,
+                        "Restitution": 1.0,
+                        "Transform": {
+                            "Location": [
+                                -57.0,
+                                0.0,
+                                5.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        },
+                        "WorldDynamic": 2,
+                        "WorldStatic": 2,
+                        "bAutoActivate": true,
+                        "bBackfaceDepth": false,
+                        "bCastShadow": true,
+                        "bEnableGravity": true,
+                        "bHiddenInGame": false,
+                        "bReceiveShadow": true,
+                        "bVisible": true
+                    }
+                },
+                {
+                    "Class": "UPointLightComponent",
+                    "Name": "UPointLightComponent_0",
+                    "Properties": {
+                        "AttenuationRadius": 25.0,
+                        "Intensity": 5.0,
+                        "LightColor": [
+                            0.9,
+                            0.95,
+                            1.0
+                        ],
+                        "ShadowBias": 0.5,
+                        "ShadowMapResolution": 512,
+                        "ShadowSlopeBias": 0.5,
+                        "ShadowSourceRadius": 0.14000000059604645,
+                        "Transform": {
+                            "Location": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        },
+                        "bAutoActivate": true,
+                        "bEnabled": true,
+                        "bHiddenInGame": false,
+                        "bShowLightBounds": true,
+                        "bVisible": true
+                    }
+                }
+            ],
+            "Properties": {
+                "bActorEnableCollision": true
+            }
+        }
+    ],
+    "Version": 2
+}
