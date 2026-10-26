@@ -13,6 +13,11 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FOnVehicleLanded, float);
 class UVehicleMovementComponent : public UActorComponent
 {
 	DECLARE_CLASS(UVehicleMovementComponent, UActorComponent)
+	REFLECT_START(ClassName)
+		PROPERTY(MaxForwardSpeed) PROPERTY(MaxReverseSpeed) PROPERTY(BoostMaxSpeed)
+		PROPERTY(Acceleration) PROPERTY(Deceleration) PROPERTY(Grip)
+		PROPERTY(TurnRate) PROPERTY(FullTurnSpeed)
+	REFLECT_END()
 
 public:
 	UVehicleMovementComponent();
@@ -48,6 +53,7 @@ private:
 		const FHitResult& Hit
 	);
 	void UpdateSteering(const FVehicleInput& Input, float DeltaTime);
+	void UpdateDrive(const FVehicleInput& Input, float DeltaTime);
 
 private:
 	FVehicleInput PendingInput;
@@ -73,4 +79,11 @@ private:
 
 	float TurnRate = 100.0f;
 	float FullTurnSpeed = 5.0f;
+
+	float MaxForwardSpeed = 20.0f;
+	float MaxReverseSpeed = 8.0f;
+	float BoostMaxSpeed = 30.0f;
+	float Acceleration = 15.0f;
+	float Deceleration = 20.0f;
+	float Grip = 10.0f;
 };

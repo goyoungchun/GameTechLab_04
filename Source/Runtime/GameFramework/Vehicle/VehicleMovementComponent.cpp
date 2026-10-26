@@ -51,6 +51,7 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
 	UpdateVelocityEstimate(DeltaTime);
 	UpdateGround(DeltaTime);
 	UpdateSteering(Input, DeltaTime);
+	UpdateDrive(Input, DeltaTime);
 }
 
 UBoxComponent* UVehicleMovementComponent::GetBody() const
@@ -158,6 +159,40 @@ void UVehicleMovementComponent::UpdateSteering(const FVehicleInput& Input, float
 
 	const float CurrentYaw = Body->GetRelativeRotation().Yaw;
 	Body->SetRelativeRotation({ 0.0f, CurrentYaw + YawDelta, 0.0f });
+}
+
+void UVehicleMovementComponent::UpdateDrive(const FVehicleInput& Input, float DeltaTime)
+{
+	UBoxComponent* Body = GetBody();
+	if (!Body || DeltaTime <= 0.0f)
+		return;
+
+	FVector Accel = FVector::ZeroVector;
+
+	if (IsGrounded())
+	{
+		const FQuat Rotation = Body->GetWorldRotation().Quaternion();
+		const FVector Forward = Rotation.GetForwardVector();
+		const FVector Right = Rotation.GetRightVector();
+		const float ForwardSpeed = Velocity.Dot(Forward);
+		const float LateralSpeed = Velocity.Dot(Right);
+
+		float TargetSpeed = 0.0f;
+		if (Input.Throttle > 0.0f)
+			TargetSpeed = Input.Throttle * (Input.bBoost ? BoostMaxSpeed : MaxForwardSpeed);
+		else if (Input.Throttle < 0.0f)
+			TargetSpeed = Input.Throttle * MaxReverseSpeed;
+		
+		const bool bSpeedingUp = TargetSpeed * ForwardSpeed >= 0.0f && std::abs(TargetSpeed) > std::abs(ForwardSpeed);
+		const float Rate = bSpeedingUp ? Acceleration : Deceleration;
+		const float ForwardAccel = std::clamp((TargetSpeed - ForwardSpeed) / DeltaTime, -Rate, Rate);
+		const float LateralAccel = -LateralSpeed * std::min(Grip, 1.0f / DeltaTime);
+
+		Accel = Forward * ForwardAccel + Right * LateralAccel;
+	}
+
+	if (Body->GetAcceleration() != Accel)
+		Body->SetAcceleration(Accel);
 }
 
 float UVehicleMovementComponent::GetSpeed() const
