@@ -10,6 +10,7 @@
 #include "Component/SphereComponent.h"
 #include "Component/CapsuleComponent.h"
 #include "Component/StaticMeshComponent.h"
+#include "GameFramework/Vehicle/VehiclePawn.h"
 #include "Component/TextRenderComponent.h"
 #include "Component/SpotLightComponent.h"
 #include "Component/PointLightComponent.h"
@@ -293,6 +294,7 @@ namespace
 		{
 			for (TObjectIterator<UStaticMesh> Itr; Itr; ++Itr)
 			{
+				if (Itr->HasAnyFlags(EObjectFlags::RF_Transient)) continue;
 				bool bSelected = (*Itr == Current);
 
 				FString ItemPath = Itr->GetPath();
@@ -309,7 +311,11 @@ namespace
 
 					// 메모리를 직접 바꾸지 않고 SetFont를 거친다
 					if (UStaticMeshComponent* MeshComponent = Cast<UStaticMeshComponent>(Owner))
-						MeshComponent->SetStaticMesh(*Itr);
+					{
+						auto* Vehicle = Cast<AVehiclePawn>(MeshComponent->GetOwner());
+						if (Vehicle && Vehicle->GetBodyMeshComponent() == MeshComponent) Vehicle->SetBody(ItemPath);
+						else MeshComponent->SetStaticMesh(*Itr);
+					}
 					else
 						*StaticMeshPtr = *Itr;
 				}

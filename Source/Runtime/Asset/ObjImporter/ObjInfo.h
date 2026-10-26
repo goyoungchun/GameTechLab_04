@@ -34,6 +34,7 @@ struct FObjIndexHash
 struct FObjFace
 {
 	TArray<FObjIndex> Indexes;
+	FString ObjectName;
 };
 
 struct FObjSection

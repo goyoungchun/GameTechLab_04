@@ -62,7 +62,15 @@ local function ResetMatchState()
     Game.LastScorerIndex = nil
 end
 
-local function EnsureStubCarsAndBall()
+local function SpawnTurnBall(Location)
+    return obj:SpawnBall(Location)
+end
+
+local function ClearTurnBall()
+    obj:ClearBalls()
+end
+
+local function EnsureCarsAndBall()
     Game.Cars = Game.Cars or {}
     for PlayerIndex = 1, 2 do
         if not Game.Cars[PlayerIndex] then
@@ -78,10 +86,11 @@ local function EnsureStubCarsAndBall()
             }
         end
     end
-    Game.Ball = Game.Ball or {
-        bIsStub = true,
-        ResetTo = function(Location) print("[Stub] Ball reset") end,
-    }
+    -- 공의 네이티브 포인터를 보관하지 않고, 현재 World에서 새 공 하나로 교체한다.
+    Game.Ball = Game.Ball or {}
+    Game.Ball.bIsStub = false
+    Game.Ball.ResetTo = SpawnTurnBall
+    Game.Ball.Clear = ClearTurnBall
 end
 
 local function SetAllCarsInputEnabled(bEnabled)
@@ -372,6 +381,7 @@ StateEnterHandlers.MainMenu = function()
     StopCountdown()
     StopTurnResult()
     LeaveShowroom()
+    Game.Ball.Clear()
     SetMenuItems(Game.Config.MainMenuItems)
     ResetMatchState()
     Game.SelectedCarNames = { nil, nil }
@@ -401,6 +411,7 @@ StateTickHandlers.Controls = function(DeltaTime) HandleBackToMainMenu() end
 StateTickHandlers.Credit   = function(DeltaTime) HandleBackToMainMenu() end
 
 StateEnterHandlers.CarSelect = function()
+    Game.Ball.Clear()
     local PreviousCarNames = Game.SelectedCarNames or {}
     Game.SelectedCarNames = {
         PreviousCarNames[1] or Game.Config.DefaultCarNames[1],
@@ -533,12 +544,12 @@ end
 
 function BeginPlay()
     ResetMatchState()
-    EnsureStubCarsAndBall()
+    EnsureCarsAndBall()
     SetState("MainMenu")
 end
 
 function Tick(DeltaTime)
-    EnsureStubCarsAndBall()
+    EnsureCarsAndBall()
 
     local StateTickHandler = StateTickHandlers[Game.State]
     if StateTickHandler then

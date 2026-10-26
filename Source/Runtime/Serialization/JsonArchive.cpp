@@ -81,7 +81,7 @@ bool FJsonArchive::SaveWorld(UWorld* World, const FString& Path)
 
 		for (UActorComponent* Component : Actor->GetComponents())
 		{
-			if (!Component) continue;
+			if (!Component || Component->HasAnyFlags(EObjectFlags::RF_Transient)) continue;
 			json ComponentJson;
 			ComponentJson["Name"] = Component->GetName();
 			ComponentJson["Class"] = Component->GetClass()->Name;

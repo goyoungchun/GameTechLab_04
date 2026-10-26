@@ -4,6 +4,7 @@
 
 class UBoxComponent;
 class UStaticMeshComponent;
+class UStaticMesh;
 class UVehicleMovementComponent;
 class UScriptComponent;
 class UCameraComponent;
@@ -20,6 +21,7 @@ public:
 	AVehiclePawn();
 	virtual ~AVehiclePawn() override = default;
 	virtual void BeginPlay() override;
+	virtual void EndPlay() override;
 	virtual void Tick(float DeltaTime) override;
 
 	int32 GetPlayerIndex() const { return static_cast<int32>(PlayerIndex); }
@@ -29,13 +31,25 @@ public:
 	void RequestJump();
 
 	UVehicleMovementComponent* GetMovement() const { return Movement; }
+	UStaticMeshComponent* GetBodyMeshComponent() const { return StaticMesh; }
 
 	bool SetBody(const FString& MeshName);
 	FString GetBodyName() const;
 
 private:
+	void RefreshVehicleVisuals();
+	void ClearVehicleVisuals();
+	void UpdateWheelVisuals(float DeltaTime);
+	void UpdateFollowCamera();
 	UBoxComponent* Box = nullptr;
 	UStaticMeshComponent* StaticMesh = nullptr;
+	UStaticMeshComponent* BodyVisual = nullptr;
+	UStaticMeshComponent* Wheels[4] = {};
+	float WheelSpin[4] = {};
+	float WheelSteering = 0.0f;
+	UStaticMesh* AppliedBodyMesh = nullptr;
+	bool bUsingParts = false;
+	bool bSourceWasVisible = true;
 	UVehicleMovementComponent* Movement = nullptr;
 	UScriptComponent* Script = nullptr;
 	UCameraComponent* Camera = nullptr;

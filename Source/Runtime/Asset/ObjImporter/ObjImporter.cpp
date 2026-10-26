@@ -261,6 +261,7 @@ bool FObjImporter::ParseObj(const FString& Path, FObjInfo& Out)
 	Info.Path = Path;
 
 	FObjSection S;
+	FString ObjectName;
 	FString Line;
 	int32 LineNumber = 0;
 	while (std::getline(File, Line))
@@ -279,7 +280,11 @@ bool FObjImporter::ParseObj(const FString& Path, FObjInfo& Out)
 			continue; // 빈 줄 || 주석
 		}
 
-		if (Keyword == "v")
+		if (Keyword == "o")
+		{
+			Stream >> ObjectName;
+		}
+		else if (Keyword == "v")
 		{
 			FVector P;
 			if (!(Stream >> P.X >> P.Y >> P.Z))
@@ -312,6 +317,7 @@ bool FObjImporter::ParseObj(const FString& Path, FObjInfo& Out)
 		else if (Keyword == "f")
 		{
 			FObjFace F;
+			F.ObjectName = ObjectName;
 			FString Token;
 			while (Stream >> Token)
 			{
@@ -347,11 +353,8 @@ bool FObjImporter::ParseObj(const FString& Path, FObjInfo& Out)
 		else if (Keyword == "usemtl")
 		{
 			FString Mtl;
-			if (!(Stream >> Mtl))
-			{
-				HTR_LOG(Error, "[OBJ] {}:{}: usemtl without name", Path, LineNumber);
-				return false;
-			}
+			// 일부 차량(mobil)의 빈 usemtl은 기본 재질로 돌아가는 구간이다.
+			Stream >> Mtl;
 
 			if (S.Count > 0)
 			{
@@ -546,10 +549,14 @@ TUniquePtr<FStaticMeshData> FObjImporter::LoadStaticMeshData(const FString& Path
 {
 	const FString BinPath = Path + ".bin";
 
-	// .bin 파일 읽기
-	if (TUniquePtr<FStaticMeshData> Baked = FStaticMeshBake::ReadBaked(BinPath))
+	// 좌표계를 수정한 OBJ보다 오래된 캐시는 재사용하지 않는다.
+	std::error_code SourceError, BakeError;
+	const auto SourceTime = std::filesystem::last_write_time(Path, SourceError);
+	const auto BakeTime = std::filesystem::last_write_time(BinPath, BakeError);
+	if (!BakeError && (SourceError || BakeTime >= SourceTime))
 	{
-		return Baked;
+		if (TUniquePtr<FStaticMeshData> Baked = FStaticMeshBake::ReadBaked(BinPath))
+			return Baked;
 	}
 
 	FObjInfo Info;
@@ -562,6 +569,41 @@ TUniquePtr<FStaticMeshData> FObjImporter::LoadStaticMeshData(const FString& Path
 
 	FStaticMeshBake::WriteBaked(BinPath, *Data);
 	return Data;
+}
+
+bool FObjImporter::LoadStaticMeshObjects(const FString& Path, TArray<FObjMeshPart>& OutParts)
+{
+	FObjInfo Source;
+	if (!ParseObj(Path, Source)) return false;
+	TArray<FString> Names;
+	for (const FObjFace& Face : Source.Faces)
+		if (std::find(Names.begin(), Names.end(), Face.ObjectName) == Names.end()) Names.Add(Face.ObjectName);
+	TArray<FObjMeshPart> Parts;
+	for (const FString& Name : Names)
+	{
+		FObjInfo Object = Source;
+		Object.Faces.Reset();
+		Object.Sections.Reset();
+		for (const FObjSection& Section : Source.Sections)
+		{
+			FObjSection Selected = Section;
+			Selected.Start = Object.Faces.Num();
+			Selected.Count = 0;
+			for (int32 Index = Section.Start; Index < Section.Start + Section.Count; ++Index)
+				if (Source.Faces[Index].ObjectName == Name)
+				{
+					Object.Faces.Add(Source.Faces[Index]);
+					++Selected.Count;
+				}
+			if (Selected.Count) Object.Sections.Add(Selected);
+		}
+		FObjMeshPart Part;
+		Part.Name = Name;
+		if (!Cook(Object, Part.Data)) return false;
+		Parts.Add(std::move(Part));
+	}
+	OutParts = std::move(Parts);
+	return !OutParts.IsEmpty();
 }
 
 // 디버그용 출력

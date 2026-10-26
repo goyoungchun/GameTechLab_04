@@ -4,13 +4,20 @@
 #include "Container/Array.h"
 #include "Core/Types.h"
 #include "Core/EngineString.h"
+#include "Render/StaticMeshData.h"
 
-struct FStaticMeshData;
+struct FObjMeshPart
+{
+	FString Name;
+	FStaticMeshData Data;
+};
 
 class FObjImporter
 {
 public:
 	static TUniquePtr<FStaticMeshData> LoadStaticMeshData(const FString& Path);
+	// 원본 OBJ의 o 경계를 보존한다. 전체 메시용 .bin 캐시는 사용하지 않는다.
+	static bool LoadStaticMeshObjects(const FString& Path, TArray<FObjMeshPart>& OutParts);
 
 	// 디버그용 출력
 	static void PrintObjInfo(const FObjInfo& ObjInfo);

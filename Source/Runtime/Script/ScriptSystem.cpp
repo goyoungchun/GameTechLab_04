@@ -6,11 +6,28 @@
 #include "Engine/World.h"
 #include "Engine/Level.h"
 #include "GameFramework/Actor/StaticMeshActor.h"
+#include "GameFramework/Actor/BallActor.h"
 #include "Asset/AssetManager.h"
 #include "Component/ScriptComponent.h"
 #include "Core/EngineLog.h"
 #include "GameFramework/Vehicle/VehicleScriptBindings.h"
 #include "GameFramework/Vehicle/VehiclePawn.h"
+
+namespace
+{
+	void ClearMatchBalls(UWorld& World, const ABallActor* Keep = nullptr)
+	{
+		ULevel* Level = World.GetPersistentLevel();
+		if (!Level)
+			return;
+		TArray<ABallActor*> Balls;
+		for (AActor* Actor : Level->GetActors())
+			if (ABallActor* Ball = Cast<ABallActor>(Actor); Ball && Ball != Keep && !Ball->IsActorBeingDestroyed())
+				Balls.Add(Ball);
+		for (ABallActor* Ball : Balls)
+			Ball->Retire();
+	}
+}
 
 FScriptSystem::FScriptSystem()
 {
@@ -227,6 +244,27 @@ void FScriptSystem::RegisterTypes()
 				Script->RegisterComponent();
 			}
 			return NewActor;
+		},
+		// 새 BodyId로 생성하므로 이전 턴의 속도나 접촉 상태를 이어받지 않는다.
+		"SpawnBall", [](AActor& Self, const FVector& Location) -> AActor*
+		{
+			UWorld* World = Self.GetWorld();
+			if (!World)
+				return nullptr;
+			FTransform Transform;
+			Transform.Location = Location;
+			ABallActor* Ball = World->SpawnActor<ABallActor>(NAME_None, &Transform);
+			if (Ball)
+			{
+				Ball->SetFlags(EObjectFlags::RF_Transient);
+				ClearMatchBalls(*World, Ball);
+			}
+			return Ball;
+		},
+		"ClearBalls", [](AActor& Self)
+		{
+			if (UWorld* World = Self.GetWorld())
+				ClearMatchBalls(*World);
 		},
 		// 이미 있는 StaticMeshActor의 메시를 이름으로 바꾼다
 		"SetMesh", [](AActor& Self, const FString& MeshName) -> bool

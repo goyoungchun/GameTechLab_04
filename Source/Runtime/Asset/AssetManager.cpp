@@ -326,6 +326,7 @@ void UAssetManager::CreateParticleMaterial()
 
 void UAssetManager::Shutdown()
 {
+	Get().MeshParts.Empty();
 	Get().AssetMap.Empty();
 }
 
@@ -428,6 +429,52 @@ UStaticMesh* UAssetManager::LoadObjStaticMesh(const FString& Path)
 
 	Get().RegisterAsset(Key, Mesh);
 	return Mesh;
+}
+
+bool UAssetManager::GetObjMeshParts(UStaticMesh* Source, TArray<FStaticMeshPart>& OutParts)
+{
+	if (!Source) return false;
+	const FString Path = Source->GetPath();
+	if (const auto* Cached = Get().MeshParts.Find(Path))
+	{
+		OutParts = *Cached;
+		return true;
+	}
+	if (fs::path(Path).extension() != ".obj") return false;
+	TArray<FObjMeshPart> Objects;
+	if (!FObjImporter::LoadStaticMeshObjects((fs::path("Assets") / Path).generic_string(), Objects)) return false;
+	TArray<FStaticMeshPart> Parts;
+	for (FObjMeshPart& Object : Objects)
+	{
+		const FVector Pivot = (Object.Data.AABB.Min + Object.Data.AABB.Max) * 0.5f;
+		Object.Data.Translate(Pivot * -1.0f);
+		Object.Data.AABB.Min -= Pivot;
+		Object.Data.AABB.Max -= Pivot;
+		Object.Data.OptimizeTriangleOrderForVertexCache();
+		TUniquePtr<FVertexBuffer> VB;
+		TUniquePtr<FIndexBuffer> IB;
+		// CPU에서만 로드한 에셋도 도구/검증에서 같은 분리 경로를 사용할 수 있다.
+		if (Source->VertexBuffer && Source->IndexBuffer)
+		{
+			VB = RenderCommand::CreateStaticVertexBuffer(Object.Data.Vertices.GetData(),
+				sizeof(FVertexPNCT) * static_cast<uint32>(Object.Data.Vertices.Num()), sizeof(FVertexPNCT));
+			IB = RenderCommand::CreateStaticIndexBuffer(Object.Data.Indices.GetData(), static_cast<uint32>(Object.Data.Indices.Num()));
+			if (!VB || !IB) return false;
+		}
+		auto* Mesh = FObjectFactory::ConstructObject<UStaticMesh>();
+		Mesh->MeshData = std::move(Object.Data);
+		Mesh->Materials = Source->Materials;
+		Mesh->VertexBuffer = std::move(VB);
+		Mesh->IndexBuffer = std::move(IB);
+		Mesh->SetPath(Path + "#" + Object.Name);
+		Mesh->SetFlags(EObjectFlags::RF_Transient);
+		Mesh->MeshData.BuildTriangleBVH();
+		Mesh->RebuildRenderData();
+		Parts.Add({ Object.Name, Mesh, Pivot });
+	}
+	Get().MeshParts.Add(Path, Parts);
+	OutParts = std::move(Parts);
+	return true;
 }
 
 bool UAssetManager::ReorientStaticMesh(UStaticMesh& Mesh, const std::function<FVector(const FVector&)>& Rotate)

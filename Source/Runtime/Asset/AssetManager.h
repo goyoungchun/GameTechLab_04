@@ -16,6 +16,13 @@ enum class EAssetType
 class UStaticMesh;
 class FShader;
 
+struct FStaticMeshPart
+{
+	FString Name;
+	UStaticMesh* Mesh = nullptr;
+	FVector Pivot = FVector::ZeroVector;
+};
+
 namespace fs = std::filesystem;
 
 class UAssetManager : public UObject
@@ -61,6 +68,8 @@ public:
 	UTexture2D* LoadTexture(const FString& InPath, bool bGenerateMips = true);
 	UFont* LoadFontAtlas(const FString& JsonPath, const FString& AtlasTexturePath);
 	static UStaticMesh* LoadObjStaticMesh(const FString& Path);
+	// 원본의 재질을 공유하는 중심 피벗 메시를 메모리에 만들고 차량끼리 재사용한다.
+	static bool GetObjMeshParts(UStaticMesh* Source, TArray<FStaticMeshPart>& OutParts);
 
 	FLODGenerateResult GenerateStaticMeshLODs(UStaticMesh& Mesh,const FLODGenerateRequest& Request);
 
@@ -74,6 +83,7 @@ public:
 private:
 	TMap<FString, FString> AssetPathMap;
 	TMap<FString, URenderAsset*> AssetMap;
+	TMap<FString, TArray<FStaticMeshPart>> MeshParts;
 
 	//TMap<FString, UStaticMesh*> MeshMap;	// KEY: FILE NAME OR 쉐입 첫글자 대문자
 	TMap<FString, TUniquePtr<FShader>> ShaderMap;	// KEY: FILE NAME

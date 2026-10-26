@@ -33,6 +33,7 @@ public:
 	bool IsGrounded() const { return MoveMode == EVehicleMoveMode::Grounded; }
 	bool HasLandedThisFrame() const { return bLandedThisFrame; }
 	bool IsBoosting() const { return bBoosting; }
+	float GetSteeringInput() const { return SteeringInput; }
 	void EndPlay() override;
 
 	const FVehicleTuning& GetTuning() const { return Tuning; }
@@ -58,6 +59,7 @@ private:
 private:
 	FVehicleInput PendingInput;
 	bool bBoosting = false;
+	float SteeringInput = 0.0f;
 
 	FVector Velocity = FVector::ZeroVector;
 	FVector PreviousLocation = FVector::ZeroVector;

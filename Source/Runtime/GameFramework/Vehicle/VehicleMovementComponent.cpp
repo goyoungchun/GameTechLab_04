@@ -37,6 +37,7 @@ void UVehicleMovementComponent::BeginPlay()
 
 void UVehicleMovementComponent::EndPlay()
 {
+	SteeringInput = 0.0f;
 	if (UBoxComponent* Body = GetBody())
 		Body->OnComponentHit.Remove(BodyHitHandle);
 
@@ -50,6 +51,7 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
 	const FVehicleInput Input = PendingInput;
 	PendingInput = {};
 	bBoosting = Input.bBoost && Input.Throttle > 0.0f;
+	SteeringInput = Input.Steer;
 
 	UpdateVelocityEstimate(DeltaTime);
 	UpdateGround(DeltaTime);
