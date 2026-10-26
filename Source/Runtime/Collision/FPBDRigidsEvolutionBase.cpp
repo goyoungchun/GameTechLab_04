@@ -397,7 +397,7 @@ void FPBDRigidsEvolutionGBF::ApplyGravityAndIntegrate(TArray<FPhysicsBodyState>&
 			continue;
 
 		// 반암시적 Euler 적분. 중력을 꺼도 기존 속도에 의한 이동은 유지한다.
-		const FVector Acceleration = State.Acceleration + (State.bEnableGravity ? Gravity : FVector::ZeroVector);
+		const FVector Acceleration = State.Acceleration + (State.bEnableGravity ? Gravity * State.GravityScale : FVector::ZeroVector);
 		FVector Velocity = State.LinearVelocity + Acceleration * DeltaTime;
 
 		const float Speed = Velocity.Size();

@@ -50,6 +50,7 @@ class UPrimitiveComponent :public USceneComponent
 			FEnumEntry(ECollisionChannel::WorldStatic, "WorldStatic"),
 			FEnumEntry(ECollisionChannel::WorldDynamic, "WorldDynamic"))
 		PROPERTY(bEnableGravity)
+		PROPERTY(GravityScale)
 		// 구조체 내부의 채널별 응답을 기존 Details/직렬화/복사 경로에 등록한다.
 		InClass->AddProperty<ECollisionResponse>("WorldStatic",
 			offsetof(ThisClass, CollisionResponses) + offsetof(FCollisionResponseContainer, WorldStatic),
@@ -150,6 +151,8 @@ public:
 	}
 	bool IsGravityEnabled() const { return bEnableGravity; }
 	void SetEnableGravity(bool bInEnableGravity) { bEnableGravity = bInEnableGravity; OnPropertyChanged("bEnableGravity"); }
+	float GetGravityScale() const { return GravityScale; }
+	void SetGravityScale(float InGravityScale) { GravityScale = InGravityScale; OnPropertyChanged("GravityScale"); }
 
 protected:
 	bool ShouldCreateRenderState() const override { return true; }
@@ -176,4 +179,5 @@ private:
 	FCollisionResponseContainer CollisionResponses;
 	// 중력 적분은 Dynamic일 때만 이 설정을 사용한다.
 	bool bEnableGravity = true;
+	float GravityScale = 1.0f;
 };

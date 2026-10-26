@@ -22,4 +22,5 @@ struct FPhysicsBodyState
 	ECollisionChannel ObjectChannel = ECollisionChannel::WorldStatic;
 	FCollisionResponseContainer CollisionResponses;
 	bool bEnableGravity = true;
+	float GravityScale = 1.0f;
 };

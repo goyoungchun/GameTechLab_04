@@ -193,6 +193,7 @@ TArray<FPhysicsBodyState> FPhysSceneChaos::CapturePhysicsInputs()
 		State.ObjectChannel = Component->GetObjectChannel();
 		State.CollisionResponses = Component->GetCollisionResponses();
 		State.bEnableGravity = Component->IsGravityEnabled();
+		State.GravityScale = Component->GetGravityScale();
 		State.Acceleration = Component->GetAcceleration();
 		State.COF = Component->GetCOF();
 		State.Restitution = Component->GetRestitution();
