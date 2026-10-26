@@ -17,6 +17,7 @@ class UVehicleMovementComponent : public UActorComponent
 		PROPERTY(MaxForwardSpeed) PROPERTY(MaxReverseSpeed) PROPERTY(BoostMaxSpeed)
 		PROPERTY(Acceleration) PROPERTY(Deceleration) PROPERTY(Grip)
 		PROPERTY(TurnRate) PROPERTY(FullTurnSpeed)
+		PROPERTY(JumpSpeed)
 	REFLECT_END()
 
 public:
@@ -86,4 +87,6 @@ private:
 	float Acceleration = 15.0f;
 	float Deceleration = 20.0f;
 	float Grip = 10.0f;
+
+	float JumpSpeed = 6.0f;
 };

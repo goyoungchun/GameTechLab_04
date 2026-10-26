@@ -38,8 +38,8 @@ AVehiclePawn::AVehiclePawn()
 	Script->SetScriptPath("Assets/Scripts/Vehicle/VehicleController.lua");
 
 	Camera->SetupAttachment(Box);
-	Camera->SetRelativeLocation({ -2.5, 0, 4 });
-	Camera->SetRelativeRotation({ 30, 0, 0 });
+	Camera->SetRelativeLocation({ -4, 0, 4 });
+	Camera->SetRelativeRotation({ 20, 0, 0 });
 	Camera->SetExternalInputManaged(true);
 }
 

@@ -189,6 +189,9 @@ void UVehicleMovementComponent::UpdateDrive(const FVehicleInput& Input, float De
 		const float LateralAccel = -LateralSpeed * std::min(Grip, 1.0f / DeltaTime);
 
 		Accel = Forward * ForwardAccel + Right * LateralAccel;
+
+		if (Input.bJumpRequested)
+			Accel.Z += JumpSpeed / DeltaTime;
 	}
 
 	if (Body->GetAcceleration() != Accel)
