@@ -64,6 +64,8 @@ AVehiclePawn::AVehiclePawn()
 
 void AVehiclePawn::BeginPlay()
 {
+	// 컴포넌트 역직렬화/PIE 복제 후 선택한 모델로 이전 씬의 Box 치수를 갱신한다.
+	FitBodyCollision();
 	Super::BeginPlay();
 
 	if (Camera)
@@ -81,7 +83,11 @@ void AVehiclePawn::EndPlay()
 void AVehiclePawn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	if (StaticMesh && StaticMesh->GetStaticMesh() != AppliedBodyMesh) RefreshVehicleVisuals();
+	if (StaticMesh && StaticMesh->GetStaticMesh() != AppliedBodyMesh)
+	{
+		FitBodyCollision();
+		RefreshVehicleVisuals();
+	}
 	UpdateWheelVisuals(DeltaTime);
 	UpdateFollowCamera();
 
@@ -119,13 +125,7 @@ bool AVehiclePawn::SetBody(const FString& MeshName)
 		return false;
 
 	StaticMesh->SetStaticMesh(Mesh);
-
-	if (const FStaticMeshData* MeshData = StaticMesh->GetMeshData())
-	{
-		const FBox Bounds = MeshData->AABB.GetWorldAABB(StaticMesh->GetTransform().GetLocalMatrix());
-		Box->SetBoxExtent(FVector(std::max(std::abs(Bounds.Min.X), std::abs(Bounds.Max.X)),
-			std::max(std::abs(Bounds.Min.Y), std::abs(Bounds.Max.Y)), std::max(std::abs(Bounds.Min.Z), std::abs(Bounds.Max.Z))));
-	}
+	FitBodyCollision();
 	if (HasBegunPlay()) RefreshVehicleVisuals();
 	UpdateFollowCamera();
 
@@ -139,6 +139,19 @@ FString AVehiclePawn::GetBodyName() const
 		return FString();
 
 	return fs::path(Mesh->GetPath()).stem().string();
+}
+
+void AVehiclePawn::FitBodyCollision()
+{
+	if (!StaticMesh || !Box || !StaticMesh->GetMeshData()) return;
+	// 피벗 오프셋을 Box 크기에 더하면 바퀴 아래에 빈 충돌 영역이 생긴다.
+	// 메시를 Box 중심에 맞추고, 회전/스케일이 반영된 크기의 절반을 사용한다.
+	FTransform Shape = StaticMesh->GetTransform();
+	Shape.Location = FVector::ZeroVector;
+	const FBox Bounds = StaticMesh->GetMeshData()->AABB.GetWorldAABB(Shape.GetLocalMatrix());
+	StaticMesh->SetRelativeLocation((Bounds.Min + Bounds.Max) * -0.5f);
+	Box->SetBoxExtent((Bounds.Max - Bounds.Min) * 0.5f);
+	UpdateFollowCamera();
 }
 
 void AVehiclePawn::ClearVehicleVisuals()
@@ -234,7 +247,10 @@ void AVehiclePawn::UpdateFollowCamera()
 	const FVector Extent = Data ? (Data->AABB.Max - Data->AABB.Min) * 0.5f * StaticMesh->GetWorldScale3D().GetAbs()
 		: Box->GetBoxExtent();
 	const FVector Forward = FRotator(0.0f, Box->GetWorldRotation().Yaw, 0.0f).Quaternion().GetForwardVector();
-	const FVector Position = Center - Forward * std::max(6.0f, Extent.X * 3.0f) + FVector(0,0,std::max(3.0f, Extent.Z * 3.0f));
+	const float DistanceScale = std::isfinite(CameraDistanceScale) ? std::max(2.0f, CameraDistanceScale) : 5.0f;
+	const float MinimumDistance = std::isfinite(MinCameraDistance) ? std::max(1.0f, MinCameraDistance) : 10.0f;
+	const FVector Position = Center - Forward * std::max(MinimumDistance, Extent.X * DistanceScale)
+		+ FVector(0,0,std::max(3.0f, Extent.Z * 3.0f));
 	const FVector Direction = Center + Forward + FVector(0,0,0.3f) - Position;
 	const FRotator View(FMath::RadiansToDegrees(std::atan2(-Direction.Z, std::hypot(Direction.X, Direction.Y))),
 		FMath::RadiansToDegrees(std::atan2(Direction.Y, Direction.X)), 0.0f);

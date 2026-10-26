@@ -30,6 +30,7 @@ Game.Config = {
         { Prev = Key.Left, Next = Key.Right, Confirm = Key.RShift },
     },
     Showroom = {
+        -- 차량 중심이 아니라 받침대 윗면의 위치. 모델별 하단 높이는 배치할 때 계산한다.
         CarLocations = { Vector(-48, -8, 0.6), Vector(-48, 8, 0.6) },
         CameraSpots = {
             { Location = Vector(-60, -8, 3.5), Rotation = Rotator(10, 0, 0) },
@@ -334,7 +335,7 @@ local function EnterShowroom()
         local Car = GetShowroomCar(PlayerIndex)
         if Car then
             Car:SetMesh(Game.SelectedCarNames[PlayerIndex])
-            Car.Location = Game.Config.Showroom.CarLocations[PlayerIndex]
+            Car:PlaceOnSurface(Game.Config.Showroom.CarLocations[PlayerIndex])
         end
     end
     SetShowroomCameras()
@@ -372,6 +373,7 @@ local function ChangeCar(PlayerIndex, Direction)
     local Car = Game.ShowroomCars and Game.ShowroomCars[PlayerIndex]
     if Car then
         Car:SetMesh(CarNames[CarIndex])
+        Car:PlaceOnSurface(Game.Config.Showroom.CarLocations[PlayerIndex])
     end
 end
 
