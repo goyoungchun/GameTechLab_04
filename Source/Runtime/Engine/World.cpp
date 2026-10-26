@@ -141,6 +141,7 @@ void UWorld::Tick(EWorldTick TickType, float DeltaTime)
 		{
 			{
 				SCOPE_CYCLE_COUNTER(STAT_ActorTick);
+				GameUIBuffer.Clear();
 				TickTaskManager.RunTickGroup(ETickingGroup::PrePhysics, DeltaTime);
 				PhysicsScene->StartFrame(DeltaTime);
 				TickTaskManager.RunTickGroup(ETickingGroup::DuringPhysics, DeltaTime);

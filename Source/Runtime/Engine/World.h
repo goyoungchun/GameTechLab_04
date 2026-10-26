@@ -16,6 +16,7 @@
 #include "Engine/Scene.h"
 #include "Camera/CameraActor.h"
 #include "Asset/LOD/StaticMeshLODSelector.h"
+#include "UI/GameUIBuffer.h"
 
 //class ACameraActor;
 class ULevel;
@@ -120,6 +121,8 @@ public:
 
 
 	EWorldType& GetWorldType() { return WorldType; }
+	
+	FGameUIBuffer& GetGameUIBuffer() { return GameUIBuffer; }
 
 	bool& GetbIsPause() { return bIsPaused; }
 
@@ -154,5 +157,5 @@ private:
 	FScene Scene;
 	TUniquePtr<FPhysSceneChaos> PhysicsScene;
 
-
+	FGameUIBuffer GameUIBuffer;
 };

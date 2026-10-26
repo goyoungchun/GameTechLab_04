@@ -66,7 +66,10 @@ void FScreenQuadRenderer::Flush()
 	{
 		WhiteTexture = UAssetManager::GetAssetByPath<UTexture2D>("WhiteTexture");
 		if (!WhiteTexture)
+		{
+			Vertices.Reset();
 			return;
+		}
 	}
 
 	RenderCommand::UpdateBufferData(VertexBuffer.get(), Vertices.GetData(), sizeof(FVertex) * Vertices.Num());
