@@ -22,6 +22,8 @@ AVehiclePawn::AVehiclePawn()
 	Box->SetEnableGravity(true);
 	Box->SetObjectChannel(ECollisionChannel::WorldDynamic);
 	Box->SetCollisionResponseToChannel(ECollisionChannel::WorldDynamic, ECollisionResponse::Block);
+	Box->SetCOF(0.0f);
+	Box->SetRestitution(0.0f);
 	SetRootComponent(Box);
 
 	StaticMesh->SetStaticMesh(UAssetManager::GetMesh("italia"));
