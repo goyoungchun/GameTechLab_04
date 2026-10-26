@@ -93,6 +93,7 @@ public:
 	virtual void PreExit() {};
 
 	void RequestRestartLevel() { bRestartLevelRequested = true; }
+	void RequestQuitGame() { bQuitGameRequested = true; }
 	bool IsPlaying() const { return PlayWorld != nullptr; }
 
 	UWorld* GetEditorWorld() const { return EditorWorld; }
@@ -119,6 +120,7 @@ protected:
 	FEngineLoop& GetEngineLoop() const { return *EngineLoop; }
 
 	bool ConsumeRestartLevelRequest();
+	bool ConsumeQuitGameRequest();
 
 	UWorld* EditorWorld = nullptr;
 	UWorld* PlayWorld = nullptr;
@@ -126,6 +128,7 @@ protected:
 private:
 	FEngineLoop* EngineLoop = nullptr;
 	bool bRestartLevelRequested = false;
+	bool bQuitGameRequested = false;
 };
 
 // FEngineLoop::PreInit에서 설정되고 Exit에서 해제된다.

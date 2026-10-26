@@ -204,6 +204,32 @@ void FScriptSystem::RegisterTypes()
 			}
 			return NewActor;
 		},
+		// 이미 있는 StaticMeshActor의 메시를 이름으로 바꾼다
+		"SetMesh", [](AActor& Self, const FString& MeshName) -> bool
+		{
+			AStaticMeshActor* MeshActor = Cast<AStaticMeshActor>(&Self);
+			UStaticMesh* Mesh = UAssetManager::GetMesh(MeshName);
+			if (!MeshActor || !Mesh)
+			{
+				return false;
+			}
+			MeshActor->GetStaticMeshComponent()->SetStaticMesh(Mesh);
+			return true;
+		},
+		"SetViewCamera", [](AActor& Self, int32 PlayerIndex, const FVector& Location, const FRotator& Rotation)
+		{
+			if (UWorld* World = Self.GetWorld())
+			{
+				World->SetViewCameraOverride(PlayerIndex - 1, Location, Rotation);
+			}
+		},
+		"ClearViewCamera", [](AActor& Self, int32 PlayerIndex)
+		{
+			if (UWorld* World = Self.GetWorld())
+			{
+				World->ClearViewCameraOverride(PlayerIndex - 1);
+			}
+		},
 		"SetText", [](AActor& Self, const FString& InText)
 		{
 			for (UActorComponent* Component : Self.GetComponents())
@@ -242,6 +268,7 @@ void FScriptSystem::RegisterInput()
 		"Up", EKeyCode::Up, "Down", EKeyCode::Down, "Left", EKeyCode::Left, "Right", EKeyCode::Right,
 		"Space", EKeyCode::Space, "Enter", EKeyCode::Enter, "Escape", EKeyCode::Escape,
 		"Shift", EKeyCode::Shift, "Control", EKeyCode::Control, "Tab", EKeyCode::Tab,
+		"LShift", EKeyCode::LShift, "RShift", EKeyCode::RShift, "LControl", EKeyCode::LControl, "RControl", EKeyCode::RControl,
 		"Num0", EKeyCode::Num0, "Num1", EKeyCode::Num1, "Num2", EKeyCode::Num2, "Num3", EKeyCode::Num3,
 		"Num4", EKeyCode::Num4, "Num5", EKeyCode::Num5, "Num6", EKeyCode::Num6, "Num7", EKeyCode::Num7,
 		"Num8", EKeyCode::Num8, "Num9", EKeyCode::Num9, "Backspace", EKeyCode::Backspace
@@ -265,6 +292,14 @@ void FScriptSystem::RegisterFunction()
 		if (GEngine)
 		{
 			GEngine->RequestRestartLevel();
+		}
+	});
+
+	// 에디터에서는 PIE만 끝나고, 게임 실행 파일에서는 프로그램이 종료된다.
+	Lua->set_function("QuitGame", []() {
+		if (GEngine)
+		{
+			GEngine->RequestQuitGame();
 		}
 	});
 }
@@ -294,6 +329,7 @@ void FScriptSystem::Init()
 	OpenLibraries();
 	RegisterTypes();
 	RegisterInput();
+	RegisterFunction();
 	OverridePrint();
 
 	Lua->create_named_table("Game",

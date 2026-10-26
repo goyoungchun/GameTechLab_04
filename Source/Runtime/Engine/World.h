@@ -76,6 +76,11 @@ public:
 	void SetMainCamera(ACameraActor* Camera);
 	ACameraActor* GetMainCamera() const { return MainCamera; }
 
+	static constexpr int32 MaxViewCameraOverrides = 2;
+	void SetViewCameraOverride(int32 PlayerIndex, const FVector& Location, const FRotator& Rotation);
+	void ClearViewCameraOverride(int32 PlayerIndex);
+	UCameraComponent* GetViewCameraOverride(int32 PlayerIndex) const;
+
 	// 플레이어 폰 및 컨트롤러
 	void SetPlayerPawn(APawn* InPawn) { PlayerPawn = InPawn; }
 	APawn* GetPlayerPawn() const { return PlayerPawn; }
@@ -139,6 +144,10 @@ private:
 
 	//메인 카메라 
 	ACameraActor* MainCamera = nullptr;
+
+	// 레벨에 속하지 않는 카메라. Tick을 등록하지 않아 입력으로 움직이지 않는다.
+	ACameraActor* ViewCameraOverrides[MaxViewCameraOverrides] = {};
+	bool bViewCameraOverrideActive[MaxViewCameraOverrides] = {};
 
 	// 플레이어 폰 및 컨트롤러
 	APawn* PlayerPawn = nullptr;

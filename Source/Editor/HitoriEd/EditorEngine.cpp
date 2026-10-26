@@ -328,6 +328,10 @@ void UEditorEngine::Tick(const float DeltaTime) {
 		StopPIESession();
 		CreatePIESession();
 	}
+	if (ConsumeQuitGameRequest() && GetWorldContextFromType(EWorldType::PIE))
+	{
+		StopPIESession();
+	}
 
 	BeginFrame(DeltaTime);
 	UpdateViewportState(DeltaTime);

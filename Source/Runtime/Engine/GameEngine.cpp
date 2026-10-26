@@ -25,6 +25,11 @@ bool UGameEngine::Init()
 
 void UGameEngine::Tick(float DeltaTime)
 {
+	if (ConsumeQuitGameRequest())
+	{
+		GetEngineLoop().RequestExit();
+		return;
+	}
 	//World->Tick(DeltaTime);
 
 }

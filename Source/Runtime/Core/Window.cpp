@@ -8,6 +8,21 @@ namespace
 {
 	// 등록 전에는 nullptr이며, 그 동안의 메시지는 창이 직접 처리한다.
 	FWndProcHook GWndProcHook = nullptr;
+
+	// WM_KEYDOWN은 Shift·Ctrl을 좌우 구분 없이 보내므로 스캔 코드로 왼쪽·오른쪽 키를 찾는다.
+	int GetSidedVirtualKey(WPARAM wParam, LPARAM lParam)
+	{
+		const bool bExtended = (lParam & (1 << 24)) != 0;
+		switch (wParam)
+		{
+		case VK_SHIFT:
+			return static_cast<int>(MapVirtualKeyW((lParam >> 16) & 0xFF, MAPVK_VSC_TO_VK_EX));
+		case VK_CONTROL:
+			return bExtended ? VK_RCONTROL : VK_LCONTROL;
+		default:
+			return 0;
+		}
+	}
 }
 
 void FWindow::SetWndProcHook(FWndProcHook Hook)
@@ -149,10 +164,14 @@ LRESULT FWindow::HandleMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam
 
 	case WM_KEYDOWN:
 		FInputSystem::OnKeyDown(wParam);
+		if (const int SidedKey = GetSidedVirtualKey(wParam, lParam))
+			FInputSystem::OnKeyDown(SidedKey);
 		break;
 
 	case WM_KEYUP:
 		FInputSystem::OnKeyUp(wParam);
+		if (const int SidedKey = GetSidedVirtualKey(wParam, lParam))
+			FInputSystem::OnKeyUp(SidedKey);
 		break;
 
 	// 포커스를 잃으면 이후의 KeyUp/ButtonUp 메시지가 이 창으로 오지 않으므로

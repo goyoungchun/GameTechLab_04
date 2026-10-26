@@ -135,22 +135,28 @@ FSceneView FGameViewportClient::CalcSceneView(const FRect& InViewRect)
 			CameraComponent = World->GetMainCamera()->GetCameraComponent();
 	}
 
-	if (CameraComponent)
-	{
-		CameraComponent->SetAspectRatio(Aspect);
+	// 게임 화면에서는 Lua 등이 지정한 카메라가 있으면 그쪽으로 본다. 화면 분할 전이라 0번 플레이어 기준.
+	UCameraComponent* ViewCamera = CameraComponent;
+	if (!bSIEMode && World)
+		if (UCameraComponent* OverrideCamera = World->GetViewCameraOverride(OutView.ViewIndex))
+			ViewCamera = OverrideCamera;
 
-		OutView.ViewLocation = CameraComponent->GetWorldLocation();
-		OutView.ViewRotation = CameraComponent->GetWorldRotation();
+	if (ViewCamera)
+	{
+		ViewCamera->SetAspectRatio(Aspect);
+
+		OutView.ViewLocation = ViewCamera->GetWorldLocation();
+		OutView.ViewRotation = ViewCamera->GetWorldRotation();
 		OutView.ViewForward = OutView.ViewRotation.Quaternion().GetForwardVector();
-		OutView.ViewMatrix = CameraComponent->GetViewMatrix();
-		OutView.ProjectionMatrix = CameraComponent->GetProjectionMatrix();
-		OutView.ViewProjectionMatrix = CameraComponent->GetViewProjectionMatrix();
-		OutView.FieldOfView = CameraComponent->GetFieldOfView();
+		OutView.ViewMatrix = ViewCamera->GetViewMatrix();
+		OutView.ProjectionMatrix = ViewCamera->GetProjectionMatrix();
+		OutView.ViewProjectionMatrix = ViewCamera->GetViewProjectionMatrix();
+		OutView.FieldOfView = ViewCamera->GetFieldOfView();
 		OutView.AspectRatio = Aspect;
-		OutView.NearClip = CameraComponent->GetNearZ();
-		OutView.FarClip = CameraComponent->GetFarZ();
-		OutView.OrthoWidth = CameraComponent->GetOrthoWidth();
-		OutView.bIsPerspective = !CameraComponent->GetIsOrthogonal();
+		OutView.NearClip = ViewCamera->GetNearZ();
+		OutView.FarClip = ViewCamera->GetFarZ();
+		OutView.OrthoWidth = ViewCamera->GetOrthoWidth();
+		OutView.bIsPerspective = !ViewCamera->GetIsOrthogonal();
 		OutView.ViewMode = EViewportMode::Lit;
 		OutView.ShadingModel = EShadingModel::BlinnPhong;
 	}

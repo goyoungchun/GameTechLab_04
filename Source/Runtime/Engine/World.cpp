@@ -47,6 +47,12 @@ UWorld::~UWorld()
 	for (TObjectIterator<UActorComponent> Component; Component; ++Component)
 		if (Component->GetWorld() == this && Component->IsRegistered())
 			Component->UnregisterComponent();
+
+	for (ACameraActor*& Camera : ViewCameraOverrides)
+	{
+		delete Camera;
+		Camera = nullptr;
+	}
 }
 
 bool  UWorld::Init()
@@ -253,6 +259,44 @@ void UWorld::SetMainCamera(ACameraActor* Camera)
 		MainCamera->GetCameraComponent()->Activate();
 		MainCamera->RegisterAllActorTickFunctions(true);
 	}
+}
+
+void UWorld::SetViewCameraOverride(int32 PlayerIndex, const FVector& Location, const FRotator& Rotation)
+{
+	if (PlayerIndex < 0 || PlayerIndex >= MaxViewCameraOverrides)
+		return;
+
+	ACameraActor*& Camera = ViewCameraOverrides[PlayerIndex];
+	if (!Camera)
+	{
+		Camera = FObjectFactory::ConstructObject<ACameraActor>();
+		if (!Camera)
+			return;
+		Camera->World = this;
+		Camera->Level = nullptr;
+		Camera->GetCameraComponent()->SetExternalInputManaged(true);
+	}
+
+	FTransform Transform = Camera->GetCameraComponent()->GetTransform();
+	Transform.Location = Location;
+	Transform.Rotation = Rotation;
+	Camera->GetCameraComponent()->SetTransform(Transform);
+	bViewCameraOverrideActive[PlayerIndex] = true;
+}
+
+void UWorld::ClearViewCameraOverride(int32 PlayerIndex)
+{
+	if (PlayerIndex < 0 || PlayerIndex >= MaxViewCameraOverrides)
+		return;
+	bViewCameraOverrideActive[PlayerIndex] = false;
+}
+
+UCameraComponent* UWorld::GetViewCameraOverride(int32 PlayerIndex) const
+{
+	if (PlayerIndex < 0 || PlayerIndex >= MaxViewCameraOverrides || !bViewCameraOverrideActive[PlayerIndex])
+		return nullptr;
+	ACameraActor* Camera = ViewCameraOverrides[PlayerIndex];
+	return Camera ? Camera->GetCameraComponent() : nullptr;
 }
 
 int32 UWorld::GetActorNum()
