@@ -305,7 +305,9 @@ void FGameViewportClient::TickSIEInput(float DeltaTime, float MoveSpeed, float M
 
 void FGameViewportClient::SyncSplitClients()
 {
-	const int32 PlayerCount = World ? static_cast<int32>(World->GetPlayerCount()) : 0;
+	const bool bSplit = World && World->IsSplitScreenEnabled();
+
+	const int32 PlayerCount = bSplit ? static_cast<int32>(World->GetPlayerCount()) : 0;
 	const int32 Wanted = std::max(1, PlayerCount) - 1;	// 2인 테스트하려면 1 넣어주세요
 
 	while (static_cast<int32>(SplitClients.Num()) > Wanted)

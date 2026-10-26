@@ -135,6 +135,10 @@ public:
 	APlayerController* GetPlayerController(uint32 Index = 0) const;
 	APawn* GetPlayerPawn(uint32 Index = 0) const;
 
+	// 화면 분할
+	void SetSplitScreenEnable(bool bEnable) { bSplitScreenEnabled = bEnable; }
+	bool IsSplitScreenEnabled() const { return bSplitScreenEnabled; }
+
 private:
 	// 등록된 Tick 함수만 실행한다. Actor보다 먼저 사라져도 남은 함수와의 연결을 스스로 끊는다.
 	FTickTaskManager TickTaskManager;
@@ -173,4 +177,7 @@ private:
 	TUniquePtr<FPhysSceneChaos> PhysicsScene;
 
 	FGameUIBuffer GameUIBuffer;
+
+	// 뷰포트 분할 여부
+	bool bSplitScreenEnabled = false;
 };

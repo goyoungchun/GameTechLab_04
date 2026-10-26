@@ -169,6 +169,11 @@ void FScriptSystem::RegisterTypes()
 
 			return Index;
 		},
+		"SetSplitScreen", [](AActor& Self, bool bEnabled)
+		{
+			if (UWorld* World = Self.GetWorld())
+				World->SetSplitScreenEnable(bEnabled);
+		},
 		"FindActor", [](AActor& Self, const FString& Name) -> AActor*
 		{
 			UWorld* World = Self.GetWorld();
