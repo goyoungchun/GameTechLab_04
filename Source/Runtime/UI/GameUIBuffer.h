@@ -5,7 +5,9 @@
 #include "Core/EngineString.h"
 #include "Container/Array.h"
 
-enum class EUIDrawType : uint8 { Text, Rect, Bar };
+class FTexture2D;
+
+enum class EUIDrawType : uint8 { Text, Rect, Bar, Image };
 
 struct FUIDrawCmd
 {
@@ -20,6 +22,10 @@ struct FUIDrawCmd
 	FString		Text;	
 	FString		FontName;
 	ETextAlign	Align = ETextAlign::Left;
+	FTexture2D*	Texture = nullptr;
+	FVector2	UVMin = FVector2(0.0f, 0.0f);
+	FVector2	UVMax = FVector2(1.0f, 1.0f);
+	bool		bKeepAspect = false;
 };
 
 
@@ -29,6 +35,8 @@ public:
 	void AddText(FVector2 InPosition, const FString& InText, float InFontSize, const FVector4& InColor, ETextAlign InAlign, const FString& InFontName = "");
 	void AddRect(FVector2 InPosition, FVector2 InSize, const FVector4& InColor);
 	void AddBar(FVector2 InPosition, FVector2 InSize, float InRatio, const FVector4& InColor, const FVector4& InBackgroundColor);
+	void AddImage(FVector2 InPosition, FVector2 InSize, FTexture2D* InTexture, const FVector4& InColor,
+		FVector2 InUVMin = FVector2(0.0f, 0.0f), FVector2 InUVMax = FVector2(1.0f, 1.0f), bool bInKeepAspect = false);
 	void BeginPlayer(int32 InPlayerIndex);
 	void EndPlayer();
 	void Clear();

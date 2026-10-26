@@ -27,6 +27,7 @@ void FScreenQuadRenderer::Init(uint32 InMaxQuads)
 void FScreenQuadRenderer::BeginFrame(uint32 ScreenW, uint32 ScreenH)
 {
 	Vertices.Reset();
+	CurrentTexture = nullptr;
 
 	// OnRenderScreen과 같은 행렬
 	ScreenProjection = FMatrix::MakeOrthographic(0.0f, static_cast<float>(ScreenW),
@@ -35,7 +36,27 @@ void FScreenQuadRenderer::BeginFrame(uint32 ScreenW, uint32 ScreenH)
 
 void FScreenQuadRenderer::AddRect(float X, float Y, float W, float H, const FVector4& Color)
 {
+	SetTexture(nullptr);
 	AddQuad(X, Y, W, H, FVector2(0.0f, 0.0f), FVector2(1.0f, 1.0f), Color);
+}
+
+void FScreenQuadRenderer::AddImage(float X, float Y, float W, float H, FTexture2D* Texture, const FVector4& Color,
+	const FVector2& UVMin, const FVector2& UVMax)
+{
+	if (!Texture)
+		return;
+
+	SetTexture(Texture);
+	AddQuad(X, Y, W, H, UVMin, UVMax, Color);
+}
+
+void FScreenQuadRenderer::SetTexture(FTexture2D* Texture)
+{
+	if (Texture == CurrentTexture)
+		return;
+
+	Flush();
+	CurrentTexture = Texture;
 }
 
 void FScreenQuadRenderer::AddQuad(float X, float Y, float W, float H, const FVector2& UVMin, const FVector2& UVMax, const FVector4& Color)
@@ -76,7 +97,8 @@ void FScreenQuadRenderer::Flush()
 	RenderCommand::UpdateBufferData(ProjectionCB.get(), &ScreenProjection, sizeof(FMatrix));
 
 	RenderCommand::BindPipelineState(PipelineState);
-	RenderCommand::BindShaderResource(0, WhiteTexture, EShaderBindFlagBits::Pixel);
+	FTexture2D* BoundTexture = CurrentTexture ? CurrentTexture : WhiteTexture->GetResource();
+	RenderCommand::BindShaderResource(0, BoundTexture, EShaderBindFlagBits::Pixel);
 	RenderCommand::BindSamplerState(0, ESamplerState::LinearClamp, EShaderBindFlagBits::Pixel);
 	RenderCommand::BindConstantBuffer(0, ProjectionCB.get(), EShaderBindFlagBits::Vertex);
 	RenderCommand::BindVertexBuffer(VertexBuffer.get());

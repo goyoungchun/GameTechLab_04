@@ -4,6 +4,28 @@
 #include "Core/EngineLog.h"
 #include "Engine/World.h"
 #include "UI/GameUIBuffer.h"
+#include "Asset/AssetManager.h"
+#include "Render/Texture/Texture2D.h"
+#include "Container/Set.h"
+
+namespace
+{
+	UTexture2D* FindUITexture(const FString& Path)
+	{
+		static TSet<FString> FailedPaths;
+		if (FailedPaths.Contains(Path))
+			return nullptr;
+
+		UTexture2D* Texture = UAssetManager::Get().LoadTexture(Path, false);
+		if (!Texture || !Texture->GetResource())
+		{
+			FailedPaths.Add(Path);
+			HTR_LOG(Warning, "[UI] Image not found: {}", Path);
+			return nullptr;
+		}
+		return Texture;
+	}
+}
 
 UScriptComponent::UScriptComponent()
 {
@@ -139,6 +161,51 @@ void UScriptComponent::BindUIAPI(sol::environment& InEnvironment)
 				Buffer->AddBar({ X, Y }, { SizeX, SizeY }, Ratio, Color.value_or(FVector4(1, 1, 1, 1)),
 					BackgroundColor.value_or(FVector4(0, 0, 0, 0.5f)));
 			}
+		});
+
+	// UI.Image(x, y, w, h, path, [color]) — 지정한 크기로 늘려 그린다. color는 이미지에 곱해진다.
+	UITable.set_function("Image", [this](float X, float Y, float SizeX, float SizeY, const FString& Path,
+		sol::optional<FVector4> Color)
+		{
+			FGameUIBuffer* Buffer = GetGameUIBuffer();
+			UTexture2D* Texture = Buffer ? FindUITexture(Path) : nullptr;
+			if (Texture)
+			{
+				Buffer->AddImage({ X, Y }, { SizeX, SizeY }, Texture->GetResource(), Color.value_or(FVector4(1, 1, 1, 1)));
+			}
+		});
+
+	// UI.ImageFit(x, y, h, path, [color]) — 높이만 정하고 폭은 원본 비율을 따른다.
+	UITable.set_function("ImageFit", [this](float X, float Y, float SizeY, const FString& Path,
+		sol::optional<FVector4> Color)
+		{
+			FGameUIBuffer* Buffer = GetGameUIBuffer();
+			UTexture2D* Texture = Buffer ? FindUITexture(Path) : nullptr;
+			if (Texture)
+			{
+				Buffer->AddImage({ X, Y }, { 0.0f, SizeY }, Texture->GetResource(), Color.value_or(FVector4(1, 1, 1, 1)),
+					FVector2(0.0f, 0.0f), FVector2(1.0f, 1.0f), true);
+			}
+		});
+
+	// UI.ImageUV(x, y, w, h, path, u0, v0, u1, v1, [color]) — 이미지의 일부(UV 0~1, 왼쪽 위 기준)만 그린다.
+	UITable.set_function("ImageUV", [this](float X, float Y, float SizeX, float SizeY, const FString& Path,
+		float U0, float V0, float U1, float V1, sol::optional<FVector4> Color)
+		{
+			FGameUIBuffer* Buffer = GetGameUIBuffer();
+			UTexture2D* Texture = Buffer ? FindUITexture(Path) : nullptr;
+			if (Texture)
+			{
+				Buffer->AddImage({ X, Y }, { SizeX, SizeY }, Texture->GetResource(), Color.value_or(FVector4(1, 1, 1, 1)),
+					FVector2(U0, V0), FVector2(U1, V1));
+			}
+		});
+
+	// local w, h = UI.GetImageSize(path) — 원본 픽셀 크기. 없으면 0, 0
+	UITable.set_function("GetImageSize", [](const FString& Path)
+		{
+			UTexture2D* Texture = FindUITexture(Path);
+			return std::make_tuple(Texture ? Texture->GetWidth() : 0u, Texture ? Texture->GetHeight() : 0u);
 		});
 
 	// UI.BeginPlayer(index) ~ UI.EndPlayer() 사이의 명령은 해당 플레이어 화면 기준으로 그린다.

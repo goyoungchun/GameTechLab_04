@@ -39,6 +39,25 @@ void FGameUIBuffer::AddBar(FVector2 InPosition, FVector2 InSize, float InRatio, 
 	Push(std::move(AddCommand));
 }
 
+void FGameUIBuffer::AddImage(FVector2 InPosition, FVector2 InSize, FTexture2D* InTexture, const FVector4& InColor,
+	FVector2 InUVMin, FVector2 InUVMax, bool bInKeepAspect)
+{
+	if (!InTexture)
+		return;
+
+	FUIDrawCmd AddCommand;
+	AddCommand.Type = EUIDrawType::Image;
+	AddCommand.Position = InPosition;
+	AddCommand.Size = InSize;
+	AddCommand.Texture = InTexture;
+	AddCommand.Color = InColor;
+	AddCommand.UVMin = InUVMin;
+	AddCommand.UVMax = InUVMax;
+	AddCommand.bKeepAspect = bInKeepAspect;
+
+	Push(std::move(AddCommand));
+}
+
 void FGameUIBuffer::BeginPlayer(int32 InPlayerIndex)
 {
 	CurrentPlayer = InPlayerIndex;

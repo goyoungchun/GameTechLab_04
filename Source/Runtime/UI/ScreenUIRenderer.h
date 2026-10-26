@@ -22,6 +22,7 @@ private:
 	void DrawRect(const FUIDrawCmd& Cmd);
 	void DrawBar(const FUIDrawCmd& Cmd);
 	void DrawTextRender(const FUIDrawCmd& Cmd);
+	void DrawImage(const FUIDrawCmd& Cmd);
 
 	UFont* FindFont(const FString& FontName);
 

@@ -2,6 +2,7 @@
 #include "ScreenUIRenderer.h"
 #include "Asset/AssetManager.h"
 #include "Render/RenderCommand.h"
+#include "Render/Texture/Texture2D.h"
 
 void FScreenUIRenderer::Init()
 {
@@ -29,6 +30,7 @@ void FScreenUIRenderer::Render(const FGameUIBuffer& Buffer, uint32 ScreenW, uint
 		case EUIDrawType::Rect: DrawRect(Cmd); break;
 		case EUIDrawType::Bar:  DrawBar(Cmd);  break;
 		case EUIDrawType::Text: DrawTextRender(Cmd); break;
+		case EUIDrawType::Image: DrawImage(Cmd); break;
 		}
 	}
 
@@ -111,6 +113,30 @@ void FScreenUIRenderer::DrawTextRender(const FUIDrawCmd& Cmd)
 
 	TextRenderer.OnRenderScreen(Cmd.Text, PixelX, PixelY, Fontsize, *Font,
 		static_cast<uint32>(AreaWidth), static_cast<uint32>(AreaHeight), Cmd.Color, Cmd.Align);
+}
+
+void FScreenUIRenderer::DrawImage(const FUIDrawCmd& Cmd)
+{
+	if (!Cmd.Texture)
+		return;
+
+	float PixelX = Cmd.Position.X * AreaWidth;
+	float PixelY = Cmd.Position.Y * AreaHeight;
+	float Width = Cmd.Size.X * AreaWidth;
+	float Height = Cmd.Size.Y * AreaHeight;
+
+	// 원본 픽셀 비율을 유지한다. 화면 비율이 바뀌어도 이미지가 찌그러지지 않는다.
+	if (Cmd.bKeepAspect)
+	{
+		const float SourceWidth = Cmd.Texture->GetWidth() * (Cmd.UVMax.X - Cmd.UVMin.X);
+		const float SourceHeight = Cmd.Texture->GetHeight() * (Cmd.UVMax.Y - Cmd.UVMin.Y);
+		if (SourceHeight > 0.0f)
+		{
+			Width = Height * SourceWidth / SourceHeight;
+		}
+	}
+
+	QuadRenderer.AddImage(PixelX, PixelY, Width, Height, Cmd.Texture, Cmd.Color, Cmd.UVMin, Cmd.UVMax);
 }
 
 UFont* FScreenUIRenderer::FindFont(const FString& FontName)
