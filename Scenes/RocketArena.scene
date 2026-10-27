@@ -8856,7 +8856,7 @@
                             0.6725000143051147
                         ],
                         "COF": 0.0,
-                        "GravityScale": 2.2,
+                        "GravityScale": 5.5,
                         "Mass": 1.3,
                         "MotionType": 2,
                         "ObjectChannel": 1,
@@ -9034,7 +9034,7 @@
                             0.6725000143051147
                         ],
                         "COF": 0.0,
-                        "GravityScale": 2.2,
+                        "GravityScale": 5.5,
                         "Mass": 1.3,
                         "MotionType": 2,
                         "ObjectChannel": 1,
