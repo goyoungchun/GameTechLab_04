@@ -24,6 +24,7 @@ namespace
 			{ "Deceleration",    &FVehicleTuning::Deceleration },
 			{ "Grip",            &FVehicleTuning::Grip },
 			{ "TurnRate",        &FVehicleTuning::TurnRate },
+			{ "MaxSteeringAngle", &FVehicleTuning::MaxSteeringAngle },
 			{ "FullTurnSpeed",   &FVehicleTuning::FullTurnSpeed },
 			{ "SteeringSpeedScale", &FVehicleTuning::SteeringSpeedScale },
 			{ "BoostMultiplier", &FVehicleTuning::BoostMultiplier },
@@ -65,9 +66,11 @@ void RegisterVehicleBindings(sol::state& Lua)
 		const auto& Info = GetVehicleCategoryInfo(Category);
 		const auto Tuning = MakeVehicleCategoryTuning(Category);
 		sol::table Data = Lua.create_table_with("Id", Info.Id, "Label", Info.Label, "Mass", Info.Mass,
+			"BoostRechargeTime", Info.BoostRechargeTime,
 			"SpeedWeight", Info.SpeedWeight, "Tuning", Lua.create_table_with(
 				"MaxForwardSpeed", Tuning.MaxForwardSpeed, "MaxReverseSpeed", Tuning.MaxReverseSpeed,
-				"BoostMaxSpeed", Tuning.BoostMaxSpeed, "Acceleration", Tuning.Acceleration));
+				"BoostMaxSpeed", Tuning.BoostMaxSpeed, "Acceleration", Tuning.Acceleration,
+				"TurnRate", Tuning.TurnRate, "MaxSteeringAngle", Tuning.MaxSteeringAngle));
 		Catalog[Info.Id] = Data;
 	}
 	Catalog["Default"] = Catalog["Balanced"];

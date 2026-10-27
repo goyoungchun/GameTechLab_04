@@ -25,7 +25,7 @@ AVehiclePawn::AVehiclePawn()
 
 	Box->SetMotionType(EPhysicsMotionType::Dynamic);
 	Box->SetEnableGravity(true);
-	Box->SetGravityScale(2.0f);
+	Box->SetGravityScale(4.2f);
 	Box->SetObjectChannel(ECollisionChannel::WorldDynamic);
 	Box->SetCollisionResponseToChannel(ECollisionChannel::WorldDynamic, ECollisionResponse::Block);
 	Box->SetCOF(0.0f);
@@ -142,7 +142,8 @@ void AVehiclePawn::FitBodyCollision()
 {
 	if (!StaticMesh || !Box || !StaticMesh->GetMeshData()) return;
 	const EVehicleCategory Category = GetVehicleCategory(GetBodyName());
-	Box->SetMass(GetVehicleCategoryInfo(Category).Mass);
+	const FVehicleCategoryInfo& ClassInfo = GetVehicleCategoryInfo(Category);
+	Box->SetMass(ClassInfo.Mass);
 	if (Movement)
 	{
 		FVehicleTuning Tuning = Movement->GetTuning();
@@ -151,7 +152,10 @@ void AVehiclePawn::FitBodyCollision()
 		Tuning.MaxReverseSpeed = ClassTuning.MaxReverseSpeed;
 		Tuning.BoostMaxSpeed = ClassTuning.BoostMaxSpeed;
 		Tuning.Acceleration = ClassTuning.Acceleration;
+		Tuning.TurnRate = ClassTuning.TurnRate;
+		Tuning.MaxSteeringAngle = ClassTuning.MaxSteeringAngle;
 		Movement->SetTuning(Tuning);
+		Movement->SetBoostRechargeTime(ClassInfo.BoostRechargeTime);
 	}
 	// 피벗 오프셋을 Box 크기에 더하면 바퀴 아래에 빈 충돌 영역이 생긴다.
 	// 메시를 Box 중심에 맞추고, 회전/스케일이 반영된 크기의 절반을 사용한다.
@@ -232,7 +236,7 @@ void AVehiclePawn::UpdateWheelVisuals(float DeltaTime)
 	// o/wheel 데이터도 엔진 +X 전방으로 변환된 원본과 같은 좌표계를 사용한다.
 	const float ForwardSpeed = Velocity.Dot(Box->GetWorldRotation().Quaternion().GetForwardVector());
 	const float TargetSteer = Movement && Movement->IsActive() && Movement->IsComponentTickEnabled()
-		? Movement->GetSteeringInput() * 25.0f : 0.0f;
+		? Movement->GetSteeringInput() * Movement->GetTuning().MaxSteeringAngle : 0.0f;
 	WheelSteering += (TargetSteer - WheelSteering) * (1.0f - std::exp(-12.0f * DeltaTime));
 	for (int32 Index = 0; Index < 4; ++Index)
 	{

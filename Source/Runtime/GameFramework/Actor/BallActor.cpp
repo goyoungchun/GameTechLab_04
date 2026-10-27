@@ -18,10 +18,10 @@ ABallActor::ABallActor()
 	Collision->SetCollisionResponseToChannel(ECollisionChannel::WorldStatic, ECollisionResponse::Block);
 	Collision->SetCollisionResponseToChannel(ECollisionChannel::WorldDynamic, ECollisionResponse::Block);
 	Collision->SetEnableGravity(true);
-	Collision->SetGravityScale(2.5f);
+	Collision->SetGravityScale(4.5f);
 	Collision->SetMass(0.45f);
 	Collision->SetCOF(0.05f);
-	Collision->SetRestitution(0.8f);
+	Collision->SetRestitution(0.5f);
 	Collision->SetDrawShape(false);
 	Collision->OnComponentHit.AddRaw(this, &ABallActor::HandleHit);
 
@@ -31,12 +31,13 @@ ABallActor::ABallActor()
 	Mesh->SetCollisionResponseToChannel(ECollisionChannel::WorldStatic, ECollisionResponse::Ignore);
 	Mesh->SetCollisionResponseToChannel(ECollisionChannel::WorldDynamic, ECollisionResponse::Ignore);
 
-	// 씬에 있던 공과 같은 표시 배율을 사용하고, 모델의 중심과 실제 반지름에 맞춘다.
-	constexpr float MeshScale = 2.5f;
+	// 표시 메시와 충돌 반지름에 같은 배율을 적용하고, 모델 중심에 맞춘다.
+	constexpr float SizeMultiplier = 1.2f;
+	constexpr float MeshScale = 2.5f * SizeMultiplier;
 	Mesh->SetRelativeScale3D(FVector(MeshScale));
 	UStaticMesh* BallMesh = UAssetManager::GetAssetByPath<UStaticMesh>("Models/SoccerBall/ball.obj");
 	Mesh->SetStaticMesh(BallMesh);
-	Collision->SetSphereRadius(1.833f);
+	Collision->SetSphereRadius(1.833f * SizeMultiplier);
 	if (BallMesh)
 	{
 		const FStaticMeshData& Data = BallMesh->GetMeshData();

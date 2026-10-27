@@ -104,12 +104,13 @@ void UVehicleMovementComponent::SetTuning(const FVehicleTuning& InTuning)
 
 	for (float* Value : { &Tuning.MaxForwardSpeed, &Tuning.MaxReverseSpeed, &Tuning.BoostMaxSpeed,
 		&Tuning.Acceleration, &Tuning.Deceleration, &Tuning.Grip,
-		&Tuning.TurnRate, &Tuning.FullTurnSpeed, &Tuning.SteeringSpeedScale, &Tuning.BoostMultiplier, &Tuning.JumpSpeed })
+		&Tuning.TurnRate, &Tuning.MaxSteeringAngle, &Tuning.FullTurnSpeed, &Tuning.SteeringSpeedScale, &Tuning.BoostMultiplier, &Tuning.JumpSpeed })
 	{
 		*Value = std::isfinite(*Value) ? std::max(0.0f, *Value) : 0.0f;
 	}
 
 	Tuning.BoostMaxSpeed = std::max(Tuning.BoostMaxSpeed, Tuning.MaxForwardSpeed);
+	Tuning.MaxSteeringAngle = std::min(Tuning.MaxSteeringAngle, 89.0f);
 	Tuning.BoostMultiplier = std::max(1.0f, Tuning.BoostMultiplier);
 }
 
@@ -197,8 +198,16 @@ void UVehicleMovementComponent::UpdateSteering(const FVehicleInput& Input, float
 	const float Scale = Tuning.SteeringSpeedScale > 0.0f ? 1.0f / (1.0f + GetSpeed() / Tuning.SteeringSpeedScale) : 1.0f;
 	SteeringInput = Input.Steer * Scale;
 	if (!Body || SteeringInput == 0.0f) return;
+	float SteeringDirection = 1.0f;
+	if (IsGrounded())
+	{
+		// 전진 -> 정지 -> 후진에 따라 회전량도 연속적으로 줄었다가 반대로 커진다.
+		const float FullSteeringSpeed = std::max(1.0f, Tuning.FullTurnSpeed);
+		SteeringDirection = std::clamp(GetForwardSpeed() / FullSteeringSpeed, -1.0f, 1.0f);
+	}
 	FRotator Rotation = Body->GetWorldRotation();
-	Rotation.Yaw = std::remainder(Rotation.Yaw + SteeringInput * Tuning.TurnRate * DeltaTime, 360.0f);
+	// 앞바퀴 표시용 SteeringInput은 유지하고, 후진할 때 차체의 회전 방향만 반전한다.
+	Rotation.Yaw = std::remainder(Rotation.Yaw + SteeringInput * SteeringDirection * Tuning.TurnRate * DeltaTime, 360.0f);
 	Body->MoveComponent(FVector::ZeroVector, Rotation, false);
 }
 
@@ -217,8 +226,11 @@ void UVehicleMovementComponent::UpdateDrive(const FVehicleInput& Input, float De
 	if (Input.Throttle != 0.0f)
 	{
 		const float ForwardSpeed = Velocity.Dot(Forward);
+		// 후진 부스트도 전진 부스트와 같은 최고속도 배율을 사용한다.
+		const float ReverseBoostScale = Tuning.MaxForwardSpeed > 0.0f
+			? Tuning.BoostMaxSpeed / Tuning.MaxForwardSpeed : 1.0f;
 		const float Limit = Input.Throttle > 0.0f ? (Input.bBoost ? Tuning.BoostMaxSpeed : Tuning.MaxForwardSpeed)
-			: Tuning.MaxReverseSpeed * BoostScale;
+			: Tuning.MaxReverseSpeed * (Input.bBoost ? ReverseBoostScale : 1.0f);
 		const float Remaining = std::max(0.0f, Limit - (Input.Throttle > 0.0f ? ForwardSpeed : -ForwardSpeed));
 		DriveAcceleration = std::copysign(std::min(std::abs(DriveAcceleration), Remaining / DeltaTime), Input.Throttle);
 	}

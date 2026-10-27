@@ -4,7 +4,6 @@ Game.Config = {
     CountdownTime  = 3,
     ResultShowTime = 2,
     BoostSeconds   = 6,
-    BoostRechargeSeconds = 30,
     CarNames = { "armor", "coupe", "fenyr", "ghini", "italia", "jeep", "kamaro", "lamb", "mobil", "police" },
     BackKey = Key.Backspace,
     MainMenuItems = { "Play", "Help", "Credit", "Exit" },
@@ -16,7 +15,7 @@ Game.Config = {
     },
     StartSpots = {
         -- Location.z는 바닥 높이. 차량/공의 실제 크기는 배치할 때 반영한다.
-        Attacker     = { Location = Vector(0, -10, 0) },
+        Attacker     = { Location = Vector(-5, -10, 0) },
         Defender     = { Location = Vector(0, 32, 0) },
         Goal         = Vector(0, 38, 0),
         SuddenDeath1 = { Location = Vector(-8, -10, 0) },
@@ -81,8 +80,9 @@ local function WrapVehicle(PlayerIndex, VehicleActor)
             Game.CarInputEnabled[PlayerIndex] = bEnabled
         end,
         RefillBoost      = function()
+            local Class = VehicleCatalog[Vehicle.BodyName] or VehicleCatalog.Default
             Vehicle:SetBoostCapacity(Game.Config.BoostSeconds)
-            Vehicle:SetBoostRechargeTime(Game.Config.BoostRechargeSeconds)
+            Vehicle:SetBoostRechargeTime(Class.BoostRechargeTime)
             Vehicle:RefillBoost()
         end,
         SetInfiniteBoost = function(bInfinite) Vehicle:SetInfiniteBoost(bInfinite) end,

@@ -7,34 +7,34 @@ _G.KeyBindings = _G.KeyBindings or {
 _G.CarPresets = {
 	Default = {
 		-- 질량과 속도·가속도는 공통 VehicleCatalog의 분류 설정을 사용한다.
-		-- feat/testmode의 조향/그립. 저속·공중에서도 회전하고 고속에서는 조향을 완화한다.
+		-- 고속에서는 조향을 완화하고, 지면에서는 실제 진행 속도에 따라 회전한다.
 		Grip = 10,
 		TurnRate = 120,
 		SteeringSpeedScale = 100,
 		BoostMultiplier = 2,
-		JumpSpeed = 11,			-- 높이 ≈ JumpSpeed² / (19.6 * GravityScale)
+		JumpSpeed = 48,			-- 높이 ≈ JumpSpeed² / (19.6 * GravityScale)
 	},
 
 	-- 균형형
 	coupe = {},
 	police = {},
 
-	-- 차종별 질량/속도/가속도 비율과 기존 점프 높이는 유지한다.
-	italia = {},
-	lamb = { JumpSpeed = 10.2 },
-	ghini = { JumpSpeed = 10.5 },
-	fenyr = {},
+	-- 스피드형
+	italia = { JumpSpeed = 51 },
+	lamb = { JumpSpeed = 50.2 },
+	ghini = { JumpSpeed = 50.5 },
+	fenyr = { JumpSpeed = 51 },
 
-	kamaro = {},
+	kamaro = { JumpSpeed = 51 },
 
-	rally = { JumpSpeed = 11.5 },
+	rally = { JumpSpeed = 50.5 },
 
 	-- 중량형 jeep / 밸런스형 mobil: 높은 점프
-	jeep = { JumpSpeed = 12.5 },
-	mobil = { JumpSpeed = 11.5 },
+	jeep = { JumpSpeed = 45.5 },
+	mobil = { JumpSpeed = 45.5 },
 
-	armor = { JumpSpeed = 10.5 },
-	van = { JumpSpeed = 11.5 },
+	armor = { JumpSpeed = 45.5 },
+	van = { JumpSpeed = 45.5 },
 }
 
 local Car = obj:AsVehicle()
@@ -51,8 +51,8 @@ end
 local function BuildPreset(BodyName)
 	local Result = {}
 	local Class = VehicleCatalog[BodyName] or VehicleCatalog.Default
-	for Name, Value in pairs(Class.Tuning) do Result[Name] = Value end
 	for Name, Value in pairs(CarPresets.Default) do Result[Name] = Value end
+	for Name, Value in pairs(Class.Tuning) do Result[Name] = Value end
 	for Name, Value in pairs(CarPresets[BodyName] or {}) do Result[Name] = Value end
 	return Result
 end

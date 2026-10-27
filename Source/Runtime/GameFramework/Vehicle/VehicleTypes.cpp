@@ -17,9 +17,9 @@ namespace
 		{ "rally", EVehicleCategory::Balanced },
 		{ "van", EVehicleCategory::Heavy },
 	};
-	constexpr FVehicleCategoryInfo Speed = { "Speed", "스피드형", 1.0f, 3.5f };
-	constexpr FVehicleCategoryInfo Balanced = { "Balanced", "밸런스형", 2.0f, 2.5f };
-	constexpr FVehicleCategoryInfo Heavy = { "Heavy", "중량형", 3.5f, 1.5f };
+	constexpr FVehicleCategoryInfo Speed = { "Speed", "스피드형", 1.3f, 3.5f, 20.0f };
+	constexpr FVehicleCategoryInfo Balanced = { "Balanced", "밸런스형", 2.1f, 2.5f, 25.0f };
+	constexpr FVehicleCategoryInfo Heavy = { "Heavy", "중량형", 3.3f, 1.5f, 30.0f };
 }
 
 std::span<const FVehicleModelEntry> GetVehicleModelCatalog() { return Models; }
@@ -50,5 +50,14 @@ FVehicleTuning MakeVehicleCategoryTuning(EVehicleCategory Category)
 	Tuning.MaxReverseSpeed *= Scale;
 	Tuning.BoostMaxSpeed *= Scale;
 	Tuning.Acceleration *= Scale;
+	if (Category == EVehicleCategory::Speed)
+	{
+		Tuning.TurnRate = 150.0f;
+		Tuning.MaxSteeringAngle = 50.0f;
+	}
+	else if (Category == EVehicleCategory::Balanced)
+	{
+		Tuning.MaxSteeringAngle = 35.0f;
+	}
 	return Tuning;
 }
