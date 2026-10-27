@@ -17,6 +17,11 @@ class AVehiclePawn : public APawn
 	PROPERTY(PlayerIndex)
 	PROPERTY_RANGE(CameraDistanceScale, 2.0f, 10.0f)
 	PROPERTY_RANGE(MinCameraDistance, 1.0f, 100.0f)
+	PROPERTY(CameraOffset)
+	PROPERTY(LookAtOffset)
+	PROPERTY(RotationFollowSpeed)
+	PROPERTY(PositionFollowSpeed)
+	PROPERTY(FOVFollowSpeed)
 	REFLECT_END()
 
 public:
@@ -38,12 +43,13 @@ public:
 	bool SetBody(const FString& MeshName);
 	FString GetBodyName() const;
 	void FitBodyCollision();
+	void ResetFollowCamera();
 
 private:
 	void RefreshVehicleVisuals();
 	void ClearVehicleVisuals();
 	void UpdateWheelVisuals(float DeltaTime);
-	void UpdateFollowCamera();
+	void UpdateFollowCamera(float DeltaTime);
 	UBoxComponent* Box = nullptr;
 	UStaticMeshComponent* StaticMesh = nullptr;
 	UStaticMeshComponent* BodyVisual = nullptr;
@@ -61,7 +67,14 @@ private:
 
 	float BaseFOV = 60.0f;
 	float BoostFOVOffset = 15.0f;
-	float FOVInterpSpeed = 6.0f;
+	FVector CameraOffset = FVector(-20.0f, 0.0f, 8.0f);
+	FVector LookAtOffset = FVector(1.5f, 0.0f, 0.8f);
+	float RotationFollowSpeed = 6.0f;
+	float PositionFollowSpeed = 12.0f;
+	float FOVFollowSpeed = 6.0f;
+	float FollowYaw = 0.0f;
+	FVector FollowPosition = FVector::ZeroVector;
+	bool bCameraInitialized = false;
 	float CameraDistanceScale = 5.0f;
 	float MinCameraDistance = 10.0f;
 };

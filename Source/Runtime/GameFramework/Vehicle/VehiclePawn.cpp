@@ -72,12 +72,13 @@ void AVehiclePawn::BeginPlay()
 	if (Camera)
 		BaseFOV = Camera->GetFieldOfView();
 	RefreshVehicleVisuals();
-	UpdateFollowCamera();
+	ResetFollowCamera();
 }
 
 void AVehiclePawn::EndPlay()
 {
 	ClearVehicleVisuals();
+	bCameraInitialized = false;
 	Super::EndPlay();
 }
 
@@ -90,14 +91,7 @@ void AVehiclePawn::Tick(float DeltaTime)
 		RefreshVehicleVisuals();
 	}
 	UpdateWheelVisuals(DeltaTime);
-	UpdateFollowCamera();
-
-	if (!Camera || !Movement)
-		return;
-
-	const float TargetFOV = Movement->IsBoosting() ? BaseFOV + BoostFOVOffset : BaseFOV;
-	const float CurrentFOV = Camera->GetFieldOfView();
-	Camera->SetFieldOfView(CurrentFOV + (TargetFOV - CurrentFOV) * std::min(DeltaTime * FOVInterpSpeed, 1.0f));
+	UpdateFollowCamera(DeltaTime);
 }
 
 void AVehiclePawn::SetVehicleInput(const FVehicleInput& Input)
@@ -128,7 +122,7 @@ bool AVehiclePawn::SetBody(const FString& MeshName)
 	StaticMesh->SetStaticMesh(Mesh);
 	FitBodyCollision();
 	if (HasBegunPlay()) RefreshVehicleVisuals();
-	UpdateFollowCamera();
+	ResetFollowCamera();
 
 	return true;
 }
@@ -164,7 +158,7 @@ void AVehiclePawn::FitBodyCollision()
 	const FBox Bounds = StaticMesh->GetMeshData()->AABB.GetWorldAABB(Shape.GetLocalMatrix());
 	StaticMesh->SetRelativeLocation((Bounds.Min + Bounds.Max) * -0.5f);
 	Box->SetBoxExtent((Bounds.Max - Bounds.Min) * 0.5f);
-	UpdateFollowCamera();
+	UpdateFollowCamera(0.0f);
 }
 
 void AVehiclePawn::ClearVehicleVisuals()
@@ -251,23 +245,52 @@ void AVehiclePawn::UpdateWheelVisuals(float DeltaTime)
 	}
 }
 
-void AVehiclePawn::UpdateFollowCamera()
+void AVehiclePawn::ResetFollowCamera()
+{
+	bCameraInitialized = false;
+	UpdateFollowCamera(0.0f);
+}
+
+void AVehiclePawn::UpdateFollowCamera(float DeltaTime)
 {
 	if (!Camera || !Box || !StaticMesh) return;
+	auto FollowAlpha = [DeltaTime](float Speed)
+	{
+		if (!std::isfinite(Speed) || Speed <= 0.0f) return 1.0f;
+		return std::isfinite(DeltaTime) && DeltaTime > 0.0f ? 1.0f - std::exp(-Speed * DeltaTime) : 0.0f;
+	};
 	const FStaticMeshData* Data = StaticMesh->GetMeshData();
 	const FVector Center = Data ? StaticMesh->GetWorldMatrix().TransformPosition((Data->AABB.Min + Data->AABB.Max) * 0.5f)
 		: Box->GetWorldLocation();
 	const FVector Extent = Data ? (Data->AABB.Max - Data->AABB.Min) * 0.5f * StaticMesh->GetWorldScale3D().GetAbs()
 		: Box->GetBoxExtent();
-	const FVector Forward = FRotator(0.0f, Box->GetWorldRotation().Yaw, 0.0f).Quaternion().GetForwardVector();
+	const float TargetYaw = Box->GetWorldRotation().Yaw;
+	if (!bCameraInitialized) FollowYaw = TargetYaw;
+	else FollowYaw = std::remainder(FollowYaw + std::remainder(TargetYaw - FollowYaw, 360.0f)
+		* FollowAlpha(RotationFollowSpeed), 360.0f);
+	// 테스트 브랜치처럼 Yaw만 지연 추적한다. 점프/기울어짐에도 수평선을 유지한다.
+	const FQuat Rotation = FRotator(0.0f, FollowYaw, 0.0f).Quaternion();
 	const float DistanceScale = std::isfinite(CameraDistanceScale) ? std::max(2.0f, CameraDistanceScale) : 5.0f;
 	const float MinimumDistance = std::isfinite(MinCameraDistance) ? std::max(1.0f, MinCameraDistance) : 10.0f;
-	const FVector Position = Center - Forward * std::max(MinimumDistance, Extent.X * DistanceScale)
-		+ FVector(0,0,std::max(3.0f, Extent.Z * 3.0f));
-	const FVector Direction = Center + Forward + FVector(0,0,0.3f) - Position;
+	// 큰 모델과 기존 씬의 거리 설정도 수용하되 테스트 씬의 (-20, 0, 8)을 기준으로 둔다.
+	FVector Offset = CameraOffset;
+	Offset.X = -std::max({std::abs(Offset.X), MinimumDistance, Extent.X * DistanceScale});
+	Offset.Z = std::max(Offset.Z, Extent.Z * 3.0f);
+	const FVector TargetPosition = Center + Rotation.RotateVector(Offset);
+	if (!bCameraInitialized) FollowPosition = TargetPosition;
+	else FollowPosition += (TargetPosition - FollowPosition) * FollowAlpha(PositionFollowSpeed);
+	const FVector Direction = Center + Rotation.RotateVector(LookAtOffset) - FollowPosition;
 	const FRotator View(FMath::RadiansToDegrees(std::atan2(-Direction.Z, std::hypot(Direction.X, Direction.Y))),
 		FMath::RadiansToDegrees(std::atan2(Direction.Y, Direction.X)), 0.0f);
-	Camera->SetWorldLocation(Position);
-	Camera->SetRelativeRotation((Box->GetWorldRotation().Quaternion().Inverse() * View.Quaternion()).ToFRotator());
+	Camera->SetWorldLocation(FollowPosition);
+	const USceneComponent* Parent = Camera->GetAttachParent();
+	Camera->SetRelativeRotation(Parent
+		? (Parent->GetWorldRotation().Quaternion().Inverse() * View.Quaternion()).ToFRotator() : View);
 	Camera->SetExternalInputManaged(true);
+	const float NormalFOV = std::isfinite(BaseFOV) ? std::clamp(BaseFOV, 1.0f, 170.0f) : 60.0f;
+	const bool bBoosting = Movement && Movement->IsActive() && Movement->IsComponentTickEnabled() && Movement->IsBoosting();
+	const float TargetFOV = bBoosting ? std::clamp(NormalFOV + BoostFOVOffset, NormalFOV, 170.0f) : NormalFOV;
+	const float CurrentFOV = bCameraInitialized ? Camera->GetFieldOfView() : NormalFOV;
+	Camera->SetFieldOfView(CurrentFOV + (TargetFOV - CurrentFOV) * FollowAlpha(FOVFollowSpeed));
+	bCameraInitialized = true;
 }

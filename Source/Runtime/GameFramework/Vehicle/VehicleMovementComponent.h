@@ -53,7 +53,7 @@ public:
 
 private:
 	UBoxComponent* GetBody() const;
-	void UpdateVelocityEstimate(float DeltaTime);
+	void UpdateVelocityFromPhysics();
 	void UpdateGround(float DeltaTime);
 	void HandleBodyHit(
 		UPrimitiveComponent* Self,
@@ -63,7 +63,7 @@ private:
 		const FHitResult& Hit
 	);
 	void UpdateSteering(const FVehicleInput& Input, float DeltaTime);
-	void UpdateDrive(const FVehicleInput& Input, float DeltaTime);
+	void UpdateDrive(const FVehicleInput& Input, float DeltaTime, const FVector& PreviousForward);
 
 private:
 	FVehicleInput PendingInput;
@@ -71,13 +71,10 @@ private:
 	float SteeringInput = 0.0f;
 
 	FVector Velocity = FVector::ZeroVector;
-	FVector PreviousLocation = FVector::ZeroVector;
-	float PreviousDeltaTime = 0.0f;
-	bool bHasPreviousLocation = false;
+	bool bSkipVelocityRead = false;
 	
 	FDelegateHandle BodyHitHandle;
 	bool bGroundContactThisStep = false;
-	bool bWaitingFirstStep = true;
 
 	EVehicleMoveMode MoveMode = EVehicleMoveMode::Airborne;
 	bool bGroundStateValid = false;
@@ -93,7 +90,5 @@ private:
 	bool bInfiniteBoost = true;
 
 	float MaxGroundSlopeDegrees = 45.0f;
-	float MaxTeleportSpeed = 100.0f;
-
 	FVehicleTuning Tuning;
 };

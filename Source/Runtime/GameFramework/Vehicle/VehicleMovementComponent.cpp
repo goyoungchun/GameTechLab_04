@@ -5,6 +5,8 @@
 #include "VehicleTypes.h"
 #include "Engine/World.h"
 #include "Collision/FPhysSceneChaos.h"
+#include "Collision/FPBDRigidsSolver.h"
+#include "Collision/Ray.h"
 
 namespace
 {
@@ -17,6 +19,7 @@ namespace
 UVehicleMovementComponent::UVehicleMovementComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.TickGroup = ETickingGroup::PrePhysics;
 }
 
 UVehicleMovementComponent::~UVehicleMovementComponent()
@@ -32,14 +35,12 @@ void UVehicleMovementComponent::BeginPlay()
 	if (UBoxComponent* Body = GetBody())
 	{
 		BodyHitHandle = Body->OnComponentHit.AddRaw(this, &UVehicleMovementComponent::HandleBodyHit);
-		PreviousLocation = Body->GetWorldLocation();
-		bHasPreviousLocation = true;
 	}
 }
 
 void UVehicleMovementComponent::EndPlay()
 {
-	SteeringInput = 0.0f;
+	ResetMotion();
 	if (UBoxComponent* Body = GetBody())
 		Body->OnComponentHit.Remove(BodyHitHandle);
 
@@ -52,10 +53,12 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
 
 	if (!std::isfinite(DeltaTime) || DeltaTime <= 0.0f)
 		return;
+	UBoxComponent* Body = GetBody();
+	if (!Body) return;
 
 	FVehicleInput Input = PendingInput;
 	PendingInput = {};
-	const bool bBoostRequested = Input.bBoost && Input.Throttle > 0.0f;
+	const bool bBoostRequested = Input.bBoost && Input.Throttle != 0.0f && Tuning.BoostMultiplier > 1.0f;
 	bBoosting = bBoostRequested && (bInfiniteBoost || BoostRemaining > 0.0f);
 	Input.bBoost = bBoosting;
 	if (!bInfiniteBoost)
@@ -66,12 +69,11 @@ void UVehicleMovementComponent::TickComponent(float DeltaTime)
 			BoostRemaining = std::min(BoostCapacity, BoostRemaining + BoostCapacity / BoostRechargeTime * DeltaTime);
 		// 소진된 채 키를 계속 누르면 충전과 사용이 매 프레임 번갈아 일어나지 않게 한다.
 	}
-	SteeringInput = Input.Steer;
-
-	UpdateVelocityEstimate(DeltaTime);
+	UpdateVelocityFromPhysics();
 	UpdateGround(DeltaTime);
+	const FVector PreviousForward = FRotator(0.0f, Body->GetWorldRotation().Yaw, 0.0f).Quaternion().GetForwardVector();
 	UpdateSteering(Input, DeltaTime);
-	UpdateDrive(Input, DeltaTime);
+	UpdateDrive(Input, DeltaTime, PreviousForward);
 }
 
 UBoxComponent* UVehicleMovementComponent::GetBody() const
@@ -102,37 +104,33 @@ void UVehicleMovementComponent::SetTuning(const FVehicleTuning& InTuning)
 
 	for (float* Value : { &Tuning.MaxForwardSpeed, &Tuning.MaxReverseSpeed, &Tuning.BoostMaxSpeed,
 		&Tuning.Acceleration, &Tuning.Deceleration, &Tuning.Grip,
-		&Tuning.TurnRate, &Tuning.FullTurnSpeed, &Tuning.JumpSpeed })
+		&Tuning.TurnRate, &Tuning.FullTurnSpeed, &Tuning.SteeringSpeedScale, &Tuning.BoostMultiplier, &Tuning.JumpSpeed })
 	{
 		*Value = std::isfinite(*Value) ? std::max(0.0f, *Value) : 0.0f;
 	}
 
 	Tuning.BoostMaxSpeed = std::max(Tuning.BoostMaxSpeed, Tuning.MaxForwardSpeed);
-
-	// 속도 추정은 MaxTeleportSpeed보다 빠른 이동을 순간이동으로 보고 버린다.
-	if (Tuning.BoostMaxSpeed >= MaxTeleportSpeed)
-	{
-		HTR_LOG(Warning, "[Vehicle] BoostMaxSpeed({}) >= MaxTeleportSpeed({}): speed estimate will drop to 0",
-			Tuning.BoostMaxSpeed, MaxTeleportSpeed);
-	}
+	Tuning.BoostMultiplier = std::max(1.0f, Tuning.BoostMultiplier);
 }
 
-void UVehicleMovementComponent::UpdateVelocityEstimate(float DeltaTime)
+void UVehicleMovementComponent::UpdateVelocityFromPhysics()
 {
 	const UBoxComponent* Body = GetBody();
-	if (!Body)
-		return;
-
-	const FVector Location = Body->GetWorldLocation();
-	if (bHasPreviousLocation && PreviousDeltaTime > 0.0f)
+	Velocity = FVector::ZeroVector;
+	// ResetPrimitiveVelocity 직후에는 직전 프레임의 ResultTransforms가 아직 남아 있다.
+	if (bSkipVelocityRead)
 	{
-		const FVector Estimated = (Location - PreviousLocation) / PreviousDeltaTime;
-		Velocity = Estimated.Size() <= MaxTeleportSpeed ? Estimated : FVector::ZeroVector;
+		bSkipVelocityRead = false;
+		return;
 	}
-
-	PreviousLocation = Location;
-	PreviousDeltaTime = DeltaTime;
-	bHasPreviousLocation = true;
+	if (!Body || !GetWorld()) return;
+	auto& Physics = GetWorld()->GetPhysicsScene();
+	for (const auto& State : Physics.GetSolver().GetResultTransforms())
+		if (Physics.FindPrimitive(State.BodyId) == Body)
+		{
+			Velocity = State.LinearVelocity;
+			break;
+		}
 }
 
 void UVehicleMovementComponent::HandleBodyHit(
@@ -153,14 +151,24 @@ void UVehicleMovementComponent::UpdateGround(float DeltaTime)
 {
 	bLandedThisFrame = false;
 
-	if (bWaitingFirstStep)
-	{
-		bWaitingFirstStep = false;
-		return;
-	}
-
-	const bool bGrounded = bGroundContactThisStep;
+	const UBoxComponent* Body = GetBody();
+	bool bGrounded = bGroundContactThisStep;
 	bGroundContactThisStep = false;
+	const float MinNormalZ = std::cos(FMath::DegreesToRadians(MaxGroundSlopeDegrees));
+	if (Body && GetWorld() && Body->GetMotionType() == EPhysicsMotionType::Dynamic && Velocity.Z <= 0.1f)
+	{
+		// 첫 프레임과 접촉 경계에서도 테스트 차량처럼 바닥을 확인한다.
+		if (!bGrounded)
+		{
+			const FBox Bounds = Body->CalcBounds();
+			const FVector Position = Body->GetWorldLocation();
+			FHitResult Hit;
+			bGrounded = GetWorld()->SweepSingle(
+				FRay{ FVector(Position.X, Position.Y, Bounds.Min.Z + 0.12f), FVector(0,0,-1) },
+				0.22f, 0.04f, Hit, Body->GetOwner(), Body) && Hit.Normal.Z >= MinNormalZ;
+		}
+	}
+	else bGrounded = false;
 
 	if (bGrounded)
 	{
@@ -186,54 +194,44 @@ void UVehicleMovementComponent::UpdateGround(float DeltaTime)
 void UVehicleMovementComponent::UpdateSteering(const FVehicleInput& Input, float DeltaTime)
 {
 	UBoxComponent* Body = GetBody();
-	if (!Body || Input.Steer == 0.0f || !IsGrounded())
-		return;
-
-	const float ForwardSpeed = GetForwardSpeed();
-	const float SpeedRatio = Tuning.FullTurnSpeed > 0.0f
-		? std::clamp(std::abs(ForwardSpeed) / Tuning.FullTurnSpeed, 0.0f, 1.0f)
-		: 1.0f;
-	const float Direction = ForwardSpeed < 0.0f ? -1.0f : 1.0f;
-	const float YawDelta = Input.Steer * Tuning.TurnRate * SpeedRatio * Direction * DeltaTime;
-	if (YawDelta == 0.0f)
-		return;
-
-	const float CurrentYaw = Body->GetRelativeRotation().Yaw;
-	Body->SetRelativeRotation({ 0.0f, CurrentYaw + YawDelta, 0.0f });
+	const float Scale = Tuning.SteeringSpeedScale > 0.0f ? 1.0f / (1.0f + GetSpeed() / Tuning.SteeringSpeedScale) : 1.0f;
+	SteeringInput = Input.Steer * Scale;
+	if (!Body || SteeringInput == 0.0f) return;
+	FRotator Rotation = Body->GetWorldRotation();
+	Rotation.Yaw = std::remainder(Rotation.Yaw + SteeringInput * Tuning.TurnRate * DeltaTime, 360.0f);
+	Body->MoveComponent(FVector::ZeroVector, Rotation, false);
 }
 
-void UVehicleMovementComponent::UpdateDrive(const FVehicleInput& Input, float DeltaTime)
+void UVehicleMovementComponent::UpdateDrive(const FVehicleInput& Input, float DeltaTime, const FVector& PreviousForward)
 {
 	UBoxComponent* Body = GetBody();
 	if (!Body || DeltaTime <= 0.0f)
 		return;
 
-	FVector Accel = FVector::ZeroVector;
-
-	if (IsGrounded())
+	const FVector Forward = FRotator(0.0f, Body->GetWorldRotation().Yaw, 0.0f).Quaternion().GetForwardVector();
+	const FVector HorizontalVelocity(Velocity.X, Velocity.Y, 0.0f);
+	const float Speed = HorizontalVelocity.Length();
+	const float BoostScale = Input.bBoost ? Tuning.BoostMultiplier : 1.0f;
+	float DriveAcceleration = Input.Throttle * Tuning.Acceleration * BoostScale;
+	// 가속/조향 방식은 테스트 브랜치와 같고, 게임의 차종별 최고속도 제한을 추가한다.
+	if (Input.Throttle != 0.0f)
 	{
-		const FQuat Rotation = Body->GetWorldRotation().Quaternion();
-		const FVector Forward = Rotation.GetForwardVector();
-		const FVector Right = Rotation.GetRightVector();
 		const float ForwardSpeed = Velocity.Dot(Forward);
-		const float LateralSpeed = Velocity.Dot(Right);
-
-		float TargetSpeed = 0.0f;
-		if (Input.Throttle > 0.0f)
-			TargetSpeed = Input.Throttle * (Input.bBoost ? Tuning.BoostMaxSpeed : Tuning.MaxForwardSpeed);
-		else if (Input.Throttle < 0.0f)
-			TargetSpeed = Input.Throttle * Tuning.MaxReverseSpeed;
-
-		const bool bSpeedingUp = TargetSpeed * ForwardSpeed >= 0.0f && std::abs(TargetSpeed) > std::abs(ForwardSpeed);
-		const float Rate = bSpeedingUp ? Tuning.Acceleration : Tuning.Deceleration;
-		const float ForwardAccel = std::clamp((TargetSpeed - ForwardSpeed) / DeltaTime, -Rate, Rate);
-		const float LateralAccel = -LateralSpeed * std::min(Tuning.Grip, 1.0f / DeltaTime);
-
-		Accel = Forward * ForwardAccel + Right * LateralAccel;
-
-		if (Input.bJumpRequested)
-			Accel.Z += Tuning.JumpSpeed / DeltaTime;
+		const float Limit = Input.Throttle > 0.0f ? (Input.bBoost ? Tuning.BoostMaxSpeed : Tuning.MaxForwardSpeed)
+			: Tuning.MaxReverseSpeed * BoostScale;
+		const float Remaining = std::max(0.0f, Limit - (Input.Throttle > 0.0f ? ForwardSpeed : -ForwardSpeed));
+		DriveAcceleration = std::copysign(std::min(std::abs(DriveAcceleration), Remaining / DeltaTime), Input.Throttle);
 	}
+	FVector Accel = Forward * DriveAcceleration;
+	if (IsGrounded() && Speed > 0.001f)
+	{
+		const float Sign = HorizontalVelocity.Dot(PreviousForward) < 0.0f ? -1.0f : 1.0f;
+		const FVector TargetVelocity = Forward * (Speed * Sign);
+		const float Alpha = 1.0f - std::exp(-Tuning.Grip * DeltaTime);
+		Accel += (TargetVelocity - HorizontalVelocity) * (Alpha / DeltaTime);
+	}
+	if (Input.bJumpRequested && IsGrounded() && Body->IsGravityEnabled())
+		Accel.Z = std::max(0.0f, Tuning.JumpSpeed - Velocity.Z) / DeltaTime;
 
 	if (Body->GetAcceleration() != Accel)
 		Body->SetAcceleration(Accel);
@@ -245,16 +243,19 @@ void UVehicleMovementComponent::ResetMotion()
 	bBoosting = false;
 	SteeringInput = 0.0f;
 	Velocity = FVector::ZeroVector;
-	PreviousDeltaTime = 0.0f;
+	bSkipVelocityRead = true;
 	bGroundContactThisStep = false;
+	MoveMode = EVehicleMoveMode::Airborne;
+	bGroundStateValid = false;
+	bLandedThisFrame = false;
+	TimeSinceGrounded = 0.0f;
+	LastLandingSpeed = 0.0f;
 	LastAirborneVerticalSpeed = 0.0f;
 
 	UBoxComponent* Body = GetBody();
 	if (!Body)
 		return;
 
-	PreviousLocation = Body->GetWorldLocation();
-	bHasPreviousLocation = true;
 	Body->SetAcceleration(FVector::ZeroVector);
 	if (UWorld* World = Body->GetWorld())
 		World->GetPhysicsScene().ResetPrimitiveVelocity(Body);

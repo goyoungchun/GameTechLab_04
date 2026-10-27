@@ -25,6 +25,8 @@ namespace
 			{ "Grip",            &FVehicleTuning::Grip },
 			{ "TurnRate",        &FVehicleTuning::TurnRate },
 			{ "FullTurnSpeed",   &FVehicleTuning::FullTurnSpeed },
+			{ "SteeringSpeedScale", &FVehicleTuning::SteeringSpeedScale },
+			{ "BoostMultiplier", &FVehicleTuning::BoostMultiplier },
 			{ "JumpSpeed",       &FVehicleTuning::JumpSpeed },
 		};
 
@@ -103,6 +105,7 @@ void RegisterVehicleBindings(sol::state& Lua)
 				Self.SetActorLocation(Location);
 				Self.SetActorRotation(FRotator(0.0f, Yaw, 0.0f));
 				if (auto* M = Self.GetMovement()) M->ResetMotion();
+				Self.ResetFollowCamera();
 			},
 		"BoostRatio", sol::readonly_property([](const AVehiclePawn& Self)
 			{ const auto* M = Self.GetMovement(); return M ? M->GetBoostRatio() : 0.0f; }),
