@@ -7,36 +7,34 @@ _G.KeyBindings = _G.KeyBindings or {
 _G.CarPresets = {
 	Default = {
 		-- 질량과 속도·가속도는 공통 VehicleCatalog의 분류 설정을 사용한다.
-		Deceleration = 30,		-- 키를 뗌, 반대 키, 부스트 끝
-		Grip = 10,				-- 클수록 레일처럼 붙고, 작을수록 미끄러진다
-		TurnRate = 100,			-- 도/초
-		FullTurnSpeed = 7.5,		-- 이 속력부터 TurnRate로 돈다
-		JumpSpeed = 6,			-- 높이 ≈ JumpSpeed² / 19.6
+		-- feat/testmode의 조향/그립. 저속·공중에서도 회전하고 고속에서는 조향을 완화한다.
+		Grip = 10,
+		TurnRate = 120,
+		SteeringSpeedScale = 100,
+		BoostMultiplier = 2,
+		JumpSpeed = 11,			-- 높이 ≈ JumpSpeed² / (19.6 * GravityScale)
 	},
 
 	-- 균형형
 	coupe = {},
-	police = { Grip = 11, TurnRate = 105 },
+	police = {},
 
-	-- 스피드형: 빠르지만 덜 붙고 일부 모델은 점프가 낮다
-	italia = { Grip = 8.5, TurnRate = 105 },
-	lamb = { Grip = 8, JumpSpeed = 5.2 },
-	ghini = { Grip = 9, TurnRate = 110, JumpSpeed = 5.5 },
-	fenyr = { Grip = 8.5, TurnRate = 90 },
+	-- 차종별 질량/속도/가속도 비율과 기존 점프 높이는 유지한다.
+	italia = {},
+	lamb = { JumpSpeed = 10.2 },
+	ghini = { JumpSpeed = 10.5 },
+	fenyr = {},
 
-	-- 스피드형: 낮은 접지력으로 미끄러짐이 크다
-	kamaro = { Grip = 7, TurnRate = 95 },
+	kamaro = {},
 
-	-- 기동형: 잘 돌고 잘 붙는다
-	rally = { Grip = 13, TurnRate = 120, FullTurnSpeed = 6, JumpSpeed = 6.5 },
+	rally = { JumpSpeed = 11.5 },
 
 	-- 중량형 jeep / 밸런스형 mobil: 높은 점프
-	jeep = { Grip = 12, TurnRate = 95, JumpSpeed = 7.5 },
-	mobil = { TurnRate = 90, JumpSpeed = 6.5 },
+	jeep = { JumpSpeed = 12.5 },
+	mobil = { JumpSpeed = 11.5 },
 
-	-- 중량형: 느리고 둔하지만 단단히 붙는다
-	armor = { Deceleration = 36, Grip = 13, TurnRate = 85, JumpSpeed = 5.5 },
-	van = { Grip = 11, TurnRate = 85, JumpSpeed = 6.5 },
+	armor = { JumpSpeed = 10.5 },
+	van = { JumpSpeed = 11.5 },
 }
 
 local Car = obj:AsVehicle()

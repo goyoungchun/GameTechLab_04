@@ -25,6 +25,7 @@ AVehiclePawn::AVehiclePawn()
 
 	Box->SetMotionType(EPhysicsMotionType::Dynamic);
 	Box->SetEnableGravity(true);
+	Box->SetGravityScale(2.0f);
 	Box->SetObjectChannel(ECollisionChannel::WorldDynamic);
 	Box->SetCollisionResponseToChannel(ECollisionChannel::WorldDynamic, ECollisionResponse::Block);
 	Box->SetCOF(0.0f);

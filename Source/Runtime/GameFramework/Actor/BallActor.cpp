@@ -18,6 +18,7 @@ ABallActor::ABallActor()
 	Collision->SetCollisionResponseToChannel(ECollisionChannel::WorldStatic, ECollisionResponse::Block);
 	Collision->SetCollisionResponseToChannel(ECollisionChannel::WorldDynamic, ECollisionResponse::Block);
 	Collision->SetEnableGravity(true);
+	Collision->SetGravityScale(2.5f);
 	Collision->SetMass(0.45f);
 	Collision->SetCOF(0.05f);
 	Collision->SetRestitution(0.8f);
