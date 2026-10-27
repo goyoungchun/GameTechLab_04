@@ -65,12 +65,13 @@ AVehiclePawn::AVehiclePawn()
 
 void AVehiclePawn::BeginPlay()
 {
+	// 모델 보정/스크립트 초기화가 카메라를 갱신하기 전에 씬의 기본 FOV를 보관한다.
+	if (Camera)
+		BaseFOV = Camera->GetFieldOfView();
 	// 컴포넌트 역직렬화/PIE 복제 후 선택한 모델로 이전 씬의 Box 치수를 갱신한다.
 	FitBodyCollision();
 	Super::BeginPlay();
 
-	if (Camera)
-		BaseFOV = Camera->GetFieldOfView();
 	RefreshVehicleVisuals();
 	ResetFollowCamera();
 }
@@ -79,6 +80,7 @@ void AVehiclePawn::EndPlay()
 {
 	ClearVehicleVisuals();
 	bCameraInitialized = false;
+	if (Camera) Camera->SetFieldOfView(BaseFOV);
 	Super::EndPlay();
 }
 
@@ -263,7 +265,7 @@ void AVehiclePawn::UpdateFollowCamera(float DeltaTime)
 	const FVector Center = Data ? StaticMesh->GetWorldMatrix().TransformPosition((Data->AABB.Min + Data->AABB.Max) * 0.5f)
 		: Box->GetWorldLocation();
 	const FVector Extent = Data ? (Data->AABB.Max - Data->AABB.Min) * 0.5f * StaticMesh->GetWorldScale3D().GetAbs()
-		: Box->GetBoxExtent();
+		: Box->GetBoxExtent() * Box->GetWorldScale3D().GetAbs();
 	const float TargetYaw = Box->GetWorldRotation().Yaw;
 	if (!bCameraInitialized) FollowYaw = TargetYaw;
 	else FollowYaw = std::remainder(FollowYaw + std::remainder(TargetYaw - FollowYaw, 360.0f)
@@ -287,10 +289,14 @@ void AVehiclePawn::UpdateFollowCamera(float DeltaTime)
 	Camera->SetRelativeRotation(Parent
 		? (Parent->GetWorldRotation().Quaternion().Inverse() * View.Quaternion()).ToFRotator() : View);
 	Camera->SetExternalInputManaged(true);
-	const float NormalFOV = std::isfinite(BaseFOV) ? std::clamp(BaseFOV, 1.0f, 170.0f) : 60.0f;
-	const bool bBoosting = Movement && Movement->IsActive() && Movement->IsComponentTickEnabled() && Movement->IsBoosting();
-	const float TargetFOV = bBoosting ? std::clamp(NormalFOV + BoostFOVOffset, NormalFOV, 170.0f) : NormalFOV;
-	const float CurrentFOV = bCameraInitialized ? Camera->GetFieldOfView() : NormalFOV;
-	Camera->SetFieldOfView(CurrentFOV + (TargetFOV - CurrentFOV) * FollowAlpha(FOVFollowSpeed));
+	// 에디터 모델 교체/로드 중에는 직렬화된 카메라 FOV를 유지한다.
+	if (HasBegunPlay())
+	{
+		const float NormalFOV = std::isfinite(BaseFOV) ? std::clamp(BaseFOV, 1.0f, 170.0f) : 60.0f;
+		const bool bBoosting = Movement && Movement->IsActive() && Movement->IsComponentTickEnabled() && Movement->IsBoosting();
+		const float TargetFOV = bBoosting ? std::clamp(NormalFOV + BoostFOVOffset, NormalFOV, 170.0f) : NormalFOV;
+		const float CurrentFOV = bCameraInitialized && std::isfinite(Camera->GetFieldOfView()) ? Camera->GetFieldOfView() : NormalFOV;
+		Camera->SetFieldOfView(CurrentFOV + (TargetFOV - CurrentFOV) * FollowAlpha(FOVFollowSpeed));
+	}
 	bCameraInitialized = true;
 }
