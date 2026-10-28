@@ -12,3 +12,14 @@ ACameraActor::ACameraActor()
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>("CameraComponent");
 	SetRootComponent(CameraComponent);
 }
+
+void ACameraActor::CalcCamera(struct FMinimalViewInfo& OutResult)
+{
+	if (CameraComponent)
+	{
+		CameraComponent->GetCameraView(OutResult);
+		return;
+	}
+
+	Super::CalcCamera(OutResult);
+}
