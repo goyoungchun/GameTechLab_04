@@ -5,6 +5,7 @@
 #include "../Math/EngineMath.h"
 #include "../Math/Rotator.h"
 
+struct FMinimalViewInfo;
 
 class UCameraComponent : public USceneComponent
 {
@@ -62,6 +63,8 @@ public:
 	void UpdateMovement(float DeltaTime); // 마우스 이동
 	void UpdateRotation(float DeltaTime); // 마우스 우클릭 회전
 	void UpdateZoom(float DeltaTime);     // 마우스 휠 줌
+
+	void GetCameraView(FMinimalViewInfo& OutView) const;
 
 protected:
 	float FieldOfView = 60.0f;

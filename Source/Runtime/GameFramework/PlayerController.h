@@ -35,6 +35,7 @@ public:
 
 	virtual void DuplicateSubobjects(UObject* SourceObject) override;
 
+    FRotator GetCameraRotation() const { return CameraRotation; }
 
     void InputKey(int32 Key, bool bDown);
     void InputAxis(EGameInputAxis AxisKey, float Delta);
