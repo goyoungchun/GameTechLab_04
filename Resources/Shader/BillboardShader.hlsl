@@ -37,5 +37,9 @@ PS_INPUT mainVS(VS_INPUT input)
 float4 mainPS(PS_INPUT input) : SV_TARGET
 {
     float4 color = SpriteTexture.Sample(SpriteSampler, input.uv);
+    // sRGB로 저장된 색을 선형으로 (감마 보정 패스에서 다시 인코딩된다)
+    float3 SRGBLow = saturate(color.rgb) / 12.92f;
+    float3 SRGBHigh = pow((saturate(color.rgb) + 0.055f) / 1.055f, 2.4f);
+    color.rgb = lerp(SRGBHigh, SRGBLow, step(color.rgb, 0.04045f));
     return color;
 }

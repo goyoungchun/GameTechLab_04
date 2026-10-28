@@ -37,6 +37,10 @@ public:
 		const TArray<FPointLightRenderData>& PointLights);
 	void DrawToneMap(FTexture2D* LightingHDR, FTexture2D* Depth);
 	void DrawScreenOverlay(const FSceneView& View);
+
+	// Source(선형)를 sRGB로 인코딩해 같은 크기의 출력 버퍼에 그린다.
+	// 성공하면 그 출력 버퍼를 돌려주고, 호출자는 SwapSceneColorAndBind로 SceneColor와 바꾼다.
+	TUniquePtr<FTexture2D>* DrawGammaCorrection(FTexture2D* Source);
 	// 시점 상수 버퍼 및 렌더링 상태 설정
 	void SetupView(const FSceneView& View, const FFrameLightData* Lights, const FTileLightCullingResources* TileLights = nullptr);
 
@@ -79,6 +83,10 @@ private:
 	TUniquePtr<FConstantBuffer> ViewCB;
 	TUniquePtr<FConstantBuffer> DeferredLightCB;
 	TUniquePtr<FConstantBuffer> ScreenOverlayCB;
+
+	// 감마 보정 출력 버퍼. 뷰포트마다 크기가 달라서 크기/포맷별로 보관해 매 프레임 재생성을 피한다.
+	// Swap 후에는 뷰의 이전 SceneColor가 같은 크기로 들어오므로 다음 프레임에도 재사용된다.
+	TArray<TUniquePtr<FTexture2D>> GammaOutputs;
 
 	// 오브젝트 상수 버퍼
 	TUniquePtr<FConstantBuffer> PerObjectSlotCB;

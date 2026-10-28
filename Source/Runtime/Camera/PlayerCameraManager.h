@@ -105,6 +105,8 @@ public:
 	void StopCameraFade();
 
 	void SetLetterbox(bool bEnable, float Ratio = 0.12f);
+	// Intensity: 가장자리 최대 어둡기(0~1), Radius: 어두워지기 시작하는 거리, Softness: 어두워지는 구간 폭
+	void SetVignette(bool bEnable, float Intensity = 0.5f, float Radius = 0.4f, float Softness = 0.6f);
 
 	AActor* GetViewTarget() const;
 	bool IsBlending() const { return PendingViewTarget.Target != nullptr; }

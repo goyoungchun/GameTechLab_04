@@ -5,6 +5,7 @@
 #include "CameraModifier_CameraShake.h"
 #include "CameraModifier_CameraFade.h"
 #include "CameraModifier_Letterbox.h"
+#include "CameraModifier_Vignette.h"
 
 APlayerCameraManager::APlayerCameraManager()
 {
@@ -290,6 +291,34 @@ void APlayerCameraManager::SetLetterbox(bool bEnable, float Ratio)
 	else if (Letterbox)
 	{
 		Letterbox->DisableModifier();
+	}
+}
+
+void APlayerCameraManager::SetVignette(bool bEnable, float Intensity, float Radius, float Softness)
+{
+	UCameraModifier_CameraVignette* Vignette = FindCameraModifier<UCameraModifier_CameraVignette>();
+
+	if (bEnable)
+	{
+		if (!Vignette)
+		{
+			Vignette = AddCameraModifier<UCameraModifier_CameraVignette>();
+		}
+		else
+		{
+			Vignette->EnableModifier();
+		}
+
+		if (Vignette)
+		{
+			Vignette->Intensity = FMath::Clamp(Intensity, 0.0f, 1.0f);
+			Vignette->Radius = FMath::Clamp(Radius, 0.0f, 1.0f);
+			Vignette->Softness = std::max(Softness, 0.001f);
+		}
+	}
+	else if (Vignette)
+	{
+		Vignette->DisableModifier();
 	}
 }
 

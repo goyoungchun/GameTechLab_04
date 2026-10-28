@@ -902,9 +902,20 @@ PS_INPUT mainVS(VS_INPUT Input)
     return Output;
 }
 
+// 색 텍스처는 sRGB로 저장돼 있어서 조명 계산 전에 선형으로 바꾼다. (GammaCorrectionShader의 역함수)
+// 노멀맵 같은 데이터 텍스처에는 쓰면 안 된다.
+float3 SRGBToLinear(float3 Color)
+{
+    Color = saturate(Color);
+    float3 Low = Color / 12.92f;
+    float3 High = pow((Color + 0.055f) / 1.055f, 2.4f);
+    return lerp(High, Low, step(Color, 0.04045f));
+}
+
 float4 mainPS(PS_INPUT Input) : SV_TARGET
 {
     float4 TexColor = Texture.Sample(Sampler, Input.UV + UVOffset);
+    TexColor.rgb = SRGBToLinear(TexColor.rgb);
     float4 Albedo = TexColor * BaseColor;
 	
     float3 NormalDir = normalize(Input.Normal);
