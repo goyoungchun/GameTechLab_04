@@ -46,4 +46,13 @@ void RegisterSequenceBindings(sol::state& Lua)
 		UWorld* World = Self.GetWorld();
 		return World && World->GetSequenceManager().IsPlaying(Name);
 	};
+
+	ActorType["GetSequenceTime"] = [](AActor& Self, const FString& Name) -> sol::optional<double>
+	{
+		UWorld* World = Self.GetWorld();
+		const double Time = World ? World->GetSequenceManager().GetPlaybackTime(Name) : -1.0;
+		if (Time < 0.0)
+			return sol::nullopt;
+		return Time;
+	};
 }

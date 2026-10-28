@@ -12,7 +12,7 @@ class UCameraModifier : public UObject
 
 public:
 	UCameraModifier() = default;
-	~UCameraModifier() override = default;
+	~UCameraModifier() override;
 
 	virtual void AddedToCamera(APlayerCameraManager* InCameraOwner);
 

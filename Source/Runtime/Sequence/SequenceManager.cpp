@@ -109,6 +109,12 @@ bool FSequenceManager::IsPlaying(const FString& Name, const USceneComponent* Tar
 	return FindIndex(Name, Target) >= 0;
 }
 
+double FSequenceManager::GetPlaybackTime(const FString& Name) const
+{
+	const int32 Index = FindIndex(Name);
+	return Index >= 0 ? ActiveSequences[Index]->Player->GetCurrentTime() : -1.0;
+}
+
 void FSequenceManager::StopAll(UWorld* World)
 {
 	while (!ActiveSequences.IsEmpty())

@@ -1,5 +1,14 @@
 #include "EnginePCH.h"
 #include "CameraModifier.h"
+#include "PlayerCameraManager.h"
+
+UCameraModifier::~UCameraModifier()
+{
+	if (CameraOwner)
+	{
+		CameraOwner->RemoveOwnedModifier(this);
+	}
+}
 
 void UCameraModifier::AddedToCamera(APlayerCameraManager* InCameraOwner)
 {

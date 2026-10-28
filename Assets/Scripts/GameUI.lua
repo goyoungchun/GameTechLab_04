@@ -193,7 +193,7 @@ end
 StateDrawHandlers.Credit = function()
     UI.Image(0, 0, 1, 1, LobbyImagePath)
     DrawBackground()
-    UI.Text(0.50, 0.28, "팀원", 40, Color.White, Align.Center)
+    UI.Text(0.50, 0.28, Game.Config.TeamName, 40, Color.White, Align.Center)
     for CreditIndex, Credit in ipairs(Game.Config.Credits) do
         local RowY = 0.28 + CreditIndex * 0.10
         UI.Text(0.50, RowY, Credit.Name, 50, Color.White, Align.Center)
@@ -231,8 +231,25 @@ StateDrawHandlers.Defended = function()
     UI.Text(0.5, 0.45, "DEFENDED!", 120, Color.Blue, Align.Center, "CookieRun")
 end
 
+local function DrawEndingTeamCard()
+    local Ending = Game.Config.EndSequence
+    local Time = obj:GetSequenceTime(Ending.Name)
+    if not Time or Time < Ending.TeamCardTime then return end
+
+    local Alpha = math.min((Time - Ending.TeamCardTime) / Ending.TeamCardFadeTime, 1)
+    local Names = {}
+    for _, Credit in ipairs(Game.Config.Credits) do
+        table.insert(Names, Credit.Name)
+    end
+    UI.Text(0.5, 0.905, Game.Config.TeamName, 44, Color(1, 1, 1, Alpha), Align.Center, "CookieRun")
+    UI.Text(0.5, 0.955, table.concat(Names, "  ·  "), 26, Color(0.85, 0.85, 0.85, Alpha), Align.Center)
+end
+
 StateDrawHandlers.Result = function()
-    if Game.bEndingPlaying then return end
+    if Game.bEndingPlaying then
+        DrawEndingTeamCard()
+        return
+    end
     DrawBackground()
 
     local WinnerColor = (Game.WinnerIndex == 1) and Color.Orange or Color.Blue

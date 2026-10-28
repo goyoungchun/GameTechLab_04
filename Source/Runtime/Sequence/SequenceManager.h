@@ -26,6 +26,7 @@ public:
 	void Stop(UWorld* World, const FString& Name, float BlendTime, USceneComponent* Target = nullptr);
 	void StopAll(UWorld* World);
 	bool IsPlaying(const FString& Name, const USceneComponent* Target = nullptr) const;
+	double GetPlaybackTime(const FString& Name) const;
 	void Tick(UWorld* World, double GameDeltaTime, double UnscaledDeltaTime);
 
 private:

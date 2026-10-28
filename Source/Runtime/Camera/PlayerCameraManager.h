@@ -97,6 +97,7 @@ public:
 
 	bool RemoveCameraModifier(UCameraModifier* Modifier);
 	void ClearCameraModifiers();
+	void RemoveOwnedModifier(UCameraModifier* Modifier);
 
 	void StartCameraShake(const FCameraShakeParams& Params);
 	void StopAllCameraShakes();

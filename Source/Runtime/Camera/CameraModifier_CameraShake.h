@@ -17,6 +17,7 @@ public:
 
 	void AddCameraShake(const FCameraShakeParams& Params);
 	void StopAllCameraShakes();
+	void RemoveOwnedShake(UCameraShakeBase* Shake);
 
 private:
 	TArray<UCameraShakeBase*> ActiveShakes;

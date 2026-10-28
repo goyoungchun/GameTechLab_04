@@ -2,6 +2,13 @@
 #include "CameraShakeBase.h"
 #include <cmath>
 #include <cstdint>
+#include "CameraModifier_CameraShake.h"
+
+UCameraShakeBase::~UCameraShakeBase()
+{
+	if (OwnerModifier)
+		OwnerModifier->RemoveOwnedShake(this);
+}
 
 namespace
 {

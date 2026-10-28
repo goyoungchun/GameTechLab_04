@@ -221,10 +221,18 @@ bool APlayerCameraManager::RemoveCameraModifier(UCameraModifier* Modifier)
 
 void APlayerCameraManager::ClearCameraModifiers()
 {
-	for (UCameraModifier* Modifier : ModifierList)
-		delete Modifier;
-
+	TArray<UCameraModifier*> ToDelete = ModifierList;
 	ModifierList.Reset();
+
+	for (UCameraModifier* Modifier : ToDelete)
+		delete Modifier;
+}
+
+void APlayerCameraManager::RemoveOwnedModifier(UCameraModifier* Modifier)
+{
+	const int32 Index = ModifierList.Find(Modifier);
+	if (Index >= 0 && Index < ModifierList.Num())
+		ModifierList.RemoveAt(Index, 1);
 }
 
 void APlayerCameraManager::StartCameraShake(const FCameraShakeParams& Params)
@@ -338,8 +346,9 @@ void APlayerCameraManager::ApplyCameraModifiers(float DeltaTime, FMinimalViewInf
 	{
 		if (ModifierList[Index]->IsFinished())
 		{
-			delete ModifierList[Index];
+			UCameraModifier* Finished = ModifierList[Index];
 			ModifierList.RemoveAt(Index, 1);
+			delete Finished;
 		}
 	}
 }
