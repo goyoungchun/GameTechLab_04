@@ -6,6 +6,8 @@
 #include "Component/SceneComponent.h"
 #include "Component/ActorComponent.h"
 #include "Component/StaticMeshComponent.h"
+#include "Camera/CameraTypes.h"
+#include "ObjectSystem/Casts.h"
 
 AActor::AActor()
 {
@@ -248,3 +250,19 @@ void AActor::DuplicateSubobjects(UObject* SourceObject)
     }
 }
 
+void AActor::CalcCamera(FMinimalViewInfo& OutResult)
+{
+    for (UActorComponent* Component : Components)
+    {
+        const UCameraComponent* Camera = Cast<UCameraComponent>(Component);
+        if (Camera && Camera->IsActive())
+        {
+            Camera->GetCameraView(OutResult);
+            return;
+        }
+    }
+
+    // 활성 카메라가 없으면 액터의 위치와 회전으로 본다.
+    OutResult.Location = GetActorLocation();
+    OutResult.Rotation = GetActorRotation();
+}

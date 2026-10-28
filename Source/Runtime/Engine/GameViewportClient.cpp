@@ -4,6 +4,7 @@
 #include "Engine.h"
 #include "Camera/ViewportCameraMovement.h"
 #include "Math/EngineMath.h"
+#include "Camera/CameraTypes.h"
 
 namespace
 {
@@ -43,11 +44,9 @@ void FGameViewportClient::Init(const FWorldContext& InWorldContext, UEngine* InE
 void FGameViewportClient::SetWorld(UWorld* InWorld)
 {
 	if (World == InWorld) return;
-	CachedPawn = nullptr;
 	EndSIEMode();
 	LostFocus();
 	RenderData.ResetScene();
-	CameraComponent = nullptr;
 	bExitRequested = bSIEModeRequested = false;
 	World = InWorld;
 }
@@ -129,63 +128,26 @@ FSceneView FGameViewportClient::CalcSceneView(const FRect& InViewRect)
 
 	const float Aspect = static_cast<float>(Width) / static_cast<float>(Height);
 
-	// Pawn 이 바뀐 경우 확인
-	if (World && !bSIEMode)
-	{
-		APawn* CurrentPawn = World->GetPlayerPawn(static_cast<uint32>(PlayerIndex));
-		if (CurrentPawn != CachedPawn)
-		{
-			CachedPawn = CurrentPawn;
-			CameraComponent = nullptr;
-		}
-	}
+	AActor* TargetActor = SelectActor();
+	FMinimalViewInfo DesiredView;
+	if (TargetActor)
+		TargetActor->CalcCamera(DesiredView);
 
-	if (!CameraComponent && World)
-	{
-		CameraComponent = FindPlayerCamera();
-		if (!CameraComponent && World->GetMainCamera())
-			CameraComponent = World->GetMainCamera()->GetCameraComponent();
-	}
-
-	// 게임 화면에서는 Lua 등이 지정한 카메라가 있으면 그쪽으로 본다. 화면 분할 전이라 0번 플레이어 기준.
-	UCameraComponent* ViewCamera = CameraComponent;
-	if (!bSIEMode && World)
-		if (UCameraComponent* OverrideCamera = World->GetViewCameraOverride(OutView.ViewIndex))
-			ViewCamera = OverrideCamera;
-
-	if (ViewCamera)
-	{
-		ViewCamera->SetAspectRatio(Aspect);
-
-		OutView.ViewLocation = ViewCamera->GetWorldLocation();
-		OutView.ViewRotation = ViewCamera->GetWorldRotation();
-		OutView.ViewForward = OutView.ViewRotation.Quaternion().GetForwardVector();
-		OutView.ViewMatrix = ViewCamera->GetViewMatrix();
-		OutView.ProjectionMatrix = ViewCamera->GetProjectionMatrix();
-		OutView.ViewProjectionMatrix = ViewCamera->GetViewProjectionMatrix();
-		OutView.FieldOfView = ViewCamera->GetFieldOfView();
-		OutView.AspectRatio = Aspect;
-		OutView.NearClip = ViewCamera->GetNearZ();
-		OutView.FarClip = ViewCamera->GetFarZ();
-		OutView.OrthoWidth = ViewCamera->GetOrthoWidth();
-		OutView.bIsPerspective = !ViewCamera->GetIsOrthogonal();
-		OutView.ViewMode = EViewportMode::Lit;
-		OutView.ShadingModel = EShadingModel::BlinnPhong;
-	}
-	else
-	{
-		// 카메라 부재 시 기본값 설정
-		OutView.ViewLocation = FVector(-5.0f, -10.0f, 10.0f);
-		OutView.ViewRotation = FRotator(30.0f, 45.0f, 0.0f);
-		OutView.ViewForward = OutView.ViewRotation.Quaternion().GetForwardVector();
-		OutView.FieldOfView = 60.0f;
-		OutView.AspectRatio = Aspect;
-		OutView.NearClip = 0.1f;
-		OutView.FarClip = 1000.0f;
-		OutView.bIsPerspective = true;
-		OutView.ViewMode = EViewportMode::Lit;
-		OutView.ShadingModel = EShadingModel::BlinnPhong;
-	}
+	DesiredView.AspectRatio = Aspect;
+	OutView.ViewLocation = DesiredView.Location;
+	OutView.ViewRotation = DesiredView.Rotation;
+	OutView.ViewForward = DesiredView.Rotation.Quaternion().GetForwardVector();
+	OutView.ViewMatrix = DesiredView.CalculateViewMatrix();
+	OutView.ProjectionMatrix = DesiredView.CalculateProjectionMatrix();
+	OutView.ViewProjectionMatrix = OutView.ViewMatrix * OutView.ProjectionMatrix;
+	OutView.FieldOfView = DesiredView.FOV;
+	OutView.AspectRatio = DesiredView.AspectRatio;
+	OutView.NearClip = DesiredView.NearClipPlane;
+	OutView.FarClip = DesiredView.FarClipPlane;
+	OutView.OrthoWidth = DesiredView.OrthoWidth;
+	OutView.bIsPerspective = DesiredView.ProjectionMode == ECameraProjectionMode::Perspective;
+	OutView.ViewMode = EViewportMode::Lit;
+	OutView.ShadingModel = EShadingModel::BlinnPhong;
 
 	// 절두체 평면 계산
 	OutView.Frustum = ExtractFrustumPlanes(OutView.ViewProjectionMatrix);
@@ -203,7 +165,6 @@ void FGameViewportClient::Reset()
 		}
 	}
 	SplitClients.Reset();
-	CachedPawn = nullptr;
 	RenderData.ResetScene();
 	EndSIEMode();
 	LostFocus();
@@ -212,7 +173,6 @@ void FGameViewportClient::Reset()
 	World = nullptr;
 	GameInstance = nullptr;
 	Engine = nullptr;
-	CameraComponent = nullptr;
 
 	// 타깃 버퍼 정리
 	ResetViewTargets();
@@ -227,22 +187,24 @@ bool FGameViewportClient::BeginSIEMode()
 	if (!World || !World->GetMainCamera())
 		return false;
 
-	if (!CameraComponent) CameraComponent = FindPlayerCamera();
-	if (!CameraComponent) return false;
-
 	UCameraComponent* MainCamera = World->GetMainCamera()->GetCameraComponent();
-	if (!MainCamera || MainCamera == CameraComponent) return false;
-	if (!SetCameraWorldPose(*MainCamera, CameraComponent->GetWorldLocation(),
-		CameraComponent->GetWorldRotation())) return false;
+	if (!MainCamera) 
+		return false;
 
-	MainCamera->SetFieldOfView(CameraComponent->GetFieldOfView());
-	MainCamera->SetNearZ(CameraComponent->GetNearZ());
-	MainCamera->SetFarZ(CameraComponent->GetFarZ());
-	MainCamera->SetIsOrthogonal(CameraComponent->GetIsOrthogonal());
-	MainCamera->SetOrthoWidth(CameraComponent->GetOrthoWidth());
+	FMinimalViewInfo CurrentView;
+	if (AActor* ViewActor = SelectActor())
+		ViewActor->CalcCamera(CurrentView);
+
+	if (!SetCameraWorldPose(*MainCamera, CurrentView.Location, CurrentView.Rotation))
+		return false;
+
+	MainCamera->SetFieldOfView(CurrentView.FOV);
+	MainCamera->SetNearZ(CurrentView.NearClipPlane);
+	MainCamera->SetFarZ(CurrentView.FarClipPlane);
+	MainCamera->SetIsOrthogonal(CurrentView.ProjectionMode == ECameraProjectionMode::Orthographic);
+	MainCamera->SetOrthoWidth(CurrentView.OrthoWidth);
 	bPreviousMainCameraExternalInputManaged = MainCamera->IsExternalInputManaged();
 	MainCamera->SetExternalInputManaged(true);
-	CameraComponent = MainCamera;
 	bSIEMode = true;
 	LostFocus();
 	return true;
@@ -255,7 +217,6 @@ void FGameViewportClient::EndSIEMode()
 	if (World && World->GetMainCamera())
 		if (UCameraComponent* MainCamera = World->GetMainCamera()->GetCameraComponent())
 			MainCamera->SetExternalInputManaged(bPreviousMainCameraExternalInputManaged);
-	CameraComponent = FindPlayerCamera();
 	bSIEMode = false;
 	LostFocus();
 }
@@ -280,8 +241,19 @@ void FGameViewportClient::GetAxisInputBySIEMode(EGameInputAxis Key, float Delta)
 
 void FGameViewportClient::TickSIEInput(float DeltaTime, float MoveSpeed, float MouseSensitivity)
 {
-	if (!bSIEMode || !CameraComponent)
+	if (!bSIEMode || !World)
 		return;
+
+	ACameraActor* MainCamera = World->GetMainCamera();
+
+	if (!MainCamera)
+		return;
+
+	UCameraComponent* CameraComponent = MainCamera->GetCameraComponent();
+
+	if (!CameraComponent)
+		return;
+	
 	FViewportCameraInput Input;
 	Input.bCaptured = bSIEKeyDown[static_cast<int32>(EKeyCode::RButton)];
 	Input.bAllowWheel = true; // The dispatcher only sends axes to the input owner.
@@ -346,15 +318,17 @@ FRect FGameViewportClient::GetSplitRect(const FRect& FullRect, int32 Index, int3
 	return FRect{ FullRect.X + Left, FullRect.Y, Right - Left, FullRect.Height };
 }
 
-UCameraComponent* FGameViewportClient::FindPlayerCamera() const
+AActor* FGameViewportClient::SelectActor() const
 {
-	if (!World) return nullptr;
-	if (APawn* Pawn = World->GetPlayerPawn(static_cast<uint32>(PlayerIndex)))
-	{
-		if (ADefaultPawn* DefaultPawn = Cast<ADefaultPawn>(Pawn))
-			if (UCameraComponent* Camera = DefaultPawn->GetCameraComponent()) return Camera;
-		for (UActorComponent* Component : Pawn->GetComponents())
-			if (UCameraComponent* Camera = Cast<UCameraComponent>(Component)) return Camera;
-	}
-	return nullptr;
+	if (!World)
+		return nullptr;
+
+	if (bSIEMode)
+		return World->GetMainCamera();
+	else if (UCameraComponent* OverridedCamera = World->GetViewCameraOverride(PlayerIndex))
+		return OverridedCamera->GetOwner();
+	else if (AActor* Pawn = World->GetPlayerPawn(static_cast<uint32>(PlayerIndex)))
+		return Pawn;
+	else
+		return World->GetMainCamera();
 }

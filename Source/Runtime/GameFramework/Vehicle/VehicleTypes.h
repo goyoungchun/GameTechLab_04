@@ -48,9 +48,9 @@ struct FVehicleTuning
 	float Acceleration = 22.5f;		// 속력을 높일 때 (u/s²)
 	float Deceleration = 30.0f;		// 이전 Lua 프리셋 호환용. 입력을 떼면 관성으로 주행한다.
 	float Grip = 10.0f;				// 지면에서 수평 속도를 차량 방향으로 정렬하는 강도 (1/s)
-	float TurnRate = 120.0f;		// 정지/저속 기준 조향 속도 (도/초)
+	float TurnRate = 120.0f;		// 기준 조향 속도 (도/초)
 	float MaxSteeringAngle = 25.0f; // 앞바퀴 최대 표시 조향각 (도)
-	float FullTurnSpeed = 7.5f;		// 지면에서 이 전후진 속력부터 최대 조향 (u/s)
+	float FullTurnSpeed = 7.5f;		// 이전 Lua 프리셋 호환용
 	float SteeringSpeedScale = 100.0f; // 속력에 따른 조향 완화 기준. 0이면 완화하지 않는다.
 	float BoostMultiplier = 2.0f;	// 부스트 시 수평 가속도 배율
 	float JumpSpeed = 16.0f;			// 점프 순간 위로 더해지는 속도 (u/s)

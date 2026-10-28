@@ -198,16 +198,9 @@ void UVehicleMovementComponent::UpdateSteering(const FVehicleInput& Input, float
 	const float Scale = Tuning.SteeringSpeedScale > 0.0f ? 1.0f / (1.0f + GetSpeed() / Tuning.SteeringSpeedScale) : 1.0f;
 	SteeringInput = Input.Steer * Scale;
 	if (!Body || SteeringInput == 0.0f) return;
-	float SteeringDirection = 1.0f;
-	if (IsGrounded())
-	{
-		// 전진 -> 정지 -> 후진에 따라 회전량도 연속적으로 줄었다가 반대로 커진다.
-		const float FullSteeringSpeed = std::max(1.0f, Tuning.FullTurnSpeed);
-		SteeringDirection = std::clamp(GetForwardSpeed() / FullSteeringSpeed, -1.0f, 1.0f);
-	}
 	FRotator Rotation = Body->GetWorldRotation();
-	// 앞바퀴 표시용 SteeringInput은 유지하고, 후진할 때 차체의 회전 방향만 반전한다.
-	Rotation.Yaw = std::remainder(Rotation.Yaw + SteeringInput * SteeringDirection * Tuning.TurnRate * DeltaTime, 360.0f);
+	// Testmode와 같이 전후진에 관계없이 입력 방향으로 회전하고, 속력에 따라서만 조향을 완화한다.
+	Rotation.Yaw = std::remainder(Rotation.Yaw + SteeringInput * Tuning.TurnRate * DeltaTime, 360.0f);
 	Body->MoveComponent(FVector::ZeroVector, Rotation, false);
 }
 

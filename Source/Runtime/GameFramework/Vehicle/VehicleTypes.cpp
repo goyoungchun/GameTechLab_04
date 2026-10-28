@@ -44,12 +44,18 @@ const FVehicleCategoryInfo& GetVehicleCategoryInfo(EVehicleCategory Category)
 FVehicleTuning MakeVehicleCategoryTuning(EVehicleCategory Category)
 {
 	FVehicleTuning Tuning;
-	// 밸런스형의 현재 속도대(30/45)와 가속도(22.5)를 기준으로 비율만 적용한다.
+	// 기준 속도대(30/45)와 가속도(22.5)에 분류별 비율을 적용한다.
 	const float Scale = GetVehicleCategoryInfo(Category).SpeedWeight / Balanced.SpeedWeight;
 	Tuning.MaxForwardSpeed *= Scale;
 	Tuning.MaxReverseSpeed *= Scale;
 	Tuning.BoostMaxSpeed *= Scale;
 	Tuning.Acceleration *= Scale;
+	if (Category == EVehicleCategory::Balanced || Category == EVehicleCategory::Heavy)
+	{
+		Tuning.MaxForwardSpeed += 4.0f;
+		Tuning.BoostMaxSpeed += 4.0f;
+		Tuning.MaxReverseSpeed = Tuning.MaxForwardSpeed * 0.9f;
+	}
 	if (Category == EVehicleCategory::Speed)
 	{
 		Tuning.TurnRate = 150.0f;

@@ -81,6 +81,8 @@ public:
 
 	virtual void DuplicateSubobjects(UObject* SourceObject) override;
 
+	virtual void CalcCamera(struct FMinimalViewInfo& OutResult);
+
 protected:
 	//TSet<TObjectPtr<UActorComponent>> OwnedComponents;
 	bool bActorEnableCollision = true;
