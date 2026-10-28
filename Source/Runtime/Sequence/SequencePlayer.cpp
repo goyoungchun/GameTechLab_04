@@ -1,6 +1,7 @@
 #include "EnginePCH.h"
 #include "SequencePlayer.h"
 #include "Camera/CameraComponent.h"
+#include "Camera/PlayerCameraManager.h"
 #include "Engine/World.h"
 
 #include <type_traits>
@@ -159,8 +160,52 @@ void USequencePlayer::Apply(const FSequence* InSequence, bool bFireEvents)
 					{
 						return;
 					}
+					const auto Requests = Evaluate(TypedTrack, PreviousTime, CurrentTime);
+
+					for (const FSequenceEventRequest& Request : Requests)
+					{
+						// TODO : 이벤트 수행부와 연결
+						switch (Request.EventType)
+						{
+						case ESequenceEventType::HitStop:
+							if (const auto* Params = std::get_if<FHitStopParams>(&Request.Params))
+							{
+								// Hit Stop 처리
+							}
+							break;
+
+						case ESequenceEventType::Slomo:
+							if (const auto* Params = std::get_if<FSlomoParams>(&Request.Params))
+							{
+								// Slomo 처리
+							}
+							break;
+
+						case ESequenceEventType::CameraShake:
+							if (const auto* Params = std::get_if<FCameraShakeParams>(&Request.Params))
+							{
+								// Camera Shake 처리
+								if (PlaybackWorld)
+								{
+									for (uint32 i = 0; i < PlaybackWorld->GetPlayerCount(); ++i)
+									{
+										APlayerController* PC = PlaybackWorld->GetPlayerController(i);
+										if (APlayerCameraManager* CM = PC ? PC->GetCameraManager() : nullptr)
+										{
+											CM->StartCameraShake(*Params);
+										}
+									}
+								}
+							}
+							break;
+
+						default:
+							break;
+						}
+					}
 
 					EventRequests.Append(Evaluate(TypedTrack, PreviousTime, CurrentTime));
+
 				}
 			}, Track);
 	}

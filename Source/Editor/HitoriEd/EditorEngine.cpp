@@ -967,6 +967,7 @@ void UEditorEngine::RenderGameFrameDeferred(FDeferredGameViewportClient* GameCli
 
 	if (!bIsSIEMode)
 	{
+		Renderer->DrawScreenOverlay(SceneView);
 		RenderGameUI(GameClient, Width, Height);
 	}
 
@@ -1008,6 +1009,7 @@ void UEditorEngine::RenderGameFrameForward(FForwardGameViewportClient* GameClien
 
 	if (!bIsSIEMode)
 	{
+		Renderer->DrawScreenOverlay(SceneView);
 		RenderGameUI(GameClient, Width, Height);
 	}
 
