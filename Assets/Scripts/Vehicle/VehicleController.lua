@@ -20,12 +20,12 @@ _G.CarPresets = {
 	police = {},
 
 	-- 스피드형
-	italia = { JumpSpeed = 22 },
-	lamb = { JumpSpeed = 22.2 },
-	ghini = { JumpSpeed = 22.5 },
-	fenyr = { JumpSpeed = 22 },
+	italia = { JumpSpeed = 19 },
+	lamb = { JumpSpeed = 19.2 },
+	ghini = { JumpSpeed = 19.5 },
+	fenyr = { JumpSpeed = 19 },
 
-	kamaro = { JumpSpeed = 22 },
+	kamaro = { JumpSpeed = 19 },
 
 	rally = { JumpSpeed = 25.5 },
 
