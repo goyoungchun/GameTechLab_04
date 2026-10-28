@@ -23,7 +23,7 @@ Game.Config = {
         BlendTime   = 0.5,
         WinnerActor = "AVehiclePawn_0",
         LoserActor  = "AVehiclePawn_1",
-        TeamCardTime     = 3.8,
+        TeamCardTime     = 0.0,
         TeamCardFadeTime = 0.6,
         SoundCues = {
             { Time = 1.2, Sound = "boost_1" },
