@@ -72,10 +72,11 @@ public:
 	void OnActorDestroyed(AActor* Actor);
 
 	void InitializeFor(APlayerController* PC);
-	void SetViewTarget(AActor* NewTarget);
+	void SetViewTarget(AActor* NewTarget, const FViewTargetTransitionParams& TransitionParams = FViewTargetTransitionParams());
 	void UpdateCamera(float DeltaTime);
 
-	AActor* GetViewTarget() const { return ViewTarget.Target; }
+	AActor* GetViewTarget() const;
+	bool IsBlending() const { return PendingViewTarget.Target != nullptr; }
 	bool IsCameraCacheValid() const { return bCameraCacheValid; }
 	const FMinimalViewInfo& GetCameraCacheView() const { return CameraCachePOV; }
 	APlayerController* GetOwningPlayerController() const { return PCOwner; }
@@ -85,8 +86,15 @@ protected:
 	void FillCameraCache(const FMinimalViewInfo& NewInfo);
 	void CheckViewTarget();
 
+	void SnapshotOutgoing(const FMinimalViewInfo& OnScreenPOV);
+	void AssignViewTarget(AActor* NewTarget);
+	void StartBlend(AActor* NewTarget, const FViewTargetTransitionParams& Params);
+
 	APlayerController* PCOwner = nullptr;
 	FViewTarget ViewTarget;
+	FViewTarget PendingViewTarget;
+	float BlendTimeToGo = 0.0f;
+	FViewTargetTransitionParams BlendParams;
 	FMinimalViewInfo CameraCachePOV;
 	bool bCameraCacheValid = false;
 };
