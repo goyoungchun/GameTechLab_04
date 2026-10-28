@@ -12,6 +12,8 @@
 
 ABallActor::ABallActor()
 {
+	PrimaryActorTick.bCanEverTick = true;
+
 	Collision = CreateDefaultSubobject<USphereComponent>("BallCollision");
 	SetRootComponent(Collision);
 	Collision->SetMotionType(EPhysicsMotionType::Dynamic);
@@ -52,10 +54,40 @@ ABallActor::ABallActor()
 			const FVector Offset = Vertex.Position - Center;
 			RadiusSquared = std::max(RadiusSquared, Offset.Dot(Offset));
 		}
-		Mesh->SetRelativeLocation(-Center * MeshScale);
+		MeshCenterOffset = Center * MeshScale;
+		Mesh->SetRelativeLocation(-MeshCenterOffset);
 		if (RadiusSquared > 0.0f)
 			Collision->SetSphereRadius(std::sqrt(RadiusSquared) * MeshScale);
 	}
+}
+
+void ABallActor::BeginPlay()
+{
+	Super::BeginPlay();
+
+	PreviousLocation = Collision->GetWorldLocation();
+}
+
+void ABallActor::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	const FVector CurrentLocation = Collision->GetWorldLocation();
+	FVector Delta = CurrentLocation - PreviousLocation;
+	PreviousLocation = CurrentLocation;
+	Delta.Z = 0.0f;
+
+	const float Distance = Delta.Length();
+	const float Radius = Collision->GetSphereRadius();
+	if (Distance <= 1e-4f || Radius <= 1e-4f)
+		return;
+
+	const FVector WorldAxis = FVector(0.0f, 0.0f, 1.0f).Cross(Delta).Normalized();
+	const FVector LocalAxis = Collision->GetWorldRotation().Quaternion().Inverse().RotateVector(WorldAxis);
+	RollRotation = (FQuat::MakeFromAxisAngle(LocalAxis, Distance / Radius) * RollRotation).Normalized();
+
+	Mesh->SetRelativeRotation(RollRotation.ToFRotator());
+	Mesh->SetRelativeLocation(-RollRotation.RotateVector(MeshCenterOffset));
 }
 
 void ABallActor::HandleHit(UPrimitiveComponent* Self, AActor* OtherActor, UPrimitiveComponent* Other,
