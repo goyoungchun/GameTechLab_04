@@ -169,6 +169,7 @@ bool UEditorEngine::Init() {
 	FireBallRenderer->Init(Renderer);
 
 	SettingsPanel = EditorUI->AddEditorPanel<FSettingsPanel>();
+
 	OutputLogPanel->SetLightCullingCallback([this](bool bEnabled)
 	{
 		SettingsPanel->GetMutableSettings().bLightCulling = bEnabled;
@@ -216,14 +217,16 @@ bool UEditorEngine::Init() {
 
 	OutlinerPanel = EditorUI->AddEditorPanel<FOutlinerPanel>();
 	OutlinerPanel->SetWorld(EditorWorld);
-	OutlinerPanel->SetSelectionCallback([this](UPrimitiveComponent *Primitive) {
-		Gizmo->SetTarget(Primitive);
-		Outline->SetTarget(Primitive);
-		DetailsPanel->SetTarget(Primitive);
+	OutlinerPanel->SetSelectionCallback([this](USceneComponent *Component) {
+		Gizmo->SetTarget(Component);
+		Outline->SetTarget(Cast<UPrimitiveComponent>(Component));
+		DetailsPanel->SetTarget(Component);
 	});
 
 	OutlinerPanel->SetDeleteActorCallback(
 			[this](AActor *Actor) { DeleteActor(Actor); });
+
+	SequencerPanel = EditorUI->AddEditorPanel<FSequencerPanel>();
 
 	LineBatcher = MakeUnique<FLineBatcher>();
 	LineBatcher->Init(Renderer, EditorWorld);
@@ -300,6 +303,9 @@ bool UEditorEngine::Init() {
 	EditorControlsPanel->SetWorld(EditorWorld);
 	EditorControlsPanel->SetGizmo(Gizmo.get());
 	EditorControlsPanel->SetViewportsPanel(ViewportsPanel);
+
+	SequencerPanel->SetWorld(EditorWorld);
+	SequencerPanel->SetViewportsPanel(ViewportsPanel);
 
 	SettingsPanel->SetWorld(EditorWorld);
 	SettingsPanel->SetViewportsPanel(ViewportsPanel);
@@ -434,6 +440,7 @@ void UEditorEngine::UpdateViewportState(const float DeltaTime) {
 
 	UpdateInputOwner();
 	if (InputOwnerPIEInstance == -1 && !ImGui::GetIO().WantTextInput &&
+		!(SequencerPanel && SequencerPanel->IsFocused()) &&
 		FInputSystem::IsKeyPressed(EKeyCode::Delete)) {
 		DeleteActor(OutlinerPanel->GetSelectedActor());
 	}
@@ -1711,7 +1718,7 @@ void UEditorEngine::StopPIESession()
 	OutlinerPanel->SetWorld(EditorWorld);
 	DetailsPanel->SetWorld(EditorWorld);
 	SettingsPanel->SetWorld(EditorWorld);
-
+	SequencerPanel->SetWorld(EditorWorld);
 }
 
 void UEditorEngine::UpdateInputOwner()
