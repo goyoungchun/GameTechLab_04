@@ -113,10 +113,11 @@ void APlayerController::UnPossess()
 	if (!PossessedPawn)
 		return;
 
-	PossessedPawn->UnPossessed();
+	APawn* OldPawn = PossessedPawn;
+	OldPawn->UnPossessed();
 	PossessedPawn = nullptr;
 
-	if (PlayerCameraManager && PlayerCameraManager->GetViewTarget() == PossessedPawn)
+	if (PlayerCameraManager && PlayerCameraManager->GetViewTarget() == OldPawn)
 		PlayerCameraManager->SetViewTarget(nullptr);
 }
 
