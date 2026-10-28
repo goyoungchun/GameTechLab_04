@@ -41,12 +41,12 @@ struct FQuat
 	FVector GetRightVector() const;
 	FVector GetUpVector() const;
 
-
 	/* Static */
 	static FQuat Identity();
 	static FQuat MakeFromAxisAngle(const FVector& Axis, float AngleRadians);
 	static FQuat MakeFromEuler(float Roll, float Pitch, float Yaw);
-
+	static FQuat Slerp(FQuat Current, FQuat Target, float Slerp);
+	
 	bool Equals(const FQuat& Q, float Tolerance = 1e-4f) const;
 };
 
