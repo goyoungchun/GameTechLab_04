@@ -108,16 +108,26 @@ struct FSlomoParams
 	}
 };
 
+// 카메라 흔들림 파형
+enum class ECameraShakeType : uint8
+{
+	Sine,	// 규칙적인 흔들림 (진동, 반동)
+	Perlin,	// 불규칙한 흔들림 (폭발, 피격)
+};
+
 struct FCameraShakeParams
 {
+	ECameraShakeType Type = ECameraShakeType::Perlin;
 	float Duration = 0.3f;
 	float Strength = 1.0f;
+	float Frequency = 20.f;
 	Bezier Ease; // 카메라 효과가 경과 시간에 따른 강도 감쇠에 사용
 
 	bool IsValid() const
 	{
 		return std::isfinite(Duration) && Duration >= 0.0f
 			&& std::isfinite(Strength) && Strength >= 0.0f
+			&& std::isfinite(Frequency) && Frequency >= 0.0f
 			&& Ease.IsValid();
 	}
 };
