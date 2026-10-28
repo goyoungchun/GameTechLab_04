@@ -55,9 +55,12 @@ bool UScriptComponent::LoadScriptFile(sol::environment InEnvironment)
 		return false;
 	}
 
+	const bool bPreviousUnscaledTick = PrimaryComponentTick.bTickWithUnscaledTime;
+	PrimaryComponentTick.bTickWithUnscaledTime = false;
 	auto Result = Lua.safe_script_file(ScriptPath, InEnvironment, sol::script_pass_on_error);
 	if (!Result.valid())
 	{
+		PrimaryComponentTick.bTickWithUnscaledTime = bPreviousUnscaledTick;
 		sol::error Err = Result;
 		HTR_LOG(Error, "[Script] Load failed: {} ({})", ScriptPath, Err.what());
 		ClearCoroutines();
@@ -101,7 +104,44 @@ void UScriptComponent::BindScriptAPI(sol::environment& InEnvironment)
 {
 	InEnvironment["obj"] = GetOwner();
 	BindCoroutineAPI(InEnvironment);
+	BindTimeAPI(InEnvironment);
 	BindUIAPI(InEnvironment);
+}
+
+void UScriptComponent::BindTimeAPI(sol::environment& InEnvironment)
+{
+	// 이 설정은 해당 스크립트의 Tick과 코루틴 대기 시간에 함께 적용된다.
+	InEnvironment.set_function("SetTickWithUnscaledTime", [this](bool bEnabled)
+		{ PrimaryComponentTick.bTickWithUnscaledTime = bEnabled; });
+	InEnvironment.set_function("GetGameDeltaTime", [this]()
+		{ return GetWorld() ? GetWorld()->GetGameDeltaSeconds() : 0.0f; });
+	InEnvironment.set_function("HitStop", [this](float Duration)
+		{
+			if (UWorld* World = GetWorld())
+			{
+				FHitStopParams Params;
+				Params.Duration = Duration;
+				World->GetTimeController().RequestHitStop(Params);
+			}
+		});
+	InEnvironment.set_function("Slomo", [this](float TargetScale, float Duration,
+		float BlendInTime, float BlendOutTime, sol::optional<bool> bHoldAtEnd)
+		{
+			if (UWorld* World = GetWorld())
+			{
+				FSlomoParams Params;
+				Params.TargetScale = TargetScale;
+				Params.Duration = Duration;
+				Params.BlendInTime = BlendInTime;
+				Params.BlendOutTime = BlendOutTime;
+				World->GetTimeController().RequestSlomo(Params, bHoldAtEnd.value_or(false));
+			}
+		});
+	InEnvironment.set_function("ResetTimeEffects", [this]()
+		{
+			if (UWorld* World = GetWorld())
+				World->GetTimeController().Reset();
+		});
 }
 
 void UScriptComponent::BindCoroutineAPI(sol::environment& InEnvironment)
@@ -245,6 +285,8 @@ void UScriptComponent::UnbindScriptAPI(sol::environment& InEnvironment)
 
 	UnbindCoroutineAPI(InEnvironment);
 	UnbindUIAPI(InEnvironment);
+	for (const char* Name : { "SetTickWithUnscaledTime", "GetGameDeltaTime", "HitStop", "Slomo", "ResetTimeEffects" })
+		InEnvironment[Name] = sol::lua_nil;
 	InEnvironment["obj"] = sol::lua_nil;
 }
 

@@ -17,7 +17,8 @@ public:
 	bool IsHitStopped() const;
 	double GetHitStopTimeRemaining() const;
 
-	void RequestSlomo(const FSlomoParams& Params);
+	// bHoldAtEnd이면 BlendOut 없이 TargetScale을 유지한다. StopSlomo/Reset으로 해제한다.
+	void RequestSlomo(const FSlomoParams& Params, bool bHoldAtEnd = false);
 	void StopSlomo();
 	bool IsSlomoActive() const;
 	double GetSlomoElapsedTime() const;
@@ -34,6 +35,7 @@ private:
 	double HitStopTimeRemaining = 0.0;
 
 	bool bSlomoActive = false;
+	bool bHoldSlomoAtEnd = false;
 	FSlomoParams ActiveSlomoParams{};
 	double SlomoElapsedTime = 0.0;
 	float SlomoStartTimeDilation = 1.0f;

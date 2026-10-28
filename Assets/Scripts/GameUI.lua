@@ -1,3 +1,6 @@
+-- 시간 배율이 0이어도 현재 상태의 결과 화면과 메뉴를 다시 그린다.
+SetTickWithUnscaledTime(true)
+
 local HintTextColor = Color(0.8, 0.8, 0.8)
 local BackHintText = "뒤로가기 Backspace"
 

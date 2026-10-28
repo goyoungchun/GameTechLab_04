@@ -325,18 +325,19 @@ void FScriptSystem::RegisterTypes()
 			Location.Z += SurfaceLocation.Z + 0.01f - Root->CalcBounds().Min.Z;
 			Self.SetActorLocation(Location);
 		},
-		"SetViewCamera", [](AActor& Self, int32 PlayerIndex, const FVector& Location, const FRotator& Rotation)
+		"SetViewCamera", [](AActor& Self, int32 PlayerIndex, const FVector& Location, const FRotator& Rotation,
+			sol::optional<float> BlendTime)
 		{
 			if (UWorld* World = Self.GetWorld())
 			{
-				World->SetViewCameraOverride(PlayerIndex - 1, Location, Rotation);
+				World->SetViewCameraOverride(PlayerIndex - 1, Location, Rotation, BlendTime.value_or(0.0f));
 			}
 		},
-		"ClearViewCamera", [](AActor& Self, int32 PlayerIndex)
+		"ClearViewCamera", [](AActor& Self, int32 PlayerIndex, sol::optional<float> BlendTime)
 		{
 			if (UWorld* World = Self.GetWorld())
 			{
-				World->ClearViewCameraOverride(PlayerIndex - 1);
+				World->ClearViewCameraOverride(PlayerIndex - 1, BlendTime.value_or(0.0f));
 			}
 		},
 		"SetText", [](AActor& Self, const FString& InText)

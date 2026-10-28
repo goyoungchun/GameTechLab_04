@@ -1,10 +1,12 @@
 #pragma once
 
 #include "GameFramework/Pawn.h"
+#include "GameFramework/HitSquashAnimation.h"
 
 class UBoxComponent;
 class UStaticMeshComponent;
 class UStaticMesh;
+class USceneComponent;
 class UVehicleMovementComponent;
 class UScriptComponent;
 class UCameraComponent;
@@ -45,13 +47,18 @@ public:
 	FString GetBodyName() const;
 	void FitBodyCollision();
 	void ResetFollowCamera();
+	// 충돌체와 카메라를 유지하고 차체·바퀴 외형만 짧게 축소·확대한다.
+	void PlayHitSquash();
+	void ResetHitSquash();
 
 private:
 	void RefreshVehicleVisuals();
 	void ClearVehicleVisuals();
 	void UpdateWheelVisuals(float DeltaTime);
 	void UpdateFollowCamera(float DeltaTime);
+	void UpdateHitSquash(float DeltaTime);
 	UBoxComponent* Box = nullptr;
+	USceneComponent* VisualRoot = nullptr;
 	UStaticMeshComponent* StaticMesh = nullptr;
 	UStaticMeshComponent* BodyVisual = nullptr;
 	UStaticMeshComponent* Wheels[4] = {};
@@ -60,6 +67,7 @@ private:
 	UStaticMesh* AppliedBodyMesh = nullptr;
 	bool bUsingParts = false;
 	bool bSourceWasVisible = true;
+	FHitSquashAnimation HitSquashAnimation;
 	UVehicleMovementComponent* Movement = nullptr;
 	UScriptComponent* Script = nullptr;
 	UCameraComponent* Camera = nullptr;

@@ -78,8 +78,10 @@ public:
 	ACameraActor* GetMainCamera() const { return MainCamera; }
 
 	static constexpr int32 MaxViewCameraOverrides = 2;
-	void SetViewCameraOverride(int32 PlayerIndex, const FVector& Location, const FRotator& Rotation);
-	void ClearViewCameraOverride(int32 PlayerIndex);
+	// BlendTime이 양수이면 현재 플레이어 시점에서 실제 시간 기준으로 부드럽게 전환한다.
+	void SetViewCameraOverride(int32 PlayerIndex, const FVector& Location, const FRotator& Rotation, float BlendTime = 0.0f);
+	// BlendTime이 양수이면 움직이는 플레이어 카메라로 복귀한 뒤 Override를 해제한다.
+	void ClearViewCameraOverride(int32 PlayerIndex, float BlendTime = 0.0f);
 	UCameraComponent* GetViewCameraOverride(int32 PlayerIndex) const;
 
 	// Level
@@ -120,6 +122,8 @@ public:
 	FTickTaskManager& GetTickTaskManager() { return TickTaskManager; }
 	FTimeController& GetTimeController();
 	const FTimeController& GetTimeController() const;
+	// 현재 프레임의 물리/게임 Tick에 전달하는 배율 적용 후 시간이다.
+	float GetGameDeltaSeconds() const { return GameDeltaSeconds; }
 
 
 	EWorldType& GetWorldType() { return WorldType; }
@@ -143,6 +147,9 @@ public:
 	bool IsSplitScreenEnabled() const { return bSplitScreenEnabled; }
 
 private:
+	bool CalcPlayerCameraView(int32 PlayerIndex, struct FMinimalViewInfo& OutView) const;
+	void UpdateViewCameraBlends();
+
 	// 등록된 Tick 함수만 실행한다. Actor보다 먼저 사라져도 남은 함수와의 연결을 스스로 끊는다.
 	FTickTaskManager TickTaskManager;
 	FTimeController TimeController;
@@ -157,6 +164,19 @@ private:
 	// 레벨에 속하지 않는 카메라. Tick을 등록하지 않아 입력으로 움직이지 않는다.
 	ACameraActor* ViewCameraOverrides[MaxViewCameraOverrides] = {};
 	bool bViewCameraOverrideActive[MaxViewCameraOverrides] = {};
+	struct FViewCameraBlend
+	{
+		FVector StartLocation = FVector::ZeroVector;
+		FVector TargetLocation = FVector::ZeroVector;
+		FQuat StartRotation;
+		FQuat TargetRotation;
+		float StartFOV = 60.0f;
+		float TargetFOV = 60.0f;
+		double StartTime = 0.0;
+		double Duration = 0.0; // 0이면 보간 중이 아니다.
+		bool bReturnToPlayer = false;
+	};
+	FViewCameraBlend ViewCameraBlends[MaxViewCameraOverrides];
 
 	// 플레이어 폰 및 컨트롤러
 	//APawn* PlayerPawn = nullptr;
@@ -174,6 +194,8 @@ private:
 	TArray<ULevel*> Levels;
 	EWorldType WorldType = EWorldType::None;
 	EWorldTick CurrentTickType = EWorldTick::All;
+	float GameDeltaSeconds = 0.0f;
+	double UnscaledTimeSeconds = 0.0;
 	bool bBegunPlay = false;
 	bool bIsPaused = false;
 

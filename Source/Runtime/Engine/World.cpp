@@ -8,6 +8,7 @@
 
 #include "Camera/CameraActor.h"
 #include "Camera/CameraComponent.h"
+#include "Camera/CameraTypes.h"
 #include "Input/InputSystem.h"
 
 #include "UObject/UObjectIterator.h"
@@ -134,6 +135,7 @@ void UWorld::FlushDestroyList()
 void UWorld::Tick(EWorldTick TickType, float DeltaTime)
 {
 	CurrentTickType = TickType;
+	GameDeltaSeconds = 0.0f;
 
 	if (CurrentTickType == EWorldTick::All)
 	{
@@ -145,25 +147,29 @@ void UWorld::Tick(EWorldTick TickType, float DeltaTime)
 
 		if (!bIsPaused)
 		{
-			const double UnscaledDeltaTime = DeltaTime;
+			const float UnscaledDeltaTime = std::isfinite(DeltaTime) && DeltaTime > 0.0f ? DeltaTime : 0.0f;
+			UnscaledTimeSeconds += UnscaledDeltaTime;
 			const float GameDeltaTime = static_cast<float>(TimeController.GetGameDeltaTime(UnscaledDeltaTime));
+			GameDeltaSeconds = GameDeltaTime;
 			TimeController.Update(UnscaledDeltaTime);
-			{
-				if(GameDeltaTime > 0.0f)
-				{
-					SCOPE_CYCLE_COUNTER(STAT_ActorTick);
-					GameUIBuffer.Clear();
-					TickTaskManager.RunTickGroup(ETickingGroup::PrePhysics, GameDeltaTime);
-					PhysicsScene->StartFrame(GameDeltaTime);
-					TickTaskManager.RunTickGroup(ETickingGroup::DuringPhysics, GameDeltaTime);
-					PhysicsScene->EndFrame();
-					TickTaskManager.RunTickGroup(ETickingGroup::PostPhysics, GameDeltaTime);
-					TickTaskManager.RunTickGroup(ETickingGroup::PostUpdateWork, GameDeltaTime);
+			SCOPE_CYCLE_COUNTER(STAT_ActorTick);
+			GameUIBuffer.Clear();
+			TickTaskManager.RunTickGroup(ETickingGroup::PrePhysics, GameDeltaTime, UnscaledDeltaTime);
+			if (GameDeltaTime > 0.0f)
+				PhysicsScene->StartFrame(GameDeltaTime);
+			TickTaskManager.RunTickGroup(ETickingGroup::DuringPhysics, GameDeltaTime, UnscaledDeltaTime);
+			if (GameDeltaTime > 0.0f)
+				PhysicsScene->EndFrame();
+			TickTaskManager.RunTickGroup(ETickingGroup::PostPhysics, GameDeltaTime, UnscaledDeltaTime);
+			TickTaskManager.RunTickGroup(ETickingGroup::PostUpdateWork, GameDeltaTime, UnscaledDeltaTime);
+			// 차량/SpringArm 갱신 후의 실제 시점을 목표로 삼아 복귀 완료 시점도 일치시킨다.
+			UpdateViewCameraBlends();
 
-					for (ULevel* Level : Levels)
-					{
-						PathTracker.Tick(Level->GetActors(), GameDeltaTime);
-					}
+			if (GameDeltaTime > 0.0f)
+			{
+				for (ULevel* Level : Levels)
+				{
+					PathTracker.Tick(Level->GetActors(), GameDeltaTime);
 				}
 			}
 		}
@@ -190,6 +196,10 @@ void UWorld::Tick(EWorldTick TickType, float DeltaTime)
 
 void UWorld::ClearWorld()
 {
+	for (int32 Index = 0; Index < MaxViewCameraOverrides; ++Index)
+		ClearViewCameraOverride(Index);
+	UnscaledTimeSeconds = 0.0;
+
 	// BeginPlay 대기 중인 Actor 제거
 	while (!BeginPlayList.IsEmpty())
 	{
@@ -266,10 +276,31 @@ void UWorld::SetMainCamera(ACameraActor* Camera)
 	}
 }
 
-void UWorld::SetViewCameraOverride(int32 PlayerIndex, const FVector& Location, const FRotator& Rotation)
+bool UWorld::CalcPlayerCameraView(int32 PlayerIndex, FMinimalViewInfo& OutView) const
+{
+	if (APawn* Pawn = GetPlayerPawn(static_cast<uint32>(PlayerIndex)))
+		Pawn->CalcCamera(OutView);
+	else if (MainCamera)
+		MainCamera->CalcCamera(OutView);
+	else
+		return false;
+	return true;
+}
+
+void UWorld::SetViewCameraOverride(int32 PlayerIndex, const FVector& Location, const FRotator& Rotation, float BlendTime)
 {
 	if (PlayerIndex < 0 || PlayerIndex >= MaxViewCameraOverrides)
 		return;
+
+	const bool bBlend = std::isfinite(BlendTime) && BlendTime > 0.0f;
+	FMinimalViewInfo StartView;
+	if (bBlend)
+	{
+		if (UCameraComponent* CurrentCamera = GetViewCameraOverride(PlayerIndex))
+			CurrentCamera->GetCameraView(StartView);
+		else
+			CalcPlayerCameraView(PlayerIndex, StartView);
+	}
 
 	ACameraActor*& Camera = ViewCameraOverrides[PlayerIndex];
 	if (!Camera)
@@ -282,17 +313,101 @@ void UWorld::SetViewCameraOverride(int32 PlayerIndex, const FVector& Location, c
 		Camera->GetCameraComponent()->SetExternalInputManaged(true);
 	}
 
-	FTransform Transform = Camera->GetCameraComponent()->GetTransform();
+	UCameraComponent* CameraComponent = Camera->GetCameraComponent();
+	FViewCameraBlend& Blend = ViewCameraBlends[PlayerIndex];
+	const float TargetFOV = Blend.Duration > 0.0 ? Blend.TargetFOV : CameraComponent->GetFieldOfView();
+	Blend = {};
+	FTransform Transform = CameraComponent->GetTransform();
 	Transform.Location = Location;
 	Transform.Rotation = Rotation;
-	Camera->GetCameraComponent()->SetTransform(Transform);
+	if (bBlend)
+	{
+		Blend.StartLocation = StartView.Location;
+		Blend.TargetLocation = Location;
+		Blend.StartRotation = StartView.Rotation.Quaternion();
+		Blend.TargetRotation = Rotation.Quaternion();
+		Blend.StartFOV = StartView.FOV;
+		Blend.TargetFOV = TargetFOV;
+		Blend.Duration = BlendTime;
+		Blend.StartTime = UnscaledTimeSeconds;
+		// 첫 화면은 기존 시점과 정확히 같게 두고 다음 프레임부터 이동한다.
+		Transform.Location = StartView.Location;
+		Transform.Rotation = StartView.Rotation;
+		CameraComponent->SetFieldOfView(StartView.FOV);
+	}
+	else
+		CameraComponent->SetFieldOfView(TargetFOV);
+	CameraComponent->SetTransform(Transform);
 	bViewCameraOverrideActive[PlayerIndex] = true;
 }
 
-void UWorld::ClearViewCameraOverride(int32 PlayerIndex)
+void UWorld::UpdateViewCameraBlends()
+{
+	for (int32 Index = 0; Index < MaxViewCameraOverrides; ++Index)
+	{
+		FViewCameraBlend& Blend = ViewCameraBlends[Index];
+		UCameraComponent* Camera = GetViewCameraOverride(Index);
+		if (!Camera || Blend.Duration <= 0.0)
+			continue;
+		if (Blend.bReturnToPlayer)
+		{
+			FMinimalViewInfo TargetView;
+			if (!CalcPlayerCameraView(Index, TargetView))
+			{
+				ClearViewCameraOverride(Index);
+				continue;
+			}
+			Blend.TargetLocation = TargetView.Location;
+			Blend.TargetRotation = TargetView.Rotation.Quaternion();
+			Blend.TargetFOV = TargetView.FOV;
+		}
+		const double Elapsed = std::clamp(UnscaledTimeSeconds - Blend.StartTime, 0.0, Blend.Duration);
+		const float Alpha = static_cast<float>(Elapsed / Blend.Duration);
+		const float Weight = Alpha * Alpha * (3.0f - 2.0f * Alpha);
+		FTransform Transform = Camera->GetTransform();
+		Transform.Location = Blend.StartLocation + (Blend.TargetLocation - Blend.StartLocation) * Weight;
+		Transform.Rotation = FQuat::Slerp(Blend.StartRotation, Blend.TargetRotation, Weight).ToFRotator();
+		Camera->SetTransform(Transform);
+		Camera->SetFieldOfView(Blend.StartFOV + (Blend.TargetFOV - Blend.StartFOV) * Weight);
+		if (Elapsed >= Blend.Duration)
+		{
+			if (Blend.bReturnToPlayer)
+				ClearViewCameraOverride(Index);
+			else
+				Blend.Duration = 0.0;
+		}
+	}
+}
+
+void UWorld::ClearViewCameraOverride(int32 PlayerIndex, float BlendTime)
 {
 	if (PlayerIndex < 0 || PlayerIndex >= MaxViewCameraOverrides)
 		return;
+	FViewCameraBlend& Blend = ViewCameraBlends[PlayerIndex];
+	if (std::isfinite(BlendTime) && BlendTime > 0.0f)
+	{
+		UCameraComponent* Camera = GetViewCameraOverride(PlayerIndex);
+		FMinimalViewInfo TargetView;
+		if (Camera && CalcPlayerCameraView(PlayerIndex, TargetView))
+		{
+			FMinimalViewInfo StartView;
+			Camera->GetCameraView(StartView);
+			Blend = {};
+			Blend.StartLocation = StartView.Location;
+			Blend.StartRotation = StartView.Rotation.Quaternion();
+			Blend.StartFOV = StartView.FOV;
+			Blend.TargetLocation = TargetView.Location;
+			Blend.TargetRotation = TargetView.Rotation.Quaternion();
+			Blend.TargetFOV = TargetView.FOV;
+			Blend.Duration = BlendTime;
+			Blend.StartTime = UnscaledTimeSeconds;
+			Blend.bReturnToPlayer = true;
+			return;
+		}
+	}
+	if (Blend.Duration > 0.0 && ViewCameraOverrides[PlayerIndex])
+		ViewCameraOverrides[PlayerIndex]->GetCameraComponent()->SetFieldOfView(Blend.TargetFOV);
+	Blend = {};
 	bViewCameraOverrideActive[PlayerIndex] = false;
 }
 

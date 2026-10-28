@@ -19,6 +19,7 @@ AVehiclePawn::AVehiclePawn()
 	PrimaryActorTick.TickGroup = ETickingGroup::PostPhysics;
 
 	Box = CreateDefaultSubobject<UBoxComponent>("BoxComponent");
+	VisualRoot = CreateDefaultSubobject<USceneComponent>("VehicleVisualRoot");
 	StaticMesh = CreateDefaultSubobject<UStaticMeshComponent>("StaticMeshComponent");
 	Script = CreateDefaultSubobject<UScriptComponent>("ScriptComponent");
 	Movement = CreateDefaultSubobject<UVehicleMovementComponent>("MovementComponent");
@@ -34,7 +35,10 @@ AVehiclePawn::AVehiclePawn()
 	Box->SetRestitution(0.0f);
 	SetRootComponent(Box);
 
-	StaticMesh->SetupAttachment(Box);
+	// 외형 효과는 이 부모에만 적용한다. 모델의 원래 Transform과 Box 크기는 유지한다.
+	VisualRoot->SetupAttachment(Box);
+	VisualRoot->SetFlags(EObjectFlags::RF_Transient);
+	StaticMesh->SetupAttachment(VisualRoot);
 	StaticMesh->SetCollisionResponseToChannel(ECollisionChannel::WorldDynamic, ECollisionResponse::Ignore);
 	StaticMesh->SetCollisionResponseToChannel(ECollisionChannel::WorldStatic, ECollisionResponse::Ignore);
 
@@ -73,6 +77,7 @@ AVehiclePawn::AVehiclePawn()
 
 void AVehiclePawn::BeginPlay()
 {
+	ResetHitSquash();
 	// 모델 보정/스크립트 초기화가 카메라를 갱신하기 전에 씬의 기본 FOV를 보관한다.
 	if (Camera)
 		BaseFOV = Camera->GetFieldOfView();
@@ -86,6 +91,7 @@ void AVehiclePawn::BeginPlay()
 
 void AVehiclePawn::EndPlay()
 {
+	ResetHitSquash();
 	ClearVehicleVisuals();
 	bCameraInitialized = false;
 	if (Camera) Camera->SetFieldOfView(BaseFOV);
@@ -100,6 +106,7 @@ void AVehiclePawn::Tick(float DeltaTime)
 		FitBodyCollision();
 		RefreshVehicleVisuals();
 	}
+	UpdateHitSquash(DeltaTime);
 	UpdateWheelVisuals(DeltaTime);
 	UpdateFollowCamera(DeltaTime);
 }
@@ -129,6 +136,7 @@ bool AVehiclePawn::SetBody(const FString& MeshName)
 	if (!Mesh || !StaticMesh || !Box)
 		return false;
 
+	ResetHitSquash();
 	StaticMesh->SetStaticMesh(Mesh);
 	FitBodyCollision();
 	if (HasBegunPlay()) RefreshVehicleVisuals();
@@ -259,6 +267,26 @@ void AVehiclePawn::UpdateWheelVisuals(float DeltaTime)
 	}
 }
 
+void AVehiclePawn::PlayHitSquash()
+{
+	if (!VisualRoot) return;
+	// 연속해서 다른 충돌이 발생해도 현재 외형에서 이어서 재생한다.
+	HitSquashAnimation.Play(VisualRoot->GetRelativeScale3D().X);
+}
+
+void AVehiclePawn::ResetHitSquash()
+{
+	HitSquashAnimation.Reset();
+	if (VisualRoot) VisualRoot->SetRelativeScale3D(FVector::OneVector);
+}
+
+void AVehiclePawn::UpdateHitSquash(float DeltaTime)
+{
+	if (!HitSquashAnimation.IsActive() || !VisualRoot || !std::isfinite(DeltaTime) || DeltaTime <= 0.0f) return;
+	const float Scale = HitSquashAnimation.Update(DeltaTime);
+	VisualRoot->SetRelativeScale3D(FVector(Scale));
+}
+
 void AVehiclePawn::ResetFollowCamera()
 {
 	bCameraInitialized = false;
@@ -276,7 +304,9 @@ void AVehiclePawn::UpdateFollowCamera(float DeltaTime)
 	};
 
 	const FStaticMeshData* Data = StaticMesh->GetMeshData();
-	const FVector Extent = Data ? (Data->AABB.Max - Data->AABB.Min) * 0.5f * StaticMesh->GetWorldScale3D().GetAbs()
+	// Squash에 따라 추적 카메라 거리까지 흔들리지 않도록 모델의 원래 크기를 사용한다.
+	const FVector ModelWorldScale = StaticMesh->GetRelativeScale3D() * Box->GetWorldScale3D();
+	const FVector Extent = Data ? (Data->AABB.Max - Data->AABB.Min) * 0.5f * ModelWorldScale.GetAbs()
 		: Box->GetBoxExtent() * Box->GetWorldScale3D().GetAbs();
 	
 	// 테스트 브랜치처럼 Yaw만 지연 추적한다. 점프/기울어짐에도 수평선을 유지한다.

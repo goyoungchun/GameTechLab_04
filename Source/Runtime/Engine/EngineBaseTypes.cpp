@@ -88,6 +88,11 @@ void FTickTaskManager::RemoveTickFunction(FTickFunction* Function)
 
 void FTickTaskManager::RunTickGroup(ETickingGroup Group, float DeltaTime)
 {
+	RunTickGroup(Group, DeltaTime, DeltaTime);
+}
+
+void FTickTaskManager::RunTickGroup(ETickingGroup Group, float GameDeltaTime, float UnscaledDeltaTime)
+{
 	TArray<FTickFunction*>& Functions = Groups[static_cast<uint8>(Group)];
 
 	bIsTicking = true;
@@ -99,10 +104,12 @@ void FTickTaskManager::RunTickGroup(ETickingGroup Group, float DeltaTime)
 		if (!Function || Function->TickState == FTickFunction::ETickState::Disabled)
 			continue;
 
-		float TickDelta = DeltaTime;
+		float TickDelta = Function->bTickWithUnscaledTime ? UnscaledDeltaTime : GameDeltaTime;
+		if (!std::isfinite(TickDelta) || TickDelta <= 0.0f)
+			continue;
 		if (Function->TickInterval > 0.0f)
 		{
-			Function->RelativeTickCooldown -= DeltaTime;
+			Function->RelativeTickCooldown -= TickDelta;
 			if (Function->RelativeTickCooldown > 0.0f)
 			{
 				Function->TickState = FTickFunction::ETickState::CoolingDown;
