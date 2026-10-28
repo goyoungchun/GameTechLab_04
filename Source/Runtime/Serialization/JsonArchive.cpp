@@ -10,6 +10,7 @@
 #include "GameFramework/Actor/StaticMeshActor.h"
 #include "GameFramework/Vehicle/VehiclePawn.h"
 #include "TypeSerializer.h"
+#include "ObjectSystem/ObjectFactory.h"
 #include "Asset/AssetManager.h"
 #include "Camera/CameraActor.h"
 #include "Camera/CameraComponent.h"
@@ -78,6 +79,7 @@ bool FJsonArchive::SaveWorld(UWorld* World, const FString& Path)
 
 		json ActorJson;
 		ActorJson["Class"] = Actor->GetClass()->Name;
+		ActorJson["Name"] = Actor->GetName();
 		Actor->Serialize(ActorJson["Properties"], false);
 
 		for (UActorComponent* Component : Actor->GetComponents())
@@ -198,6 +200,12 @@ bool FJsonArchive::LoadWorld(UWorld* World, const FString& Path)
 		{
 			HTR_LOG(Warning, "Load: failed to spawn {}", ActorJson["Class"].get<FString>());
 			continue;
+		}
+		if (ActorJson.contains("Name") && ActorJson["Name"].is_string())
+		{
+			const FString SavedName = ActorJson["Name"].get<FString>();
+			Actor->SetName(FName(SavedName));
+			FObjectFactory::ReserveObjectName(Actor->GetOuter(), SavedName);
 		}
 		Actor->UnregisterAllComponents();
 		Actor->Serialize(ActorJson["Properties"], true);

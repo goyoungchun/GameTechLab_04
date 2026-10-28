@@ -139,23 +139,30 @@ void UWorld::Tick(EWorldTick TickType, float DeltaTime)
 
 		if (!bIsPaused)
 		{
+			const double UnscaledDeltaTime = DeltaTime;
+			const float GameDeltaTime = static_cast<float>(TimeController.GetGameDeltaTime(UnscaledDeltaTime));
+			TimeController.Update(UnscaledDeltaTime);
+			SequenceManager.Tick(this, GameDeltaTime, UnscaledDeltaTime);
 			{
-				SCOPE_CYCLE_COUNTER(STAT_ActorTick);
-				GameUIBuffer.Clear();
-				TickTaskManager.RunTickGroup(ETickingGroup::PrePhysics, DeltaTime);
-				PhysicsScene->StartFrame(DeltaTime);
-				TickTaskManager.RunTickGroup(ETickingGroup::DuringPhysics, DeltaTime);
-				PhysicsScene->EndFrame();
-				TickTaskManager.RunTickGroup(ETickingGroup::PostPhysics, DeltaTime);
-
-				for (APlayerController* PC : PlayerControllers)
-					PC->UpdateCameraManager(DeltaTime);
-
-				TickTaskManager.RunTickGroup(ETickingGroup::PostUpdateWork, DeltaTime);
-
-				for (ULevel* Level : Levels)
+				if(GameDeltaTime > 0.0f)
 				{
-					PathTracker.Tick(Level->GetActors(), DeltaTime);
+					SCOPE_CYCLE_COUNTER(STAT_ActorTick);
+					GameUIBuffer.Clear();
+					TickTaskManager.RunTickGroup(ETickingGroup::PrePhysics, GameDeltaTime);
+					PhysicsScene->StartFrame(GameDeltaTime);
+					TickTaskManager.RunTickGroup(ETickingGroup::DuringPhysics, GameDeltaTime);
+					PhysicsScene->EndFrame();
+					TickTaskManager.RunTickGroup(ETickingGroup::PostPhysics, GameDeltaTime);
+
+					for (APlayerController* PC : PlayerControllers)
+						PC->UpdateCameraManager(GameDeltaTime);
+
+					TickTaskManager.RunTickGroup(ETickingGroup::PostUpdateWork, GameDeltaTime);
+
+					for (ULevel* Level : Levels)
+					{
+						PathTracker.Tick(Level->GetActors(), GameDeltaTime);
+					}
 				}
 			}
 		}
@@ -788,4 +795,14 @@ APawn* UWorld::GetPlayerPawn(uint32 Index) const
 		return nullptr;
 	}
 	return nullptr;
+}
+
+FTimeController& UWorld::GetTimeController()
+{
+	return TimeController;
+}
+
+const FTimeController& UWorld::GetTimeController() const
+{
+	return TimeController;
 }

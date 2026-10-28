@@ -14,6 +14,8 @@
 #include "Math/Frustum.h"
 #include "Math/BVH.h"
 #include "Engine/Scene.h"
+#include "Engine/TimeController.h"
+#include "Sequence/SequenceManager.h"
 #include "Camera/CameraActor.h"
 #include "Asset/LOD/StaticMeshLODSelector.h"
 #include "UI/GameUIBuffer.h"
@@ -112,6 +114,9 @@ public:
 	FPhysSceneChaos& GetPhysicsScene() { return *PhysicsScene; }
 	const FPhysSceneChaos& GetPhysicsScene() const { return *PhysicsScene; }
 	FTickTaskManager& GetTickTaskManager() { return TickTaskManager; }
+	FTimeController& GetTimeController();
+	const FTimeController& GetTimeController() const;
+	FSequenceManager& GetSequenceManager() { return SequenceManager; }
 
 
 	EWorldType& GetWorldType() { return WorldType; }
@@ -137,6 +142,8 @@ public:
 private:
 	// 등록된 Tick 함수만 실행한다. Actor보다 먼저 사라져도 남은 함수와의 연결을 스스로 끊는다.
 	FTickTaskManager TickTaskManager;
+	FTimeController TimeController;
+	FSequenceManager SequenceManager;
 
 	TQueue<AActor*> BeginPlayList;
 

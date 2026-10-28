@@ -1,10 +1,35 @@
 #include "EnginePCH.h"
 #include "SequencePlayer.h"
 #include "Camera/CameraComponent.h"
+#include "Camera/PlayerCameraManager.h"
+#include "Engine/World.h"
 
 #include <type_traits>
 #include <variant>
 #include <algorithm>
+#include <cmath>
+
+void USequencePlayer::SetSequence(const FSequence* InSequence)
+{
+	if (Sequence == InSequence)
+		return;
+
+	Sequence = InSequence;
+	State = ESequencePlaybackState::Stopped;
+	CurrentTime = 0.0;
+	PreviousTime = 0.0;
+	PlayRate = 1.0f;
+	if (Sequence)
+		SetPlayRate(Sequence->PlayRate);
+}
+
+void USequencePlayer::SetPlayRate(float InPlayRate)
+{
+	if (!std::isfinite(InPlayRate) || InPlayRate < 0.0f)
+		return;
+
+	PlayRate = InPlayRate;
+}
 
 void USequencePlayer::Update(double GameDeltaTime, double UnscaledDeltaTime)
 {
@@ -18,7 +43,7 @@ void USequencePlayer::Update(double GameDeltaTime, double UnscaledDeltaTime)
 	if (State == ESequencePlaybackState::Playing)
 	{
 		PreviousTime = CurrentTime;
-		double CurTime = std::clamp(CurrentTime + SelectedDeltaTime * Sequence->PlayRate, 0.0, Sequence->Length);
+		double CurTime = std::clamp(CurrentTime + SelectedDeltaTime * PlayRate, 0.0, Sequence->Length);
 		if (CurTime >= Sequence->Length)
 		{
 			CurrentTime = 0.0;
@@ -33,6 +58,9 @@ void USequencePlayer::Update(double GameDeltaTime, double UnscaledDeltaTime)
 
 void USequencePlayer::Play()
 {
+	if (!Sequence)
+		return;
+
 	State = ESequencePlaybackState::Playing;
 }
 
@@ -51,8 +79,19 @@ void USequencePlayer::Pause()
 
 void USequencePlayer::Seek(double Time, bool bFireEvents)
 {
+	if (!Sequence)
+		return;
+
+	const double OldTime = CurrentTime;
 	CurrentTime = std::clamp(Time, 0.0, Sequence->Length);
-	Apply(Sequence, bFireEvents);
+
+	// 현재 이벤트 평가는 정방향 이동만 지원한다.
+	const bool bEvaluateEvents = bFireEvents && CurrentTime > OldTime;
+	PreviousTime = bEvaluateEvents ? OldTime : CurrentTime;
+
+	Apply(Sequence, bEvaluateEvents);
+
+	PreviousTime = CurrentTime;
 }
 
 void USequencePlayer::Apply(const FSequence* InSequence, bool bFireEvents)
@@ -60,9 +99,18 @@ void USequencePlayer::Apply(const FSequence* InSequence, bool bFireEvents)
 	if (!InSequence)
 		return;
 
+	struct FPendingTransform
+	{
+		USceneComponent* Component;
+		FTransform WorldTransform;
+		uint32 AttachmentDepth;
+	};
+	TArray<FPendingTransform> PendingTransforms;
+	TArray<FSequenceEventRequest> EventRequests;
+
 	for (const FSequenceTrack& Track : InSequence->Tracks)
 	{
-		std::visit([this, &Track, bFireEvents](const auto& TypedTrack)
+		std::visit([this, &Track, bFireEvents, &PendingTransforms, &EventRequests](const auto& TypedTrack)
 			{
 				using TTrack = std::decay_t<decltype(TypedTrack)>; // 타입 자체를 비교하기 위함
 				if constexpr (std::is_same_v<TTrack, FFloatTrack> || std::is_same_v<TTrack, FTransformTrack>)
@@ -87,13 +135,6 @@ void USequencePlayer::Apply(const FSequence* InSequence, bool bFireEvents)
 								Camera->SetOrthoWidth(*Value);
 							}
 						}
-						if (const FTransform* Value = std::get_if<FTransform>(&Result))
-						{
-							if (TypedTrack.ValueType == ESequenceValueType::Transform)
-							{
-								Camera->SetTransform(*Value);
-							}
-						}
 					}
 					if (USceneComponent* Component = Cast<USceneComponent>(TypedTrack.Binding))
 					{
@@ -101,7 +142,13 @@ void USequencePlayer::Apply(const FSequence* InSequence, bool bFireEvents)
 						{
 							if (TypedTrack.ValueType == ESequenceValueType::Transform)
 							{
-								Component->SetTransform(*Value);
+								uint32 Depth = 0;
+								for (const USceneComponent* Parent = Component->GetAttachParent();
+									Parent; Parent = Parent->GetAttachParent())
+								{
+									++Depth;
+								}
+								PendingTransforms.Add({ Component, *Value, Depth });
 							}
 						}
 					}
@@ -113,7 +160,6 @@ void USequencePlayer::Apply(const FSequence* InSequence, bool bFireEvents)
 					{
 						return;
 					}
-
 					const auto Requests = Evaluate(TypedTrack, PreviousTime, CurrentTime);
 
 					for (const FSequenceEventRequest& Request : Requests)
@@ -139,6 +185,17 @@ void USequencePlayer::Apply(const FSequence* InSequence, bool bFireEvents)
 							if (const auto* Params = std::get_if<FCameraShakeParams>(&Request.Params))
 							{
 								// Camera Shake 처리
+								if (PlaybackWorld)
+								{
+									for (uint32 i = 0; i < PlaybackWorld->GetPlayerCount(); ++i)
+									{
+										APlayerController* PC = PlaybackWorld->GetPlayerController(i);
+										if (APlayerCameraManager* CM = PC ? PC->GetCameraManager() : nullptr)
+										{
+											CM->StartCameraShake(*Params);
+										}
+									}
+								}
 							}
 							break;
 
@@ -146,8 +203,54 @@ void USequencePlayer::Apply(const FSequence* InSequence, bool bFireEvents)
 							break;
 						}
 					}
+
+					EventRequests.Append(Evaluate(TypedTrack, PreviousTime, CurrentTime));
+
 				}
 			}, Track);
+	}
+
+	// 자식이 먼저 등록되어 있어도 부모의 이번 프레임 변환을 기준으로 상대값을 계산한다.
+	std::stable_sort(PendingTransforms.begin(), PendingTransforms.end(),
+		[](const FPendingTransform& A, const FPendingTransform& B)
+		{
+			return A.AttachmentDepth < B.AttachmentDepth;
+		});
+	for (const FPendingTransform& Pending : PendingTransforms)
+	{
+		Pending.Component->SetWorldTransform(Pending.WorldTransform);
+	}
+
+	// 같은 시각은 기존 트랙 순서와 키 배열 순서를 유지한다.
+	std::stable_sort(EventRequests.begin(), EventRequests.end(),
+		[](const FSequenceEventRequest& A, const FSequenceEventRequest& B)
+		{
+			return A.Time < B.Time;
+		});
+	for (const FSequenceEventRequest& Request : EventRequests)
+	{
+		switch (Request.EventType)
+		{
+		case ESequenceEventType::HitStop:
+			if (const auto* Params = std::get_if<FHitStopParams>(&Request.Params))
+			{
+				if (PlaybackWorld)
+					PlaybackWorld->GetTimeController().RequestHitStop(*Params);
+			}
+			break;
+		case ESequenceEventType::Slomo:
+			if (const auto* Params = std::get_if<FSlomoParams>(&Request.Params))
+			{
+				if (PlaybackWorld)
+					PlaybackWorld->GetTimeController().RequestSlomo(*Params);
+			}
+			break;
+		case ESequenceEventType::CameraShake:
+			// Camera Shake 처리
+			break;
+		default:
+			break;
+		}
 	}
 }
 
@@ -262,7 +365,13 @@ TArray<FSequenceEventRequest> USequencePlayer::Evaluate(const FEventTrack& Track
 {
 	TArray<FSequenceEventRequest> Result;
 
-
+	for (const auto& Event : Track.KeyFrames)
+	{
+		if (Event.IsValid() && PreviousTime < Event.Time && Event.Time <= CurrentTime)
+		{
+			Result.Add(FSequenceEventRequest::FromKeyFrame(Event, Track.Binding));
+		}
+	}
 
 	return Result;
 }

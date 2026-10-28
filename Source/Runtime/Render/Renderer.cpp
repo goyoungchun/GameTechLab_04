@@ -185,6 +185,13 @@ namespace
 		Capacity = NewCapacity;
 		return true;
 	}
+
+	struct FScreenOverlayConstants
+	{
+		FVector4 FadeColor;
+		float LetterboxRatio;
+		float Padding[3];
+	};
 }
 
 bool FRenderer::Init()
@@ -193,6 +200,7 @@ bool FRenderer::Init()
 	PerObjectCB = RenderCommand::CreateConstantBuffer(sizeof(FPerObjectConstants));
 	ViewCB = RenderCommand::CreateConstantBuffer(sizeof(FFrameConstants));
 	DeferredLightCB = RenderCommand::CreateConstantBuffer(sizeof(FDeferredLightConstants));
+	ScreenOverlayCB = RenderCommand::CreateConstantBuffer(sizeof(FScreenOverlayConstants));
 
 	EnsureBufferCapacity(DirectionalLightBuffer, DirectionalLightBufferSRV, DirectionalLightCapacity, 1, sizeof(FDirectionalLightRenderData));
 	EnsureBufferCapacity(PointLightBuffer, PointLightBufferSRV, PointLightCapacity, 1, sizeof(FPointLightRenderData));
@@ -489,6 +497,31 @@ void FRenderer::DrawStaticGroups(EMeshPass Pass)
 			RenderCommand::DrawIndexed(Item.IndexCount, Item.StartIndex);
 		}
 	}
+
+}
+
+void FRenderer::DrawScreenOverlay(const FSceneView& View)
+{
+	if (View.FadeAmount <= 0.0f && View.LetterboxRatio <= 0.0f)
+	{
+		return;
+	}
+
+	FPipelineState* PSO = FRenderResourceManager::GetPSO(EPSOType::ScreenOverlay);
+	if (!PSO || !PSO->Shader || !PSO->Shader->VertexShader || !PSO->Shader->PixelShader || !ScreenOverlayCB)
+	{
+		return;
+	}
+
+	FScreenOverlayConstants Constants{};
+	Constants.FadeColor = FVector4(View.FadeColor.X, View.FadeColor.Y, View.FadeColor.Z, FMath::Clamp(View.FadeAmount, 0.0f, 1.0f));
+	Constants.LetterboxRatio = FMath::Clamp(View.LetterboxRatio, 0.0f, 0.5f);
+
+	RenderCommand::UpdateBufferData(ScreenOverlayCB.get(), &Constants, sizeof(Constants));
+	RenderCommand::BindPipelineState(*PSO);
+	RenderCommand::BindVertexBuffer(nullptr);
+	RenderCommand::BindConstantBuffer(0, ScreenOverlayCB.get(), EShaderBindFlagBits::Pixel);
+	RenderCommand::Draw(3);
 
 }
 

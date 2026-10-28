@@ -45,6 +45,11 @@ struct FSceneView
 	EShadingModel ShadingModel = EShadingModel::BlinnPhong;
 	bool bGameView = false;
 
+	// 화면 효과
+	FVector FadeColor{};
+	float FadeAmount = 0.0f;
+	float LetterboxRatio = 0.0f;
+
 	// 기존 뷰 컨텍스트 변환
 	FViewContext ToViewContext() const
 	{

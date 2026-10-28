@@ -2,6 +2,9 @@
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/Pawn.h"
 #include "PlayerCameraManager.h"
+#include "CameraModifier_CameraShake.h"
+#include "CameraModifier_CameraFade.h"
+#include "CameraModifier_Letterbox.h"
 
 APlayerCameraManager::APlayerCameraManager()
 {
@@ -221,6 +224,73 @@ void APlayerCameraManager::ClearCameraModifiers()
 		delete Modifier;
 
 	ModifierList.Reset();
+}
+
+void APlayerCameraManager::StartCameraShake(const FCameraShakeParams& Params)
+{
+	UCameraModifier_CameraShake* ShakeModifier = FindCameraModifier<UCameraModifier_CameraShake>();
+	if (!ShakeModifier)
+	{
+		ShakeModifier = AddCameraModifier<UCameraModifier_CameraShake>();
+	}
+
+	if (ShakeModifier)
+	{
+		ShakeModifier->AddCameraShake(Params);
+	}
+}
+
+void APlayerCameraManager::StopAllCameraShakes()
+{
+	if (UCameraModifier_CameraShake* ShakeModifier = FindCameraModifier <UCameraModifier_CameraShake>())
+	{
+		ShakeModifier->StopAllCameraShakes();
+	}
+}
+
+void APlayerCameraManager::StartCameraFade(float FromAlpha, float ToAlpha, float Duration, const FVector& Color, bool bHoldWhenFinished)
+{
+	UCameraModifier_CameraFade* FadeModifier = FindCameraModifier<UCameraModifier_CameraFade>();
+	if (!FadeModifier)
+	{
+		FadeModifier = AddCameraModifier<UCameraModifier_CameraFade>();
+	}
+
+	if (FadeModifier)
+	{
+		FadeModifier->StartFade(FromAlpha, ToAlpha, Duration, Color, bHoldWhenFinished);
+	}
+}
+
+void APlayerCameraManager::StopCameraFade()
+{
+	if (UCameraModifier_CameraFade* FadeModifier = FindCameraModifier<UCameraModifier_CameraFade>())
+	{
+		FadeModifier->StopFade();
+	}
+}
+
+void APlayerCameraManager::SetLetterbox(bool bEnable, float Ratio)
+{
+	UCameraModifier_CameraLetterbox* Letterbox = FindCameraModifier< UCameraModifier_CameraLetterbox>();
+
+	if (bEnable)
+	{
+		if (!Letterbox)
+		{
+			Letterbox = AddCameraModifier<UCameraModifier_CameraLetterbox>();
+		}
+		else
+		{
+			Letterbox->EnableModifier();
+		}
+
+		Letterbox->TargetRatio = FMath::Clamp(Ratio, 0.0f, 0.5f);
+	}
+	else if (Letterbox)
+	{
+		Letterbox->DisableModifier();
+	}
 }
 
 void APlayerCameraManager::ApplyCameraModifiers(float DeltaTime, FMinimalViewInfo& InOutPOV)

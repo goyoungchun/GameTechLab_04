@@ -307,6 +307,7 @@ bool UEditorEngine::Init() {
 
 	SequencerPanel->SetWorld(EditorWorld);
 	SequencerPanel->SetViewportsPanel(ViewportsPanel);
+	SequencerPanel->SetSelectionResetCallback([this]() { ResetSceneSelection(); });
 
 	SettingsPanel->SetWorld(EditorWorld);
 	SettingsPanel->SetViewportsPanel(ViewportsPanel);
@@ -967,6 +968,7 @@ void UEditorEngine::RenderGameFrameDeferred(FDeferredGameViewportClient* GameCli
 
 	if (!bIsSIEMode)
 	{
+		Renderer->DrawScreenOverlay(SceneView);
 		RenderGameUI(GameClient, Width, Height);
 	}
 
@@ -1008,6 +1010,7 @@ void UEditorEngine::RenderGameFrameForward(FForwardGameViewportClient* GameClien
 
 	if (!bIsSIEMode)
 	{
+		Renderer->DrawScreenOverlay(SceneView);
 		RenderGameUI(GameClient, Width, Height);
 	}
 
