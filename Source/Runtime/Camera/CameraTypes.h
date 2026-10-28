@@ -18,6 +18,9 @@ struct FMinimalViewInfo
 	float OrthoWidth = 16.0f;
 	float NearClipPlane = 0.1f;
 	float FarClipPlane = 1000.0f;
+	FVector FadeColor = FVector(0.0f, 0.0f, 0.0f);
+	float FadeAmount = 0.0f;
+	float LetterboxRatio = 0.0f;
 
 	FMatrix CalculateViewMatrix() const
 	{
