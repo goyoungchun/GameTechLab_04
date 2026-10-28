@@ -2,7 +2,7 @@
 
 #include "Container/Array.h"
 #include "ImSequencer.h"
-#include "Editor/Sequencer/SequencerDummyData.h"
+#include "Sequence/SequenceData.h"
 
 struct FTrackFrameRange
 {
@@ -26,25 +26,28 @@ public:
 
 
 
-	FDummySequence* GetSequence() const;
-	void SetSequence(FDummySequence* InSequence);
+	FSequence* GetSequence() const;
+	void SetSequence(FSequence* InSequence);
 	void SyncCache();
-	int TimeToFrame(float Time) const;
-	float FrameToTime(int Frame) const;
+	int TimeToFrame(double Time) const;
+	double FrameToTime(int Frame) const;
 	bool ConsumeIndex(int& OutTrack, int& OutKey);
 	void SetSelection(int InTrack, int InKey);
 
+	static const char* GetTrackName(const FSequenceTrack& Track);
+	static int GetKeyCount(const FSequenceTrack& Track);
+	static double GetKeyTime(const FSequenceTrack& Track, int KeyIndex);
 
 private:
-	static unsigned int GetTrackColor(EDummyTrackType Type);
+	static unsigned int GetTrackColor(const FSequenceTrack& Track);
 
 	static constexpr float LegendWidth = 200.0f;
 	static constexpr float KeyHitPadding = 3.0f;
-	static constexpr float SelectedKeyScale = 1.8f;
+	static constexpr float SelectedKeyScale = 1.2f;
 	static constexpr unsigned int KeyColor = 0xFFFFFFFF;
 	static constexpr unsigned int SelectedKeyColor = 0xFF00A5FF;
 
-	FDummySequence* Sequence = nullptr;
+	FSequence* Sequence = nullptr;
 	TArray<FTrackFrameRange> FrameRangeCache;
 	int ClickedTrackIndex = -1;
 	int ClickedKeyIndex = -1;

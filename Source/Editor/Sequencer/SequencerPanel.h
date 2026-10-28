@@ -1,8 +1,7 @@
 #pragma once
 
 #include "Editor/EditorUI/EditorPanel.h"
-#include "SequencerDummyData.h"
-#include "SequencerAdapter.h"
+#include "Editor/Sequencer/SequencerAdapter.h"
 
 class UWorld;
 class FViewportsPanel;
@@ -36,9 +35,9 @@ private:
 	void DrawToolBar();
 	void DrawTimeline();
 	void DrawTrackBinding();
-	void BuildDummySequence();
+	void BuildSampleSequence();
 	bool GetCurrentViewPOV(FSequencerViewInfo& OutView) const;
-	int32 AddTransformKey(FDummyTrack& InTrack, float InTime, const FVector& InLocation, const FRotator& InRotation);
+	int32 AddTransformKey(FTransformTrack& InTrack, double InTime, const FTransform& InValue);
 	bool CanAddTransformKey() const;
 	bool CanAddKey() const;
 	void ValidateKeySelection();
@@ -48,7 +47,7 @@ private:
 	// 시간은 초 단위, 프레임은 표시할 때 변환
 	float CurrentTime = 0.0f;
 
-	FDummySequence DummySequence;
+	FSequence EditingSequence;
 	FSequencerAdapter Adapter;
 	FViewportsPanel* ViewportsPanel = nullptr;
 

@@ -41,7 +41,7 @@ const char* FSequencerAdapter::GetItemLabel(int Index) const
 		return "";
 	}
 
-	return Sequence->Tracks[Index].Name.c_str();
+	return GetTrackName(Sequence->Tracks[Index]);
 }
 
 void FSequencerAdapter::Get(int Index, int** Start, int** End, int* Type, unsigned int* Color)
@@ -51,7 +51,7 @@ void FSequencerAdapter::Get(int Index, int** Start, int** End, int* Type, unsign
 		return;
 	}
 
-	const FDummyTrack& Track = Sequence->Tracks[Index];
+	const FSequenceTrack& Track = Sequence->Tracks[Index];
 	FTrackFrameRange& Range = FrameRangeCache[Index];
 	Range.Start = GetFrameMin();
 	Range.End = GetFrameMax();
@@ -66,11 +66,11 @@ void FSequencerAdapter::Get(int Index, int** Start, int** End, int* Type, unsign
 	}
 	if (Type != nullptr)
 	{
-		*Type = static_cast<int>(Track.Type);
+		*Type = static_cast<int>(Track.index());
 	}
 	if (Color != nullptr)
 	{
-		*Color = GetTrackColor(Track.Type);
+		*Color = GetTrackColor(Track);
 	}
 }
 
@@ -81,10 +81,11 @@ void FSequencerAdapter::CustomDrawCompact(int Index, ImDrawList* DrawList, const
 		return;
 	}
 
-	const TArray<FDummyKey>& Keys = Sequence->Tracks[Index].Keys;
+	const FSequenceTrack& Track = Sequence->Tracks[Index];
+	const int KeyCount = GetKeyCount(Track);
 	const float FramePixelWidth = Rect.GetWidth() / (GetFrameMax() - GetFrameMin() + 1);
 	const float CenterY = (Rect.Max.y + Rect.Min.y) / 2;
-	const float KeyRadius = (Rect.Max.y - Rect.Min.y) / 2 * 0.48f;
+	const float KeyRadius = (Rect.Max.y - Rect.Min.y) / 2 * 0.8f;
 	const ImVec2 MousePos = ImGui::GetIO().MousePos;
 
 	const ImRect RowRect(ImVec2(ClipRect.Min.x - LegendWidth, ClipRect.Min.y), ClipRect.Max);
@@ -99,9 +100,9 @@ void FSequencerAdapter::CustomDrawCompact(int Index, ImDrawList* DrawList, const
 		{
 			const float HitRadius = KeyRadius + KeyHitPadding;
 			float ClosestDistance = FLT_MAX;
-			for (int KeyIndex = 0; KeyIndex < Keys.Num(); KeyIndex++)
+			for (int KeyIndex = 0; KeyIndex < KeyCount; KeyIndex++)
 			{
-				const float KeyX = Rect.Min.x + (TimeToFrame(Keys[KeyIndex].Time) - GetFrameMin()) * FramePixelWidth;
+				const float KeyX = Rect.Min.x + (TimeToFrame(GetKeyTime(Track, KeyIndex)) - GetFrameMin()) * FramePixelWidth;
 				const float Distance = fabsf(MousePos.x - KeyX) + fabsf(MousePos.y - CenterY);
 				if (Distance <= HitRadius && Distance < ClosestDistance)
 				{
@@ -114,9 +115,9 @@ void FSequencerAdapter::CustomDrawCompact(int Index, ImDrawList* DrawList, const
 
 	DrawList->PushClipRect(ClipRect.Min, ClipRect.Max, true);
 
-	for (int KeyIndex = 0; KeyIndex < Keys.Num(); KeyIndex++)
+	for (int KeyIndex = 0; KeyIndex < KeyCount; KeyIndex++)
 	{
-		const float KeyX = Rect.Min.x + (TimeToFrame(Keys[KeyIndex].Time) - GetFrameMin()) * FramePixelWidth;
+		const float KeyX = Rect.Min.x + (TimeToFrame(GetKeyTime(Track, KeyIndex)) - GetFrameMin()) * FramePixelWidth;
 		const bool bSelected = Index == SelectedTrackIndex && KeyIndex == SelectedKeyIndex;
 		const float DrawRadius = bSelected ? KeyRadius * SelectedKeyScale : KeyRadius;
 		const ImU32 Color = bSelected ? SelectedKeyColor : KeyColor;
@@ -151,12 +152,12 @@ void FSequencerAdapter::SetSelection(int InTrack, int InKey)
 	SelectedKeyIndex = InKey;
 }
 
-FDummySequence* FSequencerAdapter::GetSequence() const
+FSequence* FSequencerAdapter::GetSequence() const
 {
 	return Sequence;
 }
 
-void FSequencerAdapter::SetSequence(FDummySequence* InSequence)
+void FSequencerAdapter::SetSequence(FSequence* InSequence)
 {
 	Sequence = InSequence;
 	SyncCache();
@@ -173,37 +174,87 @@ void FSequencerAdapter::SyncCache()
 	FrameRangeCache.SetNum(Sequence->Tracks.Num());
 }
 
-int FSequencerAdapter::TimeToFrame(float Time) const
+int FSequencerAdapter::TimeToFrame(double Time) const
 {
 	if (!Sequence)
 	{
 		return 0;
 	}
 
-	return static_cast<int>(roundf(Time * Sequence->FrameRate));
+	return static_cast<int>(std::round(Time * Sequence->FrameRate));
 }
 
-float FSequencerAdapter::FrameToTime(int Frame) const
+double FSequencerAdapter::FrameToTime(int Frame) const
 {
 	if (!Sequence || Sequence->FrameRate <= 0.0f)
 	{
-		return 0.0f;
+		return 0.0;
 	}
 
-	return static_cast<float>(Frame) / Sequence->FrameRate;
+	return static_cast<double>(Frame) / Sequence->FrameRate;
 }
 
-unsigned int FSequencerAdapter::GetTrackColor(EDummyTrackType Type)
+const char* FSequencerAdapter::GetTrackName(const FSequenceTrack& Track)
 {
-	switch (Type)
+	return std::visit([](const auto& Typed) -> const char*
 	{
-	case EDummyTrackType::Transform:
+		if constexpr (std::is_same_v<std::decay_t<decltype(Typed)>, std::monostate>)
+		{
+			return "";
+		}
+		else
+		{
+			return Typed.Name.c_str();
+		}
+	}, Track);
+}
+
+int FSequencerAdapter::GetKeyCount(const FSequenceTrack& Track)
+{
+	return std::visit([](const auto& Typed) -> int
+	{
+		if constexpr (std::is_same_v<std::decay_t<decltype(Typed)>, std::monostate>)
+		{
+			return 0;
+		}
+		else
+		{
+			return Typed.KeyFrames.Num();
+		}
+	}, Track);
+}
+
+double FSequencerAdapter::GetKeyTime(const FSequenceTrack& Track, int KeyIndex)
+{
+	return std::visit([KeyIndex](const auto& Typed) -> double
+	{
+		if constexpr (std::is_same_v<std::decay_t<decltype(Typed)>, std::monostate>)
+		{
+			return 0.0;
+		}
+		else
+		{
+			if (!Typed.KeyFrames.IsValidIndex(KeyIndex))
+			{
+				return 0.0;
+			}
+			return Typed.KeyFrames[KeyIndex].Time;
+		}
+	}, Track);
+}
+
+unsigned int FSequencerAdapter::GetTrackColor(const FSequenceTrack& Track)
+{
+	if (std::holds_alternative<FTransformTrack>(Track))
+	{
 		return 0xFFAA8080;
-	case EDummyTrackType::Float:
+	}
+	if (std::holds_alternative<FFloatTrack>(Track))
+	{
 		return 0xFF80AA80;
-	case EDummyTrackType::CameraCut:
-		return 0xFF8080AA;
-	case EDummyTrackType::Event:
+	}
+	if (std::holds_alternative<FEventTrack>(Track))
+	{
 		return 0xFF80AAAA;
 	}
 	return 0xFF808080;

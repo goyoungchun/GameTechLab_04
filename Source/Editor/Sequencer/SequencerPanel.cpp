@@ -13,8 +13,8 @@ FSequencerPanel::~FSequencerPanel()
 bool FSequencerPanel::Init()
 {
 	LoadSettings();
-	BuildDummySequence();
-	Adapter.SetSequence(&DummySequence);
+	BuildSampleSequence();
+	Adapter.SetSequence(&EditingSequence);
 	return true;
 }
 
@@ -26,9 +26,9 @@ void FSequencerPanel::Tick(float DeltaTime)
 	}
 
 	CurrentTime += DeltaTime;
-	if (CurrentTime >= DummySequence.Length)
+	if (CurrentTime >= EditingSequence.Length)
 	{
-		CurrentTime = DummySequence.Length;
+		CurrentTime = static_cast<float>(EditingSequence.Length);
 		bIsPlaying = false;
 	}
 
@@ -71,7 +71,7 @@ void FSequencerPanel::DrawToolBar()
 	{
 		if (ImGui::Button("Play"))
 		{
-			if (CurrentTime >= DummySequence.Length)
+			if (CurrentTime >= EditingSequence.Length)
 			{
 				CurrentTime = 0.0f;
 				CurrentFrame = 0;
@@ -99,7 +99,10 @@ void FSequencerPanel::DrawToolBar()
 		FSequencerViewInfo ViewInfo;
 		if (GetCurrentViewPOV(ViewInfo))
 		{
-			SelectedKeyIndex = AddTransformKey(DummySequence.Tracks[SelectedTrackIndex], CurrentTime, ViewInfo.Location, ViewInfo.Rotation);
+			if (FTransformTrack* TransformTrack = std::get_if<FTransformTrack>(&EditingSequence.Tracks[SelectedTrackIndex]))
+			{
+				SelectedKeyIndex = AddTransformKey(*TransformTrack, CurrentTime, FTransform(ViewInfo.Rotation, ViewInfo.Location));
+			}
 		}
 	}
 	ImGui::EndDisabled();
@@ -140,20 +143,20 @@ void FSequencerPanel::DrawTimeline()
 
 	if (CurrentFrame != PreviousFrame)
 	{
-		CurrentTime = Adapter.FrameToTime(CurrentFrame);
+		CurrentTime = static_cast<float>(Adapter.FrameToTime(CurrentFrame));
 	}
 }
 
 void FSequencerPanel::DrawTrackBinding()
 {
-	if (SelectedTrackIndex == -1 || !DummySequence.Tracks.IsValidIndex(SelectedTrackIndex))
+	if (SelectedTrackIndex == -1 || !EditingSequence.Tracks.IsValidIndex(SelectedTrackIndex))
 	{
 		ImGui::TextDisabled("트랙을 선택해주세요");
 		return;
 	}
 
-	FDummyTrack& Track = DummySequence.Tracks[SelectedTrackIndex];
-	if (Track.Type != EDummyTrackType::Transform)
+	FTransformTrack* TrackPtr = std::get_if<FTransformTrack>(&EditingSequence.Tracks[SelectedTrackIndex]);
+	if (!TrackPtr)
 	{
 		ImGui::TextDisabled("바인딩은 Transform만 가능합니다");
 		return;
@@ -176,42 +179,43 @@ void FSequencerPanel::DrawTrackBinding()
 		}
 	}
 
-	if (Track.BoundActor)
+	FTransformTrack& Track = *TrackPtr;
+	ACameraActor* BoundCamera = nullptr;
+	if (Track.Binding)
 	{
-		bool bBoundActorAlive = false;
 		for (ACameraActor* Camera : Cameras)
 		{
-			if (Camera == Track.BoundActor)
+			if (Camera->GetCameraComponent() == Track.Binding)
 			{
-				bBoundActorAlive = true;
+				BoundCamera = Camera;
 				break;
 			}
 		}
-		if (!bBoundActorAlive)
+		if (!BoundCamera)
 		{
-			Track.BoundActor = nullptr;
+			Track.Binding = nullptr;
 		}
 	}
 
-	const FString PreviewName = Track.BoundActor ? Track.BoundActor->GetName() : FString("None");
+	const FString PreviewName = BoundCamera ? BoundCamera->GetName() : FString("None");
 
 	ImGui::TextUnformatted(Track.Name.c_str());
 	ImGui::SameLine();
 	ImGui::SetNextItemWidth(200.0f);
 	if (ImGui::BeginCombo("##Binding", PreviewName.c_str()))
 	{
-		if (ImGui::Selectable("None", Track.BoundActor == nullptr))
+		if (ImGui::Selectable("None", Track.Binding == nullptr))
 		{
-			Track.BoundActor = nullptr;
+			Track.Binding = nullptr;
 		}
 
 		for (ACameraActor* Camera : Cameras)
 		{
-			const bool bSelected = Track.BoundActor == Camera;
+			const bool bSelected = BoundCamera == Camera;
 			ImGui::PushID(Camera);
 			if (ImGui::Selectable(Camera->GetName().c_str(), bSelected))
 			{
-				Track.BoundActor = Camera;
+				Track.Binding = Camera->GetCameraComponent();
 			}
 			if (bSelected)
 			{
@@ -226,8 +230,9 @@ void FSequencerPanel::DrawTrackBinding()
 
 void FSequencerPanel::ValidateKeySelection()
 {
-	if (!DummySequence.Tracks.IsValidIndex(SelectedTrackIndex)
-		|| !DummySequence.Tracks[SelectedTrackIndex].Keys.IsValidIndex(SelectedKeyIndex))
+	if (!EditingSequence.Tracks.IsValidIndex(SelectedTrackIndex)
+		|| SelectedKeyIndex < 0
+		|| SelectedKeyIndex >= FSequencerAdapter::GetKeyCount(EditingSequence.Tracks[SelectedTrackIndex]))
 	{
 		SelectedKeyIndex = -1;
 	}
@@ -240,41 +245,38 @@ bool FSequencerPanel::CanAddKey() const
 
 bool FSequencerPanel::CanAddTransformKey() const
 {
-	return (DummySequence.Tracks.IsValidIndex(SelectedTrackIndex)
-		&& DummySequence.Tracks[SelectedTrackIndex].Type == EDummyTrackType::Transform);
+	return (EditingSequence.Tracks.IsValidIndex(SelectedTrackIndex)
+		&& std::holds_alternative<FTransformTrack>(EditingSequence.Tracks[SelectedTrackIndex]));
 }
 
-int32 FSequencerPanel::AddTransformKey(FDummyTrack& InTrack, float InTime, const FVector& InLocation, const FRotator& InRotation)
+int32 FSequencerPanel::AddTransformKey(FTransformTrack& InTrack, double InTime, const FTransform& InValue)
 {
 	const int32 NewFrame = Adapter.TimeToFrame(InTime);
 
-	for (int32 Index = 0; Index < InTrack.Keys.Num(); Index++)
+	for (int32 Index = 0; Index < InTrack.KeyFrames.Num(); Index++)
 	{
-		FDummyKey& Key = InTrack.Keys[Index];
+		FTransformKeyFrame& Key = InTrack.KeyFrames[Index];
 		const int32 KeyFrame = Adapter.TimeToFrame(Key.Time);
 		if (KeyFrame == NewFrame)
 		{
-			Key.Location = InLocation;
-			Key.Rotation = InRotation;
+			Key.Value = InValue;
 			return Index;
 		}
 		if (KeyFrame > NewFrame)
 		{
-			FDummyKey NewKey;
+			FTransformKeyFrame NewKey;
 			NewKey.Time = Adapter.FrameToTime(NewFrame);
-			NewKey.Location = InLocation;
-			NewKey.Rotation = InRotation;
-			InTrack.Keys.Insert(NewKey, Index);
+			NewKey.Value = InValue;
+			InTrack.KeyFrames.Insert(NewKey, Index);
 			return Index;
 		}
 	}
 
-	FDummyKey NewKey;
+	FTransformKeyFrame NewKey;
 	NewKey.Time = Adapter.FrameToTime(NewFrame);
-	NewKey.Location = InLocation;
-	NewKey.Rotation = InRotation;
-	InTrack.Keys.Add(NewKey);
-	return (InTrack.Keys.Num() - 1);
+	NewKey.Value = InValue;
+	InTrack.KeyFrames.Add(NewKey);
+	return (InTrack.KeyFrames.Num() - 1);
 }
 
 bool FSequencerPanel::GetCurrentViewPOV(FSequencerViewInfo& OutView) const
@@ -294,47 +296,44 @@ bool FSequencerPanel::GetCurrentViewPOV(FSequencerViewInfo& OutView) const
 	return (true);
 }
 
-void FSequencerPanel::BuildDummySequence()
+void FSequencerPanel::BuildSampleSequence()
 {
-	DummySequence = FDummySequence();
-	DummySequence.Length = 5.0f;
-	DummySequence.FrameRate = 30.0f;
+	EditingSequence = FSequence();
+	EditingSequence.Length = 5.0;
+	EditingSequence.FrameRate = 30.0f;
 
-	FDummyTrack CameraTrack;
+	FTransformTrack CameraTrack;
 	CameraTrack.Name = "Camera Transform";
-	CameraTrack.Type = EDummyTrackType::Transform;
-	for (float Time : { 0.0f, 2.0f, 4.0f })
+	CameraTrack.ValueType = ESequenceValueType::Transform;
+	for (double Time : { 0.0, 2.0, 4.0 })
 	{
-		FDummyKey Key;
+		FTransformKeyFrame Key;
 		Key.Time = Time;
-		Key.Location = FVector(Time * 100.0f, 0.0f, 100.0f);
-		CameraTrack.Keys.Add(Key);
+		Key.Value.Location = FVector(static_cast<float>(Time) * 100.0f, 0.0f, 100.0f);
+		CameraTrack.KeyFrames.Add(Key);
 	}
-	DummySequence.Tracks.Add(CameraTrack);
+	EditingSequence.Tracks.Add(CameraTrack);
 
-	FDummyTrack FovTrack;
+	FFloatTrack FovTrack;
 	FovTrack.Name = "FOV";
-	FovTrack.Type = EDummyTrackType::Float;
-	for (float Time : { 1.0f, 3.0f })
+	FovTrack.ValueType = ESequenceValueType::FOV;
+	for (double Time : { 1.0, 3.0 })
 	{
-		FDummyKey Key;
+		FFloatKeyFrame Key;
 		Key.Time = Time;
-		Key.FloatValue = Time < 2.0f ? 90.0f : 60.0f;
-		FovTrack.Keys.Add(Key);
+		Key.Value = Time < 2.0 ? 90.0f : 60.0f;
+		FovTrack.KeyFrames.Add(Key);
 	}
-	DummySequence.Tracks.Add(FovTrack);
+	EditingSequence.Tracks.Add(FovTrack);
 
-	FDummyTrack FadeTrack;
-	FadeTrack.Name = "Fade";
-	FadeTrack.Type = EDummyTrackType::Float;
-	for (float Time : { 4.0f, 5.0f })
-	{
-		FDummyKey Key;
-		Key.Time = Time;
-		Key.FloatValue = Time < 4.5f ? 0.0f : 1.0f;
-		FadeTrack.Keys.Add(Key);
-	}
-	DummySequence.Tracks.Add(FadeTrack);
+	FEventTrack EventTrack;
+	EventTrack.Name = "Event";
+	FEventKeyFrame ShakeKey;
+	ShakeKey.Time = 4.0;
+	ShakeKey.EventType = ESequenceEventType::CameraShake;
+	ShakeKey.Params = FCameraShakeParams();
+	EventTrack.KeyFrames.Add(ShakeKey);
+	EditingSequence.Tracks.Add(EventTrack);
 }
 
 bool FSequencerPanel::SaveSettings() const
