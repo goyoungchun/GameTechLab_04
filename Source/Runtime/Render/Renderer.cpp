@@ -186,12 +186,18 @@ namespace
 		return true;
 	}
 
+	// ScreenOverlayShader의 cbuffer와 순서가 같아야 한다 (48바이트)
 	struct FScreenOverlayConstants
 	{
 		FVector4 FadeColor;
 		float LetterboxRatio;
+		float VignetteIntensity;
+		float VignetteRadius;
+		float VignetteSoftness;
+		float AspectRatio;
 		float Padding[3];
 	};
+	static_assert(sizeof(FScreenOverlayConstants) % 16 == 0, "Constant buffer size must be a multiple of 16 bytes");
 }
 
 bool FRenderer::Init()
@@ -502,7 +508,7 @@ void FRenderer::DrawStaticGroups(EMeshPass Pass)
 
 void FRenderer::DrawScreenOverlay(const FSceneView& View)
 {
-	if (View.FadeAmount <= 0.0f && View.LetterboxRatio <= 0.0f)
+	if (View.FadeAmount <= 0.0f && View.LetterboxRatio <= 0.0f && View.VignetteIntensity <= 0.0f)
 	{
 		return;
 	}
@@ -516,6 +522,10 @@ void FRenderer::DrawScreenOverlay(const FSceneView& View)
 	FScreenOverlayConstants Constants{};
 	Constants.FadeColor = FVector4(View.FadeColor.X, View.FadeColor.Y, View.FadeColor.Z, FMath::Clamp(View.FadeAmount, 0.0f, 1.0f));
 	Constants.LetterboxRatio = FMath::Clamp(View.LetterboxRatio, 0.0f, 0.5f);
+	Constants.VignetteIntensity = FMath::Clamp(View.VignetteIntensity, 0.0f, 1.0f);
+	Constants.VignetteRadius = FMath::Clamp(View.VignetteRadius, 0.0f, 1.0f);
+	Constants.VignetteSoftness = std::max(View.VignetteSoftness, 0.001f); // smoothstep 구간이 0이 되지 않게
+	Constants.AspectRatio = View.AspectRatio > 0.0f ? View.AspectRatio : 1.0f;
 
 	RenderCommand::UpdateBufferData(ScreenOverlayCB.get(), &Constants, sizeof(Constants));
 	RenderCommand::BindPipelineState(*PSO);

@@ -148,6 +148,9 @@ FSceneView FGameViewportClient::CalcSceneView(const FRect& InViewRect)
 	OutView.FadeColor = DesiredView.FadeColor;
 	OutView.FadeAmount = DesiredView.FadeAmount;
 	OutView.LetterboxRatio = DesiredView.LetterboxRatio;
+	OutView.VignetteIntensity = DesiredView.VignetteIntensity;
+	OutView.VignetteRadius = DesiredView.VignetteRadius;
+	OutView.VignetteSoftness = DesiredView.VignetteSoftness;
 	OutView.ViewMode = EViewportMode::Lit;
 	OutView.ShadingModel = EShadingModel::BlinnPhong;
 

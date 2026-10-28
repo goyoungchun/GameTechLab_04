@@ -21,6 +21,9 @@ struct FMinimalViewInfo
 	FVector FadeColor = FVector(0.0f, 0.0f, 0.0f);
 	float FadeAmount = 0.0f;
 	float LetterboxRatio = 0.0f;
+	float VignetteIntensity = 0.0f;  // 0: 없음, 1: 가장자리가 완전히 검정
+	float VignetteRadius = 0.4f;     // 어두워지기 시작하는 거리 (0: 중심, 1: 모서리)
+	float VignetteSoftness = 0.6f;   // 어두워지는 구간의 폭
 
 	FMatrix CalculateViewMatrix() const
 	{
