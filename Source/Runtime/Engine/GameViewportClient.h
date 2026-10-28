@@ -122,6 +122,4 @@ private:
 
 	// 2p의 Viewport를 1p가 관리 - 그냥 포인터 1개여도 되긴 하지만 World에서 PlayerController 배열로 해서 구조 맞춤.
 	TArray<TSharedPtr<FGameViewportClient>> SplitClients;
-
-	APawn* CachedPawn = nullptr;
 };

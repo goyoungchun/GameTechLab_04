@@ -44,7 +44,6 @@ void FGameViewportClient::Init(const FWorldContext& InWorldContext, UEngine* InE
 void FGameViewportClient::SetWorld(UWorld* InWorld)
 {
 	if (World == InWorld) return;
-	CachedPawn = nullptr;
 	EndSIEMode();
 	LostFocus();
 	RenderData.ResetScene();
@@ -130,16 +129,6 @@ FSceneView FGameViewportClient::CalcSceneView(const FRect& InViewRect)
 
 	const float Aspect = static_cast<float>(Width) / static_cast<float>(Height);
 
-	// Pawn 이 바뀐 경우 확인
-	if (World && !bSIEMode)
-	{
-		APawn* CurrentPawn = World->GetPlayerPawn(static_cast<uint32>(PlayerIndex));
-		if (CurrentPawn != CachedPawn)
-		{
-			CachedPawn = CurrentPawn;
-			CameraComponent = nullptr;
-		}
-	}
 
 	if (!CameraComponent && World)
 	{
