@@ -25,6 +25,13 @@ Game.Config = {
         LoserActor  = "AVehiclePawn_1",
         TeamCardTime     = 3.8,
         TeamCardFadeTime = 0.6,
+        SoundCues = {
+            { Time = 1.2, Sound = "boost_1" },
+            { Time = 2.0, Sound = "boost_1", bStop = true },
+            { Time = 2.0, Sound = "crash", Volume = 1.0 },
+            { Time = 3.4, Sound = "goal" },
+            { Time = 5.7, Sound = "win" },
+        },
     },
     BoostSeconds   = 6,
     CarNames = { "armor", "coupe", "fenyr", "ghini", "italia", "jeep", "kamaro", "lamb", "mobil", "police" },
@@ -219,6 +226,11 @@ local function StopEnding()
     end
     if Game.bEndingPlaying then
         obj:StopSequence(Game.Config.EndSequence.Name, 0)
+        for _, Cue in ipairs(Game.Config.EndSequence.SoundCues) do
+            if Cue.bStop then
+                StopSound(Cue.Sound)
+            end
+        end
         SetCarsPhysicsEnabled(true)
         Game.bEndingPlaying = false
     end
@@ -234,9 +246,30 @@ local function PlayEndingRoutine()
         SetCarsPhysicsEnabled(false)
         local Bindings = { [Ending.WinnerActor] = Winner.Actor, [Ending.LoserActor] = Loser.Actor }
         if obj:PlaySequence(Ending.Name, Ending.BlendTime, Bindings) then
-            coroutine.yield(WaitWhile(function() return obj:IsSequencePlaying(Ending.Name) end))
+            local NextCue = 1
+            while obj:IsSequencePlaying(Ending.Name) do
+                local Time = obj:GetSequenceTime(Ending.Name) or 0
+                local Cue = Ending.SoundCues[NextCue]
+                while Cue and Time >= Cue.Time do
+                    if Cue.bStop then
+                        StopSound(Cue.Sound)
+                    else
+                        if Cue.Volume then
+                            SetSoundVolume(Cue.Sound, Cue.Volume)
+                        end
+                        PlaySound(Cue.Sound)
+                    end
+                    NextCue = NextCue + 1
+                    Cue = Ending.SoundCues[NextCue]
+                end
+                coroutine.yield()
+            end
+        else
+            PlaySound("win")
         end
         SetCarsPhysicsEnabled(true)
+    else
+        PlaySound("win")
     end
     Game.bEndingPlaying = false
     EndingCoroutineId = nil
@@ -774,7 +807,6 @@ local ResultElapsedTime = 0
 
 StateEnterHandlers.Result = function()
     PlayMusic(nil)
-    PlaySound("win")
     SetAllCarsInputEnabled(false)
     SetMenuItems(Game.Config.ResultMenuItems)
     ResultElapsedTime = 0
