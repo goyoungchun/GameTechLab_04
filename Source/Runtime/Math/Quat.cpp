@@ -96,44 +96,7 @@ FQuat FQuat::Normalized() const
 	return Result;
 }
 
-const FQuat FQuat::Slerp(const FQuat& From, const FQuat& To, float Alpha)
-{
-	Alpha = std::clamp(Alpha, 0.0f, 1.0f);
 
-	const FQuat A = From.Normalized();
-	FQuat B = To.Normalized();
-
-	float Dot = A.X * B.X + A.Y * B.Y + A.Z * B.Z + A.W * B.W;
-
-	// 같은 회전을 나타내는 B와 -B 중 짧은 회전 경로 선택
-	if (Dot < 0.0f)
-	{
-		B = FQuat(-B.X, -B.Y, -B.Z, -B.W);
-		Dot = -Dot;
-	}
-
-	Dot = std::clamp(Dot, 0.0f, 1.0f);
-
-	float WeightA = 1.0f - Alpha;
-	float WeightB = Alpha;
-
-	// 매우 가까우면 선형 보간 후 정규화하여 수치 오차 방지
-	if (Dot < 0.9995f)
-	{
-		const float Angle = std::acos(Dot);
-		const float SinAngle = std::sin(Angle);
-
-		WeightA = std::sin((1.0f - Alpha) * Angle) / SinAngle;
-		WeightB = std::sin(Alpha * Angle) / SinAngle;
-	}
-
-	return FQuat(
-		A.X * WeightA + B.X * WeightB,
-		A.Y * WeightA + B.Y * WeightB,
-		A.Z * WeightA + B.Z * WeightB,
-		A.W * WeightA + B.W * WeightB
-	).Normalized();
-}
 
 FVector FQuat::RotateVector(const FVector& V) const
 {
@@ -287,38 +250,38 @@ FQuat FQuat::MakeFromEuler(float RollRadian, float PitchRadian, float YawRadian)
 	);
 }
 
-//// 쿼터니언 구면 선형 보간
-//FQuat FQuat::Slerp(FQuat Current, FQuat Target, float Slerp)
-//{
-//	// 쿼터니언 2개 내적
-//	float Dot =
-//		Current.X * Target.X +
-//		Current.Y * Target.Y +
-//		Current.Z * Target.Z +
-//		Current.W * Target.W;
-//
-//	// 최단 경로 선택 위한 부호 적용
-//	float Sign = Dot > 0.0f ? 1.0f : -1.0f;
-//	Dot *= Sign;
-//
-//	float Scale0 = 1.0f - Slerp;
-//	float Scale1 = Slerp * Sign;
-//
-//	if (Dot < 0.9999f)
-//	{
-//		const float Omega = std::acos(Dot);
-//		const float InvSin = 1.0f / sin(Omega);
-//		Scale0 = sin(Scale0 * Omega) * InvSin;
-//		Scale1 = sin(Scale1 * Omega) * InvSin;
-//	}
-//
-//	return FQuat(
-//		Scale0 * Current.X + Scale1 * Target.X,
-//		Scale0 * Current.Y + Scale1 * Target.Y,
-//		Scale0 * Current.Z + Scale1 * Target.Z,
-//		Scale0 * Current.W + Scale1 * Target.W
-//	);
-//}
+// 쿼터니언 구면 선형 보간
+FQuat FQuat::Slerp(FQuat Current, FQuat Target, float Slerp)
+{
+	// 쿼터니언 2개 내적
+	float Dot =
+		Current.X * Target.X +
+		Current.Y * Target.Y +
+		Current.Z * Target.Z +
+		Current.W * Target.W;
+
+	// 최단 경로 선택 위한 부호 적용
+	float Sign = Dot > 0.0f ? 1.0f : -1.0f;
+	Dot *= Sign;
+
+	float Scale0 = 1.0f - Slerp;
+	float Scale1 = Slerp * Sign;
+
+	if (Dot < 0.9999f)
+	{
+		const float Omega = std::acos(Dot);
+		const float InvSin = 1.0f / sin(Omega);
+		Scale0 = sin(Scale0 * Omega) * InvSin;
+		Scale1 = sin(Scale1 * Omega) * InvSin;
+	}
+
+	return FQuat(
+		Scale0 * Current.X + Scale1 * Target.X,
+		Scale0 * Current.Y + Scale1 * Target.Y,
+		Scale0 * Current.Z + Scale1 * Target.Z,
+		Scale0 * Current.W + Scale1 * Target.W
+	);
+}
 
 bool FQuat::Equals(const FQuat& Q, float Tolerance) const
 {

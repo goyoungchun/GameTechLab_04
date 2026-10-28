@@ -33,7 +33,6 @@ struct FQuat
 	FQuat UnitInverse() const;
 	FQuat Inverse() const;
 	FQuat Normalized() const;
-	static const FQuat Slerp(const FQuat& From, const FQuat& to, float Alpha);
 	FVector RotateVector(const FVector& V) const;
 	FMatrix ToFMatrix() const;
 	FRotator ToFRotator() const;
@@ -46,7 +45,7 @@ struct FQuat
 	static FQuat Identity();
 	static FQuat MakeFromAxisAngle(const FVector& Axis, float AngleRadians);
 	static FQuat MakeFromEuler(float Roll, float Pitch, float Yaw);
-	//static FQuat Slerp(FQuat Current, FQuat Target, float Slerp);
+	static FQuat Slerp(FQuat Current, FQuat Target, float Slerp);
 	
 	bool Equals(const FQuat& Q, float Tolerance = 1e-4f) const;
 };
