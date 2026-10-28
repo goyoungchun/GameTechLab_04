@@ -4,6 +4,7 @@
 #include "Asset/AssetManager.h"
 #include "Component/SphereComponent.h"
 #include "Component/StaticMeshComponent.h"
+#include "Component/ScriptComponent.h"
 #include "GameFramework/Vehicle/VehiclePawn.h"
 
 #include <algorithm>
@@ -24,6 +25,9 @@ ABallActor::ABallActor()
 	Collision->SetRestitution(0.5f);
 	Collision->SetDrawShape(false);
 	Collision->OnComponentHit.AddRaw(this, &ABallActor::HandleHit);
+
+	Script = CreateDefaultSubobject<UScriptComponent>("ScriptComponent");
+	Script->SetScriptPath("Assets/Scripts/Ball.lua");
 
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>("BallMesh");
 	Mesh->SetupAttachment(Collision);
