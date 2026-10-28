@@ -74,6 +74,7 @@ namespace ImSequencer
 
 
    float GetLegendWidth();
+   void SetLegendWidth(float width);
    float GetItemHeight();
 
    // return true if selection is made

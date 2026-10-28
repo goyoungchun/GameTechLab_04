@@ -1,6 +1,8 @@
 #include "EnginePCH.h"
 #include "Editor/Sequencer/SequencerAdapter.h"
 #include "imgui_internal.h"
+#include "GameFramework/Actor.h"
+#include "Component/SceneComponent.h"
 #include <algorithm>
 #include <cfloat>
 #include <iterator>
@@ -8,7 +10,38 @@
 
 namespace
 {
-	const char* TrackTypeNames[] = { "Camera Transform", "FOV", "Ortho Width", "Event" };
+	const char* TrackTypeNames[] = { "Transform", "FOV", "Ortho Width", "Event" };
+
+	const char* GetValueTypeName(ESequenceValueType ValueType)
+	{
+		switch (ValueType)
+		{
+		case ESequenceValueType::Transform:
+			return "Transform";
+		case ESequenceValueType::FOV:
+			return "FOV";
+		case ESequenceValueType::OrthoWidth:
+			return "Ortho Width";
+		case ESequenceValueType::LightIntensity:
+			return "Light Intensity";
+		default:
+			return "Value";
+		}
+	}
+
+	FString GetBindingName(UActorComponent* Binding)
+	{
+		AActor* Owner = Binding ? Binding->GetOwner() : nullptr;
+		if (!Owner)
+		{
+			return "(None)";
+		}
+		if (Binding == Owner->GetRootComponent())
+		{
+			return Owner->GetName();
+		}
+		return Owner->GetName() + " / " + Binding->GetName();
+	}
 
 	enum class EKeyShape : uint8
 	{
@@ -92,7 +125,12 @@ const char* FSequencerAdapter::GetItemLabel(int Index) const
 		return "";
 	}
 
-	return GetTrackName(Sequence->Tracks[Index]);
+	if (LabelCache.Num() < Sequence->Tracks.Num())
+	{
+		LabelCache.SetNum(Sequence->Tracks.Num());
+	}
+	LabelCache[Index] = GetTrackLabel(Sequence->Tracks[Index]);
+	return LabelCache[Index].c_str();
 }
 
 void FSequencerAdapter::Get(int Index, int** Start, int** End, int* Type, unsigned int* Color)
@@ -439,6 +477,19 @@ const char* FSequencerAdapter::GetTrackName(const FSequenceTrack& Track)
 			return Typed.Name.c_str();
 		}
 	}, Track);
+}
+
+FString FSequencerAdapter::GetTrackLabel(const FSequenceTrack& Track)
+{
+	if (const FTransformTrack* TransformTrack = std::get_if<FTransformTrack>(&Track))
+	{
+		return GetBindingName(TransformTrack->Binding) + " | " + GetValueTypeName(TransformTrack->ValueType);
+	}
+	if (const FFloatTrack* FloatTrack = std::get_if<FFloatTrack>(&Track))
+	{
+		return GetBindingName(FloatTrack->Binding) + " | " + GetValueTypeName(FloatTrack->ValueType);
+	}
+	return GetTrackName(Track);
 }
 
 int FSequencerAdapter::GetKeyCount(const FSequenceTrack& Track)

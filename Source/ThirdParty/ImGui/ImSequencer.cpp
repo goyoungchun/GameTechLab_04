@@ -35,9 +35,18 @@ namespace ImSequencer
       return ImVec2(a.x + b.x, a.y + b.y);
    }
 #endif
+   static float legendWidthOverride = 0.0f;
+
    float GetLegendWidth()
    {
+      if (legendWidthOverride > 0.0f)
+         return legendWidthOverride;
       return ImMax(200.0f, ImGui::GetFontSize() * 10.0f);
+   }
+
+   void SetLegendWidth(float width)
+   {
+      legendWidthOverride = width;
    }
 
    float GetItemHeight()

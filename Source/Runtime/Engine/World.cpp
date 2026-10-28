@@ -142,6 +142,7 @@ void UWorld::Tick(EWorldTick TickType, float DeltaTime)
 			const double UnscaledDeltaTime = DeltaTime;
 			const float GameDeltaTime = static_cast<float>(TimeController.GetGameDeltaTime(UnscaledDeltaTime));
 			TimeController.Update(UnscaledDeltaTime);
+			SequenceManager.Tick(this, GameDeltaTime, UnscaledDeltaTime);
 			{
 				if(GameDeltaTime > 0.0f)
 				{

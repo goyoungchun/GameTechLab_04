@@ -15,6 +15,7 @@
 #include "GameFramework/Vehicle/VehiclePawn.h"
 #include "Audio/AudioSystem.h"
 #include "Camera/CameraScriptBindings.h"
+#include "Sequence/SequenceScriptBindings.h"
 
 namespace
 {
@@ -436,6 +437,7 @@ void FScriptSystem::Init()
 	RegisterFunction();
 	RegisterVehicleBindings(*Lua);
 	RegisterCameraBindings(*Lua);
+	RegisterSequenceBindings(*Lua);
 	OverridePrint();
 
 	Lua->create_named_table("Game",
