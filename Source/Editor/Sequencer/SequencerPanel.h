@@ -40,6 +40,8 @@ private:
 	bool GetCurrentViewPOV(FSequencerViewInfo& OutView) const;
 	int32 AddTransformKey(FDummyTrack& InTrack, float InTime, const FVector& InLocation, const FRotator& InRotation);
 	bool CanAddTransformKey() const;
+	bool CanAddKey() const;
+	void ValidateKeySelection();
 
 	UWorld* World = nullptr;
 
@@ -54,5 +56,6 @@ private:
 	bool bExpanded = true;
 	bool bIsPlaying = false;
 	int SelectedTrackIndex = -1;
+	int SelectedKeyIndex = -1;
 	int FirstVisibleFrame = 0;
 };

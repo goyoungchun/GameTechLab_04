@@ -31,15 +31,24 @@ public:
 	void SyncCache();
 	int TimeToFrame(float Time) const;
 	float FrameToTime(int Frame) const;
-	int ConsumeClickedTrackIndex();
+	bool ConsumeIndex(int& OutTrack, int& OutKey);
+	void SetSelection(int InTrack, int InKey);
+
 
 private:
 	static unsigned int GetTrackColor(EDummyTrackType Type);
 
 	static constexpr float LegendWidth = 200.0f;
+	static constexpr float KeyHitPadding = 3.0f;
+	static constexpr float SelectedKeyScale = 1.8f;
+	static constexpr unsigned int KeyColor = 0xFFFFFFFF;
+	static constexpr unsigned int SelectedKeyColor = 0xFF00A5FF;
 
 	FDummySequence* Sequence = nullptr;
 	TArray<FTrackFrameRange> FrameRangeCache;
 	int ClickedTrackIndex = -1;
+	int ClickedKeyIndex = -1;
+	int SelectedTrackIndex = -1;
+	int SelectedKeyIndex = -1;
 
 };

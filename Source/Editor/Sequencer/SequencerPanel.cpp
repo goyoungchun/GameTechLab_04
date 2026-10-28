@@ -93,13 +93,13 @@ void FSequencerPanel::DrawToolBar()
 	ImGui::TextDisabled("|");
 	ImGui::SameLine();
 
-	ImGui::BeginDisabled(!CanAddTransformKey());
-	if (ImGui::Button("Key from View"))
+	ImGui::BeginDisabled(!CanAddKey());
+	if (ImGui::Button("Add Key"))
 	{
 		FSequencerViewInfo ViewInfo;
 		if (GetCurrentViewPOV(ViewInfo))
 		{
-			AddTransformKey(DummySequence.Tracks[SelectedTrackIndex], CurrentTime, ViewInfo.Location, ViewInfo.Rotation);
+			SelectedKeyIndex = AddTransformKey(DummySequence.Tracks[SelectedTrackIndex], CurrentTime, ViewInfo.Location, ViewInfo.Rotation);
 		}
 	}
 	ImGui::EndDisabled();
@@ -121,16 +121,21 @@ void FSequencerPanel::DrawToolBar()
 void FSequencerPanel::DrawTimeline()
 {
 	Adapter.SyncCache();
+	ValidateKeySelection();
+	Adapter.SetSelection(SelectedTrackIndex, SelectedKeyIndex);
 
 	const int PreviousFrame = CurrentFrame;
 	ImSequencer::Sequencer(&Adapter, &CurrentFrame, 
 		&bExpanded, &SelectedTrackIndex, &FirstVisibleFrame,
 		ImSequencer::SEQUENCER_CHANGE_FRAME);
 
-	const int ClickedTrackIndex = Adapter.ConsumeClickedTrackIndex();
-	if (ClickedTrackIndex != -1)
+	int ClickedTrackIndex = -1;
+	int ClickedKeyIndex = -1;
+
+	if (Adapter.ConsumeIndex(ClickedTrackIndex, ClickedKeyIndex))
 	{
 		SelectedTrackIndex = ClickedTrackIndex;
+		SelectedKeyIndex = ClickedKeyIndex;
 	}
 
 	if (CurrentFrame != PreviousFrame)
@@ -217,6 +222,20 @@ void FSequencerPanel::DrawTrackBinding()
 
 		ImGui::EndCombo();
 	}
+}
+
+void FSequencerPanel::ValidateKeySelection()
+{
+	if (!DummySequence.Tracks.IsValidIndex(SelectedTrackIndex)
+		|| !DummySequence.Tracks[SelectedTrackIndex].Keys.IsValidIndex(SelectedKeyIndex))
+	{
+		SelectedKeyIndex = -1;
+	}
+}
+
+bool FSequencerPanel::CanAddKey() const
+{
+	return (CanAddTransformKey());
 }
 
 bool FSequencerPanel::CanAddTransformKey() const

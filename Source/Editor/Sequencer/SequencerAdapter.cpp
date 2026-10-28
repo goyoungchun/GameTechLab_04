@@ -1,6 +1,7 @@
 #include "EnginePCH.h"
 #include "Editor/Sequencer/SequencerAdapter.h"
 #include "imgui_internal.h"
+#include <cfloat>
 
 
 FSequencerAdapter::~FSequencerAdapter()
@@ -80,47 +81,74 @@ void FSequencerAdapter::CustomDrawCompact(int Index, ImDrawList* DrawList, const
 		return;
 	}
 
+	const TArray<FDummyKey>& Keys = Sequence->Tracks[Index].Keys;
+	const float FramePixelWidth = Rect.GetWidth() / (GetFrameMax() - GetFrameMin() + 1);
+	const float CenterY = (Rect.Max.y + Rect.Min.y) / 2;
+	const float KeyRadius = (Rect.Max.y - Rect.Min.y) / 2 * 0.48f;
+	const ImVec2 MousePos = ImGui::GetIO().MousePos;
+
 	const ImRect RowRect(ImVec2(ClipRect.Min.x - LegendWidth, ClipRect.Min.y), ClipRect.Max);
 	if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem)
 		&& ImGui::IsMouseClicked(ImGuiMouseButton_Left)
-		&& RowRect.Contains(ImGui::GetIO().MousePos))
+		&& RowRect.Contains(MousePos))
 	{
 		ClickedTrackIndex = Index;
-	}
+		ClickedKeyIndex = -1;
 
-	float FramePixelWidth = Rect.GetWidth() / (GetFrameMax() - GetFrameMin() + 1);
-	float CenterY = (Rect.Max.y + Rect.Min.y) / 2;
-	float KeyRadius = (Rect.Max.y - Rect.Min.y) / 2 * 0.48f;
+		if (ClipRect.Contains(MousePos))
+		{
+			const float HitRadius = KeyRadius + KeyHitPadding;
+			float ClosestDistance = FLT_MAX;
+			for (int KeyIndex = 0; KeyIndex < Keys.Num(); KeyIndex++)
+			{
+				const float KeyX = Rect.Min.x + (TimeToFrame(Keys[KeyIndex].Time) - GetFrameMin()) * FramePixelWidth;
+				const float Distance = fabsf(MousePos.x - KeyX) + fabsf(MousePos.y - CenterY);
+				if (Distance <= HitRadius && Distance < ClosestDistance)
+				{
+					ClosestDistance = Distance;
+					ClickedKeyIndex = KeyIndex;
+				}
+			}
+		}
+	}
 
 	DrawList->PushClipRect(ClipRect.Min, ClipRect.Max, true);
 
-	auto& Keys = Sequence->Tracks[Index].Keys;
-
-	for (const auto& Key : Keys)
+	for (int KeyIndex = 0; KeyIndex < Keys.Num(); KeyIndex++)
 	{
-		int KeyFrame = TimeToFrame(Key.Time);
-		float KeyX = Rect.Min.x + (KeyFrame - GetFrameMin()) * FramePixelWidth;
-		
-		ImVec2 Up = ImVec2(KeyX, CenterY - KeyRadius);
-		ImVec2 Right = ImVec2(KeyX + KeyRadius, CenterY);
-		ImVec2 Down = ImVec2(KeyX, CenterY + KeyRadius);
-		ImVec2 Left = ImVec2(KeyX - KeyRadius, CenterY);
-		ImU32 KeyColor = 0xFFFFFFFF;
+		const float KeyX = Rect.Min.x + (TimeToFrame(Keys[KeyIndex].Time) - GetFrameMin()) * FramePixelWidth;
+		const bool bSelected = Index == SelectedTrackIndex && KeyIndex == SelectedKeyIndex;
+		const float DrawRadius = bSelected ? KeyRadius * SelectedKeyScale : KeyRadius;
+		const ImU32 Color = bSelected ? SelectedKeyColor : KeyColor;
 
-
-		DrawList->AddQuadFilled(Up, Right, Down, Left, KeyColor);
+		const ImVec2 Up(KeyX, CenterY - DrawRadius);
+		const ImVec2 Right(KeyX + DrawRadius, CenterY);
+		const ImVec2 Down(KeyX, CenterY + DrawRadius);
+		const ImVec2 Left(KeyX - DrawRadius, CenterY);
+		DrawList->AddQuadFilled(Up, Right, Down, Left, Color);
 	}
 
 	DrawList->PopClipRect();
 }
 
-
-
-int FSequencerAdapter::ConsumeClickedTrackIndex()
+bool FSequencerAdapter::ConsumeIndex(int& OutTrack, int& OutKey)
 {
-	const int Result = ClickedTrackIndex;
+	if (ClickedTrackIndex == -1)
+	{
+		return false;
+	}
+
+	OutTrack = ClickedTrackIndex;
+	OutKey = ClickedKeyIndex;
 	ClickedTrackIndex = -1;
-	return Result;
+	ClickedKeyIndex = -1;
+	return true;
+}
+
+void FSequencerAdapter::SetSelection(int InTrack, int InKey)
+{
+	SelectedTrackIndex = InTrack;
+	SelectedKeyIndex = InKey;
 }
 
 FDummySequence* FSequencerAdapter::GetSequence() const
