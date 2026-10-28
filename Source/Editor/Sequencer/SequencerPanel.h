@@ -3,6 +3,9 @@
 #include "Editor/EditorUI/EditorPanel.h"
 #include "Editor/Sequencer/SequencerAdapter.h"
 #include "Camera/CameraTypes.h"
+#include "Engine/TimeController.h"
+#include "Sequence/SequencePlayer.h"
+#include "Container/Map.h"
 
 class UWorld;
 class FViewportsPanel;
@@ -39,6 +42,9 @@ private:
 	void DeleteSelectedKey();
 	bool HasSelectedKey() const;
 	void BuildSampleSequence();
+	void BeginPlaybackPreview();
+	void EndPlaybackPreview();
+	void DrawPlaybackStatus();
 	bool GetCurrentViewPOV(FMinimalViewInfo& OutView) const;
 	UCameraComponent* FindPreviewCamera() const;
 	void CreateCameraForTrack();
@@ -73,7 +79,11 @@ private:
 	int EaseTrackIndex = -1;
 	int EaseKeyIndex = -1;
 	float EasePresetIndex = 0.0f;
-	ESequenceEventType LastEventType = ESequenceEventType::CameraShake;
+	ESequenceEventType LastEventType = ESequenceEventType::HitStop;
+	bool bPlaybackPreviewActive = false;
+	TMap<uint32, FTransform> PhysicsPreviewTransforms;
+	FTimeController SavedPreviewTimeController;
+	double PlaybackElapsedTime = 0.0;
 
 	static constexpr float SplitterWidth = 6.0f;
 	static constexpr float MinDetailPanelWidth = 220.0f;
