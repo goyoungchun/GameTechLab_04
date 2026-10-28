@@ -83,6 +83,35 @@ void USceneComponent::SetWorldLocation(FVector InLocation)
 	}
 }
 
+bool USceneComponent::SetWorldTransform(const FTransform& InWorldTransform)
+{
+	FTransform Relative = InWorldTransform;
+	if (AttachParent)
+	{
+		const FMatrix ParentWorld = AttachParent->GetWorldMatrix();
+		const float Determinant = ParentWorld.Determinant();
+		const FVector ParentScale = AttachParent->GetWorldScale3D();
+		if (!std::isfinite(Determinant) || Determinant == 0.0f
+			|| !std::isfinite(ParentScale.X) || !std::isfinite(ParentScale.Y) || !std::isfinite(ParentScale.Z)
+			|| ParentScale.X == 0.0f || ParentScale.Y == 0.0f || ParentScale.Z == 0.0f)
+		{
+			return false;
+		}
+
+		Relative.Location = ParentWorld.Inverse().TransformPosition(InWorldTransform.Location);
+		// 회전·스케일은 기존 GetWorldRotation/GetWorldScale3D의 합성 규칙을 따른다.
+		Relative.Rotation = (AttachParent->GetWorldRotation().Quaternion().Inverse()
+			* InWorldTransform.GetOrientation()).Normalized().ToFRotator();
+		Relative.Scale = FVector(
+			InWorldTransform.Scale.X / ParentScale.X,
+			InWorldTransform.Scale.Y / ParentScale.Y,
+			InWorldTransform.Scale.Z / ParentScale.Z);
+	}
+
+	SetTransform(Relative);
+	return true;
+}
+
 FVector USceneComponent::GetWorldLocation() const
 {
 	FMatrix WorldMatrix = GetWorldMatrix();
