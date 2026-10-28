@@ -25,7 +25,7 @@ enum class ESequenceEventType : uint8
 };
 
 // 적용할 속성. 자료형은 GetSequencePropertyDataType에서 구분한다.
-// Transform은 첫 구현에서 월드 좌표계를 사용한다.
+// Transform은 기본적으로 월드 좌표계를 사용한다.
 enum class ESequenceValueType : uint8
 {
 	None,
@@ -298,7 +298,14 @@ struct TSequenceTrack
 };
 
 using FFloatTrack = TSequenceTrack<FFloatKeyFrame>;
-using FTransformTrack = TSequenceTrack<FTransformKeyFrame>;
+struct FTransformTrack : TSequenceTrack<FTransformKeyFrame>
+{
+	// 기존 파일은 전체 월드 Transform을 적용한다. 외형 애니메이션은 상대 Scale만 선택할 수 있다.
+	bool bRelative = false;
+	bool bAnimateLocation = true;
+	bool bAnimateRotation = true;
+	bool bAnimateScale = true;
+};
 using FEventTrack = TSequenceTrack<FEventKeyFrame>;
 
 using FSequenceTrack = std::variant<

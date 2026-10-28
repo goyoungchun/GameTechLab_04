@@ -17,7 +17,7 @@ Game.Config = {
     },
     CarHitStop = { Duration = 0.08, MinSpeed = 4, Cooldown = 0.35 },
     GoalSequence   = "Goal",
-    GoalSequenceBlendTime = 0.5,
+    GoalSequenceBlendTime = 0.65,
     BoostSeconds   = 6,
     CarNames = { "armor", "coupe", "fenyr", "ghini", "italia", "jeep", "kamaro", "lamb", "mobil", "police" },
     BackKey = Key.Backspace,
@@ -677,7 +677,7 @@ StateEnterHandlers.GoalScored = function()
     ClearGoalCamera()
     local SequenceName = Game.Config.GoalSequence
     ActiveGoalSequence = nil
-    if SequenceName and obj:PlaySequence(SequenceName, Game.Config.GoalSequenceBlendTime) then
+    if SequenceName and obj:PlaySequenceForPlayer(SequenceName, Game.LastScorerIndex, Game.Config.GoalSequenceBlendTime) then
         ActiveGoalSequence = SequenceName
     else
         -- 시퀀스 로드 실패 시에도 기존 골 연출과 턴 전환을 유지한다.

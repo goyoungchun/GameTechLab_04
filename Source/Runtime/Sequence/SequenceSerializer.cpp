@@ -316,6 +316,10 @@ bool FSequenceSerializer::Save(const FSequence& Sequence, const FString& Path, c
 			TrackJson["Type"] = "Transform";
 			TrackJson["Name"] = TransformTrack->Name;
 			TrackJson["ValueType"] = ValueTypeToString(TransformTrack->ValueType);
+			TrackJson["Relative"] = TransformTrack->bRelative;
+			TrackJson["AnimateLocation"] = TransformTrack->bAnimateLocation;
+			TrackJson["AnimateRotation"] = TransformTrack->bAnimateRotation;
+			TrackJson["AnimateScale"] = TransformTrack->bAnimateScale;
 			WriteBinding(TrackJson, TransformTrack->Binding);
 			TrackJson["Keys"] = json::array();
 			for (const FTransformKeyFrame& Key : TransformTrack->KeyFrames)
@@ -434,6 +438,10 @@ bool FSequenceSerializer::Load(const FString& Path, UWorld* World, FSequence& Ou
 				FTransformTrack Track;
 				Track.Name = Name;
 				Track.ValueType = ValueTypeFromString(TrackJson.at("ValueType").get<FString>());
+				Track.bRelative = TrackJson.value("Relative", false);
+				Track.bAnimateLocation = TrackJson.value("AnimateLocation", true);
+				Track.bAnimateRotation = TrackJson.value("AnimateRotation", true);
+				Track.bAnimateScale = TrackJson.value("AnimateScale", true);
 				for (const json& KeyJson : TrackJson.at("Keys"))
 				{
 					FTransformKeyFrame Key;

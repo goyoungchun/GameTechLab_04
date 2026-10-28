@@ -4,6 +4,7 @@
 #include "Engine/Level.h"
 #include "Collision/FPhysSceneChaos.h"
 #include "Camera/CameraActor.h"
+#include "Camera/PlayerCameraManager.h"
 #include "UObject/UObjectIterator.h"
 #include "Editor/Viewports/ViewportsPanel.h"
 #include "Camera/CameraComponent.h"
@@ -303,6 +304,10 @@ namespace
 
 FSequencerPanel::~FSequencerPanel()
 {
+	if (Player) Player->SetCameraManagerOverride(nullptr);
+	delete PreviewCameraManager;
+	delete PreviewCameraProxy;
+	delete Player;
 }
 
 bool FSequencerPanel::Init()
@@ -404,6 +409,8 @@ void FSequencerPanel::Tick(float DeltaTime)
 	bIsPlaying = Player->GetPlaybackState() == ESequencePlaybackState::Playing;
 	CurrentTime = static_cast<float>(Player->GetCurrentTime());
 	CurrentFrame = Adapter.TimeToFrame(CurrentTime);
+	if (bPlaybackPreviewActive)
+		UpdateCameraEffectPreview(bIsPlaying ? static_cast<float>(UnscaledDeltaTime) : 0.0f);
 
 	if (bPreviewEnabled)
 	{
@@ -530,7 +537,8 @@ void FSequencerPanel::DrawToolBar()
 		}
 		else
 		{
-			Player->Play();
+			BeginPlaybackPreview();
+			Player->Play(true);
 		}
 	}
 
@@ -547,7 +555,7 @@ void FSequencerPanel::DrawToolBar()
 	ImGui::SameLine();
 	ImGui::Checkbox("Camera Preview", &bPreviewEnabled);
 	if (ImGui::IsItemHovered())
-		ImGui::SetTooltip("카메라 시점만 뷰포트에 표시합니다. 트랙과 이벤트는 Play로 실행됩니다.");
+		ImGui::SetTooltip("연결된 카메라의 시점을 사용합니다. 카메라 효과 이벤트는 Play로 확인할 수 있습니다.");
 
 	ImGui::SameLine();
 	ImGui::TextDisabled("|");
@@ -1201,6 +1209,12 @@ bool FSequencerPanel::GetCurrentViewPOV(FMinimalViewInfo& OutView) const
 	OutView.FOV = ActiveViewportClient->GetViewFOV();
 	OutView.Location = ActiveViewportClient->GetViewLocation();
 	OutView.Rotation = ActiveViewportClient->GetViewRotation();
+	OutView.AspectRatio = ActiveViewportClient->GetAspectRatio();
+	OutView.NearClipPlane = ActiveViewportClient->GetNearClip();
+	OutView.FarClipPlane = ActiveViewportClient->GetFarClip();
+	OutView.OrthoWidth = ActiveViewportClient->GetOrthoWidth();
+	OutView.ProjectionMode = ActiveViewportClient->IsPerspective()
+		? ECameraProjectionMode::Perspective : ECameraProjectionMode::Orthographic;
 	return (true);
 }
 
@@ -1277,7 +1291,7 @@ UCameraComponent* FSequencerPanel::FindPreviewCamera() const
 
 void FSequencerPanel::ApplyPreviewToViewport()
 {
-	if (!ViewportsPanel)
+	if (!ViewportsPanel || PreviewCameraManager)
 	{
 		return;
 	}
@@ -1296,9 +1310,56 @@ void FSequencerPanel::ApplyPreviewToViewport()
 	ViewportClient->SetViewFOV(View.FOV);
 }
 
+void FSequencerPanel::UpdateCameraEffectPreview(float DeltaTime)
+{
+	if (!PreviewCameraManager || !PreviewCameraProxy || !ViewportsPanel) return;
+	FMinimalViewInfo BaseView;
+	UCameraComponent* Camera = bPreviewEnabled ? FindPreviewCamera() : nullptr;
+	if (Camera) Camera->GetCameraView(BaseView);
+	else if (!GetCurrentViewPOV(BaseView)) return;
+
+	PreviewCameraProxy->SetActorLocation(BaseView.Location);
+	PreviewCameraProxy->SetActorRotation(BaseView.Rotation);
+	UCameraComponent* Proxy = PreviewCameraProxy->GetCameraComponent();
+	Proxy->SetFieldOfView(BaseView.FOV);
+	Proxy->SetAspectRatio(BaseView.AspectRatio);
+	Proxy->SetNearZ(BaseView.NearClipPlane);
+	Proxy->SetFarZ(BaseView.FarClipPlane);
+	Proxy->SetIsOrthogonal(BaseView.ProjectionMode == ECameraProjectionMode::Orthographic);
+	Proxy->SetOrthoWidth(BaseView.OrthoWidth);
+	// 실제 시간으로 진행하므로 Hit Stop 중에도 화면 효과를 볼 수 있다.
+	PreviewCameraManager->UpdateCamera(DeltaTime);
+	for (int32 Index = 0; Index < 4; ++Index)
+		if (auto* Viewport = ViewportsPanel->GetViewportClient(Index))
+			Viewport->ClearSequencePreviewView();
+	if (auto* Viewport = ViewportsPanel->GetViewportClient(ViewportsPanel->GetActiveViewIndex()))
+		Viewport->SetSequencePreviewView(PreviewCameraManager->GetCameraCacheView());
+}
+
+void FSequencerPanel::ClearCameraEffectPreview()
+{
+	if (Player) Player->SetCameraManagerOverride(nullptr);
+	if (ViewportsPanel)
+		for (int32 Index = 0; Index < 4; ++Index)
+			if (auto* Viewport = ViewportsPanel->GetViewportClient(Index))
+				Viewport->ClearSequencePreviewView();
+	delete PreviewCameraManager;
+	PreviewCameraManager = nullptr;
+	delete PreviewCameraProxy;
+	PreviewCameraProxy = nullptr;
+}
+
 void FSequencerPanel::BeginPlaybackPreview()
 {
 	if (!World || World->GetWorldType() != EWorldType::Editor) return;
+	if (!PreviewCameraManager)
+	{
+		// 씬에 액터를 추가하지 않고, 에디터 카메라의 POV에만 효과를 적용한다.
+		PreviewCameraProxy = FObjectFactory::ConstructObject<ACameraActor>();
+		PreviewCameraManager = FObjectFactory::ConstructObject<APlayerCameraManager>();
+		PreviewCameraManager->SetViewTarget(PreviewCameraProxy);
+		Player->SetCameraManagerOverride(PreviewCameraManager);
+	}
 	if (!bPlaybackPreviewActive)
 	{
 		SavedPreviewTimeController = World->GetTimeController();
@@ -1316,6 +1377,7 @@ void FSequencerPanel::BeginPlaybackPreview()
 
 void FSequencerPanel::EndPlaybackPreview()
 {
+	ClearCameraEffectPreview();
 	if (!bPlaybackPreviewActive || !World) return;
 	// 컴포넌트 포인터를 보관하지 않고 현재 살아 있는 객체의 ID로 복원한다.
 	if (World->GetPersistentLevel())
@@ -1434,17 +1496,13 @@ void FSequencerPanel::SaveSequence(bool bSaveAs)
 
 void FSequencerPanel::LoadSequence()
 {
-	if (!World)
-	{
-		return;
-	}
-
 	const FString Path = FEditorFileUtils::OpenLoadSequenceDialog();
-	if (Path.empty())
-	{
-		return;
-	}
+	if (!Path.empty()) LoadSequenceFile(Path);
+}
 
+bool FSequencerPanel::LoadSequenceFile(const FString& Path)
+{
+	if (!World) return false;
 	if (Player)
 	{
 		Player->Stop();
@@ -1457,7 +1515,7 @@ void FSequencerPanel::LoadSequence()
 	if (!FSequenceSerializer::Load(Path, World, Loaded, Cameras, &ScenePath))
 	{
 		HTR_LOG(Error, "Failed to load sequence: {}", Path);
-		return;
+		return false;
 	}
 
 	DestroySequenceCameras(Cameras);
@@ -1473,6 +1531,7 @@ void FSequencerPanel::LoadSequence()
 	}
 	ResetEditingState();
 	HTR_LOG(Info, "Load Sequence : {}", CurrentSequencePath);
+	return true;
 }
 
 void FSequencerPanel::DestroySequenceCameras(const TArray<ACameraActor*>& KeepCameras)

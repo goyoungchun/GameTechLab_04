@@ -1463,6 +1463,7 @@ void UEditorEngine::RenderFrame(FEditorViewportClient *ViewClient,
 		LightGridDebugRenderer->OnRender(Targets.TileLightResources, Targets.SceneColor.get(), DepthTarget);
 	}
 
+	Renderer->DrawScreenOverlay(SceneView);
 	RenderCommand::EndRenderPass();
 }
 

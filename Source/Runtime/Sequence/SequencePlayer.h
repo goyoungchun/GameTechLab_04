@@ -5,6 +5,7 @@
 #include "ObjectSystem/Object.h"
 
 class UWorld;
+class APlayerCameraManager;
 
 enum class ESequencePlaybackState : uint8
 {
@@ -34,6 +35,8 @@ public:
 	// 다른 Sequence를 등록하면 정지·초기화하고 기본 배율을 복사한다. 같은 Sequence는 유지한다.
 	void SetSequence(const FSequence* InSequence);
 	void SetPlaybackWorld(UWorld* InWorld) { PlaybackWorld = InWorld; }
+	// 에디터 프리뷰는 플레이어를 생성하지 않고 별도의 효과 수신자를 연결한다. 비소유 참조.
+	void SetCameraManagerOverride(APlayerCameraManager* InManager) { CameraManagerOverride = InManager; }
 
 	// 시간 갱신 -> Apply의 트랙 순회 -> Evaluate -> 결과 적용 순서
 	// SetSequence로 등록한 시퀀스만 재생한다.
@@ -74,6 +77,7 @@ private:
 private:
 	const FSequence* Sequence = nullptr;
 	UWorld* PlaybackWorld = nullptr;
+	APlayerCameraManager* CameraManagerOverride = nullptr;
 	ESequencePlaybackState State = ESequencePlaybackState::Stopped;
 	ESequenceClockSource ClockSource = ESequenceClockSource::GameTime;
 	double PreviousTime = 0.0;

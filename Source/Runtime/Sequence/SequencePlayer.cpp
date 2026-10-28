@@ -117,8 +117,9 @@ void USequencePlayer::Apply(const FSequence* InSequence, bool bFireEvents)
 	struct FPendingTransform
 	{
 		USceneComponent* Component;
-		FTransform WorldTransform;
+		FTransform Value;
 		uint32 AttachmentDepth;
+		const FTransformTrack* Track;
 	};
 	TArray<FPendingTransform> PendingTransforms;
 	TArray<FSequenceEventRequest> EventRequests;
@@ -151,6 +152,7 @@ void USequencePlayer::Apply(const FSequence* InSequence, bool bFireEvents)
 							}
 						}
 					}
+					if constexpr (std::is_same_v<TTrack, FTransformTrack>)
 					if (USceneComponent* Component = Cast<USceneComponent>(TypedTrack.Binding))
 					{
 						if (const FTransform* Value = std::get_if<FTransform>(&Result))
@@ -163,7 +165,7 @@ void USequencePlayer::Apply(const FSequence* InSequence, bool bFireEvents)
 								{
 									++Depth;
 								}
-								PendingTransforms.Add({ Component, *Value, Depth });
+								PendingTransforms.Add({ Component, *Value, Depth, &TypedTrack });
 							}
 						}
 					}
@@ -189,7 +191,15 @@ void USequencePlayer::Apply(const FSequence* InSequence, bool bFireEvents)
 		});
 	for (const FPendingTransform& Pending : PendingTransforms)
 	{
-		Pending.Component->SetWorldTransform(Pending.WorldTransform);
+		const FTransformTrack& Track = *Pending.Track;
+		USceneComponent* Component = Pending.Component;
+		FTransform Value = Track.bRelative ? Component->GetTransform()
+			: FTransform(Component->GetWorldRotation(), Component->GetWorldLocation(), Component->GetWorldScale3D());
+		if (Track.bAnimateLocation) Value.Location = Pending.Value.Location;
+		if (Track.bAnimateRotation) Value.Rotation = Pending.Value.Rotation;
+		if (Track.bAnimateScale) Value.Scale = Pending.Value.Scale;
+		if (Track.bRelative) Component->SetTransform(Value);
+		else Component->SetWorldTransform(Value);
 	}
 
 	// 같은 시각은 기존 트랙 순서와 키 배열 순서를 유지한다.
@@ -221,12 +231,10 @@ void USequencePlayer::Apply(const FSequence* InSequence, bool bFireEvents)
 		case ESequenceEventType::StopCameraShake:
 		case ESequenceEventType::StopCameraFade:
 		case ESequenceEventType::Letterbox:
-			if (PlaybackWorld)
-				for (uint32 Index = 0; Index < PlaybackWorld->GetPlayerCount(); ++Index)
+			{
+				auto Dispatch = [&Request](APlayerCameraManager* Camera)
 				{
-					APlayerController* PC = PlaybackWorld->GetPlayerController(Index);
-					APlayerCameraManager* Camera = PC ? PC->GetCameraManager() : nullptr;
-					if (!Camera) continue;
+					if (!Camera) return;
 					if (const auto* Shake = std::get_if<FCameraShakeParams>(&Request.Params))
 						Camera->StartCameraShake(*Shake);
 					else if (const auto* Fade = std::get_if<FCameraFadeParams>(&Request.Params))
@@ -235,7 +243,15 @@ void USequencePlayer::Apply(const FSequence* InSequence, bool bFireEvents)
 						Camera->SetLetterbox(Bars->bEnable, Bars->Ratio);
 					else if (Request.EventType == ESequenceEventType::StopCameraShake) Camera->StopAllCameraShakes();
 					else if (Request.EventType == ESequenceEventType::StopCameraFade) Camera->StopCameraFade();
-				}
+				};
+				if (CameraManagerOverride) Dispatch(CameraManagerOverride);
+				else if (PlaybackWorld)
+					for (uint32 Index = 0; Index < PlaybackWorld->GetPlayerCount(); ++Index)
+					{
+						APlayerController* PC = PlaybackWorld->GetPlayerController(Index);
+						Dispatch(PC ? PC->GetCameraManager() : nullptr);
+					}
+			}
 			break;
 		default:
 			break;
