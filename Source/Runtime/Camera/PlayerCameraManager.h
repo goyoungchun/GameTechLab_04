@@ -2,6 +2,8 @@
 
 #include "GameFramework/Actor.h"
 #include "CameraTypes.h"
+#include "CameraModifier.h"
+#include "ObjectSystem/Casts.h"
 
 enum class EViewTargetBlendFunction : uint8
 {
@@ -68,12 +70,31 @@ class APlayerCameraManager : public AActor
 
 public:
 	APlayerCameraManager();
+	~APlayerCameraManager() override;
+	
+	UCameraModifier* AddNewCameraModifier(UClass* ModifierClass);
+
+	template <typename T>
+	T* AddCameraModifier() { return static_cast<T*>(AddNewCameraModifier(T::StaticClass())); }
+
+	template <typename T>
+	T* FindCameraModifier() const
+	{
+		for (UCameraModifier* Modifier : ModifierList)
+			if (T* Found = Cast<T>(Modifier))
+				return Found;
+
+		return nullptr;
+	}
 
 	void OnActorDestroyed(AActor* Actor);
 
 	void InitializeFor(APlayerController* PC);
 	void SetViewTarget(AActor* NewTarget, const FViewTargetTransitionParams& TransitionParams = FViewTargetTransitionParams());
 	void UpdateCamera(float DeltaTime);
+
+	bool RemoveCameraModifier(UCameraModifier* Modifier);
+	void ClearCameraModifiers();
 
 	AActor* GetViewTarget() const;
 	bool IsBlending() const { return PendingViewTarget.Target != nullptr; }
@@ -90,6 +111,8 @@ protected:
 	void AssignViewTarget(AActor* NewTarget);
 	void StartBlend(AActor* NewTarget, const FViewTargetTransitionParams& Params);
 
+	void ApplyCameraModifiers(float DeltaTime, FMinimalViewInfo& InOutPOV);
+
 	APlayerController* PCOwner = nullptr;
 	FViewTarget ViewTarget;
 	FViewTarget PendingViewTarget;
@@ -97,4 +120,9 @@ protected:
 	FViewTargetTransitionParams BlendParams;
 	FMinimalViewInfo CameraCachePOV;
 	bool bCameraCacheValid = false;
+
+	TArray<UCameraModifier*> ModifierList;
+	// 모디파이어 적용 전 POV
+	// 블렌드 스냅샷은 이것을 써야 효과가 두 번 들어가지 않는다
+	FMinimalViewInfo BaseCachePOV;
 };

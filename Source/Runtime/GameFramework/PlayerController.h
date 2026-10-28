@@ -42,6 +42,7 @@ public:
     virtual void UpdateCameraManager(float DeltaTime);
 
     const APlayerCameraManager* GetCameraManager() const { return PlayerCameraManager; }
+    APlayerCameraManager* GetCameraManager() { return PlayerCameraManager; }
 
     void InputKey(int32 Key, bool bDown);
     void InputAxis(EGameInputAxis AxisKey, float Delta);
