@@ -5,6 +5,7 @@
 #include "Camera/ViewportCameraMovement.h"
 #include "Math/EngineMath.h"
 #include "Camera/CameraTypes.h"
+#include "Camera/PlayerCameraManager.h"
 
 namespace
 {
@@ -128,10 +129,8 @@ FSceneView FGameViewportClient::CalcSceneView(const FRect& InViewRect)
 
 	const float Aspect = static_cast<float>(Width) / static_cast<float>(Height);
 
-	AActor* TargetActor = SelectActor();
 	FMinimalViewInfo DesiredView;
-	if (TargetActor)
-		TargetActor->CalcCamera(DesiredView);
+	GetCurrentView(DesiredView);
 
 	DesiredView.AspectRatio = Aspect;
 	OutView.ViewLocation = DesiredView.Location;
@@ -192,8 +191,7 @@ bool FGameViewportClient::BeginSIEMode()
 		return false;
 
 	FMinimalViewInfo CurrentView;
-	if (AActor* ViewActor = SelectActor())
-		ViewActor->CalcCamera(CurrentView);
+	GetCurrentView(CurrentView);
 
 	if (!SetCameraWorldPose(*MainCamera, CurrentView.Location, CurrentView.Rotation))
 		return false;
@@ -318,17 +316,35 @@ FRect FGameViewportClient::GetSplitRect(const FRect& FullRect, int32 Index, int3
 	return FRect{ FullRect.X + Left, FullRect.Y, Right - Left, FullRect.Height };
 }
 
-AActor* FGameViewportClient::SelectActor() const
+void FGameViewportClient::GetCurrentView(FMinimalViewInfo& View) const
 {
 	if (!World)
-		return nullptr;
+		return;
 
-	if (bSIEMode)
-		return World->GetMainCamera();
-	else if (UCameraComponent* OverridedCamera = World->GetViewCameraOverride(PlayerIndex))
-		return OverridedCamera->GetOwner();
-	else if (AActor* Pawn = World->GetPlayerPawn(static_cast<uint32>(PlayerIndex)))
-		return Pawn;
-	else
-		return World->GetMainCamera();
+	if (!bSIEMode)
+	{
+		if (UCameraComponent* OverrideCamera = World->GetViewCameraOverride(PlayerIndex))
+		{
+			OverrideCamera->GetCameraView(View);
+			return;
+		}
+		else if (APlayerController* PC = World->GetPlayerController(static_cast<uint32>(PlayerIndex)))
+		{
+			const APlayerCameraManager* CameraManager = PC->GetCameraManager();
+
+			if (CameraManager && CameraManager->IsCameraCacheValid())
+			{
+				View = CameraManager->GetCameraCacheView();
+				return;
+			}
+		}
+	}
+	else 
+	{
+		if (World->GetMainCamera())
+		{
+			World->GetMainCamera()->CalcCamera(View);
+			return;
+		}
+	}
 }
