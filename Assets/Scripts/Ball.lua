@@ -1,3 +1,6 @@
+SetSoundVolume("wall", 0.4)
+SetSoundPitch("wall", 1.0)
+
 local ContactGap = 0.15
 local MaxWallNormalZ = 0.5
 local MaxTrackedSpeed = 200
