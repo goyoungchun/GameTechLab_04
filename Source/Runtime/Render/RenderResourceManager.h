@@ -26,6 +26,7 @@ enum class EPSOType : uint8
 	StaticMesh_Shadow,
 	ShadowTileClear,
 	ScreenOverlay,
+	GammaCorrection,
 	Count
 };
 

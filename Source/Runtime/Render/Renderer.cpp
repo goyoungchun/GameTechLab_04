@@ -525,6 +525,65 @@ void FRenderer::DrawScreenOverlay(const FSceneView& View)
 
 }
 
+TUniquePtr<FTexture2D>* FRenderer::DrawGammaCorrection(FTexture2D* Source)
+{
+	FPipelineState* PSO = FRenderResourceManager::GetPSO(EPSOType::GammaCorrection);
+	if (!Source || !PSO || !PSO->Shader || !PSO->Shader->VertexShader || !PSO->Shader->PixelShader)
+		return nullptr;
+
+	const uint32 Width = Source->GetWidth();
+	const uint32 Height = Source->GetHeight();
+	if (!Width || !Height)
+		return nullptr;
+
+	// 같은 텍스처를 읽으면서 쓸 수 없으므로 크기/포맷이 같은 출력 버퍼를 찾거나 만든다.
+	TUniquePtr<FTexture2D>* Output = nullptr;
+	for (TUniquePtr<FTexture2D>& Candidate : GammaOutputs)
+	{
+		if (Candidate && Candidate.get() != Source && Candidate->GetWidth() == Width &&
+			Candidate->GetHeight() == Height && Candidate->GetFormat() == Source->GetFormat())
+		{
+			Output = &Candidate;
+			break;
+		}
+	}
+
+	if (!Output)
+	{
+		D3D11_TEXTURE2D_DESC Desc{};
+		Desc.Width = Width;
+		Desc.Height = Height;
+		Desc.Format = Source->GetFormat();
+		Desc.MipLevels = 1;
+		Desc.ArraySize = 1;
+		Desc.SampleDesc.Count = 1;
+		Desc.Usage = D3D11_USAGE_DEFAULT;
+		Desc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+		TUniquePtr<FTexture2D> NewTarget = RenderCommand::CreateTexture2D(Desc);
+		if (!NewTarget || !NewTarget->GetRTV() || !NewTarget->GetSRV())
+			return nullptr;
+
+		// 뷰포트 크기를 자주 바꿔도 무한히 쌓이지 않게 상한을 둔다.
+		constexpr int32 MaxGammaOutputs = 8;
+		if (GammaOutputs.Num() >= MaxGammaOutputs)
+			GammaOutputs.RemoveAt(0, 1);
+		GammaOutputs.Add(std::move(NewTarget));
+		Output = &GammaOutputs[GammaOutputs.Num() - 1];
+	}
+
+	// Source가 렌더 타깃으로 묶여 있으면 SRV로 읽을 수 없어서 먼저 해제한다.
+	RenderCommand::EndRenderPass();
+	RenderCommand::BindShaderResource(0, static_cast<FTexture2D*>(nullptr), EShaderBindFlagBits::Pixel);
+	RenderCommand::BindRenderPassNoClear(Output->get(), nullptr, Width, Height);
+	RenderCommand::BindPipelineState(*PSO);
+	RenderCommand::BindVertexBuffer(nullptr);
+	RenderCommand::BindShaderResource(0, Source, EShaderBindFlagBits::Pixel);
+	RenderCommand::Draw(3);
+	RenderCommand::BindShaderResource(0, static_cast<FTexture2D*>(nullptr), EShaderBindFlagBits::Pixel);
+	RenderCommand::EndRenderPass();
+	return Output;
+}
+
 // 정렬된 패킷 중 [Begin, End) 범위를 그린다
 void FRenderer::DrawPackets(const FRenderQueue& InQueue, uint32 Begin, uint32 End, const FMatrix& ViewProjection, EMeshPass Pass)
 {

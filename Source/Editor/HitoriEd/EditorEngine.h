@@ -92,6 +92,7 @@ private:
 		bool bDrawPrimitives = true;
 		bool bEnableFog = true;
 		bool bEnableFXAA = false;
+		bool bGammaCorrection = true;
 		bool bShowSceneDepth = false;
 		bool bShowWorldNormal = false;
 		bool bLightGridDebug = false;

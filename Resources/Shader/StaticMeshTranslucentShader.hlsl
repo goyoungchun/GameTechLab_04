@@ -94,9 +94,19 @@ PS_INPUT mainVS(VS_INPUT input)
     return output;
 }
 
+// sRGB로 저장된 색 텍스처를 선형으로 바꾼다. (GammaCorrectionShader의 역함수)
+float3 SRGBToLinear(float3 Color)
+{
+    Color = saturate(Color);
+    float3 Low = Color / 12.92f;
+    float3 High = pow((Color + 0.055f) / 1.055f, 2.4f);
+    return lerp(High, Low, step(Color, 0.04045f));
+}
+
 float4 mainPS(PS_INPUT input) : SV_TARGET
 {
     float4 texColor = g_txColor.Sample(g_Sample, input.uv + UVOffset);
+    texColor.rgb = SRGBToLinear(texColor.rgb);
     texColor.a *= FogTransmittance(input.worldPosition);
     return texColor;
 }

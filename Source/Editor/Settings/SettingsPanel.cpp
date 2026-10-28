@@ -75,6 +75,11 @@ void FSettingsPanel::OnRender()
 
 	ImGui::Checkbox("Enable FXAA", &Settings.bEnableFXAA);
 
+	ImGui::Dummy(ImVec2(0.0f, SectionGap * Scale));
+	ImGui::SeparatorText("Color");
+
+	ImGui::Checkbox("Gamma Correction", &Settings.bGammaCorrection);
+
 	//////////////////////////////////////////////////////////
 
 	ImGui::Dummy(ImVec2(0.0f, SectionGap * Scale));
@@ -152,6 +157,7 @@ bool FSettingsPanel::SaveSettings() const
 	File << "DrawPSGrid=" << Settings.bDrawPSGrid << "\n";
 	File << "SceneDepthMaxRange=" << Settings.SceneDepthMaxRange << "\n";
 	File << "EnableFXAA=" << Settings.bEnableFXAA << "\n";
+	File << "GammaCorrection=" << Settings.bGammaCorrection << "\n";
 	File << "ShadowEnabled=" << Settings.bShadowEnabled << "\n";
 	File << "CSMEnabled=" << Settings.bCSMEnabled << "\n";
 	File << "ShadowFilterMode=" << static_cast<uint32>(Settings.ShadowFilterMode) << "\n";
@@ -277,6 +283,7 @@ bool FSettingsPanel::LoadSettings()
 				else if (Key == "DrawPSGrid") Settings.bDrawPSGrid = std::stoi(ValueStr);
 				else if (Key == "SceneDepthMaxRange") Settings.SceneDepthMaxRange = std::stof(ValueStr);
 				else if (Key == "EnableFXAA") Settings.bEnableFXAA = std::stoi(ValueStr);
+				else if (Key == "GammaCorrection") Settings.bGammaCorrection = std::stoi(ValueStr);
 				else if (Key == "ShadowEnabled") Settings.bShadowEnabled = std::stoi(ValueStr);
 				else if (Key == "CSMEnabled") Settings.bCSMEnabled = std::stoi(ValueStr);
 
