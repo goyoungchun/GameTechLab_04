@@ -10,8 +10,8 @@ enum class ECameraProjectionMode : uint8
 
 struct FMinimalViewInfo
 {
-	FVector Location = FVector::ZeroVector;
-	FRotator Rotation = FRotator::Identitiy;
+	FVector Location = FVector(-5.0f, -10.0f, 10.0f);;
+	FRotator Rotation = FRotator(30.0f, 45.0f, 0.0f);
 	ECameraProjectionMode ProjectionMode = ECameraProjectionMode::Perspective;
 	float AspectRatio = 16.0f / 9.0f;
 	float FOV = 60.0f; // vertical field of view (unreal is horizontal)

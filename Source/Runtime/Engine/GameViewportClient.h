@@ -57,8 +57,6 @@ public:
 	void SetGameInstance(UGameInstance* InGameInstance) { GameInstance = InGameInstance; }
 	UGameInstance* GetGameInstance() const { return GameInstance; }
 
-	void SetCameraComponent(UCameraComponent* InCameraComponent) { CameraComponent = InCameraComponent; }
-
 	void Reset();
 
 	bool BeginSIEMode();
@@ -96,12 +94,11 @@ protected:
 	uint32 Height = 0;
 
 private:
-	UCameraComponent* FindPlayerCamera() const;
+	AActor* SelectActor() const;
 
 	UWorld* World = nullptr;
 	UGameInstance* GameInstance = nullptr;
 	UEngine* Engine = nullptr;
-	UCameraComponent* CameraComponent = nullptr;
 	bool bSIEMode = false;
 	bool bPreviousMainCameraExternalInputManaged = false;
 	bool bSIEKeyDown[256]{};
