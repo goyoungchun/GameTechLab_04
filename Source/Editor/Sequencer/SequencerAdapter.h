@@ -37,6 +37,7 @@ public:
 	static const char* GetTrackName(const FSequenceTrack& Track);
 	static int GetKeyCount(const FSequenceTrack& Track);
 	static double GetKeyTime(const FSequenceTrack& Track, int KeyIndex);
+	static ESequenceInterpolation GetKeyInterpolation(const FSequenceTrack& Track, int KeyIndex);
 
 private:
 	static unsigned int GetTrackColor(const FSequenceTrack& Track);

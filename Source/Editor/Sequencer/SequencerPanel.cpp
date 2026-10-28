@@ -65,6 +65,17 @@ namespace
 		ImGui::SetNextItemWidth(-FLT_MIN);
 	}
 
+	void DrawInterpolationRow(ESequenceInterpolation& Interpolation)
+	{
+		static const char* InterpolationNames[] = { "Constant", "Linear" };
+		BeginPropertyRow("Interpolation");
+		int Selected = static_cast<int>(Interpolation);
+		if (ImGui::Combo("##Interpolation", &Selected, InterpolationNames, IM_ARRAYSIZE(InterpolationNames)))
+		{
+			Interpolation = static_cast<ESequenceInterpolation>(Selected);
+		}
+	}
+
 	const char* GetValueTypeLabel(ESequenceValueType ValueType)
 	{
 		switch (ValueType)
@@ -442,11 +453,15 @@ void FSequencerPanel::DrawKeyProperties(FSequenceTrack& Track)
 			Value.Rotation.Yaw = Rotation[2];
 		}
 		ImGui::PopID();
+
+		DrawInterpolationRow(TransformTrack->KeyFrames[SelectedKeyIndex].Interpolation);
 	}
 	else if (FFloatTrack* FloatTrack = std::get_if<FFloatTrack>(&Track))
 	{
 		BeginPropertyRow(GetValueTypeLabel(FloatTrack->ValueType));
 		ImGui::DragFloat("##FloatValue", &FloatTrack->KeyFrames[SelectedKeyIndex].Value, 0.1f, 0.0f, 0.0f, "%.2f");
+
+		DrawInterpolationRow(FloatTrack->KeyFrames[SelectedKeyIndex].Interpolation);
 	}
 	else if (FEventTrack* EventTrack = std::get_if<FEventTrack>(&Track))
 	{
@@ -486,7 +501,14 @@ void FSequencerPanel::DrawEaseCurve(FSequenceTrack& Track)
 	}
 
 	float Points[5] = { Ease->X1, Ease->Y1, Ease->X2, Ease->Y2, EasePresetIndex };
+	const bool bConstant = FSequencerAdapter::GetKeyInterpolation(Track, SelectedKeyIndex) == ESequenceInterpolation::Constant;
+	if (bConstant)
+	{
+		ImGui::TextDisabled("Constant 보간에서는 이징이 적용되지 않습니다");
+	}
+	ImGui::BeginDisabled(bConstant);
 	ImGui::Bezier("##Ease", Points);
+	ImGui::EndDisabled();
 
 	Ease->X1 = Points[0];
 	Ease->Y1 = Points[1];

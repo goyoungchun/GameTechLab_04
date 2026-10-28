@@ -1,7 +1,54 @@
 #include "EnginePCH.h"
 #include "Editor/Sequencer/SequencerAdapter.h"
 #include "imgui_internal.h"
+#include <algorithm>
 #include <cfloat>
+
+namespace
+{
+	enum class EKeyShape : uint8
+	{
+		Diamond,
+		Triangle,
+		Square
+	};
+
+	EKeyShape GetKeyShape(const FSequenceTrack& Track, int KeyIndex)
+	{
+		if (std::holds_alternative<FEventTrack>(Track))
+		{
+			return EKeyShape::Diamond;
+		}
+		return FSequencerAdapter::GetKeyInterpolation(Track, KeyIndex) == ESequenceInterpolation::Constant
+			? EKeyShape::Square
+			: EKeyShape::Triangle;
+	}
+
+	float GetKeyHitDistance(EKeyShape Shape, float DeltaX, float DeltaY)
+	{
+		if (Shape == EKeyShape::Diamond)
+		{
+			return fabsf(DeltaX) + fabsf(DeltaY);
+		}
+		return std::max(fabsf(DeltaX), fabsf(DeltaY));
+	}
+
+	void DrawKeyShape(ImDrawList* DrawList, EKeyShape Shape, const ImVec2& Center, float Radius, ImU32 Color)
+	{
+		switch (Shape)
+		{
+		case EKeyShape::Square:
+			DrawList->AddRectFilled(ImVec2(Center.x - Radius, Center.y - Radius), ImVec2(Center.x + Radius, Center.y + Radius), Color);
+			break;
+		case EKeyShape::Triangle:
+			DrawList->AddTriangleFilled(ImVec2(Center.x, Center.y - Radius), ImVec2(Center.x + Radius, Center.y + Radius), ImVec2(Center.x - Radius, Center.y + Radius), Color);
+			break;
+		default:
+			DrawList->AddQuadFilled(ImVec2(Center.x, Center.y - Radius), ImVec2(Center.x + Radius, Center.y), ImVec2(Center.x, Center.y + Radius), ImVec2(Center.x - Radius, Center.y), Color);
+			break;
+		}
+	}
+}
 
 
 FSequencerAdapter::~FSequencerAdapter()
@@ -103,7 +150,7 @@ void FSequencerAdapter::CustomDrawCompact(int Index, ImDrawList* DrawList, const
 			for (int KeyIndex = 0; KeyIndex < KeyCount; KeyIndex++)
 			{
 				const float KeyX = Rect.Min.x + (TimeToFrame(GetKeyTime(Track, KeyIndex)) - GetFrameMin()) * FramePixelWidth;
-				const float Distance = fabsf(MousePos.x - KeyX) + fabsf(MousePos.y - CenterY);
+				const float Distance = GetKeyHitDistance(GetKeyShape(Track, KeyIndex), MousePos.x - KeyX, MousePos.y - CenterY);
 				if (Distance <= HitRadius && Distance < ClosestDistance)
 				{
 					ClosestDistance = Distance;
@@ -122,11 +169,7 @@ void FSequencerAdapter::CustomDrawCompact(int Index, ImDrawList* DrawList, const
 		const float DrawRadius = bSelected ? KeyRadius * SelectedKeyScale : KeyRadius;
 		const ImU32 Color = bSelected ? SelectedKeyColor : KeyColor;
 
-		const ImVec2 Up(KeyX, CenterY - DrawRadius);
-		const ImVec2 Right(KeyX + DrawRadius, CenterY);
-		const ImVec2 Down(KeyX, CenterY + DrawRadius);
-		const ImVec2 Left(KeyX - DrawRadius, CenterY);
-		DrawList->AddQuadFilled(Up, Right, Down, Left, Color);
+		DrawKeyShape(DrawList, GetKeyShape(Track, KeyIndex), ImVec2(KeyX, CenterY), DrawRadius, Color);
 	}
 
 	DrawList->PopClipRect();
@@ -240,6 +283,22 @@ double FSequencerAdapter::GetKeyTime(const FSequenceTrack& Track, int KeyIndex)
 			}
 			return Typed.KeyFrames[KeyIndex].Time;
 		}
+	}, Track);
+}
+
+ESequenceInterpolation FSequencerAdapter::GetKeyInterpolation(const FSequenceTrack& Track, int KeyIndex)
+{
+	return std::visit([KeyIndex](const auto& Typed) -> ESequenceInterpolation
+	{
+		using TTrack = std::decay_t<decltype(Typed)>;
+		if constexpr (std::is_same_v<TTrack, FFloatTrack> || std::is_same_v<TTrack, FTransformTrack>)
+		{
+			if (Typed.KeyFrames.IsValidIndex(KeyIndex))
+			{
+				return Typed.KeyFrames[KeyIndex].Interpolation;
+			}
+		}
+		return ESequenceInterpolation::Linear;
 	}, Track);
 }
 
