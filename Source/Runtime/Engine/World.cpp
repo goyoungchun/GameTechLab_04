@@ -29,7 +29,7 @@
 #include "Core/Stats/EditorStats.h"
 
 #include "Script/ScriptSystem.h"
-
+#include "GameFramework/PlayerController.h"
 
 DECLARE_CYCLE_STAT("Actor Tick", STAT_ActorTick); // Actor 틱 측정
 DECLARE_CYCLE_STAT("Update All Transforms", STAT_UpdateAllTransforms); // 각 Transform의 Update 시간 측정
@@ -153,6 +153,10 @@ void UWorld::Tick(EWorldTick TickType, float DeltaTime)
 				TickTaskManager.RunTickGroup(ETickingGroup::DuringPhysics, DeltaTime);
 				PhysicsScene->EndFrame();
 				TickTaskManager.RunTickGroup(ETickingGroup::PostPhysics, DeltaTime);
+
+				for (APlayerController* PC : PlayerControllers)
+					PC->UpdateCameraManager(DeltaTime);
+
 				TickTaskManager.RunTickGroup(ETickingGroup::PostUpdateWork, DeltaTime);
 
 				for (ULevel* Level : Levels)
@@ -342,6 +346,13 @@ bool UWorld::DestroyActor(AActor* Actor)
 
 	// 2. PathTracker에서 제거
 	PathTracker.OnObjectDestroyed(Actor);
+
+	// 3. PlayerController / CameraManager
+	for (APlayerController* PC : PlayerControllers)
+	{
+		if (PC && PC != Actor)
+			PC->OnActorDestroyed(Actor);
+	}
 
 	// 4. Level의 Actors에서 제거
 	for (int32 i = Level->Actors.Num() - 1; i >= 0; --i)
@@ -795,6 +806,7 @@ int32 UWorld::RegisterPlayer(APawn* InPawnPtr)
 	}
 
 	APlayerController* PC = SpawnActor<APlayerController>();
+	PC->SpawnPlayerCameraManager();
 	PC->Possess(InPawnPtr);
 	PlayerControllers.Add(PC);
 	return PlayerControllers.Num() - 1;

@@ -11,6 +11,7 @@ class UCameraComponent;
 class APawn;
 
 struct FWorldContext;
+struct FMinimalViewInfo;
 
 // 게임 뷰포트 클라이언트 클래스
 class FGameViewportClient : public FViewportClient
@@ -94,7 +95,7 @@ protected:
 	uint32 Height = 0;
 
 private:
-	AActor* SelectActor() const;
+	void GetCurrentView(FMinimalViewInfo& View) const;
 
 	UWorld* World = nullptr;
 	UGameInstance* GameInstance = nullptr;

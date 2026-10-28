@@ -5,6 +5,7 @@
 #include "Input/InputSystem.h"
 
 class APawn;
+class APlayerCameraManager;
 
 class APlayerController : public AActor
 {
@@ -37,10 +38,21 @@ public:
 
     FRotator GetCameraRotation() const { return CameraRotation; }
 
+    virtual void SpawnPlayerCameraManager();
+    virtual void UpdateCameraManager(float DeltaTime);
+
+    const APlayerCameraManager* GetCameraManager() const { return PlayerCameraManager; }
+    APlayerCameraManager* GetCameraManager() { return PlayerCameraManager; }
+
     void InputKey(int32 Key, bool bDown);
     void InputAxis(EGameInputAxis AxisKey, float Delta);
     void ClearInputState();
+
+    void OnActorDestroyed(AActor* Actor);
+
 protected:
+    APlayerCameraManager* PlayerCameraManager = nullptr;
+
     // 카메라 시점 데이터
     FVector CameraLocation = FVector::ZeroVector;
 	FRotator CameraRotation = FRotator(0.0f, 0.0f, 0.0f);
