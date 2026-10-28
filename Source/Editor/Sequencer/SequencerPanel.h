@@ -35,6 +35,8 @@ private:
 	void DrawToolBar();
 	void DrawTimeline();
 	void DrawTrackBinding();
+	void DrawKeyDetails();
+	int32 MoveKeyToFrame(FSequenceTrack& Track, int32 KeyIndex, int32 NewFrame);
 	void BuildSampleSequence();
 	bool GetCurrentViewPOV(FSequencerViewInfo& OutView) const;
 	int32 AddTransformKey(FTransformTrack& InTrack, double InTime, const FTransform& InValue);
@@ -57,4 +59,9 @@ private:
 	int SelectedTrackIndex = -1;
 	int SelectedKeyIndex = -1;
 	int FirstVisibleFrame = 0;
+	float DetailPanelWidth = 500.0f;
+
+	static constexpr float SplitterWidth = 6.0f;
+	static constexpr float MinDetailPanelWidth = 220.0f;
+	static constexpr float MinTimelineWidth = 300.0f;
 };
