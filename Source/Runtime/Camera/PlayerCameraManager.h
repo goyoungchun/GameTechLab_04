@@ -26,7 +26,6 @@ public:
 	void InitializeFor(APlayerController* PC);
 	void SetViewTarget(AActor* NewTarget);
 	void UpdateCamera(float DeltaTime);
-	void SetCameraCachePOV(const FMinimalViewInfo& InPOV) { CameraCachePOV = InPOV; }
 
 	AActor* GetViewTarget() const { return ViewTarget.Target; }
 	bool IsCameraCacheValid() const { return bCameraCacheValid; }
@@ -42,8 +41,4 @@ protected:
 	FViewTarget ViewTarget;
 	FMinimalViewInfo CameraCachePOV;
 	bool bCameraCacheValid = false;
-
-	float DefaultFOV = 60.0f;
-	float DefaultOrthoWidth = 16.0f;
-	float DefaultAspectRatio = 16.0f / 9.0f;
 };

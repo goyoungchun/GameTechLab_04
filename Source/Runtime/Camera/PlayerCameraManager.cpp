@@ -55,14 +55,8 @@ void APlayerCameraManager::UpdateCamera(float DeltaTime)
 
 void APlayerCameraManager::UpdateViewTarget(FViewTarget& OutVT, float DeltaTime)
 {
-	FMinimalViewInfo POV = {};
-	POV.FOV = DefaultFOV;
-	POV.OrthoWidth = DefaultOrthoWidth;
-	POV.AspectRatio = DefaultAspectRatio;
-	
-	if (OutVT.Target)
-		OutVT.Target->CalcCamera(POV);
-
+	FMinimalViewInfo POV;
+	OutVT.Target->CalcCamera(POV);
 	OutVT.POV = POV;
 }
 
