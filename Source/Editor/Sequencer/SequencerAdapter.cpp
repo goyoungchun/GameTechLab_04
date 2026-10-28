@@ -80,6 +80,14 @@ void FSequencerAdapter::CustomDrawCompact(int Index, ImDrawList* DrawList, const
 		return;
 	}
 
+	const ImRect RowRect(ImVec2(ClipRect.Min.x - LegendWidth, ClipRect.Min.y), ClipRect.Max);
+	if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem)
+		&& ImGui::IsMouseClicked(ImGuiMouseButton_Left)
+		&& RowRect.Contains(ImGui::GetIO().MousePos))
+	{
+		ClickedTrackIndex = Index;
+	}
+
 	float FramePixelWidth = Rect.GetWidth() / (GetFrameMax() - GetFrameMin() + 1);
 	float CenterY = (Rect.Max.y + Rect.Min.y) / 2;
 	float KeyRadius = (Rect.Max.y - Rect.Min.y) / 2 * 0.48f;
@@ -107,6 +115,13 @@ void FSequencerAdapter::CustomDrawCompact(int Index, ImDrawList* DrawList, const
 }
 
 
+
+int FSequencerAdapter::ConsumeClickedTrackIndex()
+{
+	const int Result = ClickedTrackIndex;
+	ClickedTrackIndex = -1;
+	return Result;
+}
 
 FDummySequence* FSequencerAdapter::GetSequence() const
 {

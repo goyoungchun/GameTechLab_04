@@ -31,11 +31,15 @@ public:
 	void SyncCache();
 	int TimeToFrame(float Time) const;
 	float FrameToTime(int Frame) const;
+	int ConsumeClickedTrackIndex();
 
 private:
 	static unsigned int GetTrackColor(EDummyTrackType Type);
 
+	static constexpr float LegendWidth = 200.0f;
+
 	FDummySequence* Sequence = nullptr;
 	TArray<FTrackFrameRange> FrameRangeCache;
+	int ClickedTrackIndex = -1;
 
 };

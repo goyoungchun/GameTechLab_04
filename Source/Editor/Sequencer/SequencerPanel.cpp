@@ -1,5 +1,8 @@
 #include "EnginePCH.h"
 #include "Editor/Sequencer/SequencerPanel.h"
+#include "Engine/World.h"
+#include "Camera/CameraActor.h"
+#include "UObject/UObjectIterator.h"
 
 
 FSequencerPanel::~FSequencerPanel()
@@ -29,6 +32,8 @@ void FSequencerPanel::OnRender()
 	//const float Scale = Style.FontScaleDpi * Style.FontScaleMain;
 
 	DrawToolBar();
+	ImGui::Separator();
+	DrawTrackBinding();
 	ImGui::Separator();
 	DrawTimeline();
 
@@ -81,9 +86,94 @@ void FSequencerPanel::DrawTimeline()
 		&bExpanded, &SelectedTrackIndex, &FirstVisibleFrame,
 		ImSequencer::SEQUENCER_CHANGE_FRAME);
 
+	const int ClickedTrackIndex = Adapter.ConsumeClickedTrackIndex();
+	if (ClickedTrackIndex != -1)
+	{
+		SelectedTrackIndex = ClickedTrackIndex;
+	}
+
 	if (CurrentFrame != PreviousFrame)
 	{
 		CurrentTime = Adapter.FrameToTime(CurrentFrame);
+	}
+}
+
+void FSequencerPanel::DrawTrackBinding()
+{
+	if (SelectedTrackIndex == -1 || !DummySequence.Tracks.IsValidIndex(SelectedTrackIndex))
+	{
+		ImGui::TextDisabled("트랙을 선택해주세요");
+		return;
+	}
+
+	FDummyTrack& Track = DummySequence.Tracks[SelectedTrackIndex];
+	if (Track.Type != EDummyTrackType::Transform)
+	{
+		ImGui::TextDisabled("바인딩은 Transform만 가능합니다");
+		return;
+	}
+
+	if (!World)
+	{
+		ImGui::TextDisabled("월드가 없습니다");
+		return;
+	}
+
+	TArray<ACameraActor*> Cameras;
+	for (TObjectIterator<ACameraActor> It; It; ++It)
+	{
+		ACameraActor* Camera = *It;
+		if (Camera->GetWorld() == World)
+		{
+			Cameras.Add(Camera);
+		}
+	}
+
+	if (Track.BoundActor)
+	{
+		bool bBoundActorAlive = false;
+		for (ACameraActor* Camera : Cameras)
+		{
+			if (Camera == Track.BoundActor)
+			{
+				bBoundActorAlive = true;
+				break;
+			}
+		}
+		if (!bBoundActorAlive)
+		{
+			Track.BoundActor = nullptr;
+		}
+	}
+
+	const FString PreviewName = Track.BoundActor ? Track.BoundActor->GetName() : FString("None");
+
+	ImGui::TextUnformatted(Track.Name.c_str());
+	ImGui::SameLine();
+	ImGui::SetNextItemWidth(200.0f);
+	if (ImGui::BeginCombo("##Binding", PreviewName.c_str()))
+	{
+		if (ImGui::Selectable("None", Track.BoundActor == nullptr))
+		{
+			Track.BoundActor = nullptr;
+		}
+
+		for (ACameraActor* Camera : Cameras)
+		{
+			const bool bSelected = Track.BoundActor == Camera;
+			ImGui::PushID(Camera);
+			if (ImGui::Selectable(Camera->GetName().c_str(), bSelected))
+			{
+				Track.BoundActor = Camera;
+			}
+			if (bSelected)
+			{
+				ImGui::SetItemDefaultFocus();
+			}
+			ImGui::PopID();
+		}
+
+		ImGui::EndCombo();
 	}
 }
 
@@ -119,7 +209,7 @@ void FSequencerPanel::BuildDummySequence()
 
 	FDummyTrack FadeTrack;
 	FadeTrack.Name = "Fade";
-	FadeTrack.Type = EDummyTrackType::CameraCut;
+	FadeTrack.Type = EDummyTrackType::Float;
 	for (float Time : { 4.0f, 5.0f })
 	{
 		FDummyKey Key;

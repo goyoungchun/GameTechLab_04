@@ -25,6 +25,7 @@ private:
 
 	void DrawToolBar();
 	void DrawTimeline();
+	void DrawTrackBinding();
 	void BuildDummySequence();
 
 	UWorld* World = nullptr;
