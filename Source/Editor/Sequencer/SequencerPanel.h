@@ -82,5 +82,5 @@ private:
 	static constexpr float MaxSequenceLength = 600.0f;
 	static constexpr float MinFrameRate = 1.0f;
 	static constexpr float MaxFrameRate = 120.0f;
-	static constexpr const char* CameraIconPath = "Editor/Icon/Pawn.png";
+	static constexpr const char* CameraIconPath = "Editor/Icon/CineCameraActor_64x.png";
 };
