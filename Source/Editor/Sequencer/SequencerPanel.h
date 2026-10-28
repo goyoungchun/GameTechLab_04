@@ -36,6 +36,8 @@ private:
 	void DrawTimeline();
 	void DrawTrackBinding();
 	void DrawKeyDetails();
+	void DrawKeyProperties(FSequenceTrack& Track);
+	void DrawEaseCurve(FSequenceTrack& Track);
 	int32 MoveKeyToFrame(FSequenceTrack& Track, int32 KeyIndex, int32 NewFrame);
 	void BuildSampleSequence();
 	bool GetCurrentViewPOV(FSequencerViewInfo& OutView) const;
@@ -60,6 +62,9 @@ private:
 	int SelectedKeyIndex = -1;
 	int FirstVisibleFrame = 0;
 	float DetailPanelWidth = 500.0f;
+	int EaseTrackIndex = -1;
+	int EaseKeyIndex = -1;
+	float EasePresetIndex = 0.0f;
 
 	static constexpr float SplitterWidth = 6.0f;
 	static constexpr float MinDetailPanelWidth = 220.0f;

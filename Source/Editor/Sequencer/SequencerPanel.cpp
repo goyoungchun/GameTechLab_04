@@ -4,6 +4,7 @@
 #include "Camera/CameraActor.h"
 #include "UObject/UObjectIterator.h"
 #include "Editor/Viewports/ViewportsPanel.h"
+#include "imgui_bezier.h"
 #include <algorithm>
 #include <cfloat>
 
@@ -393,15 +394,18 @@ void FSequencerPanel::DrawKeyDetails()
 	FSequenceTrack& Track = EditingSequence.Tracks[SelectedTrackIndex];
 	ImGui::Text("%s / Key %d", FSequencerAdapter::GetTrackName(Track), SelectedKeyIndex);
 
-	if (!ImGui::CollapsingHeader("Key", ImGuiTreeNodeFlags_DefaultOpen))
+	if (ImGui::CollapsingHeader("Key", ImGuiTreeNodeFlags_DefaultOpen)
+		&& ImGui::BeginTable("##KeyProperties", 2, ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_Resizable))
 	{
-		return;
+		DrawKeyProperties(Track);
+		ImGui::EndTable();
 	}
 
-	if (!ImGui::BeginTable("##KeyProperties", 2, ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_Resizable))
-	{
-		return;
-	}
+	DrawEaseCurve(EditingSequence.Tracks[SelectedTrackIndex]);
+}
+
+void FSequencerPanel::DrawKeyProperties(FSequenceTrack& Track)
+{
 	ImGui::TableSetupColumn("Label", ImGuiTableColumnFlags_WidthFixed, GetLabelColumnWidth());
 	ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
 
@@ -449,8 +453,46 @@ void FSequencerPanel::DrawKeyDetails()
 		BeginPropertyRow("Event");
 		ImGui::TextUnformatted(GetEventTypeLabel(EventTrack->KeyFrames[SelectedKeyIndex].EventType));
 	}
+}
 
-	ImGui::EndTable();
+void FSequencerPanel::DrawEaseCurve(FSequenceTrack& Track)
+{
+	Bezier* Ease = nullptr;
+	if (FTransformTrack* TransformTrack = std::get_if<FTransformTrack>(&Track))
+	{
+		Ease = &TransformTrack->KeyFrames[SelectedKeyIndex].Ease;
+	}
+	else if (FFloatTrack* FloatTrack = std::get_if<FFloatTrack>(&Track))
+	{
+		Ease = &FloatTrack->KeyFrames[SelectedKeyIndex].Ease;
+	}
+
+	if (!Ease || !ImGui::CollapsingHeader("Ease Curve", ImGuiTreeNodeFlags_DefaultOpen))
+	{
+		return;
+	}
+
+	if (SelectedKeyIndex == FSequencerAdapter::GetKeyCount(Track) - 1)
+	{
+		ImGui::TextDisabled("마지막 키는 이징이 적용되지 않습니다");
+		return;
+	}
+
+	if (EaseTrackIndex != SelectedTrackIndex || EaseKeyIndex != SelectedKeyIndex)
+	{
+		EaseTrackIndex = SelectedTrackIndex;
+		EaseKeyIndex = SelectedKeyIndex;
+		EasePresetIndex = 0.0f;
+	}
+
+	float Points[5] = { Ease->X1, Ease->Y1, Ease->X2, Ease->Y2, EasePresetIndex };
+	ImGui::Bezier("##Ease", Points);
+
+	Ease->X1 = Points[0];
+	Ease->Y1 = Points[1];
+	Ease->X2 = Points[2];
+	Ease->Y2 = Points[3];
+	EasePresetIndex = Points[4];
 }
 
 int32 FSequencerPanel::MoveKeyToFrame(FSequenceTrack& Track, int32 KeyIndex, int32 NewFrame)
