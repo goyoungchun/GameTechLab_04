@@ -8,6 +8,7 @@
 
 #include "Camera/CameraActor.h"
 #include "Camera/CameraComponent.h"
+#include "Camera/PlayerCameraManager.h"
 #include "Camera/CameraTypes.h"
 #include "Input/InputSystem.h"
 
@@ -30,7 +31,7 @@
 #include "Core/Stats/EditorStats.h"
 
 #include "Script/ScriptSystem.h"
-
+#include "GameFramework/PlayerController.h"
 
 DECLARE_CYCLE_STAT("Actor Tick", STAT_ActorTick); // Actor 틱 측정
 DECLARE_CYCLE_STAT("Update All Transforms", STAT_UpdateAllTransforms); // 각 Transform의 Update 시간 측정
@@ -48,7 +49,6 @@ UWorld::~UWorld()
 	for (TObjectIterator<UActorComponent> Component; Component; ++Component)
 		if (Component->GetWorld() == this && Component->IsRegistered())
 			Component->UnregisterComponent();
-
 	for (ACameraActor*& Camera : ViewCameraOverrides)
 	{
 		delete Camera;
@@ -162,6 +162,8 @@ void UWorld::Tick(EWorldTick TickType, float DeltaTime)
 				PhysicsScene->EndFrame();
 			TickTaskManager.RunTickGroup(ETickingGroup::PostPhysics, GameDeltaTime, UnscaledDeltaTime);
 			TickTaskManager.RunTickGroup(ETickingGroup::PostUpdateWork, GameDeltaTime, UnscaledDeltaTime);
+			for (APlayerController* PC : PlayerControllers)
+				if (PC) PC->UpdateCameraManager(GameDeltaTime);
 			// 차량/SpringArm 갱신 후의 실제 시점을 목표로 삼아 복귀 완료 시점도 일치시킨다.
 			UpdateViewCameraBlends();
 
@@ -278,6 +280,14 @@ void UWorld::SetMainCamera(ACameraActor* Camera)
 
 bool UWorld::CalcPlayerCameraView(int32 PlayerIndex, FMinimalViewInfo& OutView) const
 {
+	if (APlayerController* PC = GetPlayerController(static_cast<uint32>(PlayerIndex)))
+	{
+		if (const APlayerCameraManager* Manager = PC->GetCameraManager(); Manager && Manager->IsCameraCacheValid())
+		{
+			OutView = Manager->GetCameraCacheView();
+			return true;
+		}
+	}
 	if (APawn* Pawn = GetPlayerPawn(static_cast<uint32>(PlayerIndex)))
 		Pawn->CalcCamera(OutView);
 	else if (MainCamera)
@@ -463,6 +473,13 @@ bool UWorld::DestroyActor(AActor* Actor)
 
 	// 2. PathTracker에서 제거
 	PathTracker.OnObjectDestroyed(Actor);
+
+	// 3. PlayerController / CameraManager
+	for (APlayerController* PC : PlayerControllers)
+	{
+		if (PC && PC != Actor)
+			PC->OnActorDestroyed(Actor);
+	}
 
 	// 4. Level의 Actors에서 제거
 	for (int32 i = Level->Actors.Num() - 1; i >= 0; --i)
@@ -916,6 +933,7 @@ int32 UWorld::RegisterPlayer(APawn* InPawnPtr)
 	}
 
 	APlayerController* PC = SpawnActor<APlayerController>();
+	PC->SpawnPlayerCameraManager();
 	PC->Possess(InPawnPtr);
 	PlayerControllers.Add(PC);
 	return PlayerControllers.Num() - 1;

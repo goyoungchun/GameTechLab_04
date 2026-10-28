@@ -4,6 +4,7 @@
 #include "DefaultPawn.h"
 #include "Engine/World.h"
 #include "Input/InputSystem.h"
+#include "Camera/PlayerCameraManager.h"
 
 APlayerController::APlayerController()
 {
@@ -101,17 +102,23 @@ void APlayerController::Possess(APawn* InPawn)
 		PossessedPawn = InPawn;
 		// 폰의 소유자 설정
 		InPawn->PossessedBy(this);
+
+		if (PlayerCameraManager)
+			PlayerCameraManager->SetViewTarget(InPawn);
 	}
 }
 
 void APlayerController::UnPossess()
 {
-	if (PossessedPawn)
-	{
-		// 폰의 소유자 해제
-		PossessedPawn->UnPossessed();
-		PossessedPawn = nullptr;
-	}
+	if (!PossessedPawn)
+		return;
+
+	APawn* OldPawn = PossessedPawn;
+	OldPawn->UnPossessed();
+	PossessedPawn = nullptr;
+
+	if (PlayerCameraManager && PlayerCameraManager->GetViewTarget() == OldPawn)
+		PlayerCameraManager->SetViewTarget(nullptr);
 }
 
 void APlayerController::DuplicateSubobjects(UObject* SourceObject)
@@ -155,3 +162,41 @@ void APlayerController::ClearInputState()
 	MouseAxisY = 0.0f;
 }
 
+void APlayerController::SpawnPlayerCameraManager()
+{
+	if (PlayerCameraManager)
+		return;
+
+	PlayerCameraManager = World->SpawnActor<APlayerCameraManager>();
+
+	if (PlayerCameraManager)
+		PlayerCameraManager->InitializeFor(this);
+	else
+		HTR_LOG(Warning, "Couldn't Spawn PlayerCameraManager for Player!!");
+}
+
+void APlayerController::UpdateCameraManager(float DeltaTime)
+{
+	if (!PlayerCameraManager)
+		return;
+
+	PlayerCameraManager->UpdateCamera(DeltaTime);
+}
+
+void APlayerController::OnActorDestroyed(AActor* Actor)
+{
+	if (!Actor)
+		return;
+
+	if (Actor == PlayerCameraManager)
+	{
+		PlayerCameraManager = nullptr;
+		return;
+	}
+
+	if (Actor == PossessedPawn)
+		UnPossess();
+
+	if (PlayerCameraManager)
+		PlayerCameraManager->OnActorDestroyed(Actor);
+}

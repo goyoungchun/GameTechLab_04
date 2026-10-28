@@ -3,6 +3,7 @@
 #include "GameFramework/Actor.h"
 #include "Container/Map.h"
 #include "GameFramework/HitSquashAnimation.h"
+#include "Math/Quat.h"
 
 class USphereComponent;
 class UStaticMeshComponent;
@@ -48,4 +49,8 @@ private:
 	TMap<uint32, FRecentContact> RecentContacts;
 	double ContactTime = 0.0;
 	uint64 ContactTick = 0;
+
+	FVector MeshCenterOffset = FVector::ZeroVector;
+	FVector PreviousLocation = FVector::ZeroVector;
+	FQuat RollRotation = FQuat::Identity();
 };
