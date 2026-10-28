@@ -33,6 +33,7 @@ struct FQuat
 	FQuat UnitInverse() const;
 	FQuat Inverse() const;
 	FQuat Normalized() const;
+	static const FQuat Slerp(const FQuat& From, const FQuat& to, float Alpha);
 	FVector RotateVector(const FVector& V) const;
 	FMatrix ToFMatrix() const;
 	FRotator ToFRotator() const;
