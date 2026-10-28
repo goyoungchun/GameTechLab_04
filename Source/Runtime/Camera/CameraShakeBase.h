@@ -14,7 +14,7 @@ class UCameraShakeBase : public UObject
 public:
 	void Start(const FCameraShakeParams& InParams);
 
-	bool UpdateAndApply(float DeltaTime, FMinimalViewInfo& InOutPOV);
+	bool UpdateAndApply(float DeltaTime, FMinimalViewInfo& InOutPOV, float Scale = 1.0f);
 
 private:
 	// Type에 따라 -1 ~ 1 사이 흔들림 값을 계산 (Axis: 0=Pitch, 1=Yaw, 2=Roll)

@@ -63,6 +63,7 @@ struct FViewTarget
 };
 
 class APlayerController;
+struct FCameraShakeParams;
 
 class APlayerCameraManager : public AActor
 {
@@ -95,6 +96,9 @@ public:
 
 	bool RemoveCameraModifier(UCameraModifier* Modifier);
 	void ClearCameraModifiers();
+
+	void StartCameraShake(const FCameraShakeParams& Params);
+	void StopAllCameraShakes();
 
 	AActor* GetViewTarget() const;
 	bool IsBlending() const { return PendingViewTarget.Target != nullptr; }

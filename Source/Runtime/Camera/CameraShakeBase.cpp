@@ -60,7 +60,7 @@ float UCameraShakeBase::Wave(int32 Axis) const
 	}
 }
 
-bool UCameraShakeBase::UpdateAndApply(float DeltaTime, FMinimalViewInfo& InOutPOV)
+bool UCameraShakeBase::UpdateAndApply(float DeltaTime, FMinimalViewInfo& InOutPOV, float Scale)
 {
 	Elapsed += DeltaTime;
 	if (Elapsed >= Params.Duration)
@@ -72,7 +72,7 @@ bool UCameraShakeBase::UpdateAndApply(float DeltaTime, FMinimalViewInfo& InOutPO
 	// TODO: 베지어 Evaluation 추가 필요
 	float Fade = 1.0f - Progress; //Params.Ease.Evaluation(Progress);
 
-	float Amount = Params.Strength * Fade;
+	float Amount = Params.Strength * Fade * Scale;
 
 	InOutPOV.Rotation.Pitch += Amount * Wave(0);
 	InOutPOV.Rotation.Yaw += Amount * Wave(1);

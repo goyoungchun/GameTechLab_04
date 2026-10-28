@@ -2,6 +2,7 @@
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/Pawn.h"
 #include "PlayerCameraManager.h"
+#include "CameraModifier_CameraShake.h"
 
 APlayerCameraManager::APlayerCameraManager()
 {
@@ -221,6 +222,28 @@ void APlayerCameraManager::ClearCameraModifiers()
 		delete Modifier;
 
 	ModifierList.Reset();
+}
+
+void APlayerCameraManager::StartCameraShake(const FCameraShakeParams& Params)
+{
+	UCameraModifier_CameraShake* ShakeModifier = FindCameraModifier<UCameraModifier_CameraShake>();
+	if (!ShakeModifier)
+	{
+		ShakeModifier = AddCameraModifier<UCameraModifier_CameraShake>();
+	}
+
+	if (ShakeModifier)
+	{
+		ShakeModifier->AddCameraShake(Params);
+	}
+}
+
+void APlayerCameraManager::StopAllCameraShakes()
+{
+	if (UCameraModifier_CameraShake* ShakeModifier = FindCameraModifier <UCameraModifier_CameraShake>())
+	{
+		ShakeModifier->StopAllCameraShakes();
+	}
 }
 
 void APlayerCameraManager::ApplyCameraModifiers(float DeltaTime, FMinimalViewInfo& InOutPOV)

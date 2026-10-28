@@ -125,7 +125,8 @@ struct FCameraShakeParams
 
 	bool IsValid() const
 	{
-		return std::isfinite(Duration) && Duration >= 0.0f
+		return 
+			std::isfinite(Duration) && Duration >= 0.0f
 			&& std::isfinite(Strength) && Strength >= 0.0f
 			&& std::isfinite(Frequency) && Frequency >= 0.0f
 			&& Ease.IsValid();

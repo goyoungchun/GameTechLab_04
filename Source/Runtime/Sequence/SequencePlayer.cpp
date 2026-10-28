@@ -1,7 +1,8 @@
 #include "EnginePCH.h"
 #include "SequencePlayer.h"
 #include "Camera/CameraComponent.h"
-
+#include "Camera/PlayerCameraManager.h"
+#include "Engine/World.h"
 #include <type_traits>
 #include <variant>
 #include <algorithm>
@@ -139,6 +140,17 @@ void USequencePlayer::Apply(const FSequence* InSequence, bool bFireEvents)
 							if (const auto* Params = std::get_if<FCameraShakeParams>(&Request.Params))
 							{
 								// Camera Shake 처리
+								if (PlaybackWorld)
+								{
+									for (uint32 i = 0; i < PlaybackWorld->GetPlayerCount(); ++i)
+									{
+										APlayerController* PC = PlaybackWorld->GetPlayerController(i);
+										if (APlayerCameraManager* CM = PC ? PC->GetCameraManager() : nullptr)
+										{
+											CM->StartCameraShake(*Params);
+										}
+									}
+								}
 							}
 							break;
 
