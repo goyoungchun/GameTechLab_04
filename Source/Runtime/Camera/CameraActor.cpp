@@ -11,6 +11,9 @@ ACameraActor::ACameraActor()
 {
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>("CameraComponent");
 	SetRootComponent(CameraComponent);
+
+	// 레벨에 놓인 카메라가 WASD로 움직이지 않게 한다. 움직임은 소유자(F8 뷰포트, 시퀀서 등)가 직접 처리한다
+	CameraComponent->SetExternalInputManaged(true);
 }
 
 void ACameraActor::CalcCamera(struct FMinimalViewInfo& OutResult)

@@ -42,6 +42,8 @@ Game.Config = {
         SharedCameraSpot = { Location = Vector(-66, 0, 5), Rotation = Rotator(12, 0, 0) },
         HiddenLocation = Vector(-48, 0, -200),
         TurnSpeed = 30,
+        -- 쇼룸에 들어오고 나갈 때 카메라가 블렌드되는 시간 (0이면 즉시 전환)
+        CameraBlendTime = 1.0,
     },
 }
 
@@ -377,19 +379,70 @@ local function GetShowroomCar(PlayerIndex)
     return Car
 end
 
+-- Target이 nil이면 그 플레이어의 차로 돌아간다. 아직 등록되지 않은 플레이어는 건너뛴다
+local function SetPlayerView(PlayerIndex, Target, BlendTime)
+    local CameraManager = obj:GetCameraManager(PlayerIndex)
+    if CameraManager then
+        CameraManager:SetViewTarget(Target, BlendTime)
+    end
+end
+
+-- 쇼룸 카메라는 처음 필요할 때 한 번 스폰하고 재사용한다
+local function GetShowroomCamera(Slot, Spot)
+    Game.ShowroomCameras = Game.ShowroomCameras or {}
+    local Camera = Game.ShowroomCameras[Slot]
+    if not Camera then
+        Camera = obj:SpawnCamera(Spot.Location, Spot.Rotation)
+        Game.ShowroomCameras[Slot] = Camera
+    end
+    if Camera then
+        -- 핫 리로드로 Config를 바꾸면 다음 진입 때 반영된다
+        Camera.Location = Spot.Location
+        Camera.Rotation = Spot.Rotation
+    end
+    return Camera
+end
+
 local function SetShowroomCameras()
     local Showroom = Game.Config.Showroom
     if Game.Config.bSplitScreen then
         for PlayerIndex = 1, 2 do
-            local CameraSpot = Showroom.CameraSpots[PlayerIndex]
-            obj:SetViewCamera(PlayerIndex, CameraSpot.Location, CameraSpot.Rotation)
+            local Camera = GetShowroomCamera(PlayerIndex, Showroom.CameraSpots[PlayerIndex])
+            SetPlayerView(PlayerIndex, Camera, Showroom.CameraBlendTime)
         end
     else
-        obj:SetViewCamera(1, Showroom.SharedCameraSpot.Location, Showroom.SharedCameraSpot.Rotation)
+        local Camera = GetShowroomCamera("Shared", Showroom.SharedCameraSpot)
+        SetPlayerView(1, Camera, Showroom.CameraBlendTime)
     end
 end
 
+local HideShowroomCarsCoroutineId = nil
+
+local function HideShowroomCars()
+    for PlayerIndex = 1, 2 do
+        local Car = Game.ShowroomCars and Game.ShowroomCars[PlayerIndex]
+        if Car then
+            Car.Location = Game.Config.Showroom.HiddenLocation
+        end
+    end
+end
+
+local function StopHidingShowroomCars()
+    if HideShowroomCarsCoroutineId then
+        StopCoroutine(HideShowroomCarsCoroutineId)
+        HideShowroomCarsCoroutineId = nil
+    end
+end
+
+-- 카메라가 쇼룸에서 빠져나가는 동안에는 차를 그대로 두고, 블렌드가 끝나면 숨긴다
+local function HideShowroomCarsAfterBlend()
+    coroutine.yield(WaitForSeconds(Game.Config.Showroom.CameraBlendTime))
+    HideShowroomCarsCoroutineId = nil
+    HideShowroomCars()
+end
+
 local function EnterShowroom()
+    StopHidingShowroomCars()
     for PlayerIndex = 1, 2 do
         local Car = GetShowroomCar(PlayerIndex)
         if Car then
@@ -401,12 +454,17 @@ local function EnterShowroom()
 end
 
 local function LeaveShowroom()
+    local BlendTime = Game.Config.Showroom.CameraBlendTime
     for PlayerIndex = 1, 2 do
-        local Car = Game.ShowroomCars and Game.ShowroomCars[PlayerIndex]
-        if Car then
-            Car.Location = Game.Config.Showroom.HiddenLocation
-        end
-        obj:ClearViewCamera(PlayerIndex)
+        SetPlayerView(PlayerIndex, nil, BlendTime)
+    end
+
+    StopHidingShowroomCars()
+    if not Game.ShowroomCars then return end
+    if BlendTime > 0 then
+        HideShowroomCarsCoroutineId = StartCoroutine(HideShowroomCarsAfterBlend)
+    else
+        HideShowroomCars()
     end
 end
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "GameFramework/Actor.h"
+#include "Math/Quat.h"
 
 class USphereComponent;
 class UStaticMeshComponent;
@@ -17,6 +18,9 @@ public:
 	ABallActor();
 	virtual ~ABallActor() override = default;
 
+	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaTime) override;
+
 	USphereComponent* GetCollisionComponent() const { return Collision; }
 	UStaticMeshComponent* GetMeshComponent() const { return Mesh; }
 	void Retire();
@@ -31,4 +35,8 @@ private:
 	UStaticMeshComponent* Mesh = nullptr;
 	UScriptComponent* Script = nullptr;
 	int32 LastTouchPlayerIndex = -1;
+
+	FVector MeshCenterOffset = FVector::ZeroVector;
+	FVector PreviousLocation = FVector::ZeroVector;
+	FQuat RollRotation = FQuat::Identity();
 };
