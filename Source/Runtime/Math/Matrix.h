@@ -49,6 +49,7 @@ public:
 	void SetOrigin(const FVector& NewOrigin);
 
 	static FMatrix MakeTranslation(const FVector& T);
+	static FMatrix MakeRotation(const FRotator& Rot);
 	static FMatrix MakeView(const FVector& Location, const FRotator& Rotation);
 	static FMatrix MakeLookDirection(const FVector& Eye, const FVector& Forward, const FVector& Up);
 	static FMatrix MakeLookAt(const FVector& Eye, const FVector& Target, const FVector& Up);
