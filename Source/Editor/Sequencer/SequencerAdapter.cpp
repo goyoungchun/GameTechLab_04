@@ -1,5 +1,6 @@
 #include "EnginePCH.h"
 #include "Editor/Sequencer/SequencerAdapter.h"
+#include "imgui_internal.h"
 
 
 FSequencerAdapter::~FSequencerAdapter()
@@ -74,7 +75,35 @@ void FSequencerAdapter::Get(int Index, int** Start, int** End, int* Type, unsign
 
 void FSequencerAdapter::CustomDrawCompact(int Index, ImDrawList* DrawList, const ImRect& Rect, const ImRect& ClipRect)
 {
+	if (!Sequence || !Sequence->Tracks.IsValidIndex(Index))
+	{
+		return;
+	}
 
+	float FramePixelWidth = Rect.GetWidth() / (GetFrameMax() - GetFrameMin() + 1);
+	float CenterY = (Rect.Max.y + Rect.Min.y) / 2;
+	float KeyRadius = (Rect.Max.y - Rect.Min.y) / 2 * 0.48f;
+
+	DrawList->PushClipRect(ClipRect.Min, ClipRect.Max, true);
+
+	auto& Keys = Sequence->Tracks[Index].Keys;
+
+	for (const auto& Key : Keys)
+	{
+		int KeyFrame = TimeToFrame(Key.Time);
+		float KeyX = Rect.Min.x + (KeyFrame - GetFrameMin()) * FramePixelWidth;
+		
+		ImVec2 Up = ImVec2(KeyX, CenterY - KeyRadius);
+		ImVec2 Right = ImVec2(KeyX + KeyRadius, CenterY);
+		ImVec2 Down = ImVec2(KeyX, CenterY + KeyRadius);
+		ImVec2 Left = ImVec2(KeyX - KeyRadius, CenterY);
+		ImU32 KeyColor = 0xFFFFFFFF;
+
+
+		DrawList->AddQuadFilled(Up, Right, Down, Left, KeyColor);
+	}
+
+	DrawList->PopClipRect();
 }
 
 
