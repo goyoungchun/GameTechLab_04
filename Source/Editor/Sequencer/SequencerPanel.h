@@ -5,6 +5,15 @@
 #include "SequencerAdapter.h"
 
 class UWorld;
+class FViewportsPanel;
+
+// 임시용
+struct FSequencerViewInfo
+{
+	FVector Location;
+	FRotator Rotation;
+	float FOV = 0.0f;
+};
 
 class FSequencerPanel : public IEditorPanel
 {
@@ -18,6 +27,7 @@ public:
 	const char* GetPanelName() const override { return "Sequencer"; }
 
 	void SetWorld(UWorld* InWorld) { World = InWorld; }
+	void SetViewportsPanel(FViewportsPanel* InPanel) { ViewportsPanel = InPanel; }
 
 private:
 	bool LoadSettings();
@@ -27,6 +37,9 @@ private:
 	void DrawTimeline();
 	void DrawTrackBinding();
 	void BuildDummySequence();
+	bool GetCurrentViewPOV(FSequencerViewInfo& OutView) const;
+	int32 AddTransformKey(FDummyTrack& InTrack, float InTime, const FVector& InLocation, const FRotator& InRotation);
+	bool CanAddTransformKey() const;
 
 	UWorld* World = nullptr;
 
@@ -35,6 +48,7 @@ private:
 
 	FDummySequence DummySequence;
 	FSequencerAdapter Adapter;
+	FViewportsPanel* ViewportsPanel = nullptr;
 
 	int CurrentFrame = 0;
 	bool bExpanded = true;

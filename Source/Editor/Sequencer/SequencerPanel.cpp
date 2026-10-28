@@ -3,6 +3,7 @@
 #include "Engine/World.h"
 #include "Camera/CameraActor.h"
 #include "UObject/UObjectIterator.h"
+#include "Editor/Viewports/ViewportsPanel.h"
 
 
 FSequencerPanel::~FSequencerPanel()
@@ -61,7 +62,16 @@ void FSequencerPanel::DrawToolBar()
 	ImGui::TextDisabled("|");
 	ImGui::SameLine();
 
-	ImGui::Button("Key from View");
+	ImGui::BeginDisabled(!CanAddTransformKey());
+	if (ImGui::Button("Key from View"))
+	{
+		FSequencerViewInfo ViewInfo;
+		if (GetCurrentViewPOV(ViewInfo))
+		{
+			AddTransformKey(DummySequence.Tracks[SelectedTrackIndex], CurrentTime, ViewInfo.Location, ViewInfo.Rotation);
+		}
+	}
+	ImGui::EndDisabled();
 
 	const int32 DisplayFrame = Adapter.TimeToFrame(CurrentTime);
 	char TimeText[64];
@@ -119,11 +129,12 @@ void FSequencerPanel::DrawTrackBinding()
 		return;
 	}
 
+	ACameraActor* MainCamera = World->GetMainCamera();
 	TArray<ACameraActor*> Cameras;
 	for (TObjectIterator<ACameraActor> It; It; ++It)
 	{
 		ACameraActor* Camera = *It;
-		if (Camera->GetWorld() == World)
+		if (Camera->GetWorld() == World && Camera != MainCamera)
 		{
 			Cameras.Add(Camera);
 		}
@@ -175,6 +186,62 @@ void FSequencerPanel::DrawTrackBinding()
 
 		ImGui::EndCombo();
 	}
+}
+
+bool FSequencerPanel::CanAddTransformKey() const
+{
+	return (DummySequence.Tracks.IsValidIndex(SelectedTrackIndex)
+		&& DummySequence.Tracks[SelectedTrackIndex].Type == EDummyTrackType::Transform);
+}
+
+int32 FSequencerPanel::AddTransformKey(FDummyTrack& InTrack, float InTime, const FVector& InLocation, const FRotator& InRotation)
+{
+	const int32 NewFrame = Adapter.TimeToFrame(InTime);
+
+	for (int32 Index = 0; Index < InTrack.Keys.Num(); Index++)
+	{
+		FDummyKey& Key = InTrack.Keys[Index];
+		const int32 KeyFrame = Adapter.TimeToFrame(Key.Time);
+		if (KeyFrame == NewFrame)
+		{
+			Key.Location = InLocation;
+			Key.Rotation = InRotation;
+			return Index;
+		}
+		if (KeyFrame > NewFrame)
+		{
+			FDummyKey NewKey;
+			NewKey.Time = Adapter.FrameToTime(NewFrame);
+			NewKey.Location = InLocation;
+			NewKey.Rotation = InRotation;
+			InTrack.Keys.Insert(NewKey, Index);
+			return Index;
+		}
+	}
+
+	FDummyKey NewKey;
+	NewKey.Time = Adapter.FrameToTime(NewFrame);
+	NewKey.Location = InLocation;
+	NewKey.Rotation = InRotation;
+	InTrack.Keys.Add(NewKey);
+	return (InTrack.Keys.Num() - 1);
+}
+
+bool FSequencerPanel::GetCurrentViewPOV(FSequencerViewInfo& OutView) const
+{
+	if (!ViewportsPanel)
+	{
+		return (false);
+	}
+	FEditorViewportClient* ActiveViewportClient = ViewportsPanel->GetViewportClient(ViewportsPanel->GetActiveViewIndex());
+	if (!ActiveViewportClient)
+	{
+		return false;
+	}
+	OutView.FOV = ActiveViewportClient->GetViewFOV();
+	OutView.Location = ActiveViewportClient->GetViewLocation();
+	OutView.Rotation = ActiveViewportClient->GetViewRotation();
+	return (true);
 }
 
 void FSequencerPanel::BuildDummySequence()

@@ -305,6 +305,7 @@ bool UEditorEngine::Init() {
 	EditorControlsPanel->SetViewportsPanel(ViewportsPanel);
 
 	SequencerPanel->SetWorld(EditorWorld);
+	SequencerPanel->SetViewportsPanel(ViewportsPanel);
 
 	SettingsPanel->SetWorld(EditorWorld);
 	SettingsPanel->SetViewportsPanel(ViewportsPanel);
