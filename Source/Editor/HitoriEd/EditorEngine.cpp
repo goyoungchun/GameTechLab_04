@@ -26,6 +26,7 @@
 #include "Render/Renderer.h"
 #include "Render/SceneRenderer.h"
 #include "UObject/UObjectIterator.h"
+#include "Audio/AudioSystem.h"
 #include "Runtime/Core/EngineStatics.h"
 #include <format>
 
@@ -1689,6 +1690,7 @@ void UEditorEngine::StopPIESession()
 		ImageRect = {};
 
 	PIEState = EPIEState::Stopped;
+	FAudioSystem::Get().StopAll();
 	bIsStep = false;
 
 	// 선택 해제

@@ -94,13 +94,91 @@ function BeginPlay()
 
 end
 
+local ElapsedTime = 0
+local bBoostSoundPlaying = false
+local bDriveSoundPlaying = false
+local DriveReferenceSpeed = 30
+local ContactGap = 0.15
+local MaxWallNormalZ = 0.5
+local LastWallContactTime = -ContactGap
+_G.PreviousCarVelocities = _G.PreviousCarVelocities or {}
+
+local ImpactSounds = {
+	Car  = { Sound = "crash", MinSpeed = 4, MaxSpeed = 40, MinVolume = 0.15,  MaxVolume = 1, LastContactTime = -ContactGap },
+	Ball = { Sound = "kick",  MinSpeed = 2, MaxSpeed = 40, MinVolume = 1 / 3, MaxVolume = 1, LastContactTime = -ContactGap },
+}
+
+local function UpdateDriveSound(bEnabled)
+	local SoundName = "drive_" .. (Car.PlayerIndex + 1)
+	if not bEnabled then
+		if bDriveSoundPlaying then
+			StopSound(SoundName)
+			bDriveSoundPlaying = false
+		end
+		return
+	end
+
+	local SpeedRatio = math.min(Car.Speed / DriveReferenceSpeed, 1.5)
+	SetSoundVolume(SoundName, 0.2 + 0.35 * math.min(SpeedRatio, 1))
+	SetSoundPitch(SoundName, 0.7 + 0.8 * SpeedRatio)
+	if not bDriveSoundPlaying then
+		PlayBGM(SoundName)
+		bDriveSoundPlaying = true
+	end
+end
+
+local function PlayImpactSound(Impact, ImpactSpeed)
+	local bNewContact = ElapsedTime - Impact.LastContactTime >= ContactGap
+	Impact.LastContactTime = ElapsedTime
+	if not bNewContact or ImpactSpeed < Impact.MinSpeed then return end
+
+	local Ratio = math.min((ImpactSpeed - Impact.MinSpeed) / (Impact.MaxSpeed - Impact.MinSpeed), 1)
+	SetSoundVolume(Impact.Sound, Impact.MinVolume + (Impact.MaxVolume - Impact.MinVolume) * Ratio)
+	PlaySound(Impact.Sound)
+end
+
+local function SetBoostSoundPlaying(bPlaying)
+	if bPlaying == bBoostSoundPlaying then return end
+	bBoostSoundPlaying = bPlaying
+	local SoundName = "boost_" .. (Car.PlayerIndex + 1)
+	if bPlaying then
+		PlaySound(SoundName)
+	else
+		StopSound(SoundName)
+	end
+end
+
+function OnHit(OtherActor, Normal)
+	if not Car then return end
+	local MyVelocity = PreviousCarVelocities[Car.PlayerIndex] or Car.Velocity
+	local OtherCar = OtherActor:AsVehicle()
+	if OtherCar then
+		if Car.PlayerIndex < OtherCar.PlayerIndex then
+			local OtherVelocity = PreviousCarVelocities[OtherCar.PlayerIndex] or OtherCar.Velocity
+			PlayImpactSound(ImpactSounds.Car, (MyVelocity - OtherVelocity):Length())
+		end
+	elseif OtherActor:IsBall() then
+		local BallVelocity = Game and Game.BallVelocity or Vector(0, 0, 0)
+		PlayImpactSound(ImpactSounds.Ball, (MyVelocity - BallVelocity):Length())
+	elseif math.abs(Normal.z) <= MaxWallNormalZ then
+		local bNewContact = ElapsedTime - LastWallContactTime >= ContactGap
+		LastWallContactTime = ElapsedTime
+		if bNewContact then
+			PlaySound("wall")
+		end
+	end
+end
+
 function EndPlay()
 print("[EndPlay] " .. obj.UUID)
 end
 
 function Tick(dt)
+	ElapsedTime = ElapsedTime + dt
 
 	if not Car then return end
+
+	PreviousCarVelocities[Car.PlayerIndex] = Car.Velocity
 
 	BindCarModel()
 
@@ -113,12 +191,20 @@ function Tick(dt)
 	local InputEnabled = Game.CarInputEnabled and Game.CarInputEnabled[Car.PlayerIndex + 1]
 	if InputEnabled == false then
 		Car:SetInput(0, 0, false)
+		SetBoostSoundPlaying(false)
+		UpdateDriveSound(false)
 		return
 	end
 
-	Car:SetInput(Axis(Keys.Forward, Keys.Backward), Axis(Keys.Right, Keys.Left), IsKeyDown(Keys.Boost))
+	local bBoostPressed = IsKeyDown(Keys.Boost)
+	Car:SetInput(Axis(Keys.Forward, Keys.Backward), Axis(Keys.Right, Keys.Left), bBoostPressed)
+	SetBoostSoundPlaying(bBoostPressed and Car.BoostRatio > 0)
+	UpdateDriveSound(true)
 
 	if IsKeyPressed(Keys.Jump) then
+		if Car.IsGrounded then
+			PlaySound("jump")
+		end
 		Car:Jump()
 	end
 end
