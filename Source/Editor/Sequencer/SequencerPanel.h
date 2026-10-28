@@ -45,6 +45,7 @@ private:
 	void BuildSampleSequence();
 	bool GetCurrentViewPOV(FSequencerViewInfo& OutView) const;
 	int32 AddTransformKey(FTransformTrack& InTrack, double InTime, const FTransform& InValue);
+	int32 AddFloatKey(FFloatTrack& InTrack, double InTime);
 	bool CanAddTransformKey() const;
 	bool CanAddKey() const;
 	void ValidateKeySelection();

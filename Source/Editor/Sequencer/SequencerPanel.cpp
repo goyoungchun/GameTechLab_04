@@ -107,6 +107,34 @@ namespace
 	}
 
 	template<typename TKeyFrame>
+	int32 FindOrInsertKey(TArray<TKeyFrame>& Keys, int32 Frame, const TKeyFrame& NewKey, bool& bOutExisting, const FSequencerAdapter& Adapter)
+	{
+		bOutExisting = false;
+		for (int32 Index = 0; Index < Keys.Num(); Index++)
+		{
+			const int32 KeyFrame = Adapter.TimeToFrame(Keys[Index].Time);
+			if (KeyFrame == Frame)
+			{
+				bOutExisting = true;
+				return Index;
+			}
+			if (KeyFrame > Frame)
+			{
+				Keys.Insert(NewKey, static_cast<uint32>(Index));
+				return Index;
+			}
+		}
+
+		Keys.Add(NewKey);
+		return Keys.Num() - 1;
+	}
+
+	float GetDefaultFloatValue(ESequenceValueType ValueType)
+	{
+		return ValueType == ESequenceValueType::FOV ? 90.0f : 0.0f;
+	}
+
+	template<typename TKeyFrame>
 	int32 MoveKeyInArray(TArray<TKeyFrame>& Keys, int32 KeyIndex, int32 NewFrame, double NewTime, const FSequencerAdapter& Adapter)
 	{
 		for (int32 Index = 0; Index < Keys.Num(); Index++)
@@ -266,13 +294,18 @@ void FSequencerPanel::DrawToolBar()
 	ImGui::BeginDisabled(!CanAddKey());
 	if (ImGui::Button("Add Key"))
 	{
-		FSequencerViewInfo ViewInfo;
-		if (GetCurrentViewPOV(ViewInfo))
+		FSequenceTrack& Track = EditingSequence.Tracks[SelectedTrackIndex];
+		if (FTransformTrack* TransformTrack = std::get_if<FTransformTrack>(&Track))
 		{
-			if (FTransformTrack* TransformTrack = std::get_if<FTransformTrack>(&EditingSequence.Tracks[SelectedTrackIndex]))
+			FSequencerViewInfo ViewInfo;
+			if (GetCurrentViewPOV(ViewInfo))
 			{
 				SelectedKeyIndex = AddTransformKey(*TransformTrack, CurrentTime, FTransform(ViewInfo.Rotation, ViewInfo.Location));
 			}
+		}
+		else if (FFloatTrack* FloatTrack = std::get_if<FFloatTrack>(&Track))
+		{
+			SelectedKeyIndex = AddFloatKey(*FloatTrack, CurrentTime);
 		}
 	}
 	ImGui::EndDisabled();
@@ -594,7 +627,9 @@ void FSequencerPanel::ValidateKeySelection()
 
 bool FSequencerPanel::CanAddKey() const
 {
-	return (CanAddTransformKey());
+	return CanAddTransformKey()
+		|| (EditingSequence.Tracks.IsValidIndex(SelectedTrackIndex)
+			&& std::holds_alternative<FFloatTrack>(EditingSequence.Tracks[SelectedTrackIndex]));
 }
 
 bool FSequencerPanel::CanAddTransformKey() const
@@ -607,30 +642,48 @@ int32 FSequencerPanel::AddTransformKey(FTransformTrack& InTrack, double InTime, 
 {
 	const int32 NewFrame = Adapter.TimeToFrame(InTime);
 
-	for (int32 Index = 0; Index < InTrack.KeyFrames.Num(); Index++)
-	{
-		FTransformKeyFrame& Key = InTrack.KeyFrames[Index];
-		const int32 KeyFrame = Adapter.TimeToFrame(Key.Time);
-		if (KeyFrame == NewFrame)
-		{
-			Key.Value = InValue;
-			return Index;
-		}
-		if (KeyFrame > NewFrame)
-		{
-			FTransformKeyFrame NewKey;
-			NewKey.Time = Adapter.FrameToTime(NewFrame);
-			NewKey.Value = InValue;
-			InTrack.KeyFrames.Insert(NewKey, Index);
-			return Index;
-		}
-	}
-
 	FTransformKeyFrame NewKey;
 	NewKey.Time = Adapter.FrameToTime(NewFrame);
 	NewKey.Value = InValue;
-	InTrack.KeyFrames.Add(NewKey);
-	return (InTrack.KeyFrames.Num() - 1);
+
+	bool bExisting = false;
+	const int32 Index = FindOrInsertKey(InTrack.KeyFrames, NewFrame, NewKey, bExisting, Adapter);
+	if (bExisting)
+	{
+		InTrack.KeyFrames[Index].Value = InValue;
+	}
+	return Index;
+}
+
+int32 FSequencerPanel::AddFloatKey(FFloatTrack& InTrack, double InTime)
+{
+	const int32 NewFrame = Adapter.TimeToFrame(InTime);
+
+	float Value = GetDefaultFloatValue(InTrack.ValueType);
+	bool bFoundPrevious = false;
+	for (const FFloatKeyFrame& Key : InTrack.KeyFrames)
+	{
+		if (Adapter.TimeToFrame(Key.Time) < NewFrame)
+		{
+			Value = Key.Value;
+			bFoundPrevious = true;
+		}
+		else
+		{
+			if (!bFoundPrevious)
+			{
+				Value = Key.Value;
+			}
+			break;
+		}
+	}
+
+	FFloatKeyFrame NewKey;
+	NewKey.Time = Adapter.FrameToTime(NewFrame);
+	NewKey.Value = Value;
+
+	bool bExisting = false;
+	return FindOrInsertKey(InTrack.KeyFrames, NewFrame, NewKey, bExisting, Adapter);
 }
 
 bool FSequencerPanel::GetCurrentViewPOV(FSequencerViewInfo& OutView) const
