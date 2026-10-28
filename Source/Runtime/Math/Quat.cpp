@@ -3,6 +3,9 @@
 #include "Rotator.h"
 #include "EngineMath.h"
 
+#include <algorithm>
+#include <cmath>
+
 FQuat::FQuat()
 {
 	X = 0.0f; Y = 0.0f; Z = 0.0f; W = 1.0f;
@@ -250,37 +253,39 @@ FQuat FQuat::MakeFromEuler(float RollRadian, float PitchRadian, float YawRadian)
 	);
 }
 
-// 쿼터니언 구면 선형 보간
-FQuat FQuat::Slerp(FQuat Current, FQuat Target, float Slerp)
+FQuat FQuat::Slerp(const FQuat& From, const FQuat& To, float Alpha)
 {
-	// 쿼터니언 2개 내적
-	float Dot =
-		Current.X * Target.X +
-		Current.Y * Target.Y +
-		Current.Z * Target.Z +
-		Current.W * Target.W;
+	Alpha = std::clamp(Alpha, 0.0f, 1.0f);
 
-	// 최단 경로 선택 위한 부호 적용
-	float Sign = Dot > 0.0f ? 1.0f : -1.0f;
-	Dot *= Sign;
+	const FQuat A = From.Normalized();
+	FQuat B = To.Normalized();
+	float Dot = A.X * B.X + A.Y * B.Y + A.Z * B.Z + A.W * B.W;
 
-	float Scale0 = 1.0f - Slerp;
-	float Scale1 = Slerp * Sign;
-
-	if (Dot < 0.9999f)
+	// 같은 회전을 나타내는 B와 -B 중 짧은 회전 경로를 선택한다.
+	if (Dot < 0.0f)
 	{
-		const float Omega = std::acos(Dot);
-		const float InvSin = 1.0f / sin(Omega);
-		Scale0 = sin(Scale0 * Omega) * InvSin;
-		Scale1 = sin(Scale1 * Omega) * InvSin;
+		B = FQuat(-B.X, -B.Y, -B.Z, -B.W);
+		Dot = -Dot;
+	}
+	Dot = std::clamp(Dot, 0.0f, 1.0f);
+
+	float WeightA = 1.0f - Alpha;
+	float WeightB = Alpha;
+	// 거의 같은 회전은 선형 보간으로 sin(Angle)이 0에 가까워지는 경우를 피한다.
+	if (Dot < 0.9995f)
+	{
+		const float Angle = std::acos(Dot);
+		const float SinAngle = std::sin(Angle);
+		WeightA = std::sin((1.0f - Alpha) * Angle) / SinAngle;
+		WeightB = std::sin(Alpha * Angle) / SinAngle;
 	}
 
 	return FQuat(
-		Scale0 * Current.X + Scale1 * Target.X,
-		Scale0 * Current.Y + Scale1 * Target.Y,
-		Scale0 * Current.Z + Scale1 * Target.Z,
-		Scale0 * Current.W + Scale1 * Target.W
-	);
+		A.X * WeightA + B.X * WeightB,
+		A.Y * WeightA + B.Y * WeightB,
+		A.Z * WeightA + B.Z * WeightB,
+		A.W * WeightA + B.W * WeightB
+	).Normalized();
 }
 
 bool FQuat::Equals(const FQuat& Q, float Tolerance) const

@@ -80,6 +80,8 @@ public:
 	virtual float GetCollisionRadius() const;
 
 	void SetWorldLocation(FVector InLocation);
+	// 부모 기준 상대 Transform으로 변환한다. 부모 변환을 역변환할 수 없으면 변경하지 않는다.
+	bool SetWorldTransform(const FTransform& InWorldTransform);
 
 	FVector GetWorldLocation() const;
 	FRotator GetWorldRotation() const;
