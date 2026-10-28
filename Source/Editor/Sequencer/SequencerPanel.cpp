@@ -20,6 +20,19 @@ bool FSequencerPanel::Init()
 
 void FSequencerPanel::Tick(float DeltaTime)
 {
+	if (!bIsPlaying)
+	{
+		return;
+	}
+
+	CurrentTime += DeltaTime;
+	if (CurrentTime >= DummySequence.Length)
+	{
+		CurrentTime = DummySequence.Length;
+		bIsPlaying = false;
+	}
+
+	CurrentFrame = Adapter.TimeToFrame(CurrentTime);
 }
 
 
@@ -54,9 +67,27 @@ void FSequencerPanel::DrawToolBar()
 	ImGui::TextDisabled("|");
 	ImGui::SameLine();
 
-	ImGui::Button("Play");
-	ImGui::SameLine();
-	ImGui::Button("Stop");
+	if (!bIsPlaying)
+	{
+		if (ImGui::Button("Play"))
+		{
+			if (CurrentTime >= DummySequence.Length)
+			{
+				CurrentTime = 0.0f;
+				CurrentFrame = 0;
+			}
+			bIsPlaying = true;
+		}
+	}
+	else
+	{
+		if (ImGui::Button("Stop"))
+		{
+			bIsPlaying = false;
+			CurrentTime = 0.0f;
+			CurrentFrame = 0;
+		}
+	}
 
 	ImGui::SameLine();
 	ImGui::TextDisabled("|");

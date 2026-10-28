@@ -52,6 +52,7 @@ private:
 
 	int CurrentFrame = 0;
 	bool bExpanded = true;
+	bool bIsPlaying = false;
 	int SelectedTrackIndex = -1;
 	int FirstVisibleFrame = 0;
 };
