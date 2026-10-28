@@ -133,7 +133,13 @@ local function DrawCarSelectPanel(PlayerIndex)
 
     UI.Rect(CenterX - PanelWidth * 0.4, 0.70, PanelWidth * 0.8, 0.18, Color(0, 0, 0, 0.5))
     UI.Text(CenterX, 0.785, string.upper(CarName), 56, Color.White, Align.Center, "CookieRun")
-    UI.Text(CenterX, 0.845, CarClass.Label, 30, Color.Yellow, Align.Center, "CookieRun")
+    if (CarClass.Label == "스피드형") then
+        UI.Text(CenterX, 0.845, CarClass.Label, 30, Color.Blue, Align.Center, "CookieRun")
+    elseif (CarClass.Label == "밸런스형") then
+        UI.Text(CenterX, 0.845, CarClass.Label, 30, Color.Yellow, Align.Center, "CookieRun")
+    else
+        UI.Text(CenterX, 0.845, CarClass.Label, 30, Color.Red, Align.Center, "CookieRun")
+    end
 
     if bIsReady then
         UI.Text(CenterX, 0.925, "READY", 36, Color.Green, Align.Center, "CookieRun")

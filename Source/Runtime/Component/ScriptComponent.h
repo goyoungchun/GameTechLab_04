@@ -28,7 +28,7 @@ public:
 	virtual void EndPlay() override;
 	virtual void TickComponent(float DeltaTime) override;
 
-	void OnHit(AActor* InOtherActor);
+	void OnHit(AActor* InOtherActor, const FVector& InNormal);
 	void OnOverlap(AActor* InOtherActor);
 		
 	bool LoadScriptFile(sol::environment InEnvironment);
