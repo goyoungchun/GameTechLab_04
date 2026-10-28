@@ -1,6 +1,7 @@
 #include "EnginePCH.h"
 #include "SequencePlayer.h"
 #include "Camera/CameraComponent.h"
+#include "Engine/World.h"
 
 #include <type_traits>
 #include <variant>
@@ -42,6 +43,7 @@ void USequencePlayer::Stop()
 	CurrentTime = 0.0;
 	PreviousTime = 0.0;
 	Apply(Sequence, false);
+	PlaybackWorld->GetTimeController().Reset();
 }
 
 void USequencePlayer::Pause()
@@ -118,20 +120,22 @@ void USequencePlayer::Apply(const FSequence* InSequence, bool bFireEvents)
 
 					for (const FSequenceEventRequest& Request : Requests)
 					{
-						// TODO : 이벤트 수행부와 연결
 						switch (Request.EventType)
 						{
 						case ESequenceEventType::HitStop:
 							if (const auto* Params = std::get_if<FHitStopParams>(&Request.Params))
 							{
-								// Hit Stop 처리
+								if (PlaybackWorld)
+								{
+									PlaybackWorld->GetTimeController().RequestHitStop(*Params);
+								}
 							}
 							break;
 
 						case ESequenceEventType::Slomo:
 							if (const auto* Params = std::get_if<FSlomoParams>(&Request.Params))
 							{
-								// Slomo 처리
+								PlaybackWorld->GetTimeController().RequestSlomo(*Params);
 							}
 							break;
 
