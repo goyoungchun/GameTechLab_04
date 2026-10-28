@@ -304,10 +304,6 @@ namespace
 
 FSequencerPanel::~FSequencerPanel()
 {
-	if (Player) Player->SetCameraManagerOverride(nullptr);
-	delete PreviewCameraManager;
-	delete PreviewCameraProxy;
-	delete Player;
 }
 
 bool FSequencerPanel::Init()
