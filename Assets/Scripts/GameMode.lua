@@ -481,7 +481,9 @@ local function SetShowroomCameras()
         end
     else
         local Camera = GetShowroomCamera("Shared", Showroom.SharedCameraSpot)
-        SetPlayerView(1, Camera, Showroom.CameraBlendTime)
+        for PlayerIndex = 1, 2 do
+            SetPlayerView(PlayerIndex, Camera, Showroom.CameraBlendTime)
+        end
     end
 end
 
