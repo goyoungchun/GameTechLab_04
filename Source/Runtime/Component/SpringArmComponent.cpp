@@ -33,6 +33,14 @@ FRotator USpringArmComponent::GetTargetRotation() const
             }
         }
     }
+    else
+    {
+        const FRotator RelRot = GetRelativeRotation();
+
+        if (!bInheritPitch) DesiredRot.Pitch = RelRot.Pitch;
+        if (!bInheritYaw) DesiredRot.Yaw = RelRot.Yaw;
+        if (!bInheritRoll) DesiredRot.Roll = RelRot.Roll;
+    }
 
     return DesiredRot;
 }

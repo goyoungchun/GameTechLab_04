@@ -26,6 +26,8 @@ class USpringArmComponent : public USceneComponent
 		REFLECT_END()
 
 public:
+	USpringArmComponent() { PrimaryComponentTick.bCanEverTick = true; }
+
 	void TickComponent(float DeltaTime) override;
 
 	FRotator GetTargetRotation() const;

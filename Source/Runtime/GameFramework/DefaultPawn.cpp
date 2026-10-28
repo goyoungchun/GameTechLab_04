@@ -6,6 +6,7 @@
 #include "DefaultPawn.h"
 #include "Engine/World.h"
 #include "GameFramework/Actor/ProjectileActor.h"
+#include "Component/SpringArmComponent.h"
 
 ADefaultPawn::ADefaultPawn()
 {
@@ -14,13 +15,21 @@ ADefaultPawn::ADefaultPawn()
 	Projectiles.fill(nullptr); // The world is assigned after the constructor.
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>("CameraComponent");
 	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>("StaticMeshComponent");
+    SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>("SpringArmComponent");
+
 	SetRootComponent(StaticMeshComponent);
 
 	StaticMeshComponent->SetStaticMesh(UAssetManager::GetMesh("Hitori"));
-	CameraComponent->SetupAttachment(StaticMeshComponent);
 
-	CameraComponent->SetRelativeLocation({ -5,0,8 });
-	CameraComponent->SetRelativeRotation({ 45,0,0 });
+    SpringArmComponent->SetupAttachment(StaticMeshComponent);
+    SpringArmComponent->TargetArmLength = 10.f;
+    SpringArmComponent->TargetOffset = { 0, 0, 3 };
+    SpringArmComponent->ProbeSize = 0.5f;
+    SpringArmComponent->SetRelativeRotation({ 30, 0, 0 });
+    // 좌클릭 공과 충돌하는 문제
+    SpringArmComponent->bDoCollisionTest = false;
+
+	CameraComponent->SetupAttachment(SpringArmComponent);
 	CameraComponent->SetExternalInputManaged(true);
 }
 

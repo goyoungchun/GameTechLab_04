@@ -9,6 +9,7 @@ class AProjectileActor;
 class UCameraComponent;
 class UStaticMeshComponent;
 class UStaticMesh;
+class USpringArmComponent;
 
 class ADefaultPawn : public APawn
 {
@@ -40,6 +41,7 @@ public:
 	// 카메라 컴포넌트 반환
 	UCameraComponent* GetCameraComponent() const { return CameraComponent; }
 
+	USpringArmComponent* GetSpringArmComponent() const { return SpringArmComponent; }
 protected:
 	bool bUseStaticMeshProjectiles = false;
 	UStaticMesh* ProjectileMesh = nullptr;
@@ -49,5 +51,5 @@ protected:
 	UCameraComponent* CameraComponent = nullptr;
 	UStaticMeshComponent* StaticMeshComponent = nullptr;
 
-
+	USpringArmComponent* SpringArmComponent = nullptr;
 };
