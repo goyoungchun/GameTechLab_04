@@ -3,9 +3,13 @@
 #include "imgui_internal.h"
 #include <algorithm>
 #include <cfloat>
+#include <iterator>
+#include <string>
 
 namespace
 {
+	const char* TrackTypeNames[] = { "Camera Transform", "FOV", "Event" };
+
 	enum class EKeyShape : uint8
 	{
 		Diamond,
@@ -160,6 +164,43 @@ void FSequencerAdapter::CustomDrawCompact(int Index, ImDrawList* DrawList, const
 		}
 	}
 
+	if (ClickedTrackIndex == Index && ClickedKeyIndex != -1 && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+	{
+		DragTrackIndex = Index;
+		DragKeyIndex = ClickedKeyIndex;
+		DragStartFrame = TimeToFrame(GetKeyTime(Track, ClickedKeyIndex));
+		DragStartMouseX = MousePos.x;
+		bDragging = false;
+	}
+
+	if (DragTrackIndex == Index)
+	{
+		if (!ImGui::IsMouseDown(ImGuiMouseButton_Left) || DragKeyIndex < 0 || DragKeyIndex >= KeyCount)
+		{
+			DragTrackIndex = -1;
+			DragKeyIndex = -1;
+			bDragging = false;
+		}
+		else
+		{
+			if (!bDragging && fabsf(MousePos.x - DragStartMouseX) >= ImGui::GetIO().MouseDragThreshold)
+			{
+				bDragging = true;
+			}
+
+			if (bDragging)
+			{
+				const int MouseFrame = static_cast<int>(std::round((MousePos.x - Rect.Min.x) / FramePixelWidth)) + GetFrameMin();
+				const int TargetFrame = std::clamp(MouseFrame, GetFrameMin(), GetFrameMax());
+				if (TargetFrame != TimeToFrame(GetKeyTime(Track, DragKeyIndex)))
+				{
+					RequestedDragFrame = TargetFrame;
+				}
+				ImGui::SetTooltip("%df -> %df", DragStartFrame, TargetFrame);
+			}
+		}
+	}
+
 	DrawList->PushClipRect(ClipRect.Min, ClipRect.Max, true);
 
 	for (int KeyIndex = 0; KeyIndex < KeyCount; KeyIndex++)
@@ -173,6 +214,146 @@ void FSequencerAdapter::CustomDrawCompact(int Index, ImDrawList* DrawList, const
 	}
 
 	DrawList->PopClipRect();
+}
+
+int FSequencerAdapter::GetItemTypeCount() const
+{
+	return static_cast<int>(std::size(TrackTypeNames));
+}
+
+const char* FSequencerAdapter::GetItemTypeName(int TypeIndex) const
+{
+	if (TypeIndex < 0 || TypeIndex >= GetItemTypeCount())
+	{
+		return "";
+	}
+	return TrackTypeNames[TypeIndex];
+}
+
+void FSequencerAdapter::Add(int TypeIndex)
+{
+	if (!Sequence || TypeIndex < 0 || TypeIndex >= GetItemTypeCount())
+	{
+		return;
+	}
+
+	const FString Name = MakeUniqueTrackName(TrackTypeNames[TypeIndex]);
+	switch (TypeIndex)
+	{
+	case 0:
+	{
+		FTransformTrack Track;
+		Track.Name = Name;
+		Track.ValueType = ESequenceValueType::Transform;
+		Sequence->Tracks.Add(Track);
+		break;
+	}
+	case 1:
+	{
+		FFloatTrack Track;
+		Track.Name = Name;
+		Track.ValueType = ESequenceValueType::FOV;
+		Sequence->Tracks.Add(Track);
+		break;
+	}
+	default:
+	{
+		FEventTrack Track;
+		Track.Name = Name;
+		Sequence->Tracks.Add(Track);
+		break;
+	}
+	}
+}
+
+void FSequencerAdapter::Del(int Index)
+{
+	if (!Sequence || !Sequence->Tracks.IsValidIndex(Index))
+	{
+		return;
+	}
+
+	Sequence->Tracks.RemoveAt(static_cast<uint32>(Index), 1);
+	DeletedTrackIndex = Index;
+	DragTrackIndex = -1;
+	DragKeyIndex = -1;
+	bDragging = false;
+}
+
+void FSequencerAdapter::Duplicate(int Index)
+{
+	if (!Sequence || !Sequence->Tracks.IsValidIndex(Index))
+	{
+		return;
+	}
+
+	FSequenceTrack Copy = Sequence->Tracks[Index];
+	const FString Name = MakeUniqueTrackName(FString(GetTrackName(Copy)) + " Copy");
+	std::visit([&Name](auto& Typed)
+	{
+		if constexpr (!std::is_same_v<std::decay_t<decltype(Typed)>, std::monostate>)
+		{
+			Typed.Name = Name;
+			Typed.Binding = nullptr;
+		}
+	}, Copy);
+	Sequence->Tracks.Add(Copy);
+}
+
+bool FSequencerAdapter::ConsumeDragRequest(int& OutTrack, int& OutKey, int& OutFrame)
+{
+	if (RequestedDragFrame == -1 || DragTrackIndex == -1)
+	{
+		RequestedDragFrame = -1;
+		return false;
+	}
+
+	OutTrack = DragTrackIndex;
+	OutKey = DragKeyIndex;
+	OutFrame = RequestedDragFrame;
+	RequestedDragFrame = -1;
+	return true;
+}
+
+void FSequencerAdapter::SetDragKeyIndex(int InKey)
+{
+	DragKeyIndex = InKey;
+}
+
+int FSequencerAdapter::ConsumeDeletedTrackIndex()
+{
+	const int Result = DeletedTrackIndex;
+	DeletedTrackIndex = -1;
+	return Result;
+}
+
+FString FSequencerAdapter::MakeUniqueTrackName(const FString& BaseName) const
+{
+	auto IsNameUsed = [this](const FString& Candidate)
+	{
+		for (const FSequenceTrack& Track : Sequence->Tracks)
+		{
+			if (Candidate == GetTrackName(Track))
+			{
+				return true;
+			}
+		}
+		return false;
+	};
+
+	if (!IsNameUsed(BaseName))
+	{
+		return BaseName;
+	}
+
+	for (int Number = 2;; Number++)
+	{
+		const FString Candidate = BaseName + " " + std::to_string(Number);
+		if (!IsNameUsed(Candidate))
+		{
+			return Candidate;
+		}
+	}
 }
 
 bool FSequencerAdapter::ConsumeIndex(int& OutTrack, int& OutKey)

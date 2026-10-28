@@ -23,6 +23,11 @@ public:
 	const char* GetItemLabel(int Index) const override;
 	void Get(int Index, int** Start, int** End, int* Type, unsigned int* Color) override;
 	void CustomDrawCompact(int Index, ImDrawList* DrawList, const ImRect& Rect, const ImRect& ClipRect) override;
+	int GetItemTypeCount() const override;
+	const char* GetItemTypeName(int TypeIndex) const override;
+	void Add(int TypeIndex) override;
+	void Del(int Index) override;
+	void Duplicate(int Index) override;
 
 
 
@@ -32,6 +37,9 @@ public:
 	int TimeToFrame(double Time) const;
 	double FrameToTime(int Frame) const;
 	bool ConsumeIndex(int& OutTrack, int& OutKey);
+	int ConsumeDeletedTrackIndex();
+	bool ConsumeDragRequest(int& OutTrack, int& OutKey, int& OutFrame);
+	void SetDragKeyIndex(int InKey);
 	void SetSelection(int InTrack, int InKey);
 
 	static const char* GetTrackName(const FSequenceTrack& Track);
@@ -41,6 +49,7 @@ public:
 
 private:
 	static unsigned int GetTrackColor(const FSequenceTrack& Track);
+	FString MakeUniqueTrackName(const FString& BaseName) const;
 
 	static constexpr float LegendWidth = 200.0f;
 	static constexpr float KeyHitPadding = 3.0f;
@@ -54,5 +63,13 @@ private:
 	int ClickedKeyIndex = -1;
 	int SelectedTrackIndex = -1;
 	int SelectedKeyIndex = -1;
+	int DeletedTrackIndex = -1;
+
+	int DragTrackIndex = -1;
+	int DragKeyIndex = -1;
+	int DragStartFrame = 0;
+	float DragStartMouseX = 0.0f;
+	bool bDragging = false;
+	int RequestedDragFrame = -1;
 
 };

@@ -106,6 +106,40 @@ namespace
 		}
 	}
 
+	FSequenceEventParams MakeDefaultEventParams(ESequenceEventType EventType)
+	{
+		switch (EventType)
+		{
+		case ESequenceEventType::HitStop:
+			return FHitStopParams();
+		case ESequenceEventType::Slomo:
+			return FSlomoParams();
+		case ESequenceEventType::CameraShake:
+			return FCameraShakeParams();
+		default:
+			return std::monostate();
+		}
+	}
+
+	bool DrawEventTypeCombo(ESequenceEventType& EventType)
+	{
+		bool bChanged = false;
+		if (ImGui::BeginCombo("##EventType", GetEventTypeLabel(EventType)))
+		{
+			for (uint8 Type = static_cast<uint8>(ESequenceEventType::HitStop); Type < static_cast<uint8>(ESequenceEventType::Count); Type++)
+			{
+				const ESequenceEventType Candidate = static_cast<ESequenceEventType>(Type);
+				if (ImGui::Selectable(GetEventTypeLabel(Candidate), Candidate == EventType) && Candidate != EventType)
+				{
+					EventType = Candidate;
+					bChanged = true;
+				}
+			}
+			ImGui::EndCombo();
+		}
+		return bChanged;
+	}
+
 	template<typename TKeyFrame>
 	int32 FindOrInsertKey(TArray<TKeyFrame>& Keys, int32 Frame, const TKeyFrame& NewKey, bool& bOutExisting, const FSequencerAdapter& Adapter)
 	{
@@ -307,6 +341,10 @@ void FSequencerPanel::DrawToolBar()
 		{
 			SelectedKeyIndex = AddFloatKey(*FloatTrack, CurrentTime);
 		}
+		else if (FEventTrack* EventTrack = std::get_if<FEventTrack>(&Track))
+		{
+			SelectedKeyIndex = AddEventKey(*EventTrack, CurrentTime);
+		}
 	}
 	ImGui::EndDisabled();
 
@@ -339,17 +377,48 @@ void FSequencerPanel::DrawTimeline()
 	Adapter.SetSelection(SelectedTrackIndex, SelectedKeyIndex);
 
 	const int PreviousFrame = CurrentFrame;
-	ImSequencer::Sequencer(&Adapter, &CurrentFrame, 
+	const int PreviousSelectedTrackIndex = SelectedTrackIndex;
+	ImSequencer::Sequencer(&Adapter, &CurrentFrame,
 		&bExpanded, &SelectedTrackIndex, &FirstVisibleFrame,
-		ImSequencer::SEQUENCER_CHANGE_FRAME);
+		ImSequencer::SEQUENCER_CHANGE_FRAME | ImSequencer::SEQUENCER_ADD | ImSequencer::SEQUENCER_DEL);
 
 	int ClickedTrackIndex = -1;
 	int ClickedKeyIndex = -1;
+	const bool bClicked = Adapter.ConsumeIndex(ClickedTrackIndex, ClickedKeyIndex);
+	const int DeletedTrackIndex = Adapter.ConsumeDeletedTrackIndex();
 
-	if (Adapter.ConsumeIndex(ClickedTrackIndex, ClickedKeyIndex))
+	if (DeletedTrackIndex != -1)
+	{
+		if (PreviousSelectedTrackIndex == DeletedTrackIndex)
+		{
+			SelectedTrackIndex = -1;
+			SelectedKeyIndex = -1;
+		}
+		else if (PreviousSelectedTrackIndex > DeletedTrackIndex)
+		{
+			SelectedTrackIndex = PreviousSelectedTrackIndex - 1;
+		}
+		else
+		{
+			SelectedTrackIndex = PreviousSelectedTrackIndex;
+		}
+	}
+	else if (bClicked)
 	{
 		SelectedTrackIndex = ClickedTrackIndex;
 		SelectedKeyIndex = ClickedKeyIndex;
+	}
+
+	int DragTrackIndex = -1;
+	int DragKeyIndex = -1;
+	int DragFrame = -1;
+	if (Adapter.ConsumeDragRequest(DragTrackIndex, DragKeyIndex, DragFrame)
+		&& EditingSequence.Tracks.IsValidIndex(DragTrackIndex))
+	{
+		const int32 NewKeyIndex = MoveKeyToFrame(EditingSequence.Tracks[DragTrackIndex], DragKeyIndex, DragFrame);
+		Adapter.SetDragKeyIndex(NewKeyIndex);
+		SelectedTrackIndex = DragTrackIndex;
+		SelectedKeyIndex = NewKeyIndex;
 	}
 
 	if (CurrentFrame != PreviousFrame)
@@ -513,7 +582,12 @@ void FSequencerPanel::DrawKeyProperties(FSequenceTrack& Track)
 	else if (FEventTrack* EventTrack = std::get_if<FEventTrack>(&Track))
 	{
 		BeginPropertyRow("Event");
-		ImGui::TextUnformatted(GetEventTypeLabel(EventTrack->KeyFrames[SelectedKeyIndex].EventType));
+		FEventKeyFrame& EventKey = EventTrack->KeyFrames[SelectedKeyIndex];
+		if (DrawEventTypeCombo(EventKey.EventType))
+		{
+			EventKey.Params = MakeDefaultEventParams(EventKey.EventType);
+			LastEventType = EventKey.EventType;
+		}
 	}
 }
 
@@ -627,9 +701,28 @@ void FSequencerPanel::ValidateKeySelection()
 
 bool FSequencerPanel::CanAddKey() const
 {
-	return CanAddTransformKey()
-		|| (EditingSequence.Tracks.IsValidIndex(SelectedTrackIndex)
-			&& std::holds_alternative<FFloatTrack>(EditingSequence.Tracks[SelectedTrackIndex]));
+	if (!EditingSequence.Tracks.IsValidIndex(SelectedTrackIndex))
+	{
+		return false;
+	}
+
+	const FSequenceTrack& Track = EditingSequence.Tracks[SelectedTrackIndex];
+	return std::holds_alternative<FTransformTrack>(Track)
+		|| std::holds_alternative<FFloatTrack>(Track)
+		|| std::holds_alternative<FEventTrack>(Track);
+}
+
+int32 FSequencerPanel::AddEventKey(FEventTrack& InTrack, double InTime)
+{
+	const int32 NewFrame = Adapter.TimeToFrame(InTime);
+
+	FEventKeyFrame NewKey;
+	NewKey.Time = Adapter.FrameToTime(NewFrame);
+	NewKey.EventType = LastEventType;
+	NewKey.Params = MakeDefaultEventParams(LastEventType);
+
+	bool bExisting = false;
+	return FindOrInsertKey(InTrack.KeyFrames, NewFrame, NewKey, bExisting, Adapter);
 }
 
 bool FSequencerPanel::CanAddTransformKey() const

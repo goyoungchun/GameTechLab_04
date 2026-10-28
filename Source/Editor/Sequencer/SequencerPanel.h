@@ -46,6 +46,7 @@ private:
 	bool GetCurrentViewPOV(FSequencerViewInfo& OutView) const;
 	int32 AddTransformKey(FTransformTrack& InTrack, double InTime, const FTransform& InValue);
 	int32 AddFloatKey(FFloatTrack& InTrack, double InTime);
+	int32 AddEventKey(FEventTrack& InTrack, double InTime);
 	bool CanAddTransformKey() const;
 	bool CanAddKey() const;
 	void ValidateKeySelection();
@@ -70,6 +71,7 @@ private:
 	int EaseTrackIndex = -1;
 	int EaseKeyIndex = -1;
 	float EasePresetIndex = 0.0f;
+	ESequenceEventType LastEventType = ESequenceEventType::CameraShake;
 
 	static constexpr float SplitterWidth = 6.0f;
 	static constexpr float MinDetailPanelWidth = 220.0f;
