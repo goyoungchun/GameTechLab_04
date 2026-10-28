@@ -4,6 +4,7 @@
 #include "Engine.h"
 #include "Camera/ViewportCameraMovement.h"
 #include "Math/EngineMath.h"
+#include "Camera/CameraTypes.h"
 
 namespace
 {
@@ -155,20 +156,22 @@ FSceneView FGameViewportClient::CalcSceneView(const FRect& InViewRect)
 
 	if (ViewCamera)
 	{
-		ViewCamera->SetAspectRatio(Aspect);
+		FMinimalViewInfo DesiredView;
+		ViewCamera->GetCameraView(DesiredView);
+		DesiredView.AspectRatio = Aspect;
 
-		OutView.ViewLocation = ViewCamera->GetWorldLocation();
-		OutView.ViewRotation = ViewCamera->GetWorldRotation();
-		OutView.ViewForward = OutView.ViewRotation.Quaternion().GetForwardVector();
-		OutView.ViewMatrix = ViewCamera->GetViewMatrix();
-		OutView.ProjectionMatrix = ViewCamera->GetProjectionMatrix();
-		OutView.ViewProjectionMatrix = ViewCamera->GetViewProjectionMatrix();
-		OutView.FieldOfView = ViewCamera->GetFieldOfView();
-		OutView.AspectRatio = Aspect;
-		OutView.NearClip = ViewCamera->GetNearZ();
-		OutView.FarClip = ViewCamera->GetFarZ();
-		OutView.OrthoWidth = ViewCamera->GetOrthoWidth();
-		OutView.bIsPerspective = !ViewCamera->GetIsOrthogonal();
+		OutView.ViewLocation = DesiredView.Location;
+		OutView.ViewRotation = DesiredView.Rotation;
+		OutView.ViewForward = DesiredView.Rotation.Quaternion().GetForwardVector();
+		OutView.ViewMatrix = DesiredView.CalculateViewMatrix();
+		OutView.ProjectionMatrix = DesiredView.CalculateProjectionMatrix();
+		OutView.ViewProjectionMatrix = OutView.ViewMatrix * OutView.ProjectionMatrix;
+		OutView.FieldOfView = DesiredView.FOV;
+		OutView.AspectRatio = DesiredView.AspectRatio;
+		OutView.NearClip = DesiredView.NearClipPlane;
+		OutView.FarClip = DesiredView.FarClipPlane;
+		OutView.OrthoWidth = DesiredView.OrthoWidth;
+		OutView.bIsPerspective = DesiredView.ProjectionMode == ECameraProjectionMode::Perspective;
 		OutView.ViewMode = EViewportMode::Lit;
 		OutView.ShadingModel = EShadingModel::BlinnPhong;
 	}
