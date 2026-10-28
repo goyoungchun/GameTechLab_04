@@ -3,7 +3,7 @@
 #include "GameFramework/Pawn.h"
 #include "PlayerCameraManager.h"
 #include "CameraModifier_CameraShake.h"
-
+#include "CameraModifier_CameraFade.h"
 
 APlayerCameraManager::APlayerCameraManager()
 {
@@ -244,6 +244,28 @@ void APlayerCameraManager::StopAllCameraShakes()
 	if (UCameraModifier_CameraShake* ShakeModifier = FindCameraModifier <UCameraModifier_CameraShake>())
 	{
 		ShakeModifier->StopAllCameraShakes();
+	}
+}
+
+void APlayerCameraManager::StartCameraFade(float FromAlpha, float ToAlpha, float Duration, const FVector& Color, bool bHoldWhenFinished)
+{
+	UCameraModifier_CameraFade* FadeModifier = FindCameraModifier<UCameraModifier_CameraFade>();
+	if (!FadeModifier)
+	{
+		FadeModifier = AddCameraModifier<UCameraModifier_CameraFade>();
+	}
+
+	if (FadeModifier)
+	{
+		FadeModifier->StartFade(FromAlpha, ToAlpha, Duration, Color, bHoldWhenFinished);
+	}
+}
+
+void APlayerCameraManager::StopCameraFade()
+{
+	if (UCameraModifier_CameraFade* FadeModifier = FindCameraModifier<UCameraModifier_CameraFade>())
+	{
+		FadeModifier->StopFade();
 	}
 }
 

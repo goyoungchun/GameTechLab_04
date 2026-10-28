@@ -36,7 +36,7 @@ public:
 	void DrawDeferredLighting(const FSceneView& View, const struct FDeferredViewTargets& Targets,
 		const TArray<FPointLightRenderData>& PointLights);
 	void DrawToneMap(FTexture2D* LightingHDR, FTexture2D* Depth);
-
+	void DrawScreenOverlay(const FSceneView& View);
 	// 시점 상수 버퍼 및 렌더링 상태 설정
 	void SetupView(const FSceneView& View, const FFrameLightData* Lights, const FTileLightCullingResources* TileLights = nullptr);
 
@@ -78,6 +78,7 @@ private:
 	TUniquePtr<FConstantBuffer> PerObjectCB;
 	TUniquePtr<FConstantBuffer> ViewCB;
 	TUniquePtr<FConstantBuffer> DeferredLightCB;
+	TUniquePtr<FConstantBuffer> ScreenOverlayCB;
 
 	// 오브젝트 상수 버퍼
 	TUniquePtr<FConstantBuffer> PerObjectSlotCB;
@@ -112,6 +113,8 @@ private:
 	FTileLightCulling TileLightCulling;
 	// 현재 불투명 패스 동안만 참조하며 소유권은 뷰에 있다.
 	const FTileLightCullingResources* CurrentTileLights = nullptr;
+
+	
 
 	void DrawPackets(const FRenderQueue& InQueue, uint32 Begin, uint32 End, const FMatrix& ViewProjection, EMeshPass Pass = EMeshPass::Forward);
 

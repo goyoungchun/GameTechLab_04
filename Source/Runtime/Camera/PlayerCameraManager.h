@@ -100,6 +100,9 @@ public:
 	void StartCameraShake(const FCameraShakeParams& Params);
 	void StopAllCameraShakes();
 
+	void StartCameraFade(float FromAlpha, float ToAlpha, float Duration, const FVector& Color, bool bHoldWhenFinished = false);
+	void StopCameraFade();
+
 	AActor* GetViewTarget() const;
 	bool IsBlending() const { return PendingViewTarget.Target != nullptr; }
 	bool IsCameraCacheValid() const { return bCameraCacheValid; }
