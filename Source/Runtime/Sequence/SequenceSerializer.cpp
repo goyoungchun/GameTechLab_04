@@ -258,6 +258,19 @@ namespace
 		return nullptr;
 	}
 
+	USceneComponent* FindOverrideComponent(AActor* Actor, const FString& ComponentName)
+	{
+		if (!Actor)
+			return nullptr;
+
+		for (UActorComponent* Component : Actor->GetComponents())
+		{
+			if (Component && Component->GetName() == ComponentName)
+				return Cast<USceneComponent>(Component);
+		}
+		return Actor->GetRootComponent();
+	}
+
 	void SetTrackBinding(FSequenceTrack& Track, UActorComponent* Binding)
 	{
 		if (FTransformTrack* TransformTrack = std::get_if<FTransformTrack>(&Track))
@@ -389,7 +402,8 @@ bool FSequenceSerializer::Save(const FSequence& Sequence, const FString& Path, c
 	return !File.fail();
 }
 
-bool FSequenceSerializer::Load(const FString& Path, UWorld* World, FSequence& OutSequence, TArray<ACameraActor*>& OutCameras, FString* OutScenePath)
+bool FSequenceSerializer::Load(const FString& Path, UWorld* World, FSequence& OutSequence, TArray<ACameraActor*>& OutCameras,
+	FString* OutScenePath, const TMap<FString, AActor*>* ActorOverrides)
 {
 	if (!World)
 		return false;
@@ -541,7 +555,10 @@ bool FSequenceSerializer::Load(const FString& Path, UWorld* World, FSequence& Ou
 		}
 		else if (!Ref.ActorName.empty())
 		{
-			Binding = FindSceneComponent(World, Ref.ActorName, Ref.ComponentName);
+			AActor* const* Override = ActorOverrides ? ActorOverrides->Find(Ref.ActorName) : nullptr;
+			Binding = Override
+				? FindOverrideComponent(*Override, Ref.ComponentName)
+				: FindSceneComponent(World, Ref.ActorName, Ref.ComponentName);
 			if (!Binding)
 				HTR_LOG(Warning, "Sequence: binding {}.{} not found", Ref.ActorName, Ref.ComponentName);
 		}

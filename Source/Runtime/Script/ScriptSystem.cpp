@@ -10,6 +10,7 @@
 #include "Asset/AssetManager.h"
 #include "Component/ScriptComponent.h"
 #include "Component/SphereComponent.h"
+#include "Collision/FPhysSceneChaos.h"
 #include "Core/EngineLog.h"
 #include "GameFramework/Vehicle/VehicleScriptBindings.h"
 #include "GameFramework/Vehicle/VehiclePawn.h"
@@ -326,6 +327,15 @@ void FScriptSystem::RegisterTypes()
 			FVector Location = Self.GetActorLocation();
 			Location.Z += SurfaceLocation.Z + 0.01f - Root->CalcBounds().Min.Z;
 			Self.SetActorLocation(Location);
+		},
+		"SetPhysicsEnabled", [](AActor& Self, bool bEnabled)
+		{
+			UPrimitiveComponent* Body = Cast<UPrimitiveComponent>(Self.GetRootComponent());
+			if (!Body || Body->GetMotionType() == EPhysicsMotionType::Static)
+				return;
+			Body->SetMotionType(bEnabled ? EPhysicsMotionType::Dynamic : EPhysicsMotionType::Kinematic);
+			if (UWorld* World = Self.GetWorld())
+				World->GetPhysicsScene().ResetPrimitiveVelocity(Body);
 		},
 		"SetViewCamera", [](AActor& Self, int32 PlayerIndex, const FVector& Location, const FRotator& Rotation,
 			sol::optional<float> BlendTime)

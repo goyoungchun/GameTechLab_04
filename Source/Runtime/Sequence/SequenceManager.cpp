@@ -23,7 +23,8 @@ FSequenceManager::~FSequenceManager()
 	ActiveSequences.Reset();
 }
 
-bool FSequenceManager::Play(UWorld* World, const FString& Name, float BlendTime, USceneComponent* Target, int32 ViewPlayerIndex)
+bool FSequenceManager::Play(UWorld* World, const FString& Name, float BlendTime, USceneComponent* Target, int32 ViewPlayerIndex,
+	const TMap<FString, AActor*>* ActorOverrides)
 {
 	if (!World || (Target && (Target->GetWorld() != World || !Target->GetOwner()
 		|| Target->GetOwner()->IsActorBeingDestroyed())))
@@ -44,14 +45,14 @@ bool FSequenceManager::Play(UWorld* World, const FString& Name, float BlendTime,
 	}
 
 	FActiveSequence* Active = new FActiveSequence();
-	const FSequence* Template = Target ? ComponentSequenceTemplates.Find(Name) : nullptr;
+	const FSequence* Template = Target && !ActorOverrides ? ComponentSequenceTemplates.Find(Name) : nullptr;
 	if (Template) Active->Sequence = *Template;
-	else if (!FSequenceSerializer::Load(FSequenceSerializer::GetSequencePath(Name), World, Active->Sequence, Active->Cameras))
+	else if (!FSequenceSerializer::Load(FSequenceSerializer::GetSequencePath(Name), World, Active->Sequence, Active->Cameras, nullptr, ActorOverrides))
 	{
 		delete Active;
 		return false;
 	}
-	if (Target && !Template && Active->Cameras.IsEmpty())
+	if (Target && !Template && !ActorOverrides && Active->Cameras.IsEmpty())
 		ComponentSequenceTemplates.Add(Name, Active->Sequence);
 	if (Target)
 		for (FSequenceTrack& Track : Active->Sequence.Tracks)
@@ -124,6 +125,16 @@ void FSequenceManager::Tick(UWorld* World, double GameDeltaTime, double Unscaled
 			[World](const ACameraActor* Camera) { return IsActorAlive(World, Camera); });
 		if (!bCamerasAlive || !IsTargetAlive(World, *Active) || Active->Sequence.Length <= 0.0)
 		{
+			Finish(World, Index, Active->BlendTime);
+			continue;
+		}
+
+		const double ClockDeltaTime = Active->Player->GetClockSource() == ESequenceClockSource::UnscaledTime
+			? UnscaledDeltaTime : GameDeltaTime;
+		if (Active->Player->GetPlaybackState() == ESequencePlaybackState::Playing
+			&& Active->Player->GetCurrentTime() + ClockDeltaTime * Active->Player->GetPlayRate() >= Active->Sequence.Length)
+		{
+			Active->Player->Seek(Active->Sequence.Length, true);
 			Finish(World, Index, Active->BlendTime);
 			continue;
 		}

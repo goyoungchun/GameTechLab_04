@@ -21,7 +21,8 @@ public:
 	FSequenceManager& operator=(const FSequenceManager&) = delete;
 
 	// Target이 있으면 미지정 트랙을 연결하고, 같은 파일도 대상별로 독립 재생한다.
-	bool Play(UWorld* World, const FString& Name, float BlendTime, USceneComponent* Target = nullptr, int32 ViewPlayerIndex = -1);
+	bool Play(UWorld* World, const FString& Name, float BlendTime, USceneComponent* Target = nullptr, int32 ViewPlayerIndex = -1,
+		const TMap<FString, AActor*>* ActorOverrides = nullptr);
 	void Stop(UWorld* World, const FString& Name, float BlendTime, USceneComponent* Target = nullptr);
 	void StopAll(UWorld* World);
 	bool IsPlaying(const FString& Name, const USceneComponent* Target = nullptr) const;

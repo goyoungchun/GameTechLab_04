@@ -18,6 +18,12 @@ Game.Config = {
     CarHitStop = { Duration = 0.08, MinSpeed = 4, Cooldown = 0.35 },
     GoalSequence   = "Goal",
     GoalSequenceBlendTime = 0.65,
+    EndSequence = {
+        Name        = "End",
+        BlendTime   = 0.5,
+        WinnerActor = "AVehiclePawn_0",
+        LoserActor  = "AVehiclePawn_1",
+    },
     BoostSeconds   = 6,
     CarNames = { "armor", "coupe", "fenyr", "ghini", "italia", "jeep", "kamaro", "lamb", "mobil", "police" },
     BackKey = Key.Backspace,
@@ -192,6 +198,46 @@ local SplitScreenStates =
 
 local GoalCameraPlayer = nil
 local ActiveGoalSequence = nil
+local EndingCoroutineId = nil
+
+local function SetCarsPhysicsEnabled(bEnabled)
+    for PlayerIndex = 1, 2 do
+        local Car = Game.Cars and Game.Cars[PlayerIndex]
+        if Car and Car.Actor and not Car.Actor:IsActorBeingDestroyed() then
+            Car.Actor:SetPhysicsEnabled(bEnabled)
+        end
+    end
+end
+
+local function StopEnding()
+    if EndingCoroutineId then
+        StopCoroutine(EndingCoroutineId)
+        EndingCoroutineId = nil
+    end
+    if Game.bEndingPlaying then
+        obj:StopSequence(Game.Config.EndSequence.Name, 0)
+        SetCarsPhysicsEnabled(true)
+        Game.bEndingPlaying = false
+    end
+end
+
+local function PlayEndingRoutine()
+    local Ending = Game.Config.EndSequence
+    local WinnerIndex = Game.WinnerIndex
+    local Winner = WinnerIndex and Game.Cars[WinnerIndex]
+    local Loser = WinnerIndex and Game.Cars[3 - WinnerIndex]
+    if Winner and Winner.Actor and Loser and Loser.Actor then
+        obj:ClearBalls()
+        SetCarsPhysicsEnabled(false)
+        local Bindings = { [Ending.WinnerActor] = Winner.Actor, [Ending.LoserActor] = Loser.Actor }
+        if obj:PlaySequence(Ending.Name, Ending.BlendTime, Bindings) then
+            coroutine.yield(WaitWhile(function() return obj:IsSequencePlaying(Ending.Name) end))
+        end
+        SetCarsPhysicsEnabled(true)
+    end
+    Game.bEndingPlaying = false
+    EndingCoroutineId = nil
+end
 
 local function ClearGoalCamera(BlendTime)
     if GoalCameraPlayer then
@@ -221,6 +267,9 @@ end
 
 local function SetState(NewState)
     print(string.format("[GameMode] %s -> %s", tostring(Game.State), NewState))
+    if Game.State == "Result" and NewState ~= "Result" then
+        StopEnding()
+    end
     if Game.State == "GoalScored" and NewState ~= "GoalScored" and ActiveGoalSequence then
         obj:StopSequence(ActiveGoalSequence, 0)
         ActiveGoalSequence = nil
@@ -726,9 +775,13 @@ StateEnterHandlers.Result = function()
     SetAllCarsInputEnabled(false)
     SetMenuItems(Game.Config.ResultMenuItems)
     ResultElapsedTime = 0
+    StopEnding()
+    Game.bEndingPlaying = true
+    EndingCoroutineId = StartCoroutine(PlayEndingRoutine)
 end
 
 StateTickHandlers.Result = function(DeltaTime)
+    if Game.bEndingPlaying then return end
     ResultElapsedTime = ResultElapsedTime + DeltaTime
     if ResultElapsedTime < Game.Config.ResultInputDelay then return end
 

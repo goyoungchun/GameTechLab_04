@@ -232,6 +232,7 @@ StateDrawHandlers.Defended = function()
 end
 
 StateDrawHandlers.Result = function()
+    if Game.bEndingPlaying then return end
     DrawBackground()
 
     local WinnerColor = (Game.WinnerIndex == 1) and Color.Orange or Color.Blue
