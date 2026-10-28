@@ -13,6 +13,7 @@
 #include "Core/EngineLog.h"
 #include "GameFramework/Vehicle/VehicleScriptBindings.h"
 #include "GameFramework/Vehicle/VehiclePawn.h"
+#include "Audio/AudioSystem.h"
 
 namespace
 {
@@ -397,6 +398,7 @@ void FScriptSystem::RegisterInput()
 void FScriptSystem::RegisterFunction()
 {
 	Lua->set_function("RestartLevel", []() {
+		FAudioSystem::Get().StopAll();
 		if (GEngine)
 		{
 			GEngine->RequestRestartLevel();
@@ -410,6 +412,13 @@ void FScriptSystem::RegisterFunction()
 			GEngine->RequestQuitGame();
 		}
 	});
+
+	Lua->set_function("PlaySound", [](const FString& Name) { return FAudioSystem::Get().Play(Name); });
+	Lua->set_function("PlayBGM", [](const FString& Name) { return FAudioSystem::Get().PlayLoop(Name); });
+	Lua->set_function("StopSound", [](const FString& Name) { FAudioSystem::Get().Stop(Name); });
+	Lua->set_function("StopAllSounds", []() { FAudioSystem::Get().StopAll(); });
+	Lua->set_function("SetSoundVolume", [](const FString& Name, float Volume) { FAudioSystem::Get().SetVolume(Name, Volume); });
+	Lua->set_function("SetSoundPitch", [](const FString& Name, float Pitch) { FAudioSystem::Get().SetPitch(Name, Pitch); });
 }
 
 void FScriptSystem::LoadCoroutineWait()

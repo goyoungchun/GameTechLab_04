@@ -4,6 +4,7 @@
 
 class USphereComponent;
 class UStaticMeshComponent;
+class UScriptComponent;
 
 // 매 턴 새로 생성하는 물리 공. 움직임은 Solver가 처리한다.
 class ABallActor : public AActor
@@ -28,5 +29,6 @@ private:
 
 	USphereComponent* Collision = nullptr;
 	UStaticMeshComponent* Mesh = nullptr;
+	UScriptComponent* Script = nullptr;
 	int32 LastTouchPlayerIndex = -1;
 };

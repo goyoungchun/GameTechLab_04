@@ -470,13 +470,13 @@ void UScriptComponent::TickComponent(float DeltaTime)
 	UpdateCoroutines(DeltaTime);
 }
 
-void UScriptComponent::OnHit(AActor *InOtherActor)
+void UScriptComponent::OnHit(AActor *InOtherActor, const FVector& InNormal)
 {
 	if (!LuaOnHit.valid() || GetOwner()->IsActorBeingDestroyed())
 	{
 		return;
 	}
-	auto Result = LuaOnHit(InOtherActor);
+	auto Result = LuaOnHit(InOtherActor, InNormal);
 	if (!Result.valid())
 	{
 		sol::error Err = Result;
@@ -544,7 +544,7 @@ void UScriptComponent::HandleHit(UPrimitiveComponent* Self, AActor* OtherActor, 
 	FVector NormalImpulse, const FHitResult& Hit)
 {
 	if (OtherActor)
-		OnHit(OtherActor);
+		OnHit(OtherActor, Hit.Normal);
 }
 
 void UScriptComponent::SetScriptPath(FString InScriptPath)

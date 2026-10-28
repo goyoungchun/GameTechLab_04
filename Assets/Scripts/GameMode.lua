@@ -136,15 +136,30 @@ local function SetMenuItems(MenuItems)
     Game.Menu.SelectedIndex = 1
 end
 
+local CurrentBGM = nil
+
+local function PlayMusic(Name)
+    if CurrentBGM == Name then return end
+    if CurrentBGM then StopSound(CurrentBGM) end
+    CurrentBGM = Name
+    if Name then PlayBGM(Name) end
+end
+
 local function UpdateMenuSelection()
     local MenuState = Game.Menu
+    local PreviousIndex = MenuState.SelectedIndex
     if IsKeyPressed(Key.W) or IsKeyPressed(Key.Up) then
         MenuState.SelectedIndex = math.max(1, MenuState.SelectedIndex - 1)
     end
     if IsKeyPressed(Key.S) or IsKeyPressed(Key.Down) then
         MenuState.SelectedIndex = math.min(#MenuState.Items, MenuState.SelectedIndex + 1)
     end
+    if MenuState.SelectedIndex ~= PreviousIndex then
+        PlaySound("click")
+
+    end
     if IsKeyPressed(Key.Enter) then
+        PlaySound("select")
         return MenuState.Items[MenuState.SelectedIndex]
     end
     return nil
@@ -274,6 +289,7 @@ end
 
 local function StartSuddenDeath()
     print("[GameMode] Sudden death")
+    PlaySound("suddendeath")
     Game.bIsSuddenDeath = true
     StartTurn()
 end
@@ -309,6 +325,7 @@ local function StartMatch()
         end
     end
     print("[GameMode] Match start. First attacker: P" .. Game.FirstAttackerIndex)
+    PlayMusic("game_bgm")
     Game.Turn = 1
     StartTurn()
 end
@@ -317,10 +334,12 @@ local function CountdownRoutine()
     SetAllCarsInputEnabled(false)
     for Count = Game.Config.CountdownTime, 1, -1 do
         Game.Countdown = Count
+        PlaySound("count")
         coroutine.yield(WaitForSeconds(1))
     end
 
     Game.Countdown = 0
+    PlaySound("go")
     SetState("Playing")
     SetAllCarsInputEnabled(true)
 
@@ -429,6 +448,7 @@ StateEnterHandlers.MainMenu = function()
     Game.SelectedCarNames = { nil, nil }
     SetAllCarsInputEnabled(false)
     MainMenuElapsedTime = 0
+    PlayMusic("menu_bgm")
 end
 
 StateTickHandlers.MainMenu = function(DeltaTime)
@@ -462,6 +482,7 @@ StateEnterHandlers.CarSelect = function()
     Game.CarSelectReady = { false, false }
     SetAllCarsInputEnabled(false)
     EnterShowroom()
+    PlayMusic("menu_bgm")
 end
 
 StateTickHandlers.CarSelect = function(DeltaTime)
@@ -474,11 +495,14 @@ StateTickHandlers.CarSelect = function(DeltaTime)
         local Keys = Game.Config.CarSelectKeys[PlayerIndex]
         if IsKeyPressed(Keys.Confirm) then
             Game.CarSelectReady[PlayerIndex] = not Game.CarSelectReady[PlayerIndex]
+            PlaySound("select")
         elseif not Game.CarSelectReady[PlayerIndex] then
             if IsKeyPressed(Keys.Prev) then
                 ChangeCar(PlayerIndex, -1)
+                PlaySound("click")
             elseif IsKeyPressed(Keys.Next) then
                 ChangeCar(PlayerIndex, 1)
+                PlaySound("click")
             end
         end
     end
@@ -515,6 +539,7 @@ StateTickHandlers.Playing = function(DeltaTime)
 end
 
 StateEnterHandlers.GoalScored = function()
+    PlaySound("goal")
     StopTurnResult()
     ResultCoroutineId = StartCoroutine(ShowTurnResultThenEnd)
 end
@@ -523,6 +548,7 @@ StateTickHandlers.GoalScored = function(DeltaTime) end
 
 StateEnterHandlers.Defended = function()
     print("[GameMode] Defended by P" .. GetDefenderIndex(Game.AttackerIndex))
+    PlaySound("defended")
     StopTurnResult()
     ResultCoroutineId = StartCoroutine(ShowTurnResultThenEnd)
 end
@@ -551,6 +577,8 @@ end
 local ResultElapsedTime = 0
 
 StateEnterHandlers.Result = function()
+    PlayMusic(nil)
+    PlaySound("win")
     SetAllCarsInputEnabled(false)
     SetMenuItems(Game.Config.ResultMenuItems)
     ResultElapsedTime = 0
@@ -571,6 +599,7 @@ StateTickHandlers.Result = function(DeltaTime)
 end
 
 function BeginPlay()
+    CurrentBGM = nil
     ResetMatchState()
     EnsureCarsAndBall()
     SetState("MainMenu")

@@ -4,6 +4,7 @@
 #include "Asset/AssetManager.h"
 #include "Core/EngineTimer.h"
 #include "Core/Window.h"
+#include "Audio/AudioSystem.h"
 #include "Core/Windows/WindowsPlatformTime.h"
 #include "Input/InputSystem.h"
 #include "ObjectSystem/Casts.h"
@@ -79,6 +80,7 @@ bool FEngineLoop::PreInit(HINSTANCE hInstance, UClass* EngineClass)
 		FSplashScreen::Hide();
 		return false;
 	}
+	FAudioSystem::Get().Initialize(MainWindow->GetHandle());
 
 	Swapchain = MakeUnique<FSwapchain>(RenderDevice.get(), MainWindow.get());
 	if (Config.bCreateDepthBuffer)
@@ -193,6 +195,7 @@ void FEngineLoop::Exit()
 	Swapchain.reset();
 	Renderer.reset();
 	FScriptSystem::Get().Shutdown();
+	FAudioSystem::Get().Shutdown();
 
 	if (RenderDevice)
 	{
