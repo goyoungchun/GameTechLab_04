@@ -67,6 +67,8 @@ public:
 	// 카메라 회전 보간속도
 	float CameraRotationLagSpeed{ 10.f };
 
+	bool bLagInitialized{ false };
+
 protected:
 	// 최종 카메라 트랜스폼 갱신
 	virtual void UpdateDesiredArmLocation(bool bDoTrace, bool bDoLocationLag, bool bDoRotationLag, float DeltaTime);

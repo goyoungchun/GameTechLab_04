@@ -42,7 +42,17 @@ FRotator USpringArmComponent::GetTargetRotation() const
 // bDoRotationLag: 회전지연 여부
 void USpringArmComponent::UpdateDesiredArmLocation(bool bDoTrace, bool bDoLocationLag, bool bDoRotationLag, float DeltaTime)
 {
+    
     FRotator DesiredRot = GetTargetRotation();
+    FVector ArmOrigin = GetWorldLocation() + TargetOffset;
+    FVector DesiredLoc = ArmOrigin;
+
+    if (!bLagInitialized)
+    {
+        PreviousDesiredRot = DesiredRot;
+        PreviousDesiredLoc = DesiredLoc;
+        bLagInitialized = true;
+    }
 
     // 회전 지연
     if (bDoRotationLag)
@@ -51,9 +61,6 @@ void USpringArmComponent::UpdateDesiredArmLocation(bool bDoTrace, bool bDoLocati
     }
 
     PreviousDesiredRot = DesiredRot;
-
-    FVector ArmOrigin = GetWorldLocation() + TargetOffset;
-    FVector DesiredLoc = ArmOrigin;
 
     // 위치 지연
     if (bDoLocationLag)
