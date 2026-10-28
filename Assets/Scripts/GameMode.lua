@@ -3,6 +3,8 @@ Game.Config = {
     TotalTurns     = 4,
     CountdownTime  = 3,
     ResultShowTime = 2,
+    GoalSequence   = "Goal",
+    GoalSequenceBlendTime = 0.5,
     BoostSeconds   = 6,
     CarNames = { "armor", "coupe", "fenyr", "ghini", "italia", "jeep", "kamaro", "lamb", "mobil", "police" },
     BackKey = Key.Backspace,
@@ -353,6 +355,7 @@ end
 local function ShowTurnResultThenEnd()
     SetAllCarsInputEnabled(false)
     coroutine.yield(WaitForSeconds(Game.Config.ResultShowTime))
+    coroutine.yield(WaitWhile(function() return obj:IsSequencePlaying(Game.Config.GoalSequence) end))
     ResultCoroutineId = nil
     EndTurn()
 end
@@ -598,6 +601,7 @@ end
 
 StateEnterHandlers.GoalScored = function()
     PlaySound("goal")
+    obj:PlaySequence(Game.Config.GoalSequence, Game.Config.GoalSequenceBlendTime)
     StopTurnResult()
     ResultCoroutineId = StartCoroutine(ShowTurnResultThenEnd)
 end

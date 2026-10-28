@@ -1,0 +1,223 @@
+{
+    "Cameras": [
+        {
+            "FOV": 90.0,
+            "OrthoWidth": 16.0,
+            "Orthographic": false,
+            "Transform": {
+                "Location": [
+                    -0.13457337021827698,
+                    -13.456398010253906,
+                    12.35986042022705
+                ],
+                "Rotation": [
+                    18.19998550415039,
+                    99.20005798339844,
+                    0.0
+                ],
+                "Scale": [
+                    1.0,
+                    1.0,
+                    1.0
+                ]
+            }
+        }
+    ],
+    "FrameRate": 30.0,
+    "Length": 5.0,
+    "PlayRate": 1.0,
+    "Scene": "Scenes/RocketArena.scene",
+    "Tracks": [
+        {
+            "Binding": 0,
+            "Keys": [
+                {
+                    "Ease": [
+                        0.0,
+                        0.0,
+                        1.0,
+                        1.0
+                    ],
+                    "Interpolation": "Linear",
+                    "Time": 0.0,
+                    "Value": {
+                        "Location": [
+                            -0.13457337021827698,
+                            -13.456398010253906,
+                            12.35986042022705
+                        ],
+                        "Rotation": [
+                            18.19998550415039,
+                            99.20005798339844,
+                            0.0
+                        ],
+                        "Scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    }
+                }
+            ],
+            "Name": "Transform",
+            "Type": "Transform",
+            "ValueType": "Transform"
+        },
+        {
+            "Actor": "AStaticMeshActor_6",
+            "Binding": -1,
+            "Component": "UPrimitiveComponent_0",
+            "Keys": [
+                {
+                    "Ease": [
+                        0.0,
+                        0.0,
+                        1.0,
+                        1.0
+                    ],
+                    "Interpolation": "Linear",
+                    "Time": 0.0,
+                    "Value": {
+                        "Location": [
+                            0.0,
+                            -0.32557106018066406,
+                            1.741079330444336
+                        ],
+                        "Rotation": [
+                            0.39551621675491333,
+                            84.84153747558594,
+                            -5.487430572509766
+                        ],
+                        "Scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    }
+                },
+                {
+                    "Ease": [
+                        0.0,
+                        0.0,
+                        1.0,
+                        1.0
+                    ],
+                    "Interpolation": "Linear",
+                    "Time": 2.0,
+                    "Value": {
+                        "Location": [
+                            0.9440775513648987,
+                            10.132044792175293,
+                            1.6685950756072998
+                        ],
+                        "Rotation": [
+                            0.39551621675491333,
+                            84.84153747558594,
+                            -5.487430572509766
+                        ],
+                        "Scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    }
+                }
+            ],
+            "Name": "Transform 2",
+            "Type": "Transform",
+            "ValueType": "Transform"
+        },
+        {
+            "Actor": "AStaticMeshActor_5",
+            "Binding": -1,
+            "Component": "UPrimitiveComponent_0",
+            "Keys": [
+                {
+                    "Ease": [
+                        0.0,
+                        0.0,
+                        1.0,
+                        1.0
+                    ],
+                    "Interpolation": "Linear",
+                    "Time": 0.0,
+                    "Value": {
+                        "Location": [
+                            0.008141040802001953,
+                            11.90434455871582,
+                            1.1297621726989746
+                        ],
+                        "Rotation": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "Scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    }
+                },
+                {
+                    "Ease": [
+                        0.0,
+                        0.0,
+                        1.0,
+                        1.0
+                    ],
+                    "Interpolation": "Linear",
+                    "Time": 2.0,
+                    "Value": {
+                        "Location": [
+                            0.008141040802001953,
+                            11.90434455871582,
+                            1.1297621726989746
+                        ],
+                        "Rotation": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "Scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    }
+                },
+                {
+                    "Ease": [
+                        0.0,
+                        0.0,
+                        1.0,
+                        1.0
+                    ],
+                    "Interpolation": "Linear",
+                    "Time": 5.0,
+                    "Value": {
+                        "Location": [
+                            0.008141040802001953,
+                            34.704833984375,
+                            1.1297621726989746
+                        ],
+                        "Rotation": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "Scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    }
+                }
+            ],
+            "Name": "Transform 3",
+            "Type": "Transform",
+            "ValueType": "Transform"
+        }
+    ],
+    "Version": 1
+}

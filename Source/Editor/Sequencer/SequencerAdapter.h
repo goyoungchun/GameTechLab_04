@@ -43,6 +43,7 @@ public:
 	void SetSelection(int InTrack, int InKey);
 
 	static const char* GetTrackName(const FSequenceTrack& Track);
+	static FString GetTrackLabel(const FSequenceTrack& Track);
 	static int GetKeyCount(const FSequenceTrack& Track);
 	static double GetKeyTime(const FSequenceTrack& Track, int KeyIndex);
 	static ESequenceInterpolation GetKeyInterpolation(const FSequenceTrack& Track, int KeyIndex);
@@ -58,6 +59,7 @@ private:
 
 	FSequence* Sequence = nullptr;
 	TArray<FTrackFrameRange> FrameRangeCache;
+	mutable TArray<FString> LabelCache;
 	int ClickedTrackIndex = -1;
 	int ClickedKeyIndex = -1;
 	int SelectedTrackIndex = -1;

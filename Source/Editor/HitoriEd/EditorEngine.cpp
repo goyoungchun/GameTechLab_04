@@ -307,6 +307,7 @@ bool UEditorEngine::Init() {
 
 	SequencerPanel->SetWorld(EditorWorld);
 	SequencerPanel->SetViewportsPanel(ViewportsPanel);
+	SequencerPanel->SetSelectionResetCallback([this]() { ResetSceneSelection(); });
 
 	SettingsPanel->SetWorld(EditorWorld);
 	SettingsPanel->SetViewportsPanel(ViewportsPanel);

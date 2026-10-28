@@ -9,11 +9,12 @@
 #include "Camera/CameraComponent.h"
 #include "ObjectSystem/ObjectFactory.h"
 #include "Sequence/SequencePlayer.h"
-#include "Component/BillboardComponent.h"
-#include "Asset/AssetManager.h"
+#include "Sequence/SequenceSerializer.h"
+#include "Editor/HitoriEd/EditorFileUtils.h"
 #include "imgui_bezier.h"
 #include <algorithm>
 #include <cfloat>
+#include <filesystem>
 
 namespace
 {
@@ -184,6 +185,86 @@ namespace
 		}
 	}
 
+	struct FBindingCandidate
+	{
+		USceneComponent* Component = nullptr;
+		FString Label;
+	};
+
+	bool CanBindComponent(USceneComponent* Component, ESequenceValueType ValueType)
+	{
+		switch (ValueType)
+		{
+		case ESequenceValueType::Transform:
+			return true;
+		case ESequenceValueType::FOV:
+		case ESequenceValueType::OrthoWidth:
+			return Cast<UCameraComponent>(Component) != nullptr;
+		default:
+			return false;
+		}
+	}
+
+	TArray<FBindingCandidate> CollectBindingCandidates(UWorld* World, ESequenceValueType ValueType)
+	{
+		TArray<FBindingCandidate> Candidates;
+		if (!World || !World->GetPersistentLevel())
+		{
+			return Candidates;
+		}
+
+		for (AActor* Actor : World->GetPersistentLevel()->GetActors())
+		{
+			if (!Actor)
+			{
+				continue;
+			}
+
+			ACameraActor* SequenceCamera = Cast<ACameraActor>(Actor);
+			if (!FSequenceSerializer::IsSequenceCamera(SequenceCamera))
+			{
+				SequenceCamera = nullptr;
+			}
+			if (!SequenceCamera && Actor->HasAnyFlags(EObjectFlags::RF_Transient))
+			{
+				continue;
+			}
+
+			for (UActorComponent* Component : Actor->GetComponents())
+			{
+				USceneComponent* SceneComponent = Cast<USceneComponent>(Component);
+				if (!SceneComponent || SceneComponent->HasAnyFlags(EObjectFlags::RF_Transient)
+					|| !CanBindComponent(SceneComponent, ValueType))
+				{
+					continue;
+				}
+				if (SequenceCamera && SceneComponent != SequenceCamera->GetCameraComponent())
+				{
+					continue;
+				}
+
+				const FString Label = SceneComponent == Actor->GetRootComponent()
+					? Actor->GetName()
+					: Actor->GetName() + " / " + SceneComponent->GetName();
+				Candidates.Add({ SceneComponent, Label });
+			}
+		}
+		return Candidates;
+	}
+
+	FString MakeScenePathKey(const FString& ScenePath)
+	{
+		if (ScenePath.empty())
+		{
+			return FString();
+		}
+
+		std::error_code Error;
+		const std::filesystem::path Absolute = std::filesystem::absolute(ScenePath, Error).lexically_normal();
+		const std::filesystem::path Relative = std::filesystem::relative(Absolute, std::filesystem::current_path(Error), Error);
+		return (Error || Relative.empty() ? Absolute : Relative).generic_string();
+	}
+
 	template<typename TKeyFrame>
 	int32 MoveKeyInArray(TArray<TKeyFrame>& Keys, int32 KeyIndex, int32 NewFrame, double NewTime, const FSequencerAdapter& Adapter)
 	{
@@ -248,14 +329,17 @@ void FSequencerPanel::SetWorld(UWorld* InWorld)
 void FSequencerPanel::ValidateBindings()
 {
 	TArray<UActorComponent*> LiveComponents;
-	if (World)
+	if (World && World->GetPersistentLevel())
 	{
-		for (TObjectIterator<ACameraActor> It; It; ++It)
+		for (AActor* Actor : World->GetPersistentLevel()->GetActors())
 		{
-			ACameraActor* Camera = *It;
-			if (Camera->GetWorld() == World)
+			if (!Actor)
 			{
-				LiveComponents.Add(Camera->GetCameraComponent());
+				continue;
+			}
+			for (UActorComponent* Component : Actor->GetComponents())
+			{
+				LiveComponents.Add(Component);
 			}
 		}
 	}
@@ -272,7 +356,7 @@ void FSequencerPanel::ValidateBindings()
 			BindingPtr = &FloatTrack->Binding;
 		}
 
-		if (BindingPtr && *BindingPtr && LiveComponents.Find(*BindingPtr) == LiveComponents.Num())
+		if (BindingPtr && *BindingPtr && std::find(LiveComponents.begin(), LiveComponents.end(), *BindingPtr) == LiveComponents.end())
 		{
 			*BindingPtr = nullptr;
 		}
@@ -388,11 +472,45 @@ void FSequencerPanel::OnRender()
 
 void FSequencerPanel::DrawToolBar()
 {
-	ImGui::Button("New");
+	ImGui::BeginDisabled(!World);
+	if (ImGui::Button("New"))
+	{
+		NewSequence();
+	}
 	ImGui::SameLine();
-	ImGui::Button("Save");
+	if (ImGui::Button("Save"))
+	{
+		SaveSequence(false);
+	}
 	ImGui::SameLine();
-	ImGui::Button("Load");
+	if (ImGui::Button("Save As"))
+	{
+		SaveSequence(true);
+	}
+	ImGui::SameLine();
+	if (ImGui::Button("Load"))
+	{
+		LoadSequence();
+	}
+	ImGui::EndDisabled();
+
+	ImGui::SameLine();
+	const FString SequenceName = CurrentSequencePath.empty()
+		? FString("Untitled")
+		: std::filesystem::path(CurrentSequencePath).filename().string();
+	ImGui::TextDisabled("%s", SequenceName.c_str());
+
+	const FString CurrentSceneKey = MakeScenePathKey(FEditorFileUtils::GetCurrentScenePath());
+	if (!SequenceScenePath.empty() && SequenceScenePath != CurrentSceneKey)
+	{
+		ImGui::SameLine();
+		ImGui::TextColored(ImVec4(1.0f, 0.75f, 0.2f, 1.0f), "(Scene mismatch)");
+		if (ImGui::IsItemHovered())
+		{
+			ImGui::SetTooltip("이 시퀀스는 %s 씬에서 저장되었습니다.\n현재 씬: %s",
+				SequenceScenePath.c_str(), CurrentSceneKey.empty() ? "Untitled" : CurrentSceneKey.c_str());
+		}
+	}
 
 	ImGui::SameLine();
 	ImGui::TextDisabled("|");
@@ -435,8 +553,14 @@ void FSequencerPanel::DrawToolBar()
 		FSequenceTrack& Track = EditingSequence.Tracks[SelectedTrackIndex];
 		if (FTransformTrack* TransformTrack = std::get_if<FTransformTrack>(&Track))
 		{
+			USceneComponent* BoundComponent = Cast<USceneComponent>(TransformTrack->Binding);
 			FMinimalViewInfo ViewInfo;
-			if (GetCurrentViewPOV(ViewInfo))
+			if (BoundComponent && !Cast<UCameraComponent>(BoundComponent))
+			{
+				const FTransform ComponentTransform(BoundComponent->GetWorldRotation(), BoundComponent->GetWorldLocation(), BoundComponent->GetWorldScale3D());
+				SelectedKeyIndex = AddTransformKey(*TransformTrack, CurrentTime, ComponentTransform);
+			}
+			else if (GetCurrentViewPOV(ViewInfo))
 			{
 				SelectedKeyIndex = AddTransformKey(*TransformTrack, CurrentTime, FTransform(ViewInfo.Rotation, ViewInfo.Location));
 			}
@@ -489,6 +613,33 @@ void FSequencerPanel::DrawToolBar()
 
 void FSequencerPanel::DrawTimeline()
 {
+	if (EditingSequence.Tracks.IsEmpty())
+	{
+		if (ImGui::Button("+ Add Track"))
+		{
+			ImGui::OpenPopup("##AddFirstTrack");
+		}
+		if (ImGui::BeginPopup("##AddFirstTrack"))
+		{
+			for (int TypeIndex = 0; TypeIndex < Adapter.GetItemTypeCount(); TypeIndex++)
+			{
+				if (ImGui::Selectable(Adapter.GetItemTypeName(TypeIndex)))
+				{
+					Adapter.Add(TypeIndex);
+					SelectedTrackIndex = EditingSequence.Tracks.Num() - 1;
+					SelectedKeyIndex = -1;
+				}
+			}
+			ImGui::EndPopup();
+		}
+		return;
+	}
+
+	if (LegendWidth > 0.0f)
+	{
+		ImSequencer::SetLegendWidth(LegendWidth);
+	}
+
 	Adapter.SyncCache();
 	ValidateKeySelection();
 	Adapter.SetSelection(SelectedTrackIndex, SelectedKeyIndex);
@@ -578,40 +729,38 @@ void FSequencerPanel::DrawTrackBinding()
 		return;
 	}
 
-	ACameraActor* MainCamera = World->GetMainCamera();
-	TArray<ACameraActor*> Cameras;
-	for (TObjectIterator<ACameraActor> It; It; ++It)
+	ESequenceValueType ValueType = ESequenceValueType::None;
+	if (const FTransformTrack* TransformTrack = std::get_if<FTransformTrack>(&SelectedTrack))
 	{
-		ACameraActor* Camera = *It;
-		if (Camera->GetWorld() == World && Camera != MainCamera)
-		{
-			Cameras.Add(Camera);
-		}
+		ValueType = TransformTrack->ValueType;
 	}
+	else if (const FFloatTrack* FloatTrack = std::get_if<FFloatTrack>(&SelectedTrack))
+	{
+		ValueType = FloatTrack->ValueType;
+	}
+
+	const TArray<FBindingCandidate> Candidates = CollectBindingCandidates(World, ValueType);
 
 	UActorComponent*& Binding = *BindingPtr;
-	ACameraActor* BoundCamera = nullptr;
-	if (Binding)
+	const FBindingCandidate* BoundCandidate = nullptr;
+	for (const FBindingCandidate& Candidate : Candidates)
 	{
-		for (ACameraActor* Camera : Cameras)
+		if (Candidate.Component == Binding)
 		{
-			if (Camera->GetCameraComponent() == Binding)
-			{
-				BoundCamera = Camera;
-				break;
-			}
-		}
-		if (!BoundCamera)
-		{
-			Binding = nullptr;
+			BoundCandidate = &Candidate;
+			break;
 		}
 	}
+	if (Binding && !BoundCandidate)
+	{
+		Binding = nullptr;
+	}
 
-	const FString PreviewName = BoundCamera ? BoundCamera->GetName() : FString("None");
+	const FString PreviewName = BoundCandidate ? BoundCandidate->Label : FString("None");
 
-	ImGui::TextUnformatted(FSequencerAdapter::GetTrackName(SelectedTrack));
+	ImGui::TextUnformatted(FSequencerAdapter::GetTrackLabel(SelectedTrack).c_str());
 	ImGui::SameLine();
-	ImGui::SetNextItemWidth(200.0f);
+	ImGui::SetNextItemWidth(260.0f);
 	if (ImGui::BeginCombo("##Binding", PreviewName.c_str()))
 	{
 		if (ImGui::Selectable("None", Binding == nullptr))
@@ -619,13 +768,13 @@ void FSequencerPanel::DrawTrackBinding()
 			Binding = nullptr;
 		}
 
-		for (ACameraActor* Camera : Cameras)
+		for (const FBindingCandidate& Candidate : Candidates)
 		{
-			const bool bSelected = BoundCamera == Camera;
-			ImGui::PushID(Camera);
-			if (ImGui::Selectable(Camera->GetName().c_str(), bSelected))
+			const bool bSelected = BoundCandidate == &Candidate;
+			ImGui::PushID(Candidate.Component);
+			if (ImGui::Selectable(Candidate.Label.c_str(), bSelected))
 			{
-				Binding = Camera->GetCameraComponent();
+				Binding = Candidate.Component;
 			}
 			if (bSelected)
 			{
@@ -649,7 +798,7 @@ void FSequencerPanel::DrawKeyDetails()
 	}
 
 	FSequenceTrack& Track = EditingSequence.Tracks[SelectedTrackIndex];
-	ImGui::Text("%s / Key %d", FSequencerAdapter::GetTrackName(Track), SelectedKeyIndex);
+	ImGui::Text("%s / Key %d", FSequencerAdapter::GetTrackLabel(Track).c_str(), SelectedKeyIndex);
 
 	if (ImGui::CollapsingHeader("Key", ImGuiTreeNodeFlags_DefaultOpen)
 		&& ImGui::BeginTable("##KeyProperties", 2, ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_Resizable))
@@ -751,6 +900,7 @@ void FSequencerPanel::DrawKeyProperties(FSequenceTrack& Track)
 void FSequencerPanel::DrawEaseCurve(FSequenceTrack& Track)
 {
 	Bezier* Ease = nullptr;
+	bool bSlomoEase = false;
 	if (FTransformTrack* TransformTrack = std::get_if<FTransformTrack>(&Track))
 	{
 		Ease = &TransformTrack->KeyFrames[SelectedKeyIndex].Ease;
@@ -759,13 +909,25 @@ void FSequencerPanel::DrawEaseCurve(FSequenceTrack& Track)
 	{
 		Ease = &FloatTrack->KeyFrames[SelectedKeyIndex].Ease;
 	}
+	else if (FEventTrack* EventTrack = std::get_if<FEventTrack>(&Track))
+	{
+		if (FSlomoParams* Slomo = std::get_if<FSlomoParams>(&EventTrack->KeyFrames[SelectedKeyIndex].Params))
+		{
+			Ease = &Slomo->Ease;
+			bSlomoEase = true;
+		}
+	}
 
 	if (!Ease || !ImGui::CollapsingHeader("Ease Curve", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		return;
 	}
 
-	if (SelectedKeyIndex == FSequencerAdapter::GetKeyCount(Track) - 1)
+	if (bSlomoEase)
+	{
+		ImGui::TextDisabled("Blend In / Blend Out 구간에 적용됩니다");
+	}
+	else if (SelectedKeyIndex == FSequencerAdapter::GetKeyCount(Track) - 1)
 	{
 		ImGui::TextDisabled("마지막 키는 이징이 적용되지 않습니다");
 		return;
@@ -779,7 +941,8 @@ void FSequencerPanel::DrawEaseCurve(FSequenceTrack& Track)
 	}
 
 	float Points[5] = { Ease->X1, Ease->Y1, Ease->X2, Ease->Y2, EasePresetIndex };
-	const bool bConstant = FSequencerAdapter::GetKeyInterpolation(Track, SelectedKeyIndex) == ESequenceInterpolation::Constant;
+	const bool bConstant = !bSlomoEase
+		&& FSequencerAdapter::GetKeyInterpolation(Track, SelectedKeyIndex) == ESequenceInterpolation::Constant;
 	if (bConstant)
 	{
 		ImGui::TextDisabled("Constant 보간에서는 이징이 적용되지 않습니다");
@@ -828,6 +991,16 @@ void FSequencerPanel::DrawSequenceSettings()
 		EditingSequence.FrameRate = FrameRate;
 		CurrentFrame = Adapter.TimeToFrame(CurrentTime);
 	}
+
+	if (LegendWidth <= 0.0f)
+	{
+		LegendWidth = std::clamp(ImSequencer::GetLegendWidth(), MinLegendWidth, MaxLegendWidth);
+	}
+	ImGui::SameLine();
+	ImGui::TextUnformatted("Label");
+	ImGui::SameLine();
+	ImGui::SetNextItemWidth(InputWidth * 1.5f);
+	ImGui::SliderFloat("##LabelWidth", &LegendWidth, MinLegendWidth, MaxLegendWidth, "%.0f", ImGuiSliderFlags_AlwaysClamp);
 }
 
 bool FSequencerPanel::HasSelectedKey() const
@@ -996,19 +1169,12 @@ void FSequencerPanel::CreateCameraForTrack()
 		return;
 	}
 
-	const FTransform SpawnTransform(View.Rotation, View.Location);
-	ACameraActor* Camera = World->SpawnActor<ACameraActor>(NAME_None, &SpawnTransform);
-	if (!Camera || !Camera->GetCameraComponent())
+	ACameraActor* Camera = FSequenceSerializer::SpawnCamera(World, FTransform(View.Rotation, View.Location));
+	if (!Camera)
 	{
 		return;
 	}
 	Camera->GetCameraComponent()->SetFieldOfView(View.FOV);
-
-	UBillboardComponent* Icon = Camera->CreateDefaultSubobject<UBillboardComponent>("CameraIcon");
-	Icon->SetupAttachment(Camera->GetCameraComponent());
-	Icon->SetSprite(UAssetManager::Get().LoadTexture(CameraIconPath));
-	Icon->SetHiddenInGame(true);
-	Icon->RegisterComponent();
 
 	const bool bSelectedTransformTrack = EditingSequence.Tracks.IsValidIndex(SelectedTrackIndex)
 		&& std::holds_alternative<FTransformTrack>(EditingSequence.Tracks[SelectedTrackIndex]);
@@ -1046,7 +1212,7 @@ UCameraComponent* FSequencerPanel::FindPreviewCamera() const
 	if (EditingSequence.Tracks.IsValidIndex(SelectedTrackIndex))
 	{
 		const FTransformTrack* Selected = std::get_if<FTransformTrack>(&EditingSequence.Tracks[SelectedTrackIndex]);
-		if (Selected && Selected->Binding)
+		if (Selected && Cast<UCameraComponent>(Selected->Binding))
 		{
 			PreviewTrack = Selected;
 		}
@@ -1056,27 +1222,14 @@ UCameraComponent* FSequencerPanel::FindPreviewCamera() const
 		for (const FSequenceTrack& Track : EditingSequence.Tracks)
 		{
 			const FTransformTrack* TransformTrack = std::get_if<FTransformTrack>(&Track);
-			if (TransformTrack && TransformTrack->Binding)
+			if (TransformTrack && Cast<UCameraComponent>(TransformTrack->Binding))
 			{
 				PreviewTrack = TransformTrack;
 				break;
 			}
 		}
 	}
-	if (!PreviewTrack)
-	{
-		return nullptr;
-	}
-
-	for (TObjectIterator<ACameraActor> It; It; ++It)
-	{
-		ACameraActor* Camera = *It;
-		if (Camera->GetWorld() == World && Camera->GetCameraComponent() == PreviewTrack->Binding)
-		{
-			return Camera->GetCameraComponent();
-		}
-	}
-	return nullptr;
+	return PreviewTrack ? Cast<UCameraComponent>(PreviewTrack->Binding) : nullptr;
 }
 
 void FSequencerPanel::ApplyPreviewToViewport()
@@ -1194,6 +1347,141 @@ void FSequencerPanel::BuildSampleSequence()
 	Slomo.Params = Params;
 	EventTrack.KeyFrames.Add(Slomo);
 	EditingSequence.Tracks.Add(EventTrack);
+}
+
+void FSequencerPanel::NewSequence()
+{
+	if (Player)
+	{
+		Player->Stop();
+	}
+	EndPlaybackPreview();
+	DestroySequenceCameras({});
+
+	EditingSequence = FSequence();
+	EditingSequence.Length = 5.0;
+	CurrentSequencePath.clear();
+	SequenceScenePath.clear();
+	ResetEditingState();
+}
+
+void FSequencerPanel::SaveSequence(bool bSaveAs)
+{
+	FString Path = CurrentSequencePath;
+	if (bSaveAs || Path.empty())
+	{
+		Path = FEditorFileUtils::OpenSaveSequenceDialog();
+		if (Path.empty())
+		{
+			return;
+		}
+	}
+
+	const FString ScenePath = MakeScenePathKey(FEditorFileUtils::GetCurrentScenePath());
+	if (!FSequenceSerializer::Save(EditingSequence, Path, ScenePath))
+	{
+		HTR_LOG(Error, "Failed to save sequence: {}", Path);
+		return;
+	}
+
+	CurrentSequencePath = Path;
+	SequenceScenePath = ScenePath;
+	HTR_LOG(Info, "Save Sequence : {}", CurrentSequencePath);
+}
+
+void FSequencerPanel::LoadSequence()
+{
+	if (!World)
+	{
+		return;
+	}
+
+	const FString Path = FEditorFileUtils::OpenLoadSequenceDialog();
+	if (Path.empty())
+	{
+		return;
+	}
+
+	if (Player)
+	{
+		Player->Stop();
+	}
+	EndPlaybackPreview();
+
+	FSequence Loaded;
+	TArray<ACameraActor*> Cameras;
+	FString ScenePath;
+	if (!FSequenceSerializer::Load(Path, World, Loaded, Cameras, &ScenePath))
+	{
+		HTR_LOG(Error, "Failed to load sequence: {}", Path);
+		return;
+	}
+
+	DestroySequenceCameras(Cameras);
+	EditingSequence = Loaded;
+	CurrentSequencePath = Path;
+	SequenceScenePath = ScenePath;
+
+	const FString CurrentSceneKey = MakeScenePathKey(FEditorFileUtils::GetCurrentScenePath());
+	if (!ScenePath.empty() && ScenePath != CurrentSceneKey)
+	{
+		HTR_LOG(Warning, "Sequence {} was saved with scene {}, current scene is {}",
+			Path, ScenePath, CurrentSceneKey.empty() ? FString("Untitled") : CurrentSceneKey);
+	}
+	ResetEditingState();
+	HTR_LOG(Info, "Load Sequence : {}", CurrentSequencePath);
+}
+
+void FSequencerPanel::DestroySequenceCameras(const TArray<ACameraActor*>& KeepCameras)
+{
+	if (!World)
+	{
+		return;
+	}
+
+	TArray<ACameraActor*> Cameras;
+	for (TObjectIterator<ACameraActor> It; It; ++It)
+	{
+		ACameraActor* Camera = *It;
+		if (Camera->GetWorld() == World && FSequenceSerializer::IsSequenceCamera(Camera)
+			&& std::find(KeepCameras.begin(), KeepCameras.end(), Camera) == KeepCameras.end())
+		{
+			Cameras.Add(Camera);
+		}
+	}
+
+	if (Cameras.IsEmpty())
+	{
+		return;
+	}
+
+	if (OnResetSelection)
+	{
+		OnResetSelection();
+	}
+	for (ACameraActor* Camera : Cameras)
+	{
+		Camera->Destroy();
+	}
+}
+
+void FSequencerPanel::ResetEditingState()
+{
+	SelectedTrackIndex = -1;
+	SelectedKeyIndex = -1;
+	EaseTrackIndex = -1;
+	EaseKeyIndex = -1;
+	FirstVisibleFrame = 0;
+	CurrentTime = 0.0f;
+	CurrentFrame = 0;
+	bIsPlaying = false;
+	PlaybackElapsedTime = 0.0;
+
+	if (Player)
+	{
+		Player->SetPlayRate(EditingSequence.PlayRate);
+		Player->Stop();
+	}
 }
 
 bool FSequencerPanel::SaveSettings() const
