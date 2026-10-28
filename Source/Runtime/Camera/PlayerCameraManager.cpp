@@ -4,6 +4,7 @@
 #include "PlayerCameraManager.h"
 #include "CameraModifier_CameraShake.h"
 #include "CameraModifier_CameraFade.h"
+#include "CameraModifier_Letterbox.h"
 
 APlayerCameraManager::APlayerCameraManager()
 {
@@ -266,6 +267,29 @@ void APlayerCameraManager::StopCameraFade()
 	if (UCameraModifier_CameraFade* FadeModifier = FindCameraModifier<UCameraModifier_CameraFade>())
 	{
 		FadeModifier->StopFade();
+	}
+}
+
+void APlayerCameraManager::SetLetterbox(bool bEnable, float Ratio)
+{
+	UCameraModifier_CameraLetterbox* Letterbox = FindCameraModifier< UCameraModifier_CameraLetterbox>();
+
+	if (bEnable)
+	{
+		if (!Letterbox)
+		{
+			Letterbox = AddCameraModifier<UCameraModifier_CameraLetterbox>();
+		}
+		else
+		{
+			Letterbox->EnableModifier();
+		}
+
+		Letterbox->TargetRatio = FMath::Clamp(Ratio, 0.0f, 0.5f);
+	}
+	else if (Letterbox)
+	{
+		Letterbox->DisableModifier();
 	}
 }
 

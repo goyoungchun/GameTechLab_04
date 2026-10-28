@@ -103,6 +103,8 @@ public:
 	void StartCameraFade(float FromAlpha, float ToAlpha, float Duration, const FVector& Color, bool bHoldWhenFinished = false);
 	void StopCameraFade();
 
+	void SetLetterbox(bool bEnable, float Ratio = 0.12f);
+
 	AActor* GetViewTarget() const;
 	bool IsBlending() const { return PendingViewTarget.Target != nullptr; }
 	bool IsCameraCacheValid() const { return bCameraCacheValid; }
