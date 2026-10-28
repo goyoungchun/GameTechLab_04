@@ -110,15 +110,14 @@ void APlayerController::Possess(APawn* InPawn)
 
 void APlayerController::UnPossess()
 {
-	if (PossessedPawn && PossessedPawn == PlayerCameraManager->GetViewTarget())
-	{
-		// 폰의 소유자 해제
-		PossessedPawn->UnPossessed();
-		PossessedPawn = nullptr;
+	if (!PossessedPawn)
+		return;
 
-		if (PlayerCameraManager)
-			PlayerCameraManager->SetViewTarget(nullptr);
-	}
+	PossessedPawn->UnPossessed();
+	PossessedPawn = nullptr;
+
+	if (PlayerCameraManager && PlayerCameraManager->GetViewTarget() == PossessedPawn)
+		PlayerCameraManager->SetViewTarget(nullptr);
 }
 
 void APlayerController::DuplicateSubobjects(UObject* SourceObject)
