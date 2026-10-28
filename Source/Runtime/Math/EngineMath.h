@@ -89,4 +89,31 @@ namespace FMath
 	{
 		return FQuat::Slerp(A.Quaternion(), B.Quaternion(), Alpha).Normalized().ToFRotator();
 	}
+
+	static inline float CubicInterpolation(const float& P0, const float& T0, const float& P1, const float& T1, const float& A)
+	{
+		const float A2 = A * A;
+		const float A3 = A2 * A;
+
+		return (((2 * A3) - (3 * A2) + 1) * P0) + ((A3 - (2 * A2) + A) * T0) + ((A3 - A2) * T1) + (((-2 * A3) + (3 * A2)) * P1);
+	}
+
+	static inline float InterpEaseIn(const float& A, const float& B, float Alpha, float Exp)
+	{
+		float const ModifiedAlpha = std::pow(Alpha, Exp);
+		return Lerp(A, B, ModifiedAlpha);
+	}
+
+	static inline float InterpEaseOut(const float& A, const float& B, float Alpha, float Exp)
+	{
+		float const ModifiedAlpha = 1.f - std::pow(1.f - Alpha, Exp);
+		return Lerp(A, B, ModifiedAlpha);
+	}
+
+	static inline float InterpEaseInOut(const float& A, const float& B, float Alpha, float Exp)
+	{
+		return Lerp(A, B, (Alpha < 0.5f) ?
+			InterpEaseIn(0.f, 1.f, Alpha * 2.f, Exp) * 0.5f :
+			InterpEaseOut(0.f, 1.f, Alpha * 2.f - 1.f, Exp) * 0.5f + 0.5f);
+	}
 }
