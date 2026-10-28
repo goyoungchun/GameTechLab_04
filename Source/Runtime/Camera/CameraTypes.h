@@ -31,4 +31,20 @@ struct FMinimalViewInfo
 		else
 			return FMatrix::MakeOrthographic(OrthoWidth, OrthoWidth / AspectRatio, NearClipPlane, FarClipPlane);
 	}
+
+	void BlendViewInfo(const FMinimalViewInfo& Other, float Alpha)
+	{
+		Alpha = FMath::Clamp(Alpha, 0.0f, 1.0f);
+
+		Location = FMath::Lerp(Location, Other.Location, Alpha);
+		Rotation = FMath::Slerp(Rotation, Other.Rotation, Alpha);
+		FOV = FMath::Lerp(FOV, Other.FOV, Alpha);
+		OrthoWidth = FMath::Lerp(OrthoWidth, Other.OrthoWidth, Alpha);
+		NearClipPlane = FMath::Lerp(NearClipPlane, Other.NearClipPlane, Alpha);
+		FarClipPlane = FMath::Lerp(FarClipPlane, Other.FarClipPlane, Alpha);
+		AspectRatio = FMath::Lerp(AspectRatio, Other.AspectRatio, Alpha);
+
+		if (Alpha >= 0.5f)
+			ProjectionMode = Other.ProjectionMode;
+	}
 };
