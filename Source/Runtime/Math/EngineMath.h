@@ -74,4 +74,19 @@ namespace FMath
 		const FVector DeltaMove = Dist * FMath::Clamp(DeltaTime * InterpolationSpeed, 0.f, 1.f);
 		return Current + DeltaMove;
 	}
+
+	static inline float Lerp(float A, float B, float Alpha)
+	{
+		return A + (B - A) * Alpha;
+	}
+
+	static inline FVector Lerp(const FVector& A, const FVector& B, float Alpha)
+	{
+		return A + (B - A) * Alpha;
+	}
+
+	static inline FRotator Slerp(const FRotator& A, const FRotator& B, float Alpha)
+	{
+		return FQuat::Slerp(A.Quaternion(), B.Quaternion(), Alpha).Normalized().ToFRotator();
+	}
 }
