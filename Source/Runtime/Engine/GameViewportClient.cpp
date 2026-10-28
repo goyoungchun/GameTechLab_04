@@ -145,6 +145,9 @@ FSceneView FGameViewportClient::CalcSceneView(const FRect& InViewRect)
 	OutView.FarClip = DesiredView.FarClipPlane;
 	OutView.OrthoWidth = DesiredView.OrthoWidth;
 	OutView.bIsPerspective = DesiredView.ProjectionMode == ECameraProjectionMode::Perspective;
+	OutView.FadeColor = DesiredView.FadeColor;
+	OutView.FadeAmount = DesiredView.FadeAmount;
+	OutView.LetterboxRatio = DesiredView.LetterboxRatio;
 	OutView.ViewMode = EViewportMode::Lit;
 	OutView.ShadingModel = EShadingModel::BlinnPhong;
 
@@ -337,5 +340,8 @@ void FGameViewportClient::GetCurrentView(FMinimalViewInfo& View) const
 	}
 
 	if (World->GetMainCamera())
+	{
 		World->GetMainCamera()->CalcCamera(View);
+		return;
+	}
 }

@@ -276,6 +276,7 @@ void UGameEngine::RenderPlayerView(FForwardGameViewportClient* Client, const FSc
 	RenderCommand::BindRenderPassNoClear(ColorTarget, DepthTarget, Width, Height);
 	SceneRenderer.RenderTranslucent(Renderer, nullptr, bHasTileLights ? &Targets.TileLightResources : nullptr);
 	RenderSceneText(PlayWorld, SceneView);
+	Renderer->DrawScreenOverlay(SceneView);
 
 	ScreenUIRenderer.Render(PlayWorld->GetGameUIBuffer(), Width, Height, SplitIndex, SplitCount);
 	RenderCommand::EndRenderPass();

@@ -25,6 +25,7 @@ enum class EPSOType : uint8
 	StaticMesh_WorldNormal,
 	StaticMesh_Shadow,
 	ShadowTileClear,
+	ScreenOverlay,
 	Count
 };
 
