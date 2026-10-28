@@ -16,6 +16,8 @@ Game.Config = {
         LookAt   = Vector(0, 43.25, 2.5),
     },
     CarHitStop = { Duration = 0.08, MinSpeed = 4, Cooldown = 0.35 },
+    GoalSequence   = "Goal",
+    GoalSequenceBlendTime = 0.5,
     BoostSeconds   = 6,
     CarNames = { "armor", "coupe", "fenyr", "ghini", "italia", "jeep", "kamaro", "lamb", "mobil", "police" },
     BackKey = Key.Backspace,
@@ -189,6 +191,7 @@ local SplitScreenStates =
 }
 
 local GoalCameraPlayer = nil
+local ActiveGoalSequence = nil
 
 local function ClearGoalCamera(BlendTime)
     if GoalCameraPlayer then
@@ -218,6 +221,10 @@ end
 
 local function SetState(NewState)
     print(string.format("[GameMode] %s -> %s", tostring(Game.State), NewState))
+    if Game.State == "GoalScored" and NewState ~= "GoalScored" and ActiveGoalSequence then
+        obj:StopSequence(ActiveGoalSequence, 0)
+        ActiveGoalSequence = nil
+    end
     if Game.State == "GoalScored" and NewState == "Countdown" then
         ClearGoalCamera(Game.Config.GoalCamera.ReturnBlendTime)
     elseif NewState ~= "GoalScored" and NewState ~= "Countdown" then
@@ -410,7 +417,12 @@ end
 local function ShowTurnResultThenEnd()
     SetAllCarsInputEnabled(false)
     coroutine.yield(WaitForSeconds(Game.Config.ResultShowTime))
+    if ActiveGoalSequence then
+        local SequenceName = ActiveGoalSequence
+        coroutine.yield(WaitWhile(function() return obj:IsSequencePlaying(SequenceName) end))
+    end
     ResultCoroutineId = nil
+    if Game.State ~= "GoalScored" and Game.State ~= "Defended" then return end
     EndTurn()
 end
 
@@ -660,9 +672,17 @@ StateEnterHandlers.GoalScored = function()
     StopTurnResult()
     StopCountdown()
     ResetTimeEffects()
-    local SlowdownTime = Game.Config.GoalSlowdownTime
-    Slomo(0, SlowdownTime, SlowdownTime, 0, true)
-    ShowGoalCamera()
+    ClearGoalCamera()
+    local SequenceName = Game.Config.GoalSequence
+    ActiveGoalSequence = nil
+    if SequenceName and obj:PlaySequence(SequenceName, Game.Config.GoalSequenceBlendTime) then
+        ActiveGoalSequence = SequenceName
+    else
+        -- 시퀀스 로드 실패 시에도 기존 골 연출과 턴 전환을 유지한다.
+        local SlowdownTime = Game.Config.GoalSlowdownTime
+        Slomo(0, SlowdownTime, SlowdownTime, 0, true)
+        ShowGoalCamera()
+    end
     ResultCoroutineId = StartCoroutine(ShowTurnResultThenEnd)
 end
 

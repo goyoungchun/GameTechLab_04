@@ -152,6 +152,7 @@ void UWorld::Tick(EWorldTick TickType, float DeltaTime)
 			const float GameDeltaTime = static_cast<float>(TimeController.GetGameDeltaTime(UnscaledDeltaTime));
 			GameDeltaSeconds = GameDeltaTime;
 			TimeController.Update(UnscaledDeltaTime);
+			SequenceManager.Tick(this, GameDeltaTime, UnscaledDeltaTime);
 			SCOPE_CYCLE_COUNTER(STAT_ActorTick);
 			GameUIBuffer.Clear();
 			TickTaskManager.RunTickGroup(ETickingGroup::PrePhysics, GameDeltaTime, UnscaledDeltaTime);
@@ -198,6 +199,7 @@ void UWorld::Tick(EWorldTick TickType, float DeltaTime)
 
 void UWorld::ClearWorld()
 {
+	SequenceManager.StopAll(this);
 	for (int32 Index = 0; Index < MaxViewCameraOverrides; ++Index)
 		ClearViewCameraOverride(Index);
 	UnscaledTimeSeconds = 0.0;
@@ -724,6 +726,8 @@ void UWorld::BeginPlay()
 
 void UWorld::EndPlay()
 {
+	// 아직 BeginPlay 전인 시퀀스 카메라도 Actor 스냅샷을 만들기 전에 정리한다.
+	SequenceManager.StopAll(this);
 	bBegunPlay = false;
 
 	TArray<AActor*> InitialActors;

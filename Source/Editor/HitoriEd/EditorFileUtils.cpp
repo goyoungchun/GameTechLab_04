@@ -3,6 +3,7 @@
 
 #include "Core/EngineLog.h"
 #include "Serialization/JsonArchive.h"
+#include "Sequence/SequenceSerializer.h"
 
 #include <shobjidl.h>
 
@@ -135,14 +136,22 @@ bool FEditorFileUtils::LoadScene(UWorld* World)
 	return true;
 }
 
-bool SetSceneDialogFolder(IFileDialog* Dialog)
+struct FFileDialogType
+{
+	const wchar_t* FilterName;
+	const wchar_t* FilterPattern;
+	const wchar_t* DefaultExtension;
+	std::filesystem::path Folder;
+};
+
+bool SetSceneDialogFolder(IFileDialog* Dialog, const std::filesystem::path& RelativeFolder)
 {
 	std::error_code Error;
 	const std::filesystem::path WorkingDirectory = std::filesystem::current_path(Error);
 	if (Error)
 		return false;
 
-	std::filesystem::path InitialDirectory = WorkingDirectory / L"Scenes";
+	std::filesystem::path InitialDirectory = (WorkingDirectory / RelativeFolder).make_preferred();
 	if (!std::filesystem::is_directory(InitialDirectory, Error))
 		InitialDirectory = WorkingDirectory;
 
@@ -173,7 +182,7 @@ FString GetSceneDialogResult(IFileDialog* Dialog)
 	return SelectedPath.string();
 }
 
-FString ShowSceneDialog(bool bSaveDialog)
+FString ShowSceneDialog(bool bSaveDialog, const FFileDialogType& Type)
 {
 	FScopedComInitialization ComInitialization;
 	if (!ComInitialization.IsInitialized())
@@ -216,15 +225,15 @@ FString ShowSceneDialog(bool bSaveDialog)
 
 	const COMDLG_FILTERSPEC FileTypes[] =
 	{
-		{ L"Scene Files (*.scene)", L"*.scene" },
+		{ Type.FilterName, Type.FilterPattern },
 		{ L"All Files (*.*)", L"*.*" }
 	};
 
 	if (FAILED(Dialog->SetOptions(Options)) ||
 		FAILED(Dialog->SetFileTypes(bSaveDialog ? 1 : 2, FileTypes)) ||
 		FAILED(Dialog->SetFileTypeIndex(1)) ||
-		FAILED(Dialog->SetDefaultExtension(L"scene")) ||
-		!SetSceneDialogFolder(Dialog.Get()))
+		FAILED(Dialog->SetDefaultExtension(Type.DefaultExtension)) ||
+		!SetSceneDialogFolder(Dialog.Get(), Type.Folder))
 	{
 		HTR_LOG(Error, "Failed to configure scene dialog.");
 		return FString();
@@ -245,10 +254,27 @@ FString ShowSceneDialog(bool bSaveDialog)
 
 FString FEditorFileUtils::OpenSaveSceneDialog()
 {
-	return ShowSceneDialog(true);
+	return ShowSceneDialog(true, FFileDialogType{ L"Scene Files (*.scene)", L"*.scene", L"scene", L"Scenes" });
 }
 
 FString FEditorFileUtils::OpenLoadSceneDialog()
 {
-	return ShowSceneDialog(false);
+	return ShowSceneDialog(false, FFileDialogType{ L"Scene Files (*.scene)", L"*.scene", L"scene", L"Scenes" });
+}
+
+FString ShowSequenceDialog(bool bSaveDialog)
+{
+	std::error_code Error;
+	std::filesystem::create_directories(FSequenceSerializer::SequenceDirectory, Error);
+	return ShowSceneDialog(bSaveDialog, FFileDialogType{ L"Sequence Files (*.sequence)", L"*.sequence", L"sequence", FSequenceSerializer::SequenceDirectory });
+}
+
+FString FEditorFileUtils::OpenSaveSequenceDialog()
+{
+	return ShowSequenceDialog(true);
+}
+
+FString FEditorFileUtils::OpenLoadSequenceDialog()
+{
+	return ShowSequenceDialog(false);
 }

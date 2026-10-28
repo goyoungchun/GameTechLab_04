@@ -2,6 +2,9 @@
 #include "ObjectFactory.h"
 #include "Class.h"
 
+#include <algorithm>
+#include <cctype>
+
 //UObject* FObjectFactory::NewObject(UClass* Class, UObject* Outer, FName Name)
 //{
 //    if (!Class || !Class->Constructor)
@@ -64,4 +67,21 @@ FName FObjectFactory::MakeUniqueObjectName(const UClass* Class, UObject* Outer, 
     const FString Base = BaseName.ToString();
     int32& Next = Counters[Base];
     return FName(Base + "_" + std::to_string(Next++));
+}
+
+void FObjectFactory::ReserveObjectName(UObject* Outer, const FString& Name)
+{
+    if (!Outer)
+        return;
+
+    const size_t Separator = Name.find_last_of('_');
+    if (Separator == FString::npos || Separator + 1 >= Name.size() || Name.size() - Separator - 1 > 9)
+        return;
+
+    const FString Suffix = Name.substr(Separator + 1);
+    if (!std::all_of(Suffix.begin(), Suffix.end(), [](unsigned char C) { return std::isdigit(C) != 0; }))
+        return;
+
+    int32& Next = Outer->ChildNameCounters[Name.substr(0, Separator)];
+    Next = std::max(Next, std::stoi(Suffix) + 1);
 }

@@ -8,6 +8,7 @@
 #include <variant>
 #include <algorithm>
 #include <cmath>
+#include <limits>
 
 void USequencePlayer::SetSequence(const FSequence* InSequence)
 {
@@ -56,12 +57,19 @@ void USequencePlayer::Update(double GameDeltaTime, double UnscaledDeltaTime)
 	}
 }
 
-void USequencePlayer::Play()
+void USequencePlayer::Play(bool bFireInitialEvents)
 {
 	if (!Sequence)
 		return;
 
+	const bool bStartAtZero = bFireInitialEvents && State == ESequencePlaybackState::Stopped && CurrentTime == 0.0;
 	State = ESequencePlaybackState::Playing;
+	if (bStartAtZero)
+	{
+		PreviousTime = -std::numeric_limits<double>::epsilon();
+		Apply(Sequence, true);
+		PreviousTime = CurrentTime;
+	}
 }
 
 void USequencePlayer::Stop()
