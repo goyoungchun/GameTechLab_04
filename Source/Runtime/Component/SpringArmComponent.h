@@ -34,6 +34,8 @@ public:
 
 	virtual FRotator GetDesiredRotation() const;
 
+	void ResetLag() { bLagInitialized  = false; }
+
 public:
 	// 충돌이 없을 때 기본 팔의 길이
 	float TargetArmLength{ 300 };
