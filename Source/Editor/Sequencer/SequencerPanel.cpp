@@ -299,9 +299,13 @@ void FSequencerPanel::DrawToolBar()
 	ImGui::TextDisabled("|");
 	ImGui::SameLine();
 
-	if (!bIsPlaying)
+	if (ImGui::Button(bIsPlaying ? "Pause###PlayPause" : "Play###PlayPause"))
 	{
-		if (ImGui::Button("Play"))
+		if (bIsPlaying)
+		{
+			bIsPlaying = false;
+		}
+		else
 		{
 			if (CurrentTime >= EditingSequence.Length)
 			{
@@ -311,14 +315,13 @@ void FSequencerPanel::DrawToolBar()
 			bIsPlaying = true;
 		}
 	}
-	else
+
+	ImGui::SameLine();
+	if (ImGui::Button("Stop"))
 	{
-		if (ImGui::Button("Stop"))
-		{
-			bIsPlaying = false;
-			CurrentTime = 0.0f;
-			CurrentFrame = 0;
-		}
+		bIsPlaying = false;
+		CurrentTime = 0.0f;
+		CurrentFrame = 0;
 	}
 
 	ImGui::SameLine();
@@ -355,6 +358,11 @@ void FSequencerPanel::DrawToolBar()
 		DeleteSelectedKey();
 	}
 	ImGui::EndDisabled();
+
+	ImGui::SameLine();
+	ImGui::TextDisabled("|");
+	ImGui::SameLine();
+	DrawSequenceSettings();
 
 	const int32 DisplayFrame = Adapter.TimeToFrame(CurrentTime);
 	char TimeText[64];
@@ -636,6 +644,37 @@ void FSequencerPanel::DrawEaseCurve(FSequenceTrack& Track)
 	Ease->X2 = Points[2];
 	Ease->Y2 = Points[3];
 	EasePresetIndex = Points[4];
+}
+
+void FSequencerPanel::DrawSequenceSettings()
+{
+	const float InputWidth = ImGui::GetFontSize() * 4.0f;
+
+	ImGui::AlignTextToFramePadding();
+	ImGui::TextUnformatted("Length");
+	ImGui::SameLine();
+	ImGui::SetNextItemWidth(InputWidth);
+	float Length = static_cast<float>(EditingSequence.Length);
+	if (ImGui::DragFloat("##Length", &Length, 0.05f, MinSequenceLength, MaxSequenceLength, "%.2fs", ImGuiSliderFlags_AlwaysClamp))
+	{
+		EditingSequence.Length = Length;
+		if (CurrentTime > Length)
+		{
+			CurrentTime = Length;
+		}
+		CurrentFrame = Adapter.TimeToFrame(CurrentTime);
+	}
+
+	ImGui::SameLine();
+	ImGui::TextUnformatted("FPS");
+	ImGui::SameLine();
+	ImGui::SetNextItemWidth(InputWidth);
+	float FrameRate = EditingSequence.FrameRate;
+	if (ImGui::DragFloat("##FrameRate", &FrameRate, 0.5f, MinFrameRate, MaxFrameRate, "%g", ImGuiSliderFlags_AlwaysClamp))
+	{
+		EditingSequence.FrameRate = FrameRate;
+		CurrentFrame = Adapter.TimeToFrame(CurrentTime);
+	}
 }
 
 bool FSequencerPanel::HasSelectedKey() const

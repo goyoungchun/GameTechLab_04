@@ -136,10 +136,10 @@ void FSequencerAdapter::CustomDrawCompact(int Index, ImDrawList* DrawList, const
 	const int KeyCount = GetKeyCount(Track);
 	const float FramePixelWidth = Rect.GetWidth() / (GetFrameMax() - GetFrameMin() + 1);
 	const float CenterY = (Rect.Max.y + Rect.Min.y) / 2;
-	const float KeyRadius = (Rect.Max.y - Rect.Min.y) / 2 * 0.8f;
+	const float KeyRadius = (Rect.Max.y - Rect.Min.y) / 2 * 0.6f;
 	const ImVec2 MousePos = ImGui::GetIO().MousePos;
 
-	const ImRect RowRect(ImVec2(ClipRect.Min.x - LegendWidth, ClipRect.Min.y), ClipRect.Max);
+	const ImRect RowRect(ImVec2(ClipRect.Min.x - ImSequencer::GetLegendWidth(), ClipRect.Min.y), ClipRect.Max);
 	if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem)
 		&& ImGui::IsMouseClicked(ImGuiMouseButton_Left)
 		&& RowRect.Contains(MousePos))

@@ -34,6 +34,7 @@ private:
 	bool SaveSettings() const;
 
 	void DrawToolBar();
+	void DrawSequenceSettings();
 	void DrawTimeline();
 	void DrawTrackBinding();
 	void DrawKeyDetails();
@@ -76,4 +77,8 @@ private:
 	static constexpr float SplitterWidth = 6.0f;
 	static constexpr float MinDetailPanelWidth = 220.0f;
 	static constexpr float MinTimelineWidth = 300.0f;
+	static constexpr float MinSequenceLength = 0.1f;
+	static constexpr float MaxSequenceLength = 600.0f;
+	static constexpr float MinFrameRate = 1.0f;
+	static constexpr float MaxFrameRate = 120.0f;
 };

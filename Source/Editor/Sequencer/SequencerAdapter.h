@@ -51,7 +51,6 @@ private:
 	static unsigned int GetTrackColor(const FSequenceTrack& Track);
 	FString MakeUniqueTrackName(const FString& BaseName) const;
 
-	static constexpr float LegendWidth = 200.0f;
 	static constexpr float KeyHitPadding = 3.0f;
 	static constexpr float SelectedKeyScale = 1.2f;
 	static constexpr unsigned int KeyColor = 0xFFFFFFFF;
