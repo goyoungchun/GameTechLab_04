@@ -46,6 +46,9 @@ public:
     void InputKey(int32 Key, bool bDown);
     void InputAxis(EGameInputAxis AxisKey, float Delta);
     void ClearInputState();
+
+    void OnActorDestroyed(AActor* Actor);
+
 protected:
     APlayerCameraManager* PlayerCameraManager = nullptr;
 

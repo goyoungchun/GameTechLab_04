@@ -110,7 +110,7 @@ void APlayerController::Possess(APawn* InPawn)
 
 void APlayerController::UnPossess()
 {
-	if (PossessedPawn)
+	if (PossessedPawn && PossessedPawn == PlayerCameraManager->GetViewTarget())
 	{
 		// 폰의 소유자 해제
 		PossessedPawn->UnPossessed();
@@ -181,4 +181,22 @@ void APlayerController::UpdateCameraManager(float DeltaTime)
 		return;
 
 	PlayerCameraManager->UpdateCamera(DeltaTime);
+}
+
+void APlayerController::OnActorDestroyed(AActor* Actor)
+{
+	if (!Actor)
+		return;
+
+	if (Actor == PlayerCameraManager)
+	{
+		PlayerCameraManager = nullptr;
+		return;
+	}
+
+	if (Actor == PossessedPawn)
+		UnPossess();
+
+	if (PlayerCameraManager)
+		PlayerCameraManager->OnActorDestroyed(Actor);
 }

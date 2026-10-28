@@ -339,12 +339,10 @@ void FGameViewportClient::GetCurrentView(FMinimalViewInfo& View) const
 			}
 		}
 	}
-	else 
+
+	if (World->GetMainCamera())
 	{
-		if (World->GetMainCamera())
-		{
-			World->GetMainCamera()->CalcCamera(View);
-			return;
-		}
+		World->GetMainCamera()->CalcCamera(View);
+		return;
 	}
 }
