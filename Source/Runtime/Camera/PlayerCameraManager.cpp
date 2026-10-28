@@ -68,7 +68,13 @@ void APlayerCameraManager::FillCameraCache(const FMinimalViewInfo& NewInfo)
 
 void APlayerCameraManager::OnActorDestroyed(AActor* Actor)
 {
-	if (!Actor || ViewTarget.Target != Actor)
+	if (!Actor)
+		return;
+
+	if (Actor == PCOwner)
+		PCOwner = nullptr;
+
+	if (ViewTarget.Target != Actor)
 		return;
 
 	ViewTarget.SetNewTarget(nullptr);

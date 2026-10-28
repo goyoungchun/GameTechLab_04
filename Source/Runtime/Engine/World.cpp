@@ -347,6 +347,13 @@ bool UWorld::DestroyActor(AActor* Actor)
 	// 2. PathTracker에서 제거
 	PathTracker.OnObjectDestroyed(Actor);
 
+	// 3. PlayerController / CameraManager
+	for (APlayerController* PC : PlayerControllers)
+	{
+		if (PC && PC != Actor)
+			PC->OnActorDestroyed(Actor);
+	}
+
 	// 4. Level의 Actors에서 제거
 	for (int32 i = Level->Actors.Num() - 1; i >= 0; --i)
 	{
