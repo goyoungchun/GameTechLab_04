@@ -56,7 +56,7 @@ float UCameraShakeBase::Wave(int32 Axis) const
 
 	case ECameraShakeType::Sine:
 	default:
-		return std::sin(2.0f * PI * Params.Frequency * Elapsed);
+		return std::sin(2.0f * PI * Params.Frequency * Elapsed + Phase[Axis]);
 	}
 }
 
