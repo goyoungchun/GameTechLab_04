@@ -75,7 +75,7 @@ namespace
 
 	void DrawInterpolationRow(ESequenceInterpolation& Interpolation)
 	{
-		static const char* InterpolationNames[] = { "Constant", "Linear" };
+		static const char* InterpolationNames[] = { "Constant", "Linear", "Bezier" };
 		BeginPropertyRow("Interpolation");
 		int Selected = static_cast<int>(Interpolation);
 		if (ImGui::Combo("##Interpolation", &Selected, InterpolationNames, IM_ARRAYSIZE(InterpolationNames)))
@@ -109,6 +109,10 @@ namespace
 			return "Slomo";
 		case ESequenceEventType::CameraShake:
 			return "Camera Shake";
+		case ESequenceEventType::CameraFade: return "Camera Fade";
+		case ESequenceEventType::StopCameraShake: return "Stop Camera Shake";
+		case ESequenceEventType::StopCameraFade: return "Stop Camera Fade";
+		case ESequenceEventType::Letterbox: return "Letterbox";
 		default:
 			return "None";
 		}
@@ -124,6 +128,8 @@ namespace
 			return FSlomoParams();
 		case ESequenceEventType::CameraShake:
 			return FCameraShakeParams();
+		case ESequenceEventType::CameraFade: return FCameraFadeParams();
+		case ESequenceEventType::Letterbox: return FLetterboxParams();
 		default:
 			return std::monostate();
 		}
@@ -889,10 +895,37 @@ void FSequencerPanel::DrawKeyProperties(FSequenceTrack& Track)
 			if (ImGui::DragFloat("##SlomoBlendOut", &Slomo->BlendOutTime, 0.01f, 0.0f, Slomo->Duration, "%.2fs", ImGuiSliderFlags_AlwaysClamp))
 				Slomo->BlendOutTime = std::clamp(Slomo->BlendOutTime, 0.0f, Slomo->Duration - Slomo->BlendInTime);
 		}
-		else if (EventKey.EventType == ESequenceEventType::CameraShake)
+		else if (auto* Shake = std::get_if<FCameraShakeParams>(&EventKey.Params))
 		{
-			BeginPropertyRow("Status");
-			ImGui::TextDisabled("Camera Shake is not implemented");
+			BeginPropertyRow("Wave Type");
+			int Type = static_cast<int>(Shake->Type);
+			if (ImGui::Combo("##WaveType", &Type, "Sine\0Perlin\0")) Shake->Type = static_cast<ECameraShakeType>(Type);
+			BeginPropertyRow("Duration");
+			ImGui::DragFloat("##ShakeDuration", &Shake->Duration, 0.01f, 0, 60, "%.2fs", ImGuiSliderFlags_AlwaysClamp);
+			BeginPropertyRow("Strength");
+			ImGui::DragFloat("##ShakeStrength", &Shake->Strength, 0.05f, 0, 100, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+			BeginPropertyRow("Frequency");
+			ImGui::DragFloat("##ShakeFrequency", &Shake->Frequency, 0.1f, 0, 1000, "%.1f", ImGuiSliderFlags_AlwaysClamp);
+		}
+		else if (auto* Fade = std::get_if<FCameraFadeParams>(&EventKey.Params))
+		{
+			BeginPropertyRow("From Alpha");
+			ImGui::SliderFloat("##FromAlpha", &Fade->FromAlpha, 0, 1);
+			BeginPropertyRow("To Alpha");
+			ImGui::SliderFloat("##ToAlpha", &Fade->ToAlpha, 0, 1);
+			BeginPropertyRow("Duration");
+			ImGui::DragFloat("##FadeDuration", &Fade->Duration, 0.01f, 0, 60, "%.2fs", ImGuiSliderFlags_AlwaysClamp);
+			BeginPropertyRow("Color");
+			ImGui::ColorEdit3("##FadeColor", Fade->Color.V);
+			BeginPropertyRow("Hold At End");
+			ImGui::Checkbox("##HoldFade", &Fade->bHoldWhenFinished);
+		}
+		else if (auto* Bars = std::get_if<FLetterboxParams>(&EventKey.Params))
+		{
+			BeginPropertyRow("Enable");
+			ImGui::Checkbox("##EnableBars", &Bars->bEnable);
+			BeginPropertyRow("Ratio");
+			ImGui::SliderFloat("##BarRatio", &Bars->Ratio, 0, 0.5f);
 		}
 	}
 }
@@ -916,6 +949,16 @@ void FSequencerPanel::DrawEaseCurve(FSequenceTrack& Track)
 			Ease = &Slomo->Ease;
 			bSlomoEase = true;
 		}
+		else if (auto* Shake = std::get_if<FCameraShakeParams>(&EventTrack->KeyFrames[SelectedKeyIndex].Params))
+		{
+			Ease = &Shake->Ease;
+			bSlomoEase = true;
+		}
+		else if (auto* Fade = std::get_if<FCameraFadeParams>(&EventTrack->KeyFrames[SelectedKeyIndex].Params))
+		{
+			Ease = &Fade->Ease;
+			bSlomoEase = true;
+		}
 	}
 
 	if (!Ease || !ImGui::CollapsingHeader("Ease Curve", ImGuiTreeNodeFlags_DefaultOpen))
@@ -925,7 +968,7 @@ void FSequencerPanel::DrawEaseCurve(FSequenceTrack& Track)
 
 	if (bSlomoEase)
 	{
-		ImGui::TextDisabled("Blend In / Blend Out 구간에 적용됩니다");
+		ImGui::TextDisabled("효과 진행 구간의 보간/감쇠 곡선입니다");
 	}
 	else if (SelectedKeyIndex == FSequencerAdapter::GetKeyCount(Track) - 1)
 	{
@@ -942,10 +985,10 @@ void FSequencerPanel::DrawEaseCurve(FSequenceTrack& Track)
 
 	float Points[5] = { Ease->X1, Ease->Y1, Ease->X2, Ease->Y2, EasePresetIndex };
 	const bool bConstant = !bSlomoEase
-		&& FSequencerAdapter::GetKeyInterpolation(Track, SelectedKeyIndex) == ESequenceInterpolation::Constant;
+		&& FSequencerAdapter::GetKeyInterpolation(Track, SelectedKeyIndex) != ESequenceInterpolation::Bezier;
 	if (bConstant)
 	{
-		ImGui::TextDisabled("Constant 보간에서는 이징이 적용되지 않습니다");
+		ImGui::TextDisabled("Interpolation을 Bezier로 선택하면 곡선을 편집할 수 있습니다");
 	}
 	ImGui::BeginDisabled(bConstant);
 	ImGui::Bezier("##Ease", Points);

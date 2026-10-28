@@ -47,6 +47,10 @@ namespace
 		case ESequenceEventType::HitStop: return "HitStop";
 		case ESequenceEventType::Slomo: return "Slomo";
 		case ESequenceEventType::CameraShake: return "CameraShake";
+		case ESequenceEventType::CameraFade: return "CameraFade";
+		case ESequenceEventType::StopCameraShake: return "StopCameraShake";
+		case ESequenceEventType::StopCameraFade: return "StopCameraFade";
+		case ESequenceEventType::Letterbox: return "Letterbox";
 		default: return "None";
 		}
 	}
@@ -64,12 +68,14 @@ namespace
 
 	const char* InterpolationToString(ESequenceInterpolation Interpolation)
 	{
-		return Interpolation == ESequenceInterpolation::Constant ? "Constant" : "Linear";
+		if (Interpolation == ESequenceInterpolation::Constant) return "Constant";
+		return Interpolation == ESequenceInterpolation::Bezier ? "Bezier" : "Linear";
 	}
 
 	ESequenceInterpolation InterpolationFromString(const FString& Name)
 	{
-		return Name == "Constant" ? ESequenceInterpolation::Constant : ESequenceInterpolation::Linear;
+		if (Name == "Constant") return ESequenceInterpolation::Constant;
+		return Name == "Bezier" ? ESequenceInterpolation::Bezier : ESequenceInterpolation::Linear;
 	}
 
 	json BezierToJson(const Bezier& Ease)
@@ -109,8 +115,17 @@ namespace
 		{
 			Result["Duration"] = Shake->Duration;
 			Result["Strength"] = Shake->Strength;
+			Result["Type"] = Shake->Type == ECameraShakeType::Sine ? "Sine" : "Perlin";
+			Result["Frequency"] = Shake->Frequency;
 			Result["Ease"] = BezierToJson(Shake->Ease);
 		}
+		else if (const auto* Fade = std::get_if<FCameraFadeParams>(&Params))
+		{
+			Result = {{"FromAlpha", Fade->FromAlpha}, {"ToAlpha", Fade->ToAlpha}, {"Duration", Fade->Duration},
+				{"Color", Fade->Color}, {"Hold", Fade->bHoldWhenFinished}, {"Ease", BezierToJson(Fade->Ease)}};
+		}
+		else if (const auto* Bars = std::get_if<FLetterboxParams>(&Params))
+			Result = {{"Enable", Bars->bEnable}, {"Ratio", Bars->Ratio}};
 		return Result;
 	}
 
@@ -118,6 +133,24 @@ namespace
 	{
 		switch (EventType)
 		{
+		case ESequenceEventType::CameraFade:
+		{
+			FCameraFadeParams Params;
+			Params.FromAlpha = Value.value("FromAlpha", Params.FromAlpha);
+			Params.ToAlpha = Value.value("ToAlpha", Params.ToAlpha);
+			Params.Duration = Value.value("Duration", Params.Duration);
+			Params.Color = Value.value("Color", Params.Color);
+			Params.bHoldWhenFinished = Value.value("Hold", Params.bHoldWhenFinished);
+			Params.Ease = BezierFromJson(Value.value("Ease", json()));
+			return Params;
+		}
+		case ESequenceEventType::Letterbox:
+		{
+			FLetterboxParams Params;
+			Params.bEnable = Value.value("Enable", Params.bEnable);
+			Params.Ratio = Value.value("Ratio", Params.Ratio);
+			return Params;
+		}
 		case ESequenceEventType::HitStop:
 		{
 			FHitStopParams Params;
@@ -138,6 +171,8 @@ namespace
 		case ESequenceEventType::CameraShake:
 		{
 			FCameraShakeParams Params;
+			Params.Type = Value.value("Type", FString("Perlin")) == "Sine" ? ECameraShakeType::Sine : ECameraShakeType::Perlin;
+			Params.Frequency = Value.value("Frequency", Params.Frequency);
 			Params.Duration = Value.value("Duration", Params.Duration);
 			Params.Strength = Value.value("Strength", Params.Strength);
 			if (Value.contains("Ease"))

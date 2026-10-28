@@ -3,6 +3,7 @@
 #include "GameFramework/Actor.h"
 #include "CameraTypes.h"
 #include "CameraModifier.h"
+#include "Sequence/SequenceData.h"
 #include "ObjectSystem/Casts.h"
 
 enum class EViewTargetBlendFunction : uint8
@@ -100,7 +101,7 @@ public:
 	void StartCameraShake(const FCameraShakeParams& Params);
 	void StopAllCameraShakes();
 
-	void StartCameraFade(float FromAlpha, float ToAlpha, float Duration, const FVector& Color, bool bHoldWhenFinished = false);
+	void StartCameraFade(float FromAlpha, float ToAlpha, float Duration, const FVector& Color, bool bHoldWhenFinished = false, const Bezier& Ease = Bezier{});
 	void StopCameraFade();
 
 	void SetLetterbox(bool bEnable, float Ratio = 0.12f);

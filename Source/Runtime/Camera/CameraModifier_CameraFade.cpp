@@ -23,16 +23,17 @@ void UCameraModifier_CameraFade::ModifyCamera(float DeltaTime, FMinimalViewInfo&
 	}
 
 	InOutPOV.FadeColor = FadeColor;
-	InOutPOV.FadeAmount = FMath::Lerp(FromAlpha, ToAlpha, T) * GetAlpha();
+	InOutPOV.FadeAmount = FMath::Clamp(FMath::Lerp(FromAlpha, ToAlpha, Ease.Evaluate(T)), 0.0f, 1.0f) * GetAlpha();
 }
 
-void UCameraModifier_CameraFade::StartFade(float InFromAlpha, float InToAlpha, float InDuration, const FVector& Color, bool bHoldWhenFinished)
+void UCameraModifier_CameraFade::StartFade(float InFromAlpha, float InToAlpha, float InDuration, const FVector& Color, bool bHoldWhenFinished, const Bezier& InEase)
 {
 	FromAlpha = FMath::Clamp(InFromAlpha, 0.0f, 1.0f);
 	ToAlpha = FMath::Clamp(InToAlpha, 0.0f, 1.0f);
 	Duration = std::max(InDuration, 0.0f);
 	FadeColor = Color;
 	bHold = bHoldWhenFinished;
+	Ease = InEase;
 	Elapsed = 0.0f;
 	bFading = true;
 }

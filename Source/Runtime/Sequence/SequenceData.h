@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cmath>
+#include <algorithm>
 #include <type_traits>
 #include <variant>
 
@@ -16,6 +17,10 @@ enum class ESequenceEventType : uint8
 	HitStop,
 	Slomo,
 	CameraShake,
+	CameraFade,
+	StopCameraShake,
+	StopCameraFade,
+	Letterbox,
 	Count
 };
 
@@ -58,6 +63,7 @@ enum class ESequenceInterpolation : uint8
 {
 	Constant,
 	Linear,
+	Bezier,
 	Count
 };
 
@@ -68,6 +74,27 @@ struct Bezier
 	float Y1 = 0.0f;
 	float X2 = 1.0f;
 	float Y2 = 1.0f;
+
+	float Evaluate(float Alpha) const
+	{
+		if (!std::isfinite(Alpha)) return 0.0f;
+		Alpha = std::clamp(Alpha, 0.0f, 1.0f);
+		if (!IsValid() || Alpha == 0.0f || Alpha == 1.0f) return Alpha;
+		auto Sample = [](float T, float A, float B)
+		{
+			const float S = 1.0f - T;
+			return 3.0f*S*S*T*A + 3.0f*S*T*T*B + T*T*T;
+		};
+		// 시간은 곡선의 X 축이다. X(t)=Alpha를 풀고 같은 t의 Y를 평가한다.
+		float Low = 0.0f, High = 1.0f;
+		for (int Iteration = 0; Iteration < 24; ++Iteration)
+		{
+			const float Mid = (Low + High) * 0.5f;
+			if (Sample(Mid, X1, X2) < Alpha) Low = Mid;
+			else High = Mid;
+		}
+		return Sample((Low + High) * 0.5f, Y1, Y2);
+	}
 
 	bool IsValid() const
 	{
@@ -133,11 +160,37 @@ struct FCameraShakeParams
 	}
 };
 
+struct FCameraFadeParams
+{
+	float FromAlpha = 0.0f;
+	float ToAlpha = 1.0f;
+	float Duration = 0.3f;
+	FVector Color = FVector::ZeroVector;
+	bool bHoldWhenFinished = false;
+	Bezier Ease;
+	bool IsValid() const
+	{
+		return std::isfinite(FromAlpha) && FromAlpha >= 0 && FromAlpha <= 1
+			&& std::isfinite(ToAlpha) && ToAlpha >= 0 && ToAlpha <= 1
+			&& std::isfinite(Duration) && Duration >= 0
+			&& std::isfinite(Color.X) && std::isfinite(Color.Y) && std::isfinite(Color.Z) && Ease.IsValid();
+	}
+};
+
+struct FLetterboxParams
+{
+	bool bEnable = true;
+	float Ratio = 0.12f;
+	bool IsValid() const { return std::isfinite(Ratio) && Ratio >= 0 && Ratio <= 0.5f; }
+};
+
 using FSequenceEventParams = std::variant<
 	std::monostate,
 	FHitStopParams,
 	FSlomoParams,
-	FCameraShakeParams
+	FCameraShakeParams,
+	FCameraFadeParams,
+	FLetterboxParams
 >;
 
 // None·Count와 종류가 맞지 않는 Params는 실행할 수 없다.
@@ -146,6 +199,15 @@ inline bool IsValidSequenceEventParams(
 {
 	switch (EventType)
 	{
+	case ESequenceEventType::CameraFade:
+		if (const auto* Value = std::get_if<FCameraFadeParams>(&Params)) return Value->IsValid();
+		break;
+	case ESequenceEventType::Letterbox:
+		if (const auto* Value = std::get_if<FLetterboxParams>(&Params)) return Value->IsValid();
+		break;
+	case ESequenceEventType::StopCameraShake:
+	case ESequenceEventType::StopCameraFade:
+		return std::holds_alternative<std::monostate>(Params);
 	case ESequenceEventType::HitStop:
 		if (const auto* Value = std::get_if<FHitStopParams>(&Params))
 			return Value->IsValid();

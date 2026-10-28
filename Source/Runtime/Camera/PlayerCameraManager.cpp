@@ -248,7 +248,7 @@ void APlayerCameraManager::StopAllCameraShakes()
 	}
 }
 
-void APlayerCameraManager::StartCameraFade(float FromAlpha, float ToAlpha, float Duration, const FVector& Color, bool bHoldWhenFinished)
+void APlayerCameraManager::StartCameraFade(float FromAlpha, float ToAlpha, float Duration, const FVector& Color, bool bHoldWhenFinished, const Bezier& Ease)
 {
 	UCameraModifier_CameraFade* FadeModifier = FindCameraModifier<UCameraModifier_CameraFade>();
 	if (!FadeModifier)
@@ -258,7 +258,7 @@ void APlayerCameraManager::StartCameraFade(float FromAlpha, float ToAlpha, float
 
 	if (FadeModifier)
 	{
-		FadeModifier->StartFade(FromAlpha, ToAlpha, Duration, Color, bHoldWhenFinished);
+		FadeModifier->StartFade(FromAlpha, ToAlpha, Duration, Color, bHoldWhenFinished, Ease);
 	}
 }
 

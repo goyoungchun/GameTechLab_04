@@ -45,9 +45,16 @@ void USequencePlayer::Update(double GameDeltaTime, double UnscaledDeltaTime)
 	{
 		PreviousTime = CurrentTime;
 		double CurTime = std::clamp(CurrentTime + SelectedDeltaTime * PlayRate, 0.0, Sequence->Length);
-		if (CurTime >= Sequence->Length)
+		if (Sequence->Length > 0.0 && CurTime >= Sequence->Length)
 		{
+			// 끝 키의 중지 이벤트까지 실행한 다음 다음 반복의 시작 키를 적용한다.
+			CurrentTime = Sequence->Length;
+			Apply(Sequence, true);
+			PreviousTime = -std::numeric_limits<double>::epsilon();
 			CurrentTime = 0.0;
+			Apply(Sequence, true);
+			PreviousTime = 0.0;
+			return;
 		}
 		else
 		{
@@ -168,50 +175,6 @@ void USequencePlayer::Apply(const FSequence* InSequence, bool bFireEvents)
 					{
 						return;
 					}
-					const auto Requests = Evaluate(TypedTrack, PreviousTime, CurrentTime);
-
-					for (const FSequenceEventRequest& Request : Requests)
-					{
-						// TODO : 이벤트 수행부와 연결
-						switch (Request.EventType)
-						{
-						case ESequenceEventType::HitStop:
-							if (const auto* Params = std::get_if<FHitStopParams>(&Request.Params))
-							{
-								// Hit Stop 처리
-							}
-							break;
-
-						case ESequenceEventType::Slomo:
-							if (const auto* Params = std::get_if<FSlomoParams>(&Request.Params))
-							{
-								// Slomo 처리
-							}
-							break;
-
-						case ESequenceEventType::CameraShake:
-							if (const auto* Params = std::get_if<FCameraShakeParams>(&Request.Params))
-							{
-								// Camera Shake 처리
-								if (PlaybackWorld)
-								{
-									for (uint32 i = 0; i < PlaybackWorld->GetPlayerCount(); ++i)
-									{
-										APlayerController* PC = PlaybackWorld->GetPlayerController(i);
-										if (APlayerCameraManager* CM = PC ? PC->GetCameraManager() : nullptr)
-										{
-											CM->StartCameraShake(*Params);
-										}
-									}
-								}
-							}
-							break;
-
-						default:
-							break;
-						}
-					}
-
 					EventRequests.Append(Evaluate(TypedTrack, PreviousTime, CurrentTime));
 
 				}
@@ -254,7 +217,25 @@ void USequencePlayer::Apply(const FSequence* InSequence, bool bFireEvents)
 			}
 			break;
 		case ESequenceEventType::CameraShake:
-			// Camera Shake 처리
+		case ESequenceEventType::CameraFade:
+		case ESequenceEventType::StopCameraShake:
+		case ESequenceEventType::StopCameraFade:
+		case ESequenceEventType::Letterbox:
+			if (PlaybackWorld)
+				for (uint32 Index = 0; Index < PlaybackWorld->GetPlayerCount(); ++Index)
+				{
+					APlayerController* PC = PlaybackWorld->GetPlayerController(Index);
+					APlayerCameraManager* Camera = PC ? PC->GetCameraManager() : nullptr;
+					if (!Camera) continue;
+					if (const auto* Shake = std::get_if<FCameraShakeParams>(&Request.Params))
+						Camera->StartCameraShake(*Shake);
+					else if (const auto* Fade = std::get_if<FCameraFadeParams>(&Request.Params))
+						Camera->StartCameraFade(Fade->FromAlpha, Fade->ToAlpha, Fade->Duration, Fade->Color, Fade->bHoldWhenFinished, Fade->Ease);
+					else if (const auto* Bars = std::get_if<FLetterboxParams>(&Request.Params))
+						Camera->SetLetterbox(Bars->bEnable, Bars->Ratio);
+					else if (Request.EventType == ESequenceEventType::StopCameraShake) Camera->StopAllCameraShakes();
+					else if (Request.EventType == ESequenceEventType::StopCameraFade) Camera->StopCameraFade();
+				}
 			break;
 		default:
 			break;
@@ -303,9 +284,10 @@ FKeyFrameValueType USequencePlayer::Evaluate(const FSequenceTrack& Track, double
 				if (Left->Interpolation == ESequenceInterpolation::Constant)
 					return Left->Value;
 
-				if (Left->Interpolation == ESequenceInterpolation::Linear)
+				if (Left->Interpolation == ESequenceInterpolation::Linear || Left->Interpolation == ESequenceInterpolation::Bezier)
 				{
-					const float Alpha = static_cast<float>((Time - Left->Time) / (Right->Time - Left->Time));
+					const float Fraction = static_cast<float>((Time - Left->Time) / (Right->Time - Left->Time));
+					const float Alpha = Left->Interpolation == ESequenceInterpolation::Bezier ? Left->Ease.Evaluate(Fraction) : Fraction;
 					return Left->Value + (Right->Value - Left->Value) * Alpha;
 				}
 			}
@@ -346,9 +328,10 @@ FKeyFrameValueType USequencePlayer::Evaluate(const FSequenceTrack& Track, double
 				if (Left->Interpolation == ESequenceInterpolation::Constant)
 					return Left->Value;
 
-				if (Left->Interpolation == ESequenceInterpolation::Linear)
+				if (Left->Interpolation == ESequenceInterpolation::Linear || Left->Interpolation == ESequenceInterpolation::Bezier)
 				{
-					const float Alpha = static_cast<float>( (Time - Left->Time) / (Right->Time - Left->Time));
+					const float Fraction = static_cast<float>((Time - Left->Time) / (Right->Time - Left->Time));
+					const float Alpha = Left->Interpolation == ESequenceInterpolation::Bezier ? Left->Ease.Evaluate(Fraction) : Fraction;
 
 					const FTransform& A = Left->Value;
 					const FTransform& B = Right->Value;

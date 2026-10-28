@@ -130,12 +130,12 @@ void FTimeController::UpdateSlomo(double UnscaledDeltaTime)
 
 	if (P.BlendInTime > 0.0 && SlomoElapsedTime <= P.BlendInTime) // slow 진입점
 	{
-		const float Alpha = SlomoElapsedTime / P.BlendInTime;
+		const float Alpha = std::clamp(P.Ease.Evaluate(static_cast<float>(SlomoElapsedTime / P.BlendInTime)), 0.0f, 1.0f);
 		CurrentTimeDilation = SlomoStartTimeDilation + (P.TargetScale - SlomoStartTimeDilation) * Alpha;
 	}
 	else if (!bHoldSlomoAtEnd && P.BlendOutTime > 0.0 && SlomoElapsedTime > BlendOutStart) // slow 종료점
 	{
-		const float Alpha = (SlomoElapsedTime - BlendOutStart) / P.BlendOutTime;
+		const float Alpha = std::clamp(P.Ease.Evaluate(static_cast<float>((SlomoElapsedTime - BlendOutStart) / P.BlendOutTime)), 0.0f, 1.0f);
 		CurrentTimeDilation = P.TargetScale + (BaseTimeDilation - P.TargetScale) * Alpha;
 	}
 	else // slow 중
