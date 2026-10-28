@@ -169,6 +169,7 @@ bool UEditorEngine::Init() {
 	FireBallRenderer->Init(Renderer);
 
 	SettingsPanel = EditorUI->AddEditorPanel<FSettingsPanel>();
+
 	OutputLogPanel->SetLightCullingCallback([this](bool bEnabled)
 	{
 		SettingsPanel->GetMutableSettings().bLightCulling = bEnabled;
@@ -224,6 +225,8 @@ bool UEditorEngine::Init() {
 
 	OutlinerPanel->SetDeleteActorCallback(
 			[this](AActor *Actor) { DeleteActor(Actor); });
+
+	SequencerPanel = EditorUI->AddEditorPanel<FSequencerPanel>();
 
 	LineBatcher = MakeUnique<FLineBatcher>();
 	LineBatcher->Init(Renderer, EditorWorld);
@@ -300,6 +303,8 @@ bool UEditorEngine::Init() {
 	EditorControlsPanel->SetWorld(EditorWorld);
 	EditorControlsPanel->SetGizmo(Gizmo.get());
 	EditorControlsPanel->SetViewportsPanel(ViewportsPanel);
+
+	SequencerPanel->SetWorld(EditorWorld);
 
 	SettingsPanel->SetWorld(EditorWorld);
 	SettingsPanel->SetViewportsPanel(ViewportsPanel);
@@ -1656,6 +1661,7 @@ void UEditorEngine::CreatePIESession()
 		OutlinerPanel->SetWorld(PlayWorld);
 		DetailsPanel->SetWorld(PlayWorld);
 		SettingsPanel->SetWorld(PlayWorld);
+		SequencerPanel->SetWorld(PlayWorld);
 	}
 }
 
@@ -1711,7 +1717,7 @@ void UEditorEngine::StopPIESession()
 	OutlinerPanel->SetWorld(EditorWorld);
 	DetailsPanel->SetWorld(EditorWorld);
 	SettingsPanel->SetWorld(EditorWorld);
-
+	SequencerPanel->SetWorld(EditorWorld);
 }
 
 void UEditorEngine::UpdateInputOwner()
