@@ -262,7 +262,13 @@ TArray<FSequenceEventRequest> USequencePlayer::Evaluate(const FEventTrack& Track
 {
 	TArray<FSequenceEventRequest> Result;
 
-
+	for (const auto& Event : Track.KeyFrames)
+	{
+		if (PreviousTime <= Event.Time && Event.Time <= CurrentTime)
+		{
+			Result.Add(FSequenceEventRequest::FromKeyFrame(Event, Track.Binding));
+		}
+	}
 
 	return Result;
 }
