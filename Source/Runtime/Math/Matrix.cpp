@@ -109,10 +109,16 @@ FMatrix FMatrix::MakeTranslation(const FVector& T)
 	return Mat;
 }
 
+FMatrix FMatrix::MakeRotation(const FRotator& Rot)
+{
+	FQuat WorldQuat = Rot.Quaternion();
+	FMatrix RotationMatrix = WorldQuat.ToFMatrix();
+	return RotationMatrix;
+}
+
 FMatrix FMatrix::MakeView(const FVector& Location, const FRotator& Rotation)
 {
-	FQuat WorldQuat = Rotation.Quaternion();
-	FMatrix RotationMatrix = WorldQuat.ToFMatrix();
+	FMatrix RotationMatrix = MakeRotation(Rotation);
 
 	FMatrix InverseTranslation = MakeTranslation(Location * -1.0f);
 	FMatrix InverseRotation = RotationMatrix.GetTransposed();

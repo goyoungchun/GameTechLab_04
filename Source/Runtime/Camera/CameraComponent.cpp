@@ -2,6 +2,7 @@
 #include "CameraComponent.h"
 #include "Input/InputSystem.h"
 #include "../Collision/Ray.h"
+#include "Camera/CameraTypes.h"
 
 // 외부 입력 관리 시 기본 입력을 생략해 Adapter와 카메라의 중복 갱신을 막는다.
 void UCameraComponent::TickComponent(float DeltaTime)
@@ -139,4 +140,18 @@ FMatrix UCameraComponent::GetProjectionMatrix() const
 FMatrix UCameraComponent::GetViewProjectionMatrix() const
 {
     return GetViewMatrix() * GetProjectionMatrix();
+}
+
+void UCameraComponent::GetCameraView(FMinimalViewInfo& OutView) const
+{
+    OutView.Location = GetWorldLocation();
+    OutView.Rotation = GetWorldRotation();
+    OutView.ProjectionMode = bIsOrthogonal 
+        ? ECameraProjectionMode::Orthographic 
+        : ECameraProjectionMode::Perspective;
+    OutView.AspectRatio = AspectRatio;
+    OutView.FOV = FieldOfView;
+    OutView.OrthoWidth = OrthoWidth;
+    OutView.NearClipPlane = NearClipPlane;
+    OutView.FarClipPlane = FarClipPlane;
 }

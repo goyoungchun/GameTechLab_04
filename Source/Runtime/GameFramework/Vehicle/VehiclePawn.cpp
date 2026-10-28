@@ -10,6 +10,7 @@
 #include "Collision/FPhysSceneChaos.h"
 #include "Collision/FPBDRigidsSolver.h"
 #include "Engine/World.h"
+#include "Component/SpringArmComponent.h"
 #include <cmath>
 
 AVehiclePawn::AVehiclePawn()
@@ -21,6 +22,7 @@ AVehiclePawn::AVehiclePawn()
 	StaticMesh = CreateDefaultSubobject<UStaticMeshComponent>("StaticMeshComponent");
 	Script = CreateDefaultSubobject<UScriptComponent>("ScriptComponent");
 	Movement = CreateDefaultSubobject<UVehicleMovementComponent>("MovementComponent");
+	SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>("SpringArmComponent");
 	Camera = CreateDefaultSubobject<UCameraComponent>("CameraComponent");
 
 	Box->SetMotionType(EPhysicsMotionType::Dynamic);
@@ -54,11 +56,17 @@ AVehiclePawn::AVehiclePawn()
 
 	Script->SetScriptPath("Assets/Scripts/Vehicle/VehicleController.lua");
 
-	Camera->SetupAttachment(Box);
+	// SpringArmComponent
+	SpringArmComponent->SetupAttachment(Box);
+	SpringArmComponent->bInheritPitch = false;
+	SpringArmComponent->bInheritRoll = false;
+	SpringArmComponent->bEnableCameraLag = true;
+	SpringArmComponent->bEnableCameraRotationLag = true;
+	SpringArmComponent->CameraLagSpeed = PositionFollowSpeed;
+	SpringArmComponent->CameraRotationLagSpeed = RotationFollowSpeed;
+	SpringArmComponent->ProbeSize = 0.5f;
 
-	Camera->SetRelativeLocation({ -4, 0, 4 });
-	Camera->SetRelativeRotation({ 20, 0, 0 });
-
+	Camera->SetupAttachment(SpringArmComponent);
 	Camera->SetExternalInputManaged(true);
 	SetBody("italia");
 }
@@ -254,6 +262,7 @@ void AVehiclePawn::UpdateWheelVisuals(float DeltaTime)
 void AVehiclePawn::ResetFollowCamera()
 {
 	bCameraInitialized = false;
+	if (SpringArmComponent) SpringArmComponent->ResetLag();
 	UpdateFollowCamera(0.0f);
 }
 
@@ -265,34 +274,25 @@ void AVehiclePawn::UpdateFollowCamera(float DeltaTime)
 		if (!std::isfinite(Speed) || Speed <= 0.0f) return 1.0f;
 		return std::isfinite(DeltaTime) && DeltaTime > 0.0f ? 1.0f - std::exp(-Speed * DeltaTime) : 0.0f;
 	};
+
 	const FStaticMeshData* Data = StaticMesh->GetMeshData();
-	const FVector Center = Data ? StaticMesh->GetWorldMatrix().TransformPosition((Data->AABB.Min + Data->AABB.Max) * 0.5f)
-		: Box->GetWorldLocation();
 	const FVector Extent = Data ? (Data->AABB.Max - Data->AABB.Min) * 0.5f * StaticMesh->GetWorldScale3D().GetAbs()
 		: Box->GetBoxExtent() * Box->GetWorldScale3D().GetAbs();
-	const float TargetYaw = Box->GetWorldRotation().Yaw;
-	if (!bCameraInitialized) FollowYaw = TargetYaw;
-	else FollowYaw = std::remainder(FollowYaw + std::remainder(TargetYaw - FollowYaw, 360.0f)
-		* FollowAlpha(RotationFollowSpeed), 360.0f);
+	
 	// 테스트 브랜치처럼 Yaw만 지연 추적한다. 점프/기울어짐에도 수평선을 유지한다.
-	const FQuat Rotation = FRotator(0.0f, FollowYaw, 0.0f).Quaternion();
 	const float DistanceScale = std::isfinite(CameraDistanceScale) ? std::max(2.0f, CameraDistanceScale) : 5.0f;
 	const float MinimumDistance = std::isfinite(MinCameraDistance) ? std::max(1.0f, MinCameraDistance) : 10.0f;
-	// 큰 모델과 기존 씬의 거리 설정도 수용하되 테스트 씬의 (-20, 0, 8)을 기준으로 둔다.
-	FVector Offset = CameraOffset;
-	Offset.X = -std::max({std::abs(Offset.X), MinimumDistance, Extent.X * DistanceScale});
-	Offset.Z = std::max(Offset.Z, Extent.Z * 3.0f);
-	const FVector TargetPosition = Center + Rotation.RotateVector(Offset);
-	if (!bCameraInitialized) FollowPosition = TargetPosition;
-	else FollowPosition += (TargetPosition - FollowPosition) * FollowAlpha(PositionFollowSpeed);
-	const FVector Direction = Center + Rotation.RotateVector(LookAtOffset) - FollowPosition;
-	const FRotator View(FMath::RadiansToDegrees(std::atan2(-Direction.Z, std::hypot(Direction.X, Direction.Y))),
-		FMath::RadiansToDegrees(std::atan2(Direction.Y, Direction.X)), 0.0f);
-	Camera->SetWorldLocation(FollowPosition);
-	const USceneComponent* Parent = Camera->GetAttachParent();
-	Camera->SetRelativeRotation(Parent
-		? (Parent->GetWorldRotation().Quaternion().Inverse() * View.Quaternion()).ToFRotator() : View);
-	Camera->SetExternalInputManaged(true);
+	const float Back = std::max({ std::abs(CameraOffset.X), MinimumDistance, Extent.X * DistanceScale });
+	const float Up = std::max(CameraOffset.Z, Extent.Z * 3.0f);
+
+	const float DX = Back + LookAtOffset.X;
+	const float DZ = Up - LookAtOffset.Z;
+	SpringArmComponent->SetRelativeLocation({ LookAtOffset.X, LookAtOffset.Y, LookAtOffset.Z });
+	SpringArmComponent->SetRelativeRotation({ FMath::RadiansToDegrees(std::atan2(DZ, DX)), 0.0f, 0.0f });
+	SpringArmComponent->TargetArmLength = std::hypot(DX, DZ);
+	SpringArmComponent->CameraLagSpeed = RotationFollowSpeed;
+	SpringArmComponent->CameraRotationLagSpeed = RotationFollowSpeed;
+
 	// 에디터 모델 교체/로드 중에는 직렬화된 카메라 FOV를 유지한다.
 	if (HasBegunPlay())
 	{
