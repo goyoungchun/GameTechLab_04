@@ -2,17 +2,12 @@
 
 #include "Editor/EditorUI/EditorPanel.h"
 #include "Editor/Sequencer/SequencerAdapter.h"
+#include "Camera/CameraTypes.h"
 
 class UWorld;
 class FViewportsPanel;
-
-// 임시용
-struct FSequencerViewInfo
-{
-	FVector Location;
-	FRotator Rotation;
-	float FOV = 0.0f;
-};
+class USequencePlayer;
+class UCameraComponent;
 
 class FSequencerPanel : public IEditorPanel
 {
@@ -25,7 +20,7 @@ public:
 	void OnRender() override;
 	const char* GetPanelName() const override { return "Sequencer"; }
 
-	void SetWorld(UWorld* InWorld) { World = InWorld; }
+	void SetWorld(UWorld* InWorld);
 	void SetViewportsPanel(FViewportsPanel* InPanel) { ViewportsPanel = InPanel; }
 	bool IsFocused() const { return bWindowFocused; }
 
@@ -44,13 +39,17 @@ private:
 	void DeleteSelectedKey();
 	bool HasSelectedKey() const;
 	void BuildSampleSequence();
-	bool GetCurrentViewPOV(FSequencerViewInfo& OutView) const;
+	bool GetCurrentViewPOV(FMinimalViewInfo& OutView) const;
+	UCameraComponent* FindPreviewCamera() const;
+	void CreateCameraForTrack();
+	void ApplyPreviewToViewport();
 	int32 AddTransformKey(FTransformTrack& InTrack, double InTime, const FTransform& InValue);
 	int32 AddFloatKey(FFloatTrack& InTrack, double InTime);
 	int32 AddEventKey(FEventTrack& InTrack, double InTime);
 	bool CanAddTransformKey() const;
 	bool CanAddKey() const;
 	void ValidateKeySelection();
+	void ValidateBindings();
 
 	UWorld* World = nullptr;
 
@@ -64,6 +63,8 @@ private:
 	int CurrentFrame = 0;
 	bool bExpanded = true;
 	bool bIsPlaying = false;
+	bool bPreviewEnabled = false;
+	USequencePlayer* Player = nullptr;
 	bool bWindowFocused = false;
 	int SelectedTrackIndex = -1;
 	int SelectedKeyIndex = -1;
@@ -81,4 +82,5 @@ private:
 	static constexpr float MaxSequenceLength = 600.0f;
 	static constexpr float MinFrameRate = 1.0f;
 	static constexpr float MaxFrameRate = 120.0f;
+	static constexpr const char* CameraIconPath = "Editor/Icon/Pawn.png";
 };

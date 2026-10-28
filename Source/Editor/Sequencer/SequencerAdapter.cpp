@@ -8,7 +8,7 @@
 
 namespace
 {
-	const char* TrackTypeNames[] = { "Camera Transform", "FOV", "Event" };
+	const char* TrackTypeNames[] = { "Camera Transform", "FOV", "Ortho Width", "Event" };
 
 	enum class EKeyShape : uint8
 	{
@@ -253,6 +253,14 @@ void FSequencerAdapter::Add(int TypeIndex)
 		FFloatTrack Track;
 		Track.Name = Name;
 		Track.ValueType = ESequenceValueType::FOV;
+		Sequence->Tracks.Add(Track);
+		break;
+	}
+	case 2:
+	{
+		FFloatTrack Track;
+		Track.Name = Name;
+		Track.ValueType = ESequenceValueType::OrthoWidth;
 		Sequence->Tracks.Add(Track);
 		break;
 	}

@@ -287,38 +287,38 @@ FQuat FQuat::MakeFromEuler(float RollRadian, float PitchRadian, float YawRadian)
 	);
 }
 
-// 쿼터니언 구면 선형 보간
-FQuat FQuat::Slerp(FQuat Current, FQuat Target, float Slerp)
-{
-	// 쿼터니언 2개 내적
-	float Dot =
-		Current.X * Target.X +
-		Current.Y * Target.Y +
-		Current.Z * Target.Z +
-		Current.W * Target.W;
-
-	// 최단 경로 선택 위한 부호 적용
-	float Sign = Dot > 0.0f ? 1.0f : -1.0f;
-	Dot *= Sign;
-
-	float Scale0 = 1.0f - Slerp;
-	float Scale1 = Slerp * Sign;
-
-	if (Dot < 0.9999f)
-	{
-		const float Omega = std::acos(Dot);
-		const float InvSin = 1.0f / sin(Omega);
-		Scale0 = sin(Scale0 * Omega) * InvSin;
-		Scale1 = sin(Scale1 * Omega) * InvSin;
-	}
-
-	return FQuat(
-		Scale0 * Current.X + Scale1 * Target.X,
-		Scale0 * Current.Y + Scale1 * Target.Y,
-		Scale0 * Current.Z + Scale1 * Target.Z,
-		Scale0 * Current.W + Scale1 * Target.W
-	);
-}
+//// 쿼터니언 구면 선형 보간
+//FQuat FQuat::Slerp(FQuat Current, FQuat Target, float Slerp)
+//{
+//	// 쿼터니언 2개 내적
+//	float Dot =
+//		Current.X * Target.X +
+//		Current.Y * Target.Y +
+//		Current.Z * Target.Z +
+//		Current.W * Target.W;
+//
+//	// 최단 경로 선택 위한 부호 적용
+//	float Sign = Dot > 0.0f ? 1.0f : -1.0f;
+//	Dot *= Sign;
+//
+//	float Scale0 = 1.0f - Slerp;
+//	float Scale1 = Slerp * Sign;
+//
+//	if (Dot < 0.9999f)
+//	{
+//		const float Omega = std::acos(Dot);
+//		const float InvSin = 1.0f / sin(Omega);
+//		Scale0 = sin(Scale0 * Omega) * InvSin;
+//		Scale1 = sin(Scale1 * Omega) * InvSin;
+//	}
+//
+//	return FQuat(
+//		Scale0 * Current.X + Scale1 * Target.X,
+//		Scale0 * Current.Y + Scale1 * Target.Y,
+//		Scale0 * Current.Z + Scale1 * Target.Z,
+//		Scale0 * Current.W + Scale1 * Target.W
+//	);
+//}
 
 bool FQuat::Equals(const FQuat& Q, float Tolerance) const
 {

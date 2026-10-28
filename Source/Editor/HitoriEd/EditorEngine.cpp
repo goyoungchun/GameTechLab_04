@@ -217,10 +217,10 @@ bool UEditorEngine::Init() {
 
 	OutlinerPanel = EditorUI->AddEditorPanel<FOutlinerPanel>();
 	OutlinerPanel->SetWorld(EditorWorld);
-	OutlinerPanel->SetSelectionCallback([this](UPrimitiveComponent *Primitive) {
-		Gizmo->SetTarget(Primitive);
-		Outline->SetTarget(Primitive);
-		DetailsPanel->SetTarget(Primitive);
+	OutlinerPanel->SetSelectionCallback([this](USceneComponent *Component) {
+		Gizmo->SetTarget(Component);
+		Outline->SetTarget(Cast<UPrimitiveComponent>(Component));
+		DetailsPanel->SetTarget(Component);
 	});
 
 	OutlinerPanel->SetDeleteActorCallback(
@@ -1663,7 +1663,6 @@ void UEditorEngine::CreatePIESession()
 		OutlinerPanel->SetWorld(PlayWorld);
 		DetailsPanel->SetWorld(PlayWorld);
 		SettingsPanel->SetWorld(PlayWorld);
-		SequencerPanel->SetWorld(PlayWorld);
 	}
 }
 
