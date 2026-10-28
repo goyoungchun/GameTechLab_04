@@ -51,4 +51,27 @@ namespace FMath
 	{
 		return Degree * (PI / 180.0f);
 	}
+
+	static FQuat QuatInterpolationTo(const FQuat& Current, const FQuat& Target, float DeltaTime, float InterpolationSpeed)
+	{
+		if (InterpolationSpeed <= 0.f)
+		{
+			return Target;
+		}
+
+		return FQuat::Slerp(Current, Target, FMath::Clamp(InterpolationSpeed * DeltaTime, 0.f, 1.f));
+	}
+
+	static FVector VectorInterpoationTo(const FVector& Current, const FVector& Target, float DeltaTime, float InterpolationSpeed)
+	{
+		if (InterpolationSpeed <= 0.f)
+		{
+			return Target;
+		}
+
+		const FVector Dist = Target - Current;
+
+		const FVector DeltaMove = Dist * FMath::Clamp(DeltaTime * InterpolationSpeed, 0.f, 1.f);
+		return Current + DeltaMove;
+	}
 }

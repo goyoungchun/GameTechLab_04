@@ -9,6 +9,7 @@ class UVehicleMovementComponent;
 class UScriptComponent;
 class UCameraComponent;
 struct FVehicleInput;
+class USpringArmComponent;
 
 class AVehiclePawn : public APawn
 {
@@ -77,4 +78,6 @@ private:
 	bool bCameraInitialized = false;
 	float CameraDistanceScale = 5.0f;
 	float MinCameraDistance = 10.0f;
+
+	USpringArmComponent* SpringArmComponent = nullptr;
 };
