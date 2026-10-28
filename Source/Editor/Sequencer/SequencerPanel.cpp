@@ -171,6 +171,12 @@ void FSequencerPanel::OnRender()
 	ImGui::SetNextWindowSize(ImVec2(800, 300), ImGuiCond_FirstUseEver);
 	ImGui::SetNextWindowViewport(ImGui::GetMainViewport()->ID);
 	ImGui::Begin(GetPanelName());
+	bWindowFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
+
+	if (bWindowFocused && !ImGui::GetIO().WantTextInput && ImGui::IsKeyPressed(ImGuiKey_Delete, false))
+	{
+		DeleteSelectedKey();
+	}
 
 	DrawToolBar();
 	ImGui::Separator();
@@ -268,6 +274,14 @@ void FSequencerPanel::DrawToolBar()
 				SelectedKeyIndex = AddTransformKey(*TransformTrack, CurrentTime, FTransform(ViewInfo.Rotation, ViewInfo.Location));
 			}
 		}
+	}
+	ImGui::EndDisabled();
+
+	ImGui::SameLine();
+	ImGui::BeginDisabled(!HasSelectedKey());
+	if (ImGui::Button("Delete Key"))
+	{
+		DeleteSelectedKey();
 	}
 	ImGui::EndDisabled();
 
@@ -515,6 +529,35 @@ void FSequencerPanel::DrawEaseCurve(FSequenceTrack& Track)
 	Ease->X2 = Points[2];
 	Ease->Y2 = Points[3];
 	EasePresetIndex = Points[4];
+}
+
+bool FSequencerPanel::HasSelectedKey() const
+{
+	return EditingSequence.Tracks.IsValidIndex(SelectedTrackIndex)
+		&& SelectedKeyIndex >= 0
+		&& SelectedKeyIndex < FSequencerAdapter::GetKeyCount(EditingSequence.Tracks[SelectedTrackIndex]);
+}
+
+void FSequencerPanel::DeleteSelectedKey()
+{
+	if (!EditingSequence.Tracks.IsValidIndex(SelectedTrackIndex))
+	{
+		return;
+	}
+
+	const int32 KeyIndex = SelectedKeyIndex;
+	std::visit([KeyIndex](auto& Typed)
+	{
+		if constexpr (!std::is_same_v<std::decay_t<decltype(Typed)>, std::monostate>)
+		{
+			if (Typed.KeyFrames.IsValidIndex(KeyIndex))
+			{
+				Typed.KeyFrames.RemoveAt(static_cast<uint32>(KeyIndex), 1);
+			}
+		}
+	}, EditingSequence.Tracks[SelectedTrackIndex]);
+
+	SelectedKeyIndex = -1;
 }
 
 int32 FSequencerPanel::MoveKeyToFrame(FSequenceTrack& Track, int32 KeyIndex, int32 NewFrame)

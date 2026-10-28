@@ -440,6 +440,7 @@ void UEditorEngine::UpdateViewportState(const float DeltaTime) {
 
 	UpdateInputOwner();
 	if (InputOwnerPIEInstance == -1 && !ImGui::GetIO().WantTextInput &&
+		!(SequencerPanel && SequencerPanel->IsFocused()) &&
 		FInputSystem::IsKeyPressed(EKeyCode::Delete)) {
 		DeleteActor(OutlinerPanel->GetSelectedActor());
 	}

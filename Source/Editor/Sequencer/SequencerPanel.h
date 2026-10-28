@@ -27,6 +27,7 @@ public:
 
 	void SetWorld(UWorld* InWorld) { World = InWorld; }
 	void SetViewportsPanel(FViewportsPanel* InPanel) { ViewportsPanel = InPanel; }
+	bool IsFocused() const { return bWindowFocused; }
 
 private:
 	bool LoadSettings();
@@ -39,6 +40,8 @@ private:
 	void DrawKeyProperties(FSequenceTrack& Track);
 	void DrawEaseCurve(FSequenceTrack& Track);
 	int32 MoveKeyToFrame(FSequenceTrack& Track, int32 KeyIndex, int32 NewFrame);
+	void DeleteSelectedKey();
+	bool HasSelectedKey() const;
 	void BuildSampleSequence();
 	bool GetCurrentViewPOV(FSequencerViewInfo& OutView) const;
 	int32 AddTransformKey(FTransformTrack& InTrack, double InTime, const FTransform& InValue);
@@ -58,6 +61,7 @@ private:
 	int CurrentFrame = 0;
 	bool bExpanded = true;
 	bool bIsPlaying = false;
+	bool bWindowFocused = false;
 	int SelectedTrackIndex = -1;
 	int SelectedKeyIndex = -1;
 	int FirstVisibleFrame = 0;
