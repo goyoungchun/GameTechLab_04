@@ -276,6 +276,14 @@ void UGameEngine::RenderPlayerView(FForwardGameViewportClient* Client, const FSc
 	RenderCommand::BindRenderPassNoClear(ColorTarget, DepthTarget, Width, Height);
 	SceneRenderer.RenderTranslucent(Renderer, nullptr, bHasTileLights ? &Targets.TileLightResources : nullptr);
 	RenderSceneText(PlayWorld, SceneView);
+
+	// 감마 보정: 게임 빌드는 설정 패널이 없어서 항상 켠다. UI와 오버레이는 보정 뒤에 그린다.
+	bool bGammaApplied = false;
+	if (TUniquePtr<FTexture2D>* GammaOutput = Renderer->DrawGammaCorrection(Targets.SceneColor.get()))
+		bGammaApplied = Targets.SwapSceneColorAndBind(*GammaOutput) != nullptr;
+	if (!bGammaApplied)
+		RenderCommand::BindRenderPassNoClear(Targets.SceneColor.get(), DepthTarget, Width, Height);
+
 	Renderer->DrawScreenOverlay(SceneView);
 
 	ScreenUIRenderer.Render(PlayWorld->GetGameUIBuffer(), Width, Height, SplitIndex, SplitCount);

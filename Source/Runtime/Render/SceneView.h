@@ -49,6 +49,9 @@ struct FSceneView
 	FVector FadeColor{};
 	float FadeAmount = 0.0f;
 	float LetterboxRatio = 0.0f;
+	float VignetteIntensity = 0.0f;
+	float VignetteRadius = 0.4f;
+	float VignetteSoftness = 0.6f;
 
 	// 기존 뷰 컨텍스트 변환
 	FViewContext ToViewContext() const

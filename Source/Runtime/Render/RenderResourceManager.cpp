@@ -38,7 +38,8 @@ constexpr FPipelineTableEntry PipelineTable[] =
 	{ EPSOType::StaticMesh_WorldNormal,    "Resources/Shader/StaticMeshWorldNormalShader.hlsl",    D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST, ERasterizerState::SolidBack, EBlendState::Opaque,       EDepthStencilState::Default },
 	{ EPSOType::StaticMesh_Shadow,    "Resources/Shader/LightShadowShader.hlsl",    D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST, ERasterizerState::SolidFront, EBlendState::Opaque,       EDepthStencilState::Default },
 	{ EPSOType::ShadowTileClear,	"Resources/Shader/ShadowTileClearShader.hlsl",	D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST,	ERasterizerState::SolidNone,	EBlendState::NoColorWrite, EDepthStencilState::AlwaysWrite },
-	{EPSOType::ScreenOverlay, "Resources/Shader/ScreenOverlayShader.hlsl", D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST, ERasterizerState::SolidNone, EBlendState::AlphaBlend, EDepthStencilState::Disabled}
+	{EPSOType::ScreenOverlay, "Resources/Shader/ScreenOverlayShader.hlsl", D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST, ERasterizerState::SolidNone, EBlendState::AlphaBlend, EDepthStencilState::Disabled},
+	{ EPSOType::GammaCorrection,        "Resources/Shader/GammaCorrectionShader.hlsl",      D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST, ERasterizerState::SolidNone, EBlendState::Opaque,       EDepthStencilState::Disabled }
 };
 
 static_assert(sizeof(PipelineTable) / sizeof(PipelineTable[0]) == static_cast<size_t>(EPSOType::Count));

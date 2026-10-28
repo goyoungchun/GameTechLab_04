@@ -31,6 +31,21 @@
 #include <format>
 
 namespace {
+// SceneColor를 감마 보정된 버퍼와 바꾸고 이후 패스를 위해 다시 바인딩한다.
+// 실패하면 원래 SceneColor를 그대로 바인딩해서 보정 없이 계속 그린다.
+template <typename TViewTargets>
+FTexture2D* ApplyGammaCorrection(FRenderer* Renderer, TViewTargets& Targets, FTexture2D* DepthTarget)
+{
+	FTexture2D* Source = Targets.SceneColor.get();
+	if (TUniquePtr<FTexture2D>* Output = Renderer->DrawGammaCorrection(Source))
+	{
+		if (FTexture2D* NewColor = Targets.SwapSceneColorAndBind(*Output))
+			return NewColor;
+	}
+	RenderCommand::BindRenderPassNoClear(Source, DepthTarget, Source->GetWidth(), Source->GetHeight());
+	return Source;
+}
+
 DECLARE_CYCLE_STAT("Viewport Update", STAT_ViewportUpdate);
 DECLARE_CYCLE_STAT("World Tick", STAT_WorldTick);
 DECLARE_CYCLE_STAT("Editor Tick", STAT_EditorTick);
@@ -941,6 +956,7 @@ void UEditorEngine::RenderGameFrameDeferred(FDeferredGameViewportClient* GameCli
 
 	FSceneRenderOptions Options;
 	Options.bEnableFXAA = SettingsPanel && SettingsPanel->GetSettings().bEnableFXAA;
+	Options.bGammaCorrection = !SettingsPanel || SettingsPanel->GetSettings().bGammaCorrection;
 	// FDeferredViewTargets& Targets = GameClient->GetDeferredViewTargets();
 	FDeferredViewTargets& Targets = GameClient->GetViewTargets();
 	if (!RenderSceneFrameDeferred(Targets, SceneView, SceneRenderer, GameClient->GetWorld(), Options))
@@ -981,6 +997,7 @@ void UEditorEngine::RenderGameFrameForward(FForwardGameViewportClient* GameClien
 
 	FSceneRenderOptions Options;
 	Options.bEnableFXAA = SettingsPanel && SettingsPanel->GetSettings().bEnableFXAA;
+	Options.bGammaCorrection = !SettingsPanel || SettingsPanel->GetSettings().bGammaCorrection;
 	Options.bLightGridDebug = SettingsPanel && SettingsPanel->GetSettings().bLightGridDebug;
 	Options.bLightCulling = !SettingsPanel || SettingsPanel->GetSettings().bLightCulling;
 	// FDeferredViewTargets& Targets = GameClient->GetDeferredViewTargets();
@@ -1074,6 +1091,11 @@ bool UEditorEngine::RenderSceneFrameDeferred(FDeferredViewTargets& Targets, cons
 
 	RenderSceneText(TargetWorld, SceneView);
 
+	// 감마 보정 (Show Flag): 씬은 선형으로 그리고 여기서 한 번만 sRGB로 인코딩한다.
+	// FXAA는 인코딩된 값에서 동작하도록 설계돼서 그 앞에 둔다. 디버그 뷰는 값 자체를 봐야 하므로 제외.
+	if (Options.bGammaCorrection && !Options.bShowSceneDepth && !Options.bShowWorldNormal)
+		ColorTarget = ApplyGammaCorrection(Renderer, Targets, DepthTarget);
+
 	if (Options.bShowSceneDepth && SceneDepthRenderer)
 		SceneDepthRenderer->OnRender(SceneView, DepthTarget, ColorTarget, Options.SceneDepthRange);
 	if (Options.bEnableFXAA && !Options.bShowSceneDepth && FXAARenderer &&
@@ -1137,6 +1159,10 @@ bool UEditorEngine::RenderSceneFrameForward(FForwardViewTargets& Targets, const 
 	}
 
 	RenderSceneText(TargetWorld, SceneView);
+
+	// 감마 보정 (Show Flag): Deferred 경로와 같은 위치(FXAA 앞)에서 한 번만 인코딩한다.
+	if (Options.bGammaCorrection && !Options.bShowSceneDepth && !Options.bShowWorldNormal)
+		ColorTarget = ApplyGammaCorrection(Renderer, Targets, DepthTarget);
 
 	if (Options.bShowSceneDepth && SceneDepthRenderer)
 	{
@@ -1347,6 +1373,7 @@ void UEditorEngine::RenderFrame(FEditorViewportClient *ViewClient,
 	Options.bDrawPrimitives = bIsPIE || SettingsPanel->GetSettings().bDrawPrimitives;
 	Options.bEnableFog = ViewClient->GetViewportMode() == EViewportMode::Lit;
 	Options.bEnableFXAA = SettingsPanel->GetSettings().bEnableFXAA;
+	Options.bGammaCorrection = SettingsPanel->GetSettings().bGammaCorrection;
 	Options.bShowSceneDepth = !bIsPIE && ViewClient->IsSceneDepth();
 	Options.bShowWorldNormal = !bIsPIE && ViewClient->IsWorldNormal();
 	Options.bLightGridDebug = SettingsPanel->GetSettings().bLightGridDebug;

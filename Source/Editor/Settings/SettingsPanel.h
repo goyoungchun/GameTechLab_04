@@ -19,6 +19,8 @@ struct FEditorSettings
 	bool bDrawBatchLine = true;
 	bool bDrawPSGrid = false;
 	bool bEnableFXAA = false;
+	// Show Flag: 선형 → sRGB 감마 보정. 끄면 선형 값이 그대로 화면에 나간다.
+	bool bGammaCorrection = true;
 	// 콘솔 전용 실행 중 플래그. UI 및 editor.ini에는 노출하지 않는다.
 	bool bLightGridDebug = false;
 	bool bLightCulling = true;
