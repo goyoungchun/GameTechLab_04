@@ -96,6 +96,8 @@ FQuat FQuat::Normalized() const
 	return Result;
 }
 
+
+
 FVector FQuat::RotateVector(const FVector& V) const
 {
 	FQuatRegister Q = VectorSIMD::Load(this->V);

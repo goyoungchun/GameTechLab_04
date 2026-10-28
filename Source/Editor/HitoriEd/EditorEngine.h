@@ -24,6 +24,7 @@
 #include "Editor/Details/DetailsPanel.h"
 #include "Editor/EditorControls/EditorControlsPanel.h"
 #include "Editor/Settings/SettingsPanel.h"
+#include "Editor/Sequencer/SequencerPanel.h"
 #include "Editor/Viewports/ViewportsPanel.h"
 #include "Editor/Viewports/ViewportLayout.h"
 #include "Editor/ContentDrawer/ContentDrawerPanel.h"
@@ -138,6 +139,7 @@ private:
 	FOutputLogPanel* OutputLogPanel = nullptr;
 
 	FDetailsPanel* DetailsPanel = nullptr;
+	FSequencerPanel* SequencerPanel = nullptr;
 	FEditorControlsPanel* EditorControlsPanel = nullptr;
 	FSettingsPanel* SettingsPanel = nullptr;
 	FViewportsPanel* ViewportsPanel = nullptr;

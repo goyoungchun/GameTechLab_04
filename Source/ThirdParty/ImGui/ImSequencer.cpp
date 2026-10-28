@@ -35,10 +35,21 @@ namespace ImSequencer
       return ImVec2(a.x + b.x, a.y + b.y);
    }
 #endif
+   float GetLegendWidth()
+   {
+      return ImMax(200.0f, ImGui::GetFontSize() * 10.0f);
+   }
+
+   float GetItemHeight()
+   {
+      return ImMax(20.0f, ImGui::GetFontSize() + 6.0f);
+   }
+
    static bool SequencerAddDelButton(ImDrawList* draw_list, ImVec2 pos, bool add = true)
    {
       ImGuiIO& io = ImGui::GetIO();
-      ImRect btnRect(pos, ImVec2(pos.x + 16, pos.y + 16));
+      const float btnSize = GetItemHeight() - 4.0f;
+      ImRect btnRect(pos, ImVec2(pos.x + btnSize, pos.y + btnSize));
       bool overBtn = btnRect.Contains(io.MousePos);
       bool containedClick = overBtn && btnRect.Contains(io.MouseClickedPos[0]);
       bool clickedBtn = containedClick && io.MouseReleased[0];
@@ -46,8 +57,8 @@ namespace ImSequencer
       if (containedClick && io.MouseDownDuration[0] > 0)
          btnRect.Expand(2.0f);
 
-      float midy = pos.y + 16 / 2 - 0.5f;
-      float midx = pos.x + 16 / 2 - 0.5f;
+      float midy = pos.y + btnSize / 2 - 0.5f;
+      float midx = pos.x + btnSize / 2 - 0.5f;
       draw_list->AddRect(btnRect.Min, btnRect.Max, btnColor, 4);
       draw_list->AddLine(ImVec2(btnRect.Min.x + 3, midy), ImVec2(btnRect.Max.x - 3, midy), btnColor, 2);
       if (add)
@@ -63,14 +74,14 @@ namespace ImSequencer
       int cy = (int)(io.MousePos.y);
       static float framePixelWidth = 10.f;
       static float framePixelWidthTarget = 10.f;
-      int legendWidth = 200;
+      int legendWidth = (int)GetLegendWidth();
 
       static int movingEntry = -1;
       static int movingPos = -1;
       static int movingPart = -1;
       int delEntry = -1;
       int dupEntry = -1;
-      int ItemHeight = 20;
+      int ItemHeight = (int)GetItemHeight();
 
       bool popupOpened = false;
       int sequenceCount = sequence->GetItemCount();
@@ -142,7 +153,7 @@ namespace ImSequencer
          draw_list->AddRectFilled(canvas_pos, ImVec2(canvas_size.x + canvas_pos.x, canvas_pos.y + ItemHeight), 0xFF3D3837, 0);
          char tmps[512];
          ImFormatString(tmps, IM_ARRAYSIZE(tmps), sequence->GetCollapseFmt(), frameCount, sequenceCount);
-         draw_list->AddText(ImVec2(canvas_pos.x + 26, canvas_pos.y + 2), 0xFFFFFFFF, tmps);
+         draw_list->AddText(ImVec2(canvas_pos.x + ItemHeight + 6, canvas_pos.y + 2), 0xFFFFFFFF, tmps);
       }
       else
       {

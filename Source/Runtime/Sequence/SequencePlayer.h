@@ -1,8 +1,8 @@
 #pragma once
 
-#include "ObjectSystem/Object.h"
 #include "ObjectSystem/Class.h"
 #include "SequenceData.h"
+#include "ObjectSystem/Object.h"
 
 class UWorld;
 
@@ -22,7 +22,7 @@ enum class ESequenceClockSource : uint8
 class USequencePlayer : public UObject
 {
 	DECLARE_CLASS(USequencePlayer, UObject)
-
+	// TODO : SceneJSON 연결
 	REFLECT_START(ClassName)
 	REFLECT_END()
 
@@ -35,17 +35,18 @@ public:
 	void SetSequence(FSequence* InSequence) { Sequence = InSequence; Sequence->PlayRate = PlayRate; }
 	void SetPlaybackWorld(UWorld* InWorld) { PlaybackWorld = InWorld; }
 
-	// 시간 갱신 -> Apply의 트랙 순회 -> Evaluate -> 결과 적용 순서로 구현한다.
+	// 시간 갱신 -> Apply의 트랙 순회 -> Evaluate -> 결과 적용 순서
+	// SetSequence로 등록한 시퀀스만 재생한다.
 	// Update는 World 시간 배율을 다시 곱하지 않고, 확정된 두 DeltaTime을 받는다.
-	void Update(const FSequence* InSequence, double GameDeltaTime, double UnscaledDeltaTime);
+	void Update(double GameDeltaTime, double UnscaledDeltaTime);
 
 	void Play();
 	// 재생 종료 후 재생 위치를 0으로 돌리고 자신이 시작한 임시 효과를 정리한다.
 	void Stop();
 	void Pause();
 	// 기본 Seek는 값만 적용한다. 이벤트 실행은 명시적으로 요청한 경우에만 허용한다.
-	void Seek(double Time, bool bFireEvents = false);
-	void SetPlayRate(float InPlayRate);
+	void Seek(double Time, bool bFireEvents);
+	void SetPlayRate(float InPlayRate) { Sequence->PlayRate = InPlayRate; };
 	void SetClockSource(ESequenceClockSource InClockSource) { ClockSource = InClockSource; }
 
 	const FSequence* GetSequence() const { return Sequence; }
