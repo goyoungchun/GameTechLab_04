@@ -14,6 +14,7 @@
 #include "GameFramework/Vehicle/VehicleScriptBindings.h"
 #include "GameFramework/Vehicle/VehiclePawn.h"
 #include "Audio/AudioSystem.h"
+#include "Camera/CameraScriptBindings.h"
 
 namespace
 {
@@ -325,20 +326,6 @@ void FScriptSystem::RegisterTypes()
 			Location.Z += SurfaceLocation.Z + 0.01f - Root->CalcBounds().Min.Z;
 			Self.SetActorLocation(Location);
 		},
-		"SetViewCamera", [](AActor& Self, int32 PlayerIndex, const FVector& Location, const FRotator& Rotation)
-		{
-			if (UWorld* World = Self.GetWorld())
-			{
-				World->SetViewCameraOverride(PlayerIndex - 1, Location, Rotation);
-			}
-		},
-		"ClearViewCamera", [](AActor& Self, int32 PlayerIndex)
-		{
-			if (UWorld* World = Self.GetWorld())
-			{
-				World->ClearViewCameraOverride(PlayerIndex - 1);
-			}
-		},
 		"SetText", [](AActor& Self, const FString& InText)
 		{
 			for (UActorComponent* Component : Self.GetComponents())
@@ -448,6 +435,7 @@ void FScriptSystem::Init()
 	RegisterInput();
 	RegisterFunction();
 	RegisterVehicleBindings(*Lua);
+	RegisterCameraBindings(*Lua);
 	OverridePrint();
 
 	Lua->create_named_table("Game",
