@@ -4,6 +4,7 @@
 #include "Engine/Level.h"
 #include "Collision/FPhysSceneChaos.h"
 #include "Camera/CameraActor.h"
+#include "Camera/PlayerCameraManager.h"
 #include "UObject/UObjectIterator.h"
 #include "Editor/Viewports/ViewportsPanel.h"
 #include "Camera/CameraComponent.h"
@@ -75,7 +76,7 @@ namespace
 
 	void DrawInterpolationRow(ESequenceInterpolation& Interpolation)
 	{
-		static const char* InterpolationNames[] = { "Constant", "Linear" };
+		static const char* InterpolationNames[] = { "Constant", "Linear", "Bezier" };
 		BeginPropertyRow("Interpolation");
 		int Selected = static_cast<int>(Interpolation);
 		if (ImGui::Combo("##Interpolation", &Selected, InterpolationNames, IM_ARRAYSIZE(InterpolationNames)))
@@ -109,6 +110,10 @@ namespace
 			return "Slomo";
 		case ESequenceEventType::CameraShake:
 			return "Camera Shake";
+		case ESequenceEventType::CameraFade: return "Camera Fade";
+		case ESequenceEventType::StopCameraShake: return "Stop Camera Shake";
+		case ESequenceEventType::StopCameraFade: return "Stop Camera Fade";
+		case ESequenceEventType::Letterbox: return "Letterbox";
 		default:
 			return "None";
 		}
@@ -124,6 +129,8 @@ namespace
 			return FSlomoParams();
 		case ESequenceEventType::CameraShake:
 			return FCameraShakeParams();
+		case ESequenceEventType::CameraFade: return FCameraFadeParams();
+		case ESequenceEventType::Letterbox: return FLetterboxParams();
 		default:
 			return std::monostate();
 		}
@@ -398,6 +405,8 @@ void FSequencerPanel::Tick(float DeltaTime)
 	bIsPlaying = Player->GetPlaybackState() == ESequencePlaybackState::Playing;
 	CurrentTime = static_cast<float>(Player->GetCurrentTime());
 	CurrentFrame = Adapter.TimeToFrame(CurrentTime);
+	if (bPlaybackPreviewActive)
+		UpdateCameraEffectPreview(bIsPlaying ? static_cast<float>(UnscaledDeltaTime) : 0.0f);
 
 	if (bPreviewEnabled)
 	{
@@ -524,7 +533,8 @@ void FSequencerPanel::DrawToolBar()
 		}
 		else
 		{
-			Player->Play();
+			BeginPlaybackPreview();
+			Player->Play(true);
 		}
 	}
 
@@ -541,7 +551,7 @@ void FSequencerPanel::DrawToolBar()
 	ImGui::SameLine();
 	ImGui::Checkbox("Camera Preview", &bPreviewEnabled);
 	if (ImGui::IsItemHovered())
-		ImGui::SetTooltip("카메라 시점만 뷰포트에 표시합니다. 트랙과 이벤트는 Play로 실행됩니다.");
+		ImGui::SetTooltip("연결된 카메라의 시점을 사용합니다. 카메라 효과 이벤트는 Play로 확인할 수 있습니다.");
 
 	ImGui::SameLine();
 	ImGui::TextDisabled("|");
@@ -889,10 +899,37 @@ void FSequencerPanel::DrawKeyProperties(FSequenceTrack& Track)
 			if (ImGui::DragFloat("##SlomoBlendOut", &Slomo->BlendOutTime, 0.01f, 0.0f, Slomo->Duration, "%.2fs", ImGuiSliderFlags_AlwaysClamp))
 				Slomo->BlendOutTime = std::clamp(Slomo->BlendOutTime, 0.0f, Slomo->Duration - Slomo->BlendInTime);
 		}
-		else if (EventKey.EventType == ESequenceEventType::CameraShake)
+		else if (auto* Shake = std::get_if<FCameraShakeParams>(&EventKey.Params))
 		{
-			BeginPropertyRow("Status");
-			ImGui::TextDisabled("Camera Shake is not implemented");
+			BeginPropertyRow("Wave Type");
+			int Type = static_cast<int>(Shake->Type);
+			if (ImGui::Combo("##WaveType", &Type, "Sine\0Perlin\0")) Shake->Type = static_cast<ECameraShakeType>(Type);
+			BeginPropertyRow("Duration");
+			ImGui::DragFloat("##ShakeDuration", &Shake->Duration, 0.01f, 0, 60, "%.2fs", ImGuiSliderFlags_AlwaysClamp);
+			BeginPropertyRow("Strength");
+			ImGui::DragFloat("##ShakeStrength", &Shake->Strength, 0.05f, 0, 100, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+			BeginPropertyRow("Frequency");
+			ImGui::DragFloat("##ShakeFrequency", &Shake->Frequency, 0.1f, 0, 1000, "%.1f", ImGuiSliderFlags_AlwaysClamp);
+		}
+		else if (auto* Fade = std::get_if<FCameraFadeParams>(&EventKey.Params))
+		{
+			BeginPropertyRow("From Alpha");
+			ImGui::SliderFloat("##FromAlpha", &Fade->FromAlpha, 0, 1);
+			BeginPropertyRow("To Alpha");
+			ImGui::SliderFloat("##ToAlpha", &Fade->ToAlpha, 0, 1);
+			BeginPropertyRow("Duration");
+			ImGui::DragFloat("##FadeDuration", &Fade->Duration, 0.01f, 0, 60, "%.2fs", ImGuiSliderFlags_AlwaysClamp);
+			BeginPropertyRow("Color");
+			ImGui::ColorEdit3("##FadeColor", Fade->Color.V);
+			BeginPropertyRow("Hold At End");
+			ImGui::Checkbox("##HoldFade", &Fade->bHoldWhenFinished);
+		}
+		else if (auto* Bars = std::get_if<FLetterboxParams>(&EventKey.Params))
+		{
+			BeginPropertyRow("Enable");
+			ImGui::Checkbox("##EnableBars", &Bars->bEnable);
+			BeginPropertyRow("Ratio");
+			ImGui::SliderFloat("##BarRatio", &Bars->Ratio, 0, 0.5f);
 		}
 	}
 }
@@ -916,6 +953,16 @@ void FSequencerPanel::DrawEaseCurve(FSequenceTrack& Track)
 			Ease = &Slomo->Ease;
 			bSlomoEase = true;
 		}
+		else if (auto* Shake = std::get_if<FCameraShakeParams>(&EventTrack->KeyFrames[SelectedKeyIndex].Params))
+		{
+			Ease = &Shake->Ease;
+			bSlomoEase = true;
+		}
+		else if (auto* Fade = std::get_if<FCameraFadeParams>(&EventTrack->KeyFrames[SelectedKeyIndex].Params))
+		{
+			Ease = &Fade->Ease;
+			bSlomoEase = true;
+		}
 	}
 
 	if (!Ease || !ImGui::CollapsingHeader("Ease Curve", ImGuiTreeNodeFlags_DefaultOpen))
@@ -925,7 +972,7 @@ void FSequencerPanel::DrawEaseCurve(FSequenceTrack& Track)
 
 	if (bSlomoEase)
 	{
-		ImGui::TextDisabled("Blend In / Blend Out 구간에 적용됩니다");
+		ImGui::TextDisabled("효과 진행 구간의 보간/감쇠 곡선입니다");
 	}
 	else if (SelectedKeyIndex == FSequencerAdapter::GetKeyCount(Track) - 1)
 	{
@@ -942,10 +989,10 @@ void FSequencerPanel::DrawEaseCurve(FSequenceTrack& Track)
 
 	float Points[5] = { Ease->X1, Ease->Y1, Ease->X2, Ease->Y2, EasePresetIndex };
 	const bool bConstant = !bSlomoEase
-		&& FSequencerAdapter::GetKeyInterpolation(Track, SelectedKeyIndex) == ESequenceInterpolation::Constant;
+		&& FSequencerAdapter::GetKeyInterpolation(Track, SelectedKeyIndex) != ESequenceInterpolation::Bezier;
 	if (bConstant)
 	{
-		ImGui::TextDisabled("Constant 보간에서는 이징이 적용되지 않습니다");
+		ImGui::TextDisabled("Interpolation을 Bezier로 선택하면 곡선을 편집할 수 있습니다");
 	}
 	ImGui::BeginDisabled(bConstant);
 	ImGui::Bezier("##Ease", Points);
@@ -1158,6 +1205,12 @@ bool FSequencerPanel::GetCurrentViewPOV(FMinimalViewInfo& OutView) const
 	OutView.FOV = ActiveViewportClient->GetViewFOV();
 	OutView.Location = ActiveViewportClient->GetViewLocation();
 	OutView.Rotation = ActiveViewportClient->GetViewRotation();
+	OutView.AspectRatio = ActiveViewportClient->GetAspectRatio();
+	OutView.NearClipPlane = ActiveViewportClient->GetNearClip();
+	OutView.FarClipPlane = ActiveViewportClient->GetFarClip();
+	OutView.OrthoWidth = ActiveViewportClient->GetOrthoWidth();
+	OutView.ProjectionMode = ActiveViewportClient->IsPerspective()
+		? ECameraProjectionMode::Perspective : ECameraProjectionMode::Orthographic;
 	return (true);
 }
 
@@ -1234,7 +1287,7 @@ UCameraComponent* FSequencerPanel::FindPreviewCamera() const
 
 void FSequencerPanel::ApplyPreviewToViewport()
 {
-	if (!ViewportsPanel)
+	if (!ViewportsPanel || PreviewCameraManager)
 	{
 		return;
 	}
@@ -1253,9 +1306,56 @@ void FSequencerPanel::ApplyPreviewToViewport()
 	ViewportClient->SetViewFOV(View.FOV);
 }
 
+void FSequencerPanel::UpdateCameraEffectPreview(float DeltaTime)
+{
+	if (!PreviewCameraManager || !PreviewCameraProxy || !ViewportsPanel) return;
+	FMinimalViewInfo BaseView;
+	UCameraComponent* Camera = bPreviewEnabled ? FindPreviewCamera() : nullptr;
+	if (Camera) Camera->GetCameraView(BaseView);
+	else if (!GetCurrentViewPOV(BaseView)) return;
+
+	PreviewCameraProxy->SetActorLocation(BaseView.Location);
+	PreviewCameraProxy->SetActorRotation(BaseView.Rotation);
+	UCameraComponent* Proxy = PreviewCameraProxy->GetCameraComponent();
+	Proxy->SetFieldOfView(BaseView.FOV);
+	Proxy->SetAspectRatio(BaseView.AspectRatio);
+	Proxy->SetNearZ(BaseView.NearClipPlane);
+	Proxy->SetFarZ(BaseView.FarClipPlane);
+	Proxy->SetIsOrthogonal(BaseView.ProjectionMode == ECameraProjectionMode::Orthographic);
+	Proxy->SetOrthoWidth(BaseView.OrthoWidth);
+	// 실제 시간으로 진행하므로 Hit Stop 중에도 화면 효과를 볼 수 있다.
+	PreviewCameraManager->UpdateCamera(DeltaTime);
+	for (int32 Index = 0; Index < 4; ++Index)
+		if (auto* Viewport = ViewportsPanel->GetViewportClient(Index))
+			Viewport->ClearSequencePreviewView();
+	if (auto* Viewport = ViewportsPanel->GetViewportClient(ViewportsPanel->GetActiveViewIndex()))
+		Viewport->SetSequencePreviewView(PreviewCameraManager->GetCameraCacheView());
+}
+
+void FSequencerPanel::ClearCameraEffectPreview()
+{
+	if (Player) Player->SetCameraManagerOverride(nullptr);
+	if (ViewportsPanel)
+		for (int32 Index = 0; Index < 4; ++Index)
+			if (auto* Viewport = ViewportsPanel->GetViewportClient(Index))
+				Viewport->ClearSequencePreviewView();
+	delete PreviewCameraManager;
+	PreviewCameraManager = nullptr;
+	delete PreviewCameraProxy;
+	PreviewCameraProxy = nullptr;
+}
+
 void FSequencerPanel::BeginPlaybackPreview()
 {
 	if (!World || World->GetWorldType() != EWorldType::Editor) return;
+	if (!PreviewCameraManager)
+	{
+		// 씬에 액터를 추가하지 않고, 에디터 카메라의 POV에만 효과를 적용한다.
+		PreviewCameraProxy = FObjectFactory::ConstructObject<ACameraActor>();
+		PreviewCameraManager = FObjectFactory::ConstructObject<APlayerCameraManager>();
+		PreviewCameraManager->SetViewTarget(PreviewCameraProxy);
+		Player->SetCameraManagerOverride(PreviewCameraManager);
+	}
 	if (!bPlaybackPreviewActive)
 	{
 		SavedPreviewTimeController = World->GetTimeController();
@@ -1273,6 +1373,7 @@ void FSequencerPanel::BeginPlaybackPreview()
 
 void FSequencerPanel::EndPlaybackPreview()
 {
+	ClearCameraEffectPreview();
 	if (!bPlaybackPreviewActive || !World) return;
 	// 컴포넌트 포인터를 보관하지 않고 현재 살아 있는 객체의 ID로 복원한다.
 	if (World->GetPersistentLevel())
@@ -1391,17 +1492,13 @@ void FSequencerPanel::SaveSequence(bool bSaveAs)
 
 void FSequencerPanel::LoadSequence()
 {
-	if (!World)
-	{
-		return;
-	}
-
 	const FString Path = FEditorFileUtils::OpenLoadSequenceDialog();
-	if (Path.empty())
-	{
-		return;
-	}
+	if (!Path.empty()) LoadSequenceFile(Path);
+}
 
+bool FSequencerPanel::LoadSequenceFile(const FString& Path)
+{
+	if (!World) return false;
 	if (Player)
 	{
 		Player->Stop();
@@ -1414,7 +1511,7 @@ void FSequencerPanel::LoadSequence()
 	if (!FSequenceSerializer::Load(Path, World, Loaded, Cameras, &ScenePath))
 	{
 		HTR_LOG(Error, "Failed to load sequence: {}", Path);
-		return;
+		return false;
 	}
 
 	DestroySequenceCameras(Cameras);
@@ -1430,6 +1527,7 @@ void FSequencerPanel::LoadSequence()
 	}
 	ResetEditingState();
 	HTR_LOG(Info, "Load Sequence : {}", CurrentSequencePath);
+	return true;
 }
 
 void FSequencerPanel::DestroySequenceCameras(const TArray<ACameraActor*>& KeepCameras)

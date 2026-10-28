@@ -3,6 +3,7 @@
 #include "GameFramework/Actor.h"
 #include "CameraTypes.h"
 #include "CameraModifier.h"
+#include "Sequence/SequenceData.h"
 #include "ObjectSystem/Casts.h"
 
 enum class EViewTargetBlendFunction : uint8
@@ -35,7 +36,7 @@ struct FViewTargetTransitionParams
 		const float T = FMath::Clamp(TimePct, 0.0f, 1.0f);
 		const float Exp = BlendExp > 0.0f ? BlendExp : 1.0f;
 
-		switch (BlendFunction) 
+		switch (BlendFunction)
 		{
 		case EViewTargetBlendFunction::Linear:
 			return FMath::Lerp(0.f, 1.f, T);
@@ -72,7 +73,7 @@ class APlayerCameraManager : public AActor
 public:
 	APlayerCameraManager();
 	~APlayerCameraManager() override;
-	
+
 	UCameraModifier* AddNewCameraModifier(UClass* ModifierClass);
 
 	template <typename T>
@@ -100,7 +101,7 @@ public:
 	void StartCameraShake(const FCameraShakeParams& Params);
 	void StopAllCameraShakes();
 
-	void StartCameraFade(float FromAlpha, float ToAlpha, float Duration, const FVector& Color, bool bHoldWhenFinished = false);
+	void StartCameraFade(float FromAlpha, float ToAlpha, float Duration, const FVector& Color, bool bHoldWhenFinished = false, const Bezier& Ease = Bezier{});
 	void StopCameraFade();
 
 	void SetLetterbox(bool bEnable, float Ratio = 0.12f);

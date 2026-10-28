@@ -85,6 +85,7 @@ void RegisterVehicleBindings(sol::state& Lua)
 		"SetInput", [](AVehiclePawn& Self, float Throttle, float Steer, bool bBoost) 
 			{ Self.SetVehicleInput(FVehicleInput{ Throttle, Steer, bBoost, false }); },
 		"Jump", &AVehiclePawn::RequestJump,
+		"PlayHitSquash", &AVehiclePawn::PlayHitSquash,
 		"Velocity", sol::readonly_property([](const AVehiclePawn& Self)
 			{ const auto* M = Self.GetMovement(); return M ? M->GetVelocity() : FVector::ZeroVector; }),
 		"Speed", sol::readonly_property([](const AVehiclePawn& Self)
@@ -108,6 +109,7 @@ void RegisterVehicleBindings(sol::state& Lua)
 				Self.SetActorLocation(Location);
 				Self.SetActorRotation(FRotator(0.0f, Yaw, 0.0f));
 				if (auto* M = Self.GetMovement()) M->ResetMotion();
+				Self.ResetHitSquash();
 				Self.ResetFollowCamera();
 			},
 		"BoostRatio", sol::readonly_property([](const AVehiclePawn& Self)

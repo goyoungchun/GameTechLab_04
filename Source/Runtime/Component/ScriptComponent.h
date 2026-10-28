@@ -42,6 +42,7 @@ public:
 private:
 	void BindScriptAPI(sol::environment& InEnvironment);
 	void BindCoroutineAPI(sol::environment& InEnvironment);
+	void BindTimeAPI(sol::environment& InEnvironment);
 	void BindUIAPI(sol::environment& InEnvironment);
 	void UnbindUIAPI(sol::environment& InEnvironment);
 	void UnbindScriptAPI(sol::environment& InEnvironment);

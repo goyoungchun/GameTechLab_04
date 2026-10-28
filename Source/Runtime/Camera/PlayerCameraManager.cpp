@@ -27,7 +27,7 @@ void APlayerCameraManager::SetViewTarget(AActor* NewTarget, const FViewTargetTra
 {
 	if (!NewTarget && PCOwner)
 		NewTarget = PCOwner->GetPawn();
-	
+
 	// 보여줄 대상이 없음 -> 블렌드 취소 후 비우기
 	if (!NewTarget)
 	{
@@ -249,7 +249,7 @@ void APlayerCameraManager::StopAllCameraShakes()
 	}
 }
 
-void APlayerCameraManager::StartCameraFade(float FromAlpha, float ToAlpha, float Duration, const FVector& Color, bool bHoldWhenFinished)
+void APlayerCameraManager::StartCameraFade(float FromAlpha, float ToAlpha, float Duration, const FVector& Color, bool bHoldWhenFinished, const Bezier& Ease)
 {
 	UCameraModifier_CameraFade* FadeModifier = FindCameraModifier<UCameraModifier_CameraFade>();
 	if (!FadeModifier)
@@ -259,7 +259,7 @@ void APlayerCameraManager::StartCameraFade(float FromAlpha, float ToAlpha, float
 
 	if (FadeModifier)
 	{
-		FadeModifier->StartFade(FromAlpha, ToAlpha, Duration, Color, bHoldWhenFinished);
+		FadeModifier->StartFade(FromAlpha, ToAlpha, Duration, Color, bHoldWhenFinished, Ease);
 	}
 }
 

@@ -8,6 +8,7 @@
 #include "Math/Vector2.h"
 #include "Render/DeferredViewTargets.h"
 #include "Render/SceneView.h"
+#include "Camera/CameraTypes.h"
 #include "Render/SceneRenderData.h"
 #include "Render/Texture/Texture2D.h"
 
@@ -23,6 +24,8 @@ class FEditorViewportClient : public FViewportClient {
 public:
 	FEditorViewportClient();
 	virtual ~FEditorViewportClient() override = default;
+	void SetSequencePreviewView(const FMinimalViewInfo& View) { SequencePreviewView = View; bHasSequencePreviewView = true; }
+	void ClearSequencePreviewView() { bHasSequencePreviewView = false; }
 
 	// 월드 조회 및 설정
 	virtual UWorld *GetWorld() const override { return World; }
@@ -141,6 +144,8 @@ protected:
 	FVector ViewLocation = FVector(0.0f, 0.0f, 0.0f);
 	FRotator ViewRotation = FRotator(0.0f, 0.0f, 0.0f);
 	float ViewFOV = 60.0f;
+	FMinimalViewInfo SequencePreviewView;
+	bool bHasSequencePreviewView = false;
 	float AspectRatio = 1.777778f;
 	float NearClip = 0.1f;
 	float FarClip = 1000.0f;

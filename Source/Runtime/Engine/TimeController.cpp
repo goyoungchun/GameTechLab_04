@@ -53,7 +53,7 @@ double FTimeController::GetHitStopTimeRemaining() const
 }
 
 
-void FTimeController::RequestSlomo(const FSlomoParams& Params)
+void FTimeController::RequestSlomo(const FSlomoParams& Params, bool bHoldAtEnd)
 {
 	if (!Params.IsValid() || Params.Duration <= 0.0f)
 		return;
@@ -61,6 +61,7 @@ void FTimeController::RequestSlomo(const FSlomoParams& Params)
 	ActiveSlomoParams = Params;
 	SlomoElapsedTime = 0.0;
 	bSlomoActive = true;
+	bHoldSlomoAtEnd = bHoldAtEnd;
 
 	if (Params.BlendInTime <= 0.0f) // 진입 시간이 없으면 배율 즉시 적용
 		CurrentTimeDilation = Params.TargetScale;
@@ -68,6 +69,7 @@ void FTimeController::RequestSlomo(const FSlomoParams& Params)
 void FTimeController::StopSlomo()
 {
 	bSlomoActive = false;
+	bHoldSlomoAtEnd = false;
 	ActiveSlomoParams = {};
 	SlomoElapsedTime = 0.0;
 
@@ -90,6 +92,7 @@ void FTimeController::Reset()
 	CurrentTimeDilation = 1.0f; 
 	HitStopTimeRemaining = 0.0;
 	bSlomoActive = false;
+	bHoldSlomoAtEnd = false;
 	ActiveSlomoParams = {};
 	SlomoElapsedTime = 0.0;
 	SlomoStartTimeDilation = 1.0f;
@@ -110,10 +113,16 @@ void FTimeController::UpdateSlomo(double UnscaledDeltaTime)
 	SlomoElapsedTime += UnscaledDeltaTime;
 	const FSlomoParams& P = ActiveSlomoParams;
 
-	// 전체 지속 시간이 끝났으면 복구
+	// 게임 연출은 목표 배율을 유지할 수 있다. 기존 시퀀서 이벤트는 자동 복구한다.
 	if (SlomoElapsedTime >= P.Duration)
 	{
-		StopSlomo();
+		if (bHoldSlomoAtEnd)
+		{
+			SlomoElapsedTime = P.Duration;
+			CurrentTimeDilation = P.TargetScale;
+		}
+		else
+			StopSlomo();
 		return;
 	}
 
@@ -121,12 +130,12 @@ void FTimeController::UpdateSlomo(double UnscaledDeltaTime)
 
 	if (P.BlendInTime > 0.0 && SlomoElapsedTime <= P.BlendInTime) // slow 진입점
 	{
-		const float Alpha = SlomoElapsedTime / P.BlendInTime;
+		const float Alpha = std::clamp(P.Ease.Evaluate(static_cast<float>(SlomoElapsedTime / P.BlendInTime)), 0.0f, 1.0f);
 		CurrentTimeDilation = SlomoStartTimeDilation + (P.TargetScale - SlomoStartTimeDilation) * Alpha;
 	}
-	else if (P.BlendOutTime > 0.0 && SlomoElapsedTime > BlendOutStart) // slow 종료점
+	else if (!bHoldSlomoAtEnd && P.BlendOutTime > 0.0 && SlomoElapsedTime > BlendOutStart) // slow 종료점
 	{
-		const float Alpha = (SlomoElapsedTime - BlendOutStart) / P.BlendOutTime;
+		const float Alpha = std::clamp(P.Ease.Evaluate(static_cast<float>((SlomoElapsedTime - BlendOutStart) / P.BlendOutTime)), 0.0f, 1.0f);
 		CurrentTimeDilation = P.TargetScale + (BaseTimeDilation - P.TargetScale) * Alpha;
 	}
 	else // slow 중

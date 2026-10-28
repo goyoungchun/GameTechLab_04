@@ -13,7 +13,7 @@
 ABallActor::ABallActor()
 {
 	PrimaryActorTick.bCanEverTick = true;
-
+	PrimaryActorTick.TickGroup = ETickingGroup::PostPhysics;
 	Collision = CreateDefaultSubobject<USphereComponent>("BallCollision");
 	SetRootComponent(Collision);
 	Collision->SetMotionType(EPhysicsMotionType::Dynamic);
@@ -31,8 +31,11 @@ ABallActor::ABallActor()
 	Script = CreateDefaultSubobject<UScriptComponent>("ScriptComponent");
 	Script->SetScriptPath("Assets/Scripts/Ball.lua");
 
+	VisualRoot = CreateDefaultSubobject<USceneComponent>("BallVisualRoot");
+	VisualRoot->SetupAttachment(Collision);
+	VisualRoot->SetFlags(EObjectFlags::RF_Transient);
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>("BallMesh");
-	Mesh->SetupAttachment(Collision);
+	Mesh->SetupAttachment(VisualRoot);
 	Mesh->SetEnableGravity(false);
 	Mesh->SetCollisionResponseToChannel(ECollisionChannel::WorldStatic, ECollisionResponse::Ignore);
 	Mesh->SetCollisionResponseToChannel(ECollisionChannel::WorldDynamic, ECollisionResponse::Ignore);
@@ -63,14 +66,25 @@ ABallActor::ABallActor()
 
 void ABallActor::BeginPlay()
 {
+	ResetHitSquash();
 	Super::BeginPlay();
-
 	PreviousLocation = Collision->GetWorldLocation();
+}
+
+void ABallActor::EndPlay()
+{
+	ResetHitSquash();
+	Super::EndPlay();
 }
 
 void ABallActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	if (!std::isfinite(DeltaTime) || DeltaTime <= 0.0f) return;
+	ContactTime += DeltaTime;
+	++ContactTick;
+	if (VisualRoot && HitSquashAnimation.IsActive())
+		VisualRoot->SetRelativeScale3D(FVector(HitSquashAnimation.Update(DeltaTime)));
 
 	const FVector CurrentLocation = Collision->GetWorldLocation();
 	FVector Delta = CurrentLocation - PreviousLocation;
@@ -90,17 +104,37 @@ void ABallActor::Tick(float DeltaTime)
 	Mesh->SetRelativeLocation(-RollRotation.RotateVector(MeshCenterOffset));
 }
 
+void ABallActor::ResetHitSquash()
+{
+	HitSquashAnimation.Reset();
+	RecentContacts.Empty();
+	ContactTime = 0.0;
+	ContactTick = 0;
+	if (VisualRoot) VisualRoot->SetRelativeScale3D(FVector::OneVector);
+}
+
 void ABallActor::HandleHit(UPrimitiveComponent* Self, AActor* OtherActor, UPrimitiveComponent* Other,
 	FVector NormalImpulse, const FHitResult& Hit)
 {
 	if (const AVehiclePawn* Vehicle = Cast<AVehiclePawn>(OtherActor))
 		LastTouchPlayerIndex = Vehicle->GetPlayerIndex();
+
+	if (!Other || !Hit.bBlockingHit || !VisualRoot || IsActorBeingDestroyed()) return;
+	const uint32 OtherId = Other->GetUUID();
+	const FRecentContact* Previous = RecentContacts.FindOrNull(OtherId);
+	// 지속 접촉은 프레임 간격과 무관하게 제외하고, 빠른 재접촉도 제한한다.
+	const bool bNewContact = !Previous || (ContactTick > Previous->Tick + 1
+		&& ContactTime - Previous->Time >= 0.15);
+	RecentContacts[OtherId] = { ContactTime, ContactTick };
+	if (bNewContact)
+		HitSquashAnimation.Play(VisualRoot->GetRelativeScale3D().X);
 }
 
 void ABallActor::Retire()
 {
 	if (IsActorBeingDestroyed())
 		return;
+	ResetHitSquash();
 	// 지연 삭제되는 프레임에도 이전 공이 새 공과 충돌하거나 화면에 남지 않게 한다.
 	SetActorEnableCollision(false);
 	UnregisterAllComponents();

@@ -1,5 +1,6 @@
 #pragma once
 #include "CameraModifier.h"
+#include "Sequence/SequenceData.h"
 
 class UCameraModifier_CameraFade : public UCameraModifier
 {
@@ -10,7 +11,7 @@ public:
 
 	void ModifyCamera(float DeltaTime, FMinimalViewInfo& InOutPOV) override;
 
-	void StartFade(float FromAlpha, float ToAlpha, float Duration, const FVector& Color, bool bHoldWhenFinished);
+	void StartFade(float FromAlpha, float ToAlpha, float Duration, const FVector& Color, bool bHoldWhenFinished, const Bezier& InEase = Bezier{});
 	void StopFade();
 
 private:
@@ -21,5 +22,6 @@ private:
 	float Elapsed{ 0.0f };
 	bool bFading{ false };
 	bool bHold{ false };
+	Bezier Ease;
 
 };

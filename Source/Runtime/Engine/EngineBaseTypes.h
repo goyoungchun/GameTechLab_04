@@ -35,6 +35,8 @@ public:
 	bool IsTickFunctionEnabled() const { return TickState != ETickState::Disabled; }
 
 	uint8 bTickEvenWhenPaused : 1 = false;
+	// 시간 배율이 0이어도 원본 DeltaTime으로 실행한다. 월드 Pause에는 영향받는다.
+	uint8 bTickWithUnscaledTime : 1 = false;
 	uint8 bCanEverTick : 1 = false;          // UE 기본값
 	uint8 bStartWithTickEnabled : 1 = true;  // 등록할때 바로 Tick을 켤 껀지?
 
@@ -79,6 +81,7 @@ public:
 	void RemoveTickFunction(FTickFunction* Function);
 
 	void RunTickGroup(ETickingGroup Group, float DeltaTime);
+	void RunTickGroup(ETickingGroup Group, float GameDeltaTime, float UnscaledDeltaTime);
 	void RunAllTickGroups(float DeltaTime);
 
 	int32 GetRegisteredCount() const;

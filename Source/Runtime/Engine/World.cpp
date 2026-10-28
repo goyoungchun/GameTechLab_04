@@ -8,6 +8,8 @@
 
 #include "Camera/CameraActor.h"
 #include "Camera/CameraComponent.h"
+#include "Camera/PlayerCameraManager.h"
+#include "Camera/CameraTypes.h"
 #include "Input/InputSystem.h"
 
 #include "UObject/UObjectIterator.h"
@@ -47,6 +49,11 @@ UWorld::~UWorld()
 	for (TObjectIterator<UActorComponent> Component; Component; ++Component)
 		if (Component->GetWorld() == this && Component->IsRegistered())
 			Component->UnregisterComponent();
+	for (ACameraActor*& Camera : ViewCameraOverrides)
+	{
+		delete Camera;
+		Camera = nullptr;
+	}
 }
 
 bool  UWorld::Init()
@@ -128,6 +135,7 @@ void UWorld::FlushDestroyList()
 void UWorld::Tick(EWorldTick TickType, float DeltaTime)
 {
 	CurrentTickType = TickType;
+	GameDeltaSeconds = 0.0f;
 
 	if (CurrentTickType == EWorldTick::All)
 	{
@@ -139,30 +147,32 @@ void UWorld::Tick(EWorldTick TickType, float DeltaTime)
 
 		if (!bIsPaused)
 		{
-			const double UnscaledDeltaTime = DeltaTime;
+			const float UnscaledDeltaTime = std::isfinite(DeltaTime) && DeltaTime > 0.0f ? DeltaTime : 0.0f;
+			UnscaledTimeSeconds += UnscaledDeltaTime;
 			const float GameDeltaTime = static_cast<float>(TimeController.GetGameDeltaTime(UnscaledDeltaTime));
+			GameDeltaSeconds = GameDeltaTime;
 			TimeController.Update(UnscaledDeltaTime);
 			SequenceManager.Tick(this, GameDeltaTime, UnscaledDeltaTime);
+			SCOPE_CYCLE_COUNTER(STAT_ActorTick);
+			GameUIBuffer.Clear();
+			TickTaskManager.RunTickGroup(ETickingGroup::PrePhysics, GameDeltaTime, UnscaledDeltaTime);
+			if (GameDeltaTime > 0.0f)
+				PhysicsScene->StartFrame(GameDeltaTime);
+			TickTaskManager.RunTickGroup(ETickingGroup::DuringPhysics, GameDeltaTime, UnscaledDeltaTime);
+			if (GameDeltaTime > 0.0f)
+				PhysicsScene->EndFrame();
+			TickTaskManager.RunTickGroup(ETickingGroup::PostPhysics, GameDeltaTime, UnscaledDeltaTime);
+			TickTaskManager.RunTickGroup(ETickingGroup::PostUpdateWork, GameDeltaTime, UnscaledDeltaTime);
+			for (APlayerController* PC : PlayerControllers)
+				if (PC) PC->UpdateCameraManager(GameDeltaTime);
+			// 차량과 카메라 매니저 갱신 후의 실제 시점으로 복귀를 마무리한다.
+			UpdateViewCameraBlends();
+
+			if (GameDeltaTime > 0.0f)
 			{
-				if(GameDeltaTime > 0.0f)
+				for (ULevel* Level : Levels)
 				{
-					SCOPE_CYCLE_COUNTER(STAT_ActorTick);
-					GameUIBuffer.Clear();
-					TickTaskManager.RunTickGroup(ETickingGroup::PrePhysics, GameDeltaTime);
-					PhysicsScene->StartFrame(GameDeltaTime);
-					TickTaskManager.RunTickGroup(ETickingGroup::DuringPhysics, GameDeltaTime);
-					PhysicsScene->EndFrame();
-					TickTaskManager.RunTickGroup(ETickingGroup::PostPhysics, GameDeltaTime);
-
-					for (APlayerController* PC : PlayerControllers)
-						PC->UpdateCameraManager(GameDeltaTime);
-
-					TickTaskManager.RunTickGroup(ETickingGroup::PostUpdateWork, GameDeltaTime);
-
-					for (ULevel* Level : Levels)
-					{
-						PathTracker.Tick(Level->GetActors(), GameDeltaTime);
-					}
+					PathTracker.Tick(Level->GetActors(), GameDeltaTime);
 				}
 			}
 		}
@@ -189,6 +199,11 @@ void UWorld::Tick(EWorldTick TickType, float DeltaTime)
 
 void UWorld::ClearWorld()
 {
+	SequenceManager.StopAll(this);
+	for (int32 Index = 0; Index < MaxViewCameraOverrides; ++Index)
+		ClearViewCameraOverride(Index);
+	UnscaledTimeSeconds = 0.0;
+
 	// BeginPlay 대기 중인 Actor 제거
 	while (!BeginPlayList.IsEmpty())
 	{
@@ -263,6 +278,157 @@ void UWorld::SetMainCamera(ACameraActor* Camera)
 		MainCamera->GetCameraComponent()->Activate();
 		MainCamera->RegisterAllActorTickFunctions(true);
 	}
+}
+
+bool UWorld::CalcPlayerCameraView(int32 PlayerIndex, FMinimalViewInfo& OutView) const
+{
+	if (APlayerController* PC = GetPlayerController(static_cast<uint32>(PlayerIndex)))
+	{
+		if (const APlayerCameraManager* Manager = PC->GetCameraManager(); Manager && Manager->IsCameraCacheValid())
+		{
+			OutView = Manager->GetCameraCacheView();
+			return true;
+		}
+	}
+	if (APawn* Pawn = GetPlayerPawn(static_cast<uint32>(PlayerIndex)))
+		Pawn->CalcCamera(OutView);
+	else if (MainCamera)
+		MainCamera->CalcCamera(OutView);
+	else
+		return false;
+	return true;
+}
+
+void UWorld::SetViewCameraOverride(int32 PlayerIndex, const FVector& Location, const FRotator& Rotation, float BlendTime)
+{
+	if (PlayerIndex < 0 || PlayerIndex >= MaxViewCameraOverrides)
+		return;
+
+	const bool bBlend = std::isfinite(BlendTime) && BlendTime > 0.0f;
+	FMinimalViewInfo StartView;
+	if (bBlend)
+	{
+		if (UCameraComponent* CurrentCamera = GetViewCameraOverride(PlayerIndex))
+			CurrentCamera->GetCameraView(StartView);
+		else
+			CalcPlayerCameraView(PlayerIndex, StartView);
+	}
+
+	ACameraActor*& Camera = ViewCameraOverrides[PlayerIndex];
+	if (!Camera)
+	{
+		Camera = FObjectFactory::ConstructObject<ACameraActor>();
+		if (!Camera)
+			return;
+		Camera->World = this;
+		Camera->Level = nullptr;
+		Camera->GetCameraComponent()->SetExternalInputManaged(true);
+	}
+
+	UCameraComponent* CameraComponent = Camera->GetCameraComponent();
+	FViewCameraBlend& Blend = ViewCameraBlends[PlayerIndex];
+	const float TargetFOV = Blend.Duration > 0.0 ? Blend.TargetFOV : CameraComponent->GetFieldOfView();
+	Blend = {};
+	FTransform Transform = CameraComponent->GetTransform();
+	Transform.Location = Location;
+	Transform.Rotation = Rotation;
+	if (bBlend)
+	{
+		Blend.StartLocation = StartView.Location;
+		Blend.TargetLocation = Location;
+		Blend.StartRotation = StartView.Rotation.Quaternion();
+		Blend.TargetRotation = Rotation.Quaternion();
+		Blend.StartFOV = StartView.FOV;
+		Blend.TargetFOV = TargetFOV;
+		Blend.Duration = BlendTime;
+		Blend.StartTime = UnscaledTimeSeconds;
+		// 첫 화면은 기존 시점과 정확히 같게 두고 다음 프레임부터 이동한다.
+		Transform.Location = StartView.Location;
+		Transform.Rotation = StartView.Rotation;
+		CameraComponent->SetFieldOfView(StartView.FOV);
+	}
+	else
+		CameraComponent->SetFieldOfView(TargetFOV);
+	CameraComponent->SetTransform(Transform);
+	bViewCameraOverrideActive[PlayerIndex] = true;
+}
+
+void UWorld::UpdateViewCameraBlends()
+{
+	for (int32 Index = 0; Index < MaxViewCameraOverrides; ++Index)
+	{
+		FViewCameraBlend& Blend = ViewCameraBlends[Index];
+		UCameraComponent* Camera = GetViewCameraOverride(Index);
+		if (!Camera || Blend.Duration <= 0.0)
+			continue;
+		if (Blend.bReturnToPlayer)
+		{
+			FMinimalViewInfo TargetView;
+			if (!CalcPlayerCameraView(Index, TargetView))
+			{
+				ClearViewCameraOverride(Index);
+				continue;
+			}
+			Blend.TargetLocation = TargetView.Location;
+			Blend.TargetRotation = TargetView.Rotation.Quaternion();
+			Blend.TargetFOV = TargetView.FOV;
+		}
+		const double Elapsed = std::clamp(UnscaledTimeSeconds - Blend.StartTime, 0.0, Blend.Duration);
+		const float Alpha = static_cast<float>(Elapsed / Blend.Duration);
+		const float Weight = Alpha * Alpha * (3.0f - 2.0f * Alpha);
+		FTransform Transform = Camera->GetTransform();
+		Transform.Location = Blend.StartLocation + (Blend.TargetLocation - Blend.StartLocation) * Weight;
+		Transform.Rotation = FQuat::Slerp(Blend.StartRotation, Blend.TargetRotation, Weight).ToFRotator();
+		Camera->SetTransform(Transform);
+		Camera->SetFieldOfView(Blend.StartFOV + (Blend.TargetFOV - Blend.StartFOV) * Weight);
+		if (Elapsed >= Blend.Duration)
+		{
+			if (Blend.bReturnToPlayer)
+				ClearViewCameraOverride(Index);
+			else
+				Blend.Duration = 0.0;
+		}
+	}
+}
+
+void UWorld::ClearViewCameraOverride(int32 PlayerIndex, float BlendTime)
+{
+	if (PlayerIndex < 0 || PlayerIndex >= MaxViewCameraOverrides)
+		return;
+	FViewCameraBlend& Blend = ViewCameraBlends[PlayerIndex];
+	if (std::isfinite(BlendTime) && BlendTime > 0.0f)
+	{
+		UCameraComponent* Camera = GetViewCameraOverride(PlayerIndex);
+		FMinimalViewInfo TargetView;
+		if (Camera && CalcPlayerCameraView(PlayerIndex, TargetView))
+		{
+			FMinimalViewInfo StartView;
+			Camera->GetCameraView(StartView);
+			Blend = {};
+			Blend.StartLocation = StartView.Location;
+			Blend.StartRotation = StartView.Rotation.Quaternion();
+			Blend.StartFOV = StartView.FOV;
+			Blend.TargetLocation = TargetView.Location;
+			Blend.TargetRotation = TargetView.Rotation.Quaternion();
+			Blend.TargetFOV = TargetView.FOV;
+			Blend.Duration = BlendTime;
+			Blend.StartTime = UnscaledTimeSeconds;
+			Blend.bReturnToPlayer = true;
+			return;
+		}
+	}
+	if (Blend.Duration > 0.0 && ViewCameraOverrides[PlayerIndex])
+		ViewCameraOverrides[PlayerIndex]->GetCameraComponent()->SetFieldOfView(Blend.TargetFOV);
+	Blend = {};
+	bViewCameraOverrideActive[PlayerIndex] = false;
+}
+
+UCameraComponent* UWorld::GetViewCameraOverride(int32 PlayerIndex) const
+{
+	if (PlayerIndex < 0 || PlayerIndex >= MaxViewCameraOverrides || !bViewCameraOverrideActive[PlayerIndex])
+		return nullptr;
+	ACameraActor* Camera = ViewCameraOverrides[PlayerIndex];
+	return Camera ? Camera->GetCameraComponent() : nullptr;
 }
 
 int32 UWorld::GetActorNum()
@@ -560,6 +726,8 @@ void UWorld::BeginPlay()
 
 void UWorld::EndPlay()
 {
+	// 아직 BeginPlay 전인 시퀀스 카메라도 Actor 스냅샷을 만들기 전에 정리한다.
+	SequenceManager.StopAll(this);
 	bBegunPlay = false;
 
 	TArray<AActor*> InitialActors;

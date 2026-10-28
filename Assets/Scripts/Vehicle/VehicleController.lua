@@ -100,7 +100,10 @@ local bDriveSoundPlaying = false
 local DriveReferenceSpeed = 30
 local ContactGap = 0.15
 local MaxWallNormalZ = 0.5
+local MinSquashImpactSpeed = 2
 local LastWallContactTime = -ContactGap
+local LastCarContactTime = -ContactGap
+local LastCarHitStopTime = -math.huge
 _G.PreviousCarVelocities = _G.PreviousCarVelocities or {}
 
 local ImpactSounds = {
@@ -130,11 +133,12 @@ end
 local function PlayImpactSound(Impact, ImpactSpeed)
 	local bNewContact = ElapsedTime - Impact.LastContactTime >= ContactGap
 	Impact.LastContactTime = ElapsedTime
-	if not bNewContact or ImpactSpeed < Impact.MinSpeed then return end
+	if not bNewContact or ImpactSpeed < Impact.MinSpeed then return false end
 
 	local Ratio = math.min((ImpactSpeed - Impact.MinSpeed) / (Impact.MaxSpeed - Impact.MinSpeed), 1)
 	SetSoundVolume(Impact.Sound, Impact.MinVolume + (Impact.MaxVolume - Impact.MinVolume) * Ratio)
 	PlaySound(Impact.Sound)
+	return true
 end
 
 local function SetBoostSoundPlaying(bPlaying)
@@ -149,22 +153,49 @@ local function SetBoostSoundPlaying(bPlaying)
 end
 
 function OnHit(OtherActor, Normal)
-	if not Car then return end
+	if not Car or not OtherActor or not Normal then return end
 	local MyVelocity = PreviousCarVelocities[Car.PlayerIndex] or Car.Velocity
 	local OtherCar = OtherActor:AsVehicle()
 	if OtherCar then
 		if Car.PlayerIndex < OtherCar.PlayerIndex then
 			local OtherVelocity = PreviousCarVelocities[OtherCar.PlayerIndex] or OtherCar.Velocity
-			PlayImpactSound(ImpactSounds.Car, (MyVelocity - OtherVelocity):Length())
+			local ImpactSpeed = (MyVelocity - OtherVelocity):Length()
+			PlayImpactSound(ImpactSounds.Car, ImpactSpeed)
+
+			-- 양쪽에서 오는 Hit 중 한 번만 처리하고, 지속 접촉/빠른 재접촉은 제한한다.
+			local bNewContact = ElapsedTime - LastCarContactTime >= ContactGap
+			LastCarContactTime = ElapsedTime
+			local ClosingSpeed = math.max(0, -(MyVelocity - OtherVelocity):Dot(Normal))
+			if bNewContact and ClosingSpeed >= MinSquashImpactSpeed then
+				Car:PlayHitSquash()
+				OtherCar:PlayHitSquash()
+			end
+			local HitStopConfig = Game.Config and Game.Config.CarHitStop
+			if Game.State == "Playing" and HitStopConfig and bNewContact
+				and ImpactSpeed >= HitStopConfig.MinSpeed
+				and ElapsedTime - LastCarHitStopTime >= HitStopConfig.Cooldown then
+				LastCarHitStopTime = ElapsedTime
+				HitStop(HitStopConfig.Duration)
+			end
 		end
 	elseif OtherActor:IsBall() then
 		local BallVelocity = Game and Game.BallVelocity or Vector(0, 0, 0)
-		PlayImpactSound(ImpactSounds.Ball, (MyVelocity - BallVelocity):Length())
+		local RelativeVelocity = MyVelocity - BallVelocity
+		local bNewImpact = PlayImpactSound(ImpactSounds.Ball, RelativeVelocity:Length())
+		-- 접촉 면을 향한 접근 속도로 판정해 스치거나 계속 닿아 있는 경우를 제외한다.
+		local ImpactSpeed = math.max(0, -RelativeVelocity:Dot(Normal))
+		if bNewImpact and ImpactSpeed >= MinSquashImpactSpeed then
+			Car:PlayHitSquash()
+		end
 	elseif math.abs(Normal.z) <= MaxWallNormalZ then
 		local bNewContact = ElapsedTime - LastWallContactTime >= ContactGap
 		LastWallContactTime = ElapsedTime
 		if bNewContact then
 			PlaySound("wall")
+			local ImpactSpeed = math.max(0, -MyVelocity:Dot(Normal))
+			if ImpactSpeed >= MinSquashImpactSpeed then
+				Car:PlayHitSquash()
+			end
 		end
 	end
 end

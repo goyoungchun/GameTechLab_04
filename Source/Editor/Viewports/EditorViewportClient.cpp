@@ -138,6 +138,25 @@ FSceneView FEditorViewportClient::CalcSceneView(const FRect &InViewRect) const {
   OutView.bIsPerspective = bIsPerspective;
   OutView.ViewMode = ViewMode;
   OutView.ShadingModel = ShadingModel;
+  if (bHasSequencePreviewView) {
+    FMinimalViewInfo Preview = SequencePreviewView;
+    Preview.AspectRatio = AspectRatio;
+    OutView.ViewLocation = Preview.Location;
+    OutView.ViewRotation = Preview.Rotation;
+    OutView.ViewForward = Preview.Rotation.Quaternion().GetForwardVector();
+    OutView.ViewMatrix = Preview.CalculateViewMatrix();
+    OutView.ProjectionMatrix = Preview.CalculateProjectionMatrix();
+    OutView.ViewProjectionMatrix = OutView.ViewMatrix * OutView.ProjectionMatrix;
+    OutView.Frustum = ExtractFrustumPlanes(OutView.ViewProjectionMatrix);
+    OutView.FieldOfView = Preview.FOV;
+    OutView.NearClip = Preview.NearClipPlane;
+    OutView.FarClip = Preview.FarClipPlane;
+    OutView.OrthoWidth = Preview.OrthoWidth;
+    OutView.bIsPerspective = Preview.ProjectionMode == ECameraProjectionMode::Perspective;
+    OutView.FadeColor = Preview.FadeColor;
+    OutView.FadeAmount = Preview.FadeAmount;
+    OutView.LetterboxRatio = Preview.LetterboxRatio;
+  }
   return OutView;
 }
 

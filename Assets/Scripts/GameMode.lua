@@ -1,10 +1,23 @@
+-- 결과 대기 코루틴과 메뉴 입력은 물리가 정지해도 실제 시간으로 진행한다.
+SetTickWithUnscaledTime(true)
+
 Game.Config = {
     TurnTime       = 60,
     TotalTurns     = 4,
     CountdownTime  = 3,
     ResultShowTime = 2,
+    GoalSlowdownTime = 0.6,
+    GoalCamera = {
+        BlendTime = 0.8,
+        ReturnBlendTime = 0.8,
+        ReturnTimeScale = 0.2,
+        ReturnRecoveryTime = 0.3,
+        Location = Vector(12, 24, 9),
+        LookAt   = Vector(0, 43.25, 2.5),
+    },
+    CarHitStop = { Duration = 0.08, MinSpeed = 4, Cooldown = 0.35 },
     GoalSequence   = "Goal",
-    GoalSequenceBlendTime = 0.5,
+    GoalSequenceBlendTime = 0.65,
     BoostSeconds   = 6,
     CarNames = { "armor", "coupe", "fenyr", "ghini", "italia", "jeep", "kamaro", "lamb", "mobil", "police" },
     BackKey = Key.Backspace,
@@ -177,8 +190,46 @@ local SplitScreenStates =
     Countdown = true, Playing = true, GoalScored =true , Defended = true,
 }
 
+local GoalCameraPlayer = nil
+local ActiveGoalSequence = nil
+
+local function ClearGoalCamera(BlendTime)
+    if GoalCameraPlayer then
+        obj:ClearViewCamera(GoalCameraPlayer, BlendTime or 0)
+        -- 복귀 중에도 소유자를 기록해 메뉴 이동이나 EndPlay에서 중단할 수 있게 한다.
+        if not BlendTime or BlendTime <= 0 then
+            GoalCameraPlayer = nil
+        end
+    end
+end
+
+local function ShowGoalCamera()
+    ClearGoalCamera()
+    local PlayerIndex = Game.LastScorerIndex
+    if PlayerIndex ~= 1 and PlayerIndex ~= 2 then return end
+
+    local Camera = Game.Config.GoalCamera
+    local Direction = Camera.LookAt - Camera.Location
+    local Horizontal = math.sqrt(Direction.x * Direction.x + Direction.y * Direction.y)
+    -- 현재 엔진에서는 양의 Pitch가 아래를 바라본다.
+    local Pitch = -math.deg(math.atan2(Direction.z, Horizontal))
+    local Yaw = math.deg(math.atan2(Direction.y, Direction.x))
+
+    obj:SetViewCamera(PlayerIndex, Camera.Location, Rotator(Pitch, Yaw, 0), Camera.BlendTime)
+    GoalCameraPlayer = PlayerIndex
+end
+
 local function SetState(NewState)
     print(string.format("[GameMode] %s -> %s", tostring(Game.State), NewState))
+    if Game.State == "GoalScored" and NewState ~= "GoalScored" and ActiveGoalSequence then
+        obj:StopSequence(ActiveGoalSequence, 0)
+        ActiveGoalSequence = nil
+    end
+    if Game.State == "GoalScored" and NewState == "Countdown" then
+        ClearGoalCamera(Game.Config.GoalCamera.ReturnBlendTime)
+    elseif NewState ~= "GoalScored" and NewState ~= "Countdown" then
+        ClearGoalCamera()
+    end
     Game.State = NewState
     obj:SetSplitScreen(SplitScreenStates[NewState] == true 
         or (NewState == "CarSelect" and Game.Config.bSplitScreen))
@@ -237,6 +288,8 @@ local function ResetCarFacing(PlayerIndex, Spot, Target)
 end
 
 local function StartTurn()
+    local bReturnFromGoal = Game.State == "GoalScored" and GoalCameraPlayer ~= nil
+    ResetTimeEffects()
     local Spots = Game.Config.StartSpots
 
     if Game.bIsSuddenDeath then
@@ -262,6 +315,15 @@ local function StartTurn()
     Game.Ball.ResetTo(Spots.Ball)
     Game.RemainTime = Game.Config.TurnTime
     Game.LastTouchIndex = nil
+    if bReturnFromGoal then
+        local Camera = Game.Config.GoalCamera
+        local ReturnTime = math.max(0, Camera.ReturnBlendTime)
+        local RecoveryTime = math.max(0, Camera.ReturnRecoveryTime)
+        if ReturnTime > 0 then
+            -- 복귀 중에는 저속을 유지하고, 카운트다운 중 정상 속도로 서서히 회복한다.
+            Slomo(Camera.ReturnTimeScale, ReturnTime + RecoveryTime, 0, RecoveryTime)
+        end
+    end
     SetState("Countdown")
 end
 
@@ -355,8 +417,12 @@ end
 local function ShowTurnResultThenEnd()
     SetAllCarsInputEnabled(false)
     coroutine.yield(WaitForSeconds(Game.Config.ResultShowTime))
-    coroutine.yield(WaitWhile(function() return obj:IsSequencePlaying(Game.Config.GoalSequence) end))
+    if ActiveGoalSequence then
+        local SequenceName = ActiveGoalSequence
+        coroutine.yield(WaitWhile(function() return obj:IsSequencePlaying(SequenceName) end))
+    end
     ResultCoroutineId = nil
+    if Game.State ~= "GoalScored" and Game.State ~= "Defended" then return end
     EndTurn()
 end
 
@@ -415,7 +481,9 @@ local function SetShowroomCameras()
         end
     else
         local Camera = GetShowroomCamera("Shared", Showroom.SharedCameraSpot)
-        SetPlayerView(1, Camera, Showroom.CameraBlendTime)
+        for PlayerIndex = 1, 2 do
+            SetPlayerView(PlayerIndex, Camera, Showroom.CameraBlendTime)
+        end
     end
 end
 
@@ -500,6 +568,7 @@ end
 local MainMenuElapsedTime = 0
 
 StateEnterHandlers.MainMenu = function()
+    ResetTimeEffects()
     StopCountdown()
     StopTurnResult()
     LeaveShowroom()
@@ -534,6 +603,7 @@ StateTickHandlers.Controls = function(DeltaTime) HandleBackToMainMenu() end
 StateTickHandlers.Credit   = function(DeltaTime) HandleBackToMainMenu() end
 
 StateEnterHandlers.CarSelect = function()
+    ResetTimeEffects()
     Game.Ball.Clear()
     local PreviousCarNames = Game.SelectedCarNames or {}
     Game.SelectedCarNames = {
@@ -601,8 +671,20 @@ end
 
 StateEnterHandlers.GoalScored = function()
     PlaySound("goal")
-    obj:PlaySequence(Game.Config.GoalSequence, Game.Config.GoalSequenceBlendTime)
     StopTurnResult()
+    StopCountdown()
+    ResetTimeEffects()
+    ClearGoalCamera()
+    local SequenceName = Game.Config.GoalSequence
+    ActiveGoalSequence = nil
+    if SequenceName and obj:PlaySequenceForPlayer(SequenceName, Game.LastScorerIndex, Game.Config.GoalSequenceBlendTime) then
+        ActiveGoalSequence = SequenceName
+    else
+        -- 시퀀스 로드 실패 시에도 기존 골 연출과 턴 전환을 유지한다.
+        local SlowdownTime = Game.Config.GoalSlowdownTime
+        Slomo(0, SlowdownTime, SlowdownTime, 0, true)
+        ShowGoalCamera()
+    end
     ResultCoroutineId = StartCoroutine(ShowTurnResultThenEnd)
 end
 
@@ -661,6 +743,7 @@ StateTickHandlers.Result = function(DeltaTime)
 end
 
 function BeginPlay()
+    ResetTimeEffects()
     CurrentBGM = nil
     ResetMatchState()
     EnsureCarsAndBall()
@@ -672,8 +755,15 @@ function Tick(DeltaTime)
 
     local StateTickHandler = StateTickHandlers[Game.State]
     if StateTickHandler then
-        StateTickHandler(DeltaTime)
+        -- 경기 제한 시간은 HitStop/Slomo의 영향을 받고, 결과/메뉴는 실제 시간을 쓴다.
+        local StateDeltaTime = Game.State == "Playing" and GetGameDeltaTime() or DeltaTime
+        StateTickHandler(StateDeltaTime)
     else
         LogWarning("[GameMode] Unknown state: " .. tostring(Game.State))
     end
+end
+
+function EndPlay()
+    ClearGoalCamera()
+    ResetTimeEffects()
 end

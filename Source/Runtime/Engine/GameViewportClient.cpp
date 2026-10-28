@@ -327,9 +327,14 @@ void FGameViewportClient::GetCurrentView(FMinimalViewInfo& View) const
 	if (!World)
 		return;
 
-	// 게임 화면은 플레이어 카메라 매니저의 결과만 보여준다. F8과 매니저가 없을 때만 MainCamera
+	// 골 연출의 임시 시점을 우선하고, 일반 게임 화면은 카메라 매니저의 결과를 사용한다.
 	if (!bSIEMode)
 	{
+		if (UCameraComponent* Override = World->GetViewCameraOverride(PlayerIndex))
+		{
+			Override->GetCameraView(View);
+			return;
+		}
 		if (APlayerController* PC = World->GetPlayerController(static_cast<uint32>(PlayerIndex)))
 		{
 			const APlayerCameraManager* CameraManager = PC->GetCameraManager();

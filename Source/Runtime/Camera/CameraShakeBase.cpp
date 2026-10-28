@@ -69,8 +69,7 @@ bool UCameraShakeBase::UpdateAndApply(float DeltaTime, FMinimalViewInfo& InOutPO
 	}
 
 	float Progress = Elapsed / Params.Duration;
-	// TODO: 베지어 Evaluation 추가 필요
-	float Fade = 1.0f - Progress; //Params.Ease.Evaluation(Progress);
+	float Fade = 1.0f - std::clamp(Params.Ease.Evaluate(Progress), 0.0f, 1.0f);
 
 	float Amount = Params.Strength * Fade * Scale;
 

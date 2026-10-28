@@ -13,6 +13,7 @@ class FViewportsPanel;
 class USequencePlayer;
 class UCameraComponent;
 class ACameraActor;
+class APlayerCameraManager;
 
 class FSequencerPanel : public IEditorPanel
 {
@@ -47,6 +48,8 @@ private:
 	void BuildSampleSequence();
 	void BeginPlaybackPreview();
 	void EndPlaybackPreview();
+	void UpdateCameraEffectPreview(float DeltaTime);
+	void ClearCameraEffectPreview();
 	void DrawPlaybackStatus();
 	bool GetCurrentViewPOV(FMinimalViewInfo& OutView) const;
 	UCameraComponent* FindPreviewCamera() const;
@@ -62,6 +65,7 @@ private:
 	void NewSequence();
 	void SaveSequence(bool bSaveAs);
 	void LoadSequence();
+	bool LoadSequenceFile(const FString& Path);
 	void DestroySequenceCameras(const TArray<ACameraActor*>& KeepCameras);
 	void ResetEditingState();
 
@@ -79,6 +83,8 @@ private:
 	bool bIsPlaying = false;
 	bool bPreviewEnabled = false;
 	USequencePlayer* Player = nullptr;
+	APlayerCameraManager* PreviewCameraManager = nullptr;
+	ACameraActor* PreviewCameraProxy = nullptr;
 	bool bWindowFocused = false;
 	int SelectedTrackIndex = -1;
 	int SelectedKeyIndex = -1;
