@@ -6,9 +6,9 @@
 enum class EViewTargetBlendFunction : uint8
 {
 	Linear,		// 단순 선형 보간
-	Cubic,		// 약간의 Ease In / Out, 정도 조절 가능
-	EaseIn,		// 즉시 가속, 타겟에 가까워지면서 부드럽게 감속
-	EaseOut,	// 부드럽게 가속, 타겟에 가까워져도 감속 안함
+	Cubic,		// 약간의 Ease In / Out
+	EaseIn,		// 부드럽게 가속, 타겟에 가까워져도 감속 안함
+	EaseOut,	// 즉시 가속, 타겟에 가까워지면서 부드럽게 감속
 	EaseInOut,	// 부드럽게 가속하고 감속
 };
 
@@ -33,7 +33,8 @@ struct FViewTargetTransitionParams
 		const float T = FMath::Clamp(TimePct, 0.0f, 1.0f);
 		const float Exp = BlendExp > 0.0f ? BlendExp : 1.0f;
 
-		switch (BlendFunction) {
+		switch (BlendFunction) 
+		{
 		case EViewTargetBlendFunction::Linear:
 			return FMath::Lerp(0.f, 1.f, T);
 		case EViewTargetBlendFunction::Cubic:
@@ -41,9 +42,9 @@ struct FViewTargetTransitionParams
 		case EViewTargetBlendFunction::EaseInOut:
 			return FMath::InterpEaseInOut(0.f, 1.f, T, Exp);
 		case EViewTargetBlendFunction::EaseIn:
-			return FMath::Lerp(0.f, 1.f, std::pow(T, Exp));
+			return FMath::InterpEaseIn(0.f, 1.f, T, Exp);
 		case EViewTargetBlendFunction::EaseOut:
-			return FMath::Lerp(0.f, 1.f, std::pow(T, (1.f / Exp)));
+			return FMath::InterpEaseOut(0.0f, 1.0f, T, Exp);
 		}
 
 		return T;
