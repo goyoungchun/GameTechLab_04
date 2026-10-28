@@ -1,6 +1,8 @@
 #include "EnginePCH.h"
 #include "Editor/Sequencer/SequencerPanel.h"
 #include "Engine/World.h"
+#include "Engine/Level.h"
+#include "Collision/FPhysSceneChaos.h"
 #include "Camera/CameraActor.h"
 #include "UObject/UObjectIterator.h"
 #include "Editor/Viewports/ViewportsPanel.h"
@@ -230,6 +232,12 @@ bool FSequencerPanel::Init()
 
 void FSequencerPanel::SetWorld(UWorld* InWorld)
 {
+	if (World != InWorld)
+	{
+		if (Player) Player->Stop();
+		EndPlaybackPreview();
+		PlaybackElapsedTime = 0.0;
+	}
 	World = InWorld;
 	if (Player)
 	{
@@ -273,13 +281,36 @@ void FSequencerPanel::ValidateBindings()
 
 void FSequencerPanel::Tick(float DeltaTime)
 {
-	if (!Player)
+	if (!Player || !World)
 	{
 		return;
 	}
 
 	ValidateBindings();
-	Player->Update(DeltaTime, DeltaTime);
+	const bool bPlaying = Player->GetPlaybackState() == ESequencePlaybackState::Playing;
+	if (World->GetWorldType() == EWorldType::Editor)
+	{
+		if (bPlaying) BeginPlaybackPreview();
+		else if (Player->GetPlaybackState() == ESequencePlaybackState::Stopped) EndPlaybackPreview();
+	}
+
+	const double UnscaledDeltaTime = std::isfinite(DeltaTime) && DeltaTime > 0.0f ? DeltaTime : 0.0;
+	const float GameDeltaTime = static_cast<float>(World->GetTimeController().GetGameDeltaTime(UnscaledDeltaTime));
+	// EditorWorld의 ViewportsOnly Tick은 시간 효과를 갱신하지 않는다.
+	// 런타임 World는 자신의 Tick에서 갱신하므로 프리뷰 월드만 여기서 처리한다.
+	if (World->GetWorldType() == EWorldType::Editor)
+		World->GetTimeController().Update(UnscaledDeltaTime);
+	if (bPlaying) PlaybackElapsedTime += UnscaledDeltaTime;
+
+	Player->Update(GameDeltaTime, UnscaledDeltaTime);
+	// 일반 Play로 Dynamic 물체도 같은 게임 시간만큼 진행한다. Pause/Hit Stop에서는 정지한다.
+	// BeginPlay나 스크립트 실행 없이 기존 Solver만 사용하며, 런타임 World는 중복 갱신하지 않는다.
+	if (bPlaybackPreviewActive && bPlaying && GameDeltaTime > 0.0f)
+	{
+		World->GetPhysicsScene().StartFrame(GameDeltaTime);
+		World->GetPhysicsScene().EndFrame();
+		World->GetScene().UpdateAllTransforms();
+	}
 	bIsPlaying = Player->GetPlaybackState() == ESequencePlaybackState::Playing;
 	CurrentTime = static_cast<float>(Player->GetCurrentTime());
 	CurrentFrame = Adapter.TimeToFrame(CurrentTime);
@@ -308,6 +339,7 @@ void FSequencerPanel::OnRender()
 	}
 
 	DrawToolBar();
+	DrawPlaybackStatus();
 	ImGui::Separator();
 	DrawTrackBinding();
 	ImGui::Separator();
@@ -382,12 +414,16 @@ void FSequencerPanel::DrawToolBar()
 	if (ImGui::Button("Stop") && Player)
 	{
 		Player->Stop();
+		EndPlaybackPreview();
+		PlaybackElapsedTime = 0.0;
 		CurrentTime = 0.0f;
 		CurrentFrame = 0;
 	}
 
 	ImGui::SameLine();
-	ImGui::Checkbox("Preview", &bPreviewEnabled);
+	ImGui::Checkbox("Camera Preview", &bPreviewEnabled);
+	if (ImGui::IsItemHovered())
+		ImGui::SetTooltip("카메라 시점만 뷰포트에 표시합니다. 트랙과 이벤트는 Play로 실행됩니다.");
 
 	ImGui::SameLine();
 	ImGui::TextDisabled("|");
@@ -681,6 +717,33 @@ void FSequencerPanel::DrawKeyProperties(FSequenceTrack& Track)
 		{
 			EventKey.Params = MakeDefaultEventParams(EventKey.EventType);
 			LastEventType = EventKey.EventType;
+		}
+		if (auto* HitStop = std::get_if<FHitStopParams>(&EventKey.Params))
+		{
+			BeginPropertyRow("Duration");
+			ImGui::DragFloat("##HitStopDuration", &HitStop->Duration, 0.01f, 0.0f, 10.0f, "%.2fs", ImGuiSliderFlags_AlwaysClamp);
+		}
+		else if (auto* Slomo = std::get_if<FSlomoParams>(&EventKey.Params))
+		{
+			BeginPropertyRow("Time Scale");
+			ImGui::DragFloat("##SlomoScale", &Slomo->TargetScale, 0.01f, 0.0f, 1.0f, "%.2fx", ImGuiSliderFlags_AlwaysClamp);
+			BeginPropertyRow("Duration");
+			if (ImGui::DragFloat("##SlomoDuration", &Slomo->Duration, 0.01f, 0.0f, 10.0f, "%.2fs", ImGuiSliderFlags_AlwaysClamp))
+			{
+				Slomo->BlendInTime = std::min(Slomo->BlendInTime, Slomo->Duration);
+				Slomo->BlendOutTime = std::min(Slomo->BlendOutTime, Slomo->Duration - Slomo->BlendInTime);
+			}
+			BeginPropertyRow("Blend In");
+			if (ImGui::DragFloat("##SlomoBlendIn", &Slomo->BlendInTime, 0.01f, 0.0f, Slomo->Duration, "%.2fs", ImGuiSliderFlags_AlwaysClamp))
+				Slomo->BlendInTime = std::clamp(Slomo->BlendInTime, 0.0f, Slomo->Duration - Slomo->BlendOutTime);
+			BeginPropertyRow("Blend Out");
+			if (ImGui::DragFloat("##SlomoBlendOut", &Slomo->BlendOutTime, 0.01f, 0.0f, Slomo->Duration, "%.2fs", ImGuiSliderFlags_AlwaysClamp))
+				Slomo->BlendOutTime = std::clamp(Slomo->BlendOutTime, 0.0f, Slomo->Duration - Slomo->BlendInTime);
+		}
+		else if (EventKey.EventType == ESequenceEventType::CameraShake)
+		{
+			BeginPropertyRow("Status");
+			ImGui::TextDisabled("Camera Shake is not implemented");
 		}
 	}
 }
@@ -1037,6 +1100,52 @@ void FSequencerPanel::ApplyPreviewToViewport()
 	ViewportClient->SetViewFOV(View.FOV);
 }
 
+void FSequencerPanel::BeginPlaybackPreview()
+{
+	if (!World || World->GetWorldType() != EWorldType::Editor) return;
+	if (!bPlaybackPreviewActive)
+	{
+		SavedPreviewTimeController = World->GetTimeController();
+		PhysicsPreviewTransforms.Reset();
+		bPlaybackPreviewActive = true;
+	}
+	if (World->GetPersistentLevel())
+		for (AActor* Actor : World->GetPersistentLevel()->GetActors())
+			for (UActorComponent* Component : Actor->GetComponents())
+				if (auto* Body = Cast<UPrimitiveComponent>(Component))
+					if (Body->IsRegistered() && Body->GetMotionType() == EPhysicsMotionType::Dynamic
+						&& !PhysicsPreviewTransforms.Contains(Body->GetUUID()))
+						PhysicsPreviewTransforms.Add(Body->GetUUID(), Body->GetTransform());
+}
+
+void FSequencerPanel::EndPlaybackPreview()
+{
+	if (!bPlaybackPreviewActive || !World) return;
+	// 컴포넌트 포인터를 보관하지 않고 현재 살아 있는 객체의 ID로 복원한다.
+	if (World->GetPersistentLevel())
+		for (AActor* Actor : World->GetPersistentLevel()->GetActors())
+			for (UActorComponent* Component : Actor->GetComponents())
+				if (auto* Body = Cast<UPrimitiveComponent>(Component))
+					if (const FTransform* Before = PhysicsPreviewTransforms.Find(Body->GetUUID()))
+					{
+						Body->SetTransform(*Before);
+						World->GetPhysicsScene().ResetPrimitiveVelocity(Body);
+					}
+	World->GetTimeController() = SavedPreviewTimeController;
+	PhysicsPreviewTransforms.Reset();
+	bPlaybackPreviewActive = false;
+	PlaybackElapsedTime = 0.0;
+}
+
+void FSequencerPanel::DrawPlaybackStatus()
+{
+	if (!World || !Player) return;
+	const FTimeController& Time = World->GetTimeController();
+	const char* State = Time.IsHitStopped() ? "HIT STOP" : Time.IsSlomoActive() ? "SLOMO" : "NORMAL";
+	ImGui::Text("%s | Sequence %.2fs | Real %.2fs | Scale %.2fx | Hit Stop %.2fs",
+		State, Player->GetCurrentTime(), PlaybackElapsedTime, Time.GetEffectiveTimeDilation(), Time.GetHitStopTimeRemaining());
+}
+
 void FSequencerPanel::BuildSampleSequence()
 {
 	EditingSequence = FSequence();
@@ -1069,11 +1178,21 @@ void FSequencerPanel::BuildSampleSequence()
 
 	FEventTrack EventTrack;
 	EventTrack.Name = "Event";
-	FEventKeyFrame ShakeKey;
-	ShakeKey.Time = 4.0;
-	ShakeKey.EventType = ESequenceEventType::CameraShake;
-	ShakeKey.Params = FCameraShakeParams();
-	EventTrack.KeyFrames.Add(ShakeKey);
+	FEventKeyFrame HitStop;
+	HitStop.Time = 1.0;
+	HitStop.EventType = ESequenceEventType::HitStop;
+	HitStop.Params = FHitStopParams{0.3f};
+	EventTrack.KeyFrames.Add(HitStop);
+	FEventKeyFrame Slomo;
+	Slomo.Time = 2.5;
+	Slomo.EventType = ESequenceEventType::Slomo;
+	FSlomoParams Params;
+	Params.TargetScale = 0.25f;
+	Params.Duration = 1.5f;
+	Params.BlendInTime = 0.15f;
+	Params.BlendOutTime = 0.15f;
+	Slomo.Params = Params;
+	EventTrack.KeyFrames.Add(Slomo);
 	EditingSequence.Tracks.Add(EventTrack);
 }
 

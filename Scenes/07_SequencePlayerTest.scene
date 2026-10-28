@@ -1,0 +1,6013 @@
+{
+  "Version": 2,
+  "Actors": [
+    {
+      "Class": "ACameraActor",
+      "Properties": {
+        "bActorEnableCollision": false
+      },
+      "Components": [
+        {
+          "Class": "UCameraComponent",
+          "Name": "CameraComponent_0",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                0,
+                0,
+                100
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "bAutoActivate": true
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": false
+      },
+      "Components": [
+        {
+          "Class": "USceneComponent",
+          "Name": "SequenceTestStageRoot",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                0,
+                0,
+                0
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "bVisible": true,
+            "bAutoActivate": true
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "SequenceTestFloor",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                400,
+                0,
+                58
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1040,
+                350,
+                4
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.06,
+                  0.075,
+                  0.1,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "DistanceGridX_-100",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                -100,
+                0,
+                60.2
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                0.7,
+                320,
+                0.2
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.18,
+                  0.22,
+                  0.27,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "DistanceGridX_-50",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                -50,
+                0,
+                60.2
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                0.7,
+                320,
+                0.2
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.18,
+                  0.22,
+                  0.27,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "DistanceGridX_0",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                0,
+                0,
+                60.2
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                0.7,
+                320,
+                0.2
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.18,
+                  0.22,
+                  0.27,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "DistanceGridX_50",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                50,
+                0,
+                60.2
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                0.7,
+                320,
+                0.2
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.18,
+                  0.22,
+                  0.27,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "DistanceGridX_100",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                100,
+                0,
+                60.2
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                0.7,
+                320,
+                0.2
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.18,
+                  0.22,
+                  0.27,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "DistanceGridX_150",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                150,
+                0,
+                60.2
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                0.7,
+                320,
+                0.2
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.18,
+                  0.22,
+                  0.27,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "DistanceGridX_200",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                200,
+                0,
+                60.2
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                0.7,
+                320,
+                0.2
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.18,
+                  0.22,
+                  0.27,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "DistanceGridX_250",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                250,
+                0,
+                60.2
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                0.7,
+                320,
+                0.2
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.18,
+                  0.22,
+                  0.27,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "DistanceGridX_300",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                300,
+                0,
+                60.2
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                0.7,
+                320,
+                0.2
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.18,
+                  0.22,
+                  0.27,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "DistanceGridX_350",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                350,
+                0,
+                60.2
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                0.7,
+                320,
+                0.2
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.18,
+                  0.22,
+                  0.27,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "DistanceGridX_400",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                400,
+                0,
+                60.2
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                0.7,
+                320,
+                0.2
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.18,
+                  0.22,
+                  0.27,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "DistanceGridX_450",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                450,
+                0,
+                60.2
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                0.7,
+                320,
+                0.2
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.18,
+                  0.22,
+                  0.27,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "DistanceGridX_500",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                500,
+                0,
+                60.2
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                0.7,
+                320,
+                0.2
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.18,
+                  0.22,
+                  0.27,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "DistanceGridX_550",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                550,
+                0,
+                60.2
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                0.7,
+                320,
+                0.2
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.18,
+                  0.22,
+                  0.27,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "DistanceGridX_600",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                600,
+                0,
+                60.2
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                0.7,
+                320,
+                0.2
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.18,
+                  0.22,
+                  0.27,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "DistanceGridX_650",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                650,
+                0,
+                60.2
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                0.7,
+                320,
+                0.2
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.18,
+                  0.22,
+                  0.27,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "DistanceGridX_700",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                700,
+                0,
+                60.2
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                0.7,
+                320,
+                0.2
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.18,
+                  0.22,
+                  0.27,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "DistanceGridX_750",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                750,
+                0,
+                60.2
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                0.7,
+                320,
+                0.2
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.18,
+                  0.22,
+                  0.27,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "DistanceGridX_800",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                800,
+                0,
+                60.2
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                0.7,
+                320,
+                0.2
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.18,
+                  0.22,
+                  0.27,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "DistanceGridX_850",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                850,
+                0,
+                60.2
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                0.7,
+                320,
+                0.2
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.18,
+                  0.22,
+                  0.27,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "DistanceGridX_900",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                900,
+                0,
+                60.2
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                0.7,
+                320,
+                0.2
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.18,
+                  0.22,
+                  0.27,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "DistanceGridY_-140",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                400,
+                -140,
+                60.3
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1040,
+                0.6,
+                0.2
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.13,
+                  0.17,
+                  0.22,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "DistanceGridY_-105",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                400,
+                -105,
+                60.3
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1040,
+                0.6,
+                0.2
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.13,
+                  0.17,
+                  0.22,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "DistanceGridY_-70",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                400,
+                -70,
+                60.3
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1040,
+                0.6,
+                0.2
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.13,
+                  0.17,
+                  0.22,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "DistanceGridY_-35",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                400,
+                -35,
+                60.3
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1040,
+                0.6,
+                0.2
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.13,
+                  0.17,
+                  0.22,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "DistanceGridY_0",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                400,
+                0,
+                60.3
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1040,
+                0.6,
+                0.2
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.13,
+                  0.17,
+                  0.22,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "DistanceGridY_35",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                400,
+                35,
+                60.3
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1040,
+                0.6,
+                0.2
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.13,
+                  0.17,
+                  0.22,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "DistanceGridY_70",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                400,
+                70,
+                60.3
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1040,
+                0.6,
+                0.2
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.13,
+                  0.17,
+                  0.22,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "DistanceGridY_105",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                400,
+                105,
+                60.3
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1040,
+                0.6,
+                0.2
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.13,
+                  0.17,
+                  0.22,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "DistanceGridY_140",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                400,
+                140,
+                60.3
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1040,
+                0.6,
+                0.2
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.13,
+                  0.17,
+                  0.22,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "GuardRail_-166",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                400,
+                -166,
+                68
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1040,
+                3,
+                14
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.18,
+                  0.37,
+                  0.46,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "GuardRail_166",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                400,
+                166,
+                68
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1040,
+                3,
+                14
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.18,
+                  0.37,
+                  0.46,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "SampleCameraPath_25",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                25,
+                0,
+                60.6
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                24,
+                2.2,
+                0.4
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  1.0,
+                  0.7,
+                  0.12,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "SampleCameraPath_75",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                75,
+                0,
+                60.6
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                24,
+                2.2,
+                0.4
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  1.0,
+                  0.7,
+                  0.12,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "SampleCameraPath_125",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                125,
+                0,
+                60.6
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                24,
+                2.2,
+                0.4
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  1.0,
+                  0.7,
+                  0.12,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "SampleCameraPath_175",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                175,
+                0,
+                60.6
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                24,
+                2.2,
+                0.4
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  1.0,
+                  0.7,
+                  0.12,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "SampleCameraPath_225",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                225,
+                0,
+                60.6
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                24,
+                2.2,
+                0.4
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  1.0,
+                  0.7,
+                  0.12,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "SampleCameraPath_275",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                275,
+                0,
+                60.6
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                24,
+                2.2,
+                0.4
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  1.0,
+                  0.7,
+                  0.12,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "SampleCameraPath_325",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                325,
+                0,
+                60.6
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                24,
+                2.2,
+                0.4
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  1.0,
+                  0.7,
+                  0.12,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "SampleCameraPath_375",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                375,
+                0,
+                60.6
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                24,
+                2.2,
+                0.4
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  1.0,
+                  0.7,
+                  0.12,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "Gate1_Post_-100",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                100,
+                -100,
+                110
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                8,
+                7,
+                100
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.12,
+                  0.72,
+                  1.0,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "Gate1_Post_100",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                100,
+                100,
+                110
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                8,
+                7,
+                100
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.12,
+                  0.72,
+                  1.0,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "Gate1_Top",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                100,
+                0,
+                160
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                8,
+                207,
+                6
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.12,
+                  0.72,
+                  1.0,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UTextRenderComponent",
+          "Name": "Gate1_Label",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                95,
+                -80,
+                166
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "Text": "GATE 1 | X=100",
+            "TextSize": 7,
+            "Font": "Fonts/CookieRun.json"
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "Gate2_Post_-100",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                300,
+                -100,
+                110
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                8,
+                7,
+                100
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  1.0,
+                  0.62,
+                  0.12,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "Gate2_Post_100",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                300,
+                100,
+                110
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                8,
+                7,
+                100
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  1.0,
+                  0.62,
+                  0.12,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "Gate2_Top",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                300,
+                0,
+                160
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                8,
+                207,
+                6
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  1.0,
+                  0.62,
+                  0.12,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UTextRenderComponent",
+          "Name": "Gate2_Label",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                295,
+                -80,
+                166
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "Text": "GATE 2 | X=300",
+            "TextSize": 7,
+            "Font": "Fonts/CookieRun.json"
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "Gate3_Post_-100",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                500,
+                -100,
+                110
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                8,
+                7,
+                100
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.83,
+                  0.28,
+                  0.88,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "Gate3_Post_100",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                500,
+                100,
+                110
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                8,
+                7,
+                100
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.83,
+                  0.28,
+                  0.88,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "Gate3_Top",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                500,
+                0,
+                160
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                8,
+                207,
+                6
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.83,
+                  0.28,
+                  0.88,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UTextRenderComponent",
+          "Name": "Gate3_Label",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                495,
+                -80,
+                166
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "Text": "GATE 3 | X=500",
+            "TextSize": 7,
+            "Font": "Fonts/CookieRun.json"
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "Gate4_Post_-100",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                700,
+                -100,
+                110
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                8,
+                7,
+                100
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.2,
+                  0.86,
+                  0.55,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "Gate4_Post_100",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                700,
+                100,
+                110
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                8,
+                7,
+                100
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.2,
+                  0.86,
+                  0.55,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "Gate4_Top",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                700,
+                0,
+                160
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                8,
+                207,
+                6
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.2,
+                  0.86,
+                  0.55,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UTextRenderComponent",
+          "Name": "Gate4_Label",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                695,
+                -80,
+                166
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "Text": "GATE 4 | X=700",
+            "TextSize": 7,
+            "Font": "Fonts/CookieRun.json"
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "SequenceStation0_Stripe",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                0,
+                0,
+                60.8
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                3,
+                140,
+                0.3
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.12,
+                  0.72,
+                  1.0,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "SequenceStation0_Pylon_-130",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                0,
+                -130,
+                77
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                10,
+                10,
+                34
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.12,
+                  0.72,
+                  1.0,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "SequenceStation0_Beacon_-130",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                0,
+                -130,
+                99
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                4,
+                4,
+                4
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Sphere",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.12,
+                  0.72,
+                  1.0,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "SequenceStation0_Pylon_130",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                0,
+                130,
+                77
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                10,
+                10,
+                34
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.12,
+                  0.72,
+                  1.0,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "SequenceStation0_Beacon_130",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                0,
+                130,
+                99
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                4,
+                4,
+                4
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Sphere",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.12,
+                  0.72,
+                  1.0,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UTextRenderComponent",
+          "Name": "SequenceStation0_Timing",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                10,
+                -126,
+                114
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "Text": "0s / 0f | START X=0",
+            "TextSize": 5,
+            "Font": "Fonts/CookieRun.json"
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "SequenceStation1_Stripe",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                100,
+                0,
+                60.8
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                3,
+                140,
+                0.3
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.12,
+                  0.72,
+                  1.0,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "SequenceStation1_Pylon_-130",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                100,
+                -130,
+                77
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                10,
+                10,
+                34
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.12,
+                  0.72,
+                  1.0,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "SequenceStation1_Beacon_-130",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                100,
+                -130,
+                99
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                4,
+                4,
+                4
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Sphere",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.12,
+                  0.72,
+                  1.0,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "SequenceStation1_Pylon_130",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                100,
+                130,
+                77
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                10,
+                10,
+                34
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.12,
+                  0.72,
+                  1.0,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "SequenceStation1_Beacon_130",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                100,
+                130,
+                99
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                4,
+                4,
+                4
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Sphere",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.12,
+                  0.72,
+                  1.0,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UTextRenderComponent",
+          "Name": "SequenceStation1_Timing",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                110,
+                -126,
+                114
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "Text": "1s / 30f | HIT STOP 0.30s",
+            "TextSize": 5,
+            "Font": "Fonts/CookieRun.json"
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "SequenceStation2_Stripe",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                200,
+                0,
+                60.8
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                3,
+                140,
+                0.3
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  1.0,
+                  0.62,
+                  0.12,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "SequenceStation2_Pylon_-130",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                200,
+                -130,
+                77
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                10,
+                10,
+                34
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  1.0,
+                  0.62,
+                  0.12,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "SequenceStation2_Beacon_-130",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                200,
+                -130,
+                99
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                4,
+                4,
+                4
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Sphere",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  1.0,
+                  0.62,
+                  0.12,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "SequenceStation2_Pylon_130",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                200,
+                130,
+                77
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                10,
+                10,
+                34
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  1.0,
+                  0.62,
+                  0.12,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "SequenceStation2_Beacon_130",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                200,
+                130,
+                99
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                4,
+                4,
+                4
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Sphere",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  1.0,
+                  0.62,
+                  0.12,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UTextRenderComponent",
+          "Name": "SequenceStation2_Timing",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                210,
+                -126,
+                114
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "Text": "2s / 60f | FOV 75",
+            "TextSize": 5,
+            "Font": "Fonts/CookieRun.json"
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "SequenceStation3_Stripe",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                300,
+                0,
+                60.8
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                3,
+                140,
+                0.3
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.83,
+                  0.28,
+                  0.88,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "SequenceStation3_Pylon_-130",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                300,
+                -130,
+                77
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                10,
+                10,
+                34
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.83,
+                  0.28,
+                  0.88,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "SequenceStation3_Beacon_-130",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                300,
+                -130,
+                99
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                4,
+                4,
+                4
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Sphere",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.83,
+                  0.28,
+                  0.88,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "SequenceStation3_Pylon_130",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                300,
+                130,
+                77
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                10,
+                10,
+                34
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.83,
+                  0.28,
+                  0.88,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "SequenceStation3_Beacon_130",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                300,
+                130,
+                99
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                4,
+                4,
+                4
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Sphere",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.83,
+                  0.28,
+                  0.88,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UTextRenderComponent",
+          "Name": "SequenceStation3_Timing",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                310,
+                -126,
+                114
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "Text": "3s / 90f | FOV 60",
+            "TextSize": 5,
+            "Font": "Fonts/CookieRun.json"
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "SequenceStation4_Stripe",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                400,
+                0,
+                60.8
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                3,
+                140,
+                0.3
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.2,
+                  0.86,
+                  0.55,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "SequenceStation4_Pylon_-130",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                400,
+                -130,
+                77
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                10,
+                10,
+                34
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.2,
+                  0.86,
+                  0.55,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "SequenceStation4_Beacon_-130",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                400,
+                -130,
+                99
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                4,
+                4,
+                4
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Sphere",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.2,
+                  0.86,
+                  0.55,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "SequenceStation4_Pylon_130",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                400,
+                130,
+                77
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                10,
+                10,
+                34
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.2,
+                  0.86,
+                  0.55,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "SequenceStation4_Beacon_130",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                400,
+                130,
+                99
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                4,
+                4,
+                4
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Sphere",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.2,
+                  0.86,
+                  0.55,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UTextRenderComponent",
+          "Name": "SequenceStation4_Timing",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                410,
+                -126,
+                114
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "Text": "4-5s / 120-150f | HOLD",
+            "TextSize": 5,
+            "Font": "Fonts/CookieRun.json"
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "FOVTargetBacking",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                890,
+                0,
+                110
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                4,
+                280,
+                150
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.1,
+                  0.13,
+                  0.19,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "FOVTargetVertical_0",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                886,
+                -100,
+                110
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1.5,
+                1.5,
+                100
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.6,
+                  0.69,
+                  0.78,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "FOVTargetVertical_1",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                886,
+                -75,
+                110
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1.5,
+                1.5,
+                100
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.6,
+                  0.69,
+                  0.78,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "FOVTargetVertical_2",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                886,
+                -50,
+                110
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1.5,
+                1.5,
+                100
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.6,
+                  0.69,
+                  0.78,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "FOVTargetVertical_3",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                886,
+                -25,
+                110
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1.5,
+                1.5,
+                100
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.6,
+                  0.69,
+                  0.78,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "FOVTargetVertical_4",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                886,
+                0,
+                110
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1.5,
+                1.5,
+                100
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.6,
+                  0.69,
+                  0.78,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "FOVTargetVertical_5",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                886,
+                25,
+                110
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1.5,
+                1.5,
+                100
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.6,
+                  0.69,
+                  0.78,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "FOVTargetVertical_6",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                886,
+                50,
+                110
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1.5,
+                1.5,
+                100
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.6,
+                  0.69,
+                  0.78,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "FOVTargetVertical_7",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                886,
+                75,
+                110
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1.5,
+                1.5,
+                100
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.6,
+                  0.69,
+                  0.78,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "FOVTargetVertical_8",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                886,
+                100,
+                110
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1.5,
+                1.5,
+                100
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.6,
+                  0.69,
+                  0.78,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "FOVTargetHorizontal_65",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                885,
+                0,
+                65
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1.5,
+                230,
+                1.5
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.6,
+                  0.69,
+                  0.78,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "FOVTargetHorizontal_85",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                885,
+                0,
+                85
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1.5,
+                230,
+                1.5
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.6,
+                  0.69,
+                  0.78,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "FOVTargetHorizontal_105",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                885,
+                0,
+                105
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1.5,
+                230,
+                1.5
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.6,
+                  0.69,
+                  0.78,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "FOVTargetHorizontal_125",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                885,
+                0,
+                125
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1.5,
+                230,
+                1.5
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.6,
+                  0.69,
+                  0.78,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "FOVTargetHorizontal_145",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                885,
+                0,
+                145
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1.5,
+                230,
+                1.5
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.6,
+                  0.69,
+                  0.78,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "FOVCenterTarget",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                882,
+                0,
+                105
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                3,
+                12,
+                12
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  1,
+                  0.38,
+                  0.15,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UTextRenderComponent",
+          "Name": "FOVTargetTitle",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                880,
+                -65,
+                165
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "Text": "FOV 90 -> 60",
+            "TextSize": 12,
+            "Font": "Fonts/CookieRun.json"
+          }
+        },
+        {
+          "Class": "UTextRenderComponent",
+          "Name": "SequenceTestTitle",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                880,
+                -130,
+                198
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "Text": "SEQUENCE PLAYER | CAMERA + FOV",
+            "TextSize": 9,
+            "Font": "Fonts/CookieRun.json"
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "SequenceTestEntryBoard",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                38,
+                0,
+                10
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                0.5,
+                48,
+                19
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.045,
+                  0.09,
+                  0.14,
+                  1
+                ],
+                "SpecularColor": [
+                  0.08,
+                  0.08,
+                  0.08
+                ],
+                "Shininess": 12
+              }
+            ]
+          }
+        },
+        {
+          "Class": "UTextRenderComponent",
+          "Name": "SequenceTestEntryTitle",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                37.5,
+                -14,
+                16
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "Text": "SEQUENCER TEST",
+            "TextSize": 2.5,
+            "Font": "Fonts/CookieRun.json"
+          }
+        },
+        {
+          "Class": "UTextRenderComponent",
+          "Name": "SequenceTestEntryBinding",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                37.5,
+                -21,
+                11.5
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "Text": "Camera Transform + FOV -> ACameraActor",
+            "TextSize": 1.1,
+            "Font": "Fonts/CookieRun.json"
+          }
+        },
+        {
+          "Class": "UTextRenderComponent",
+          "Name": "SequenceTestEntryPlay",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                37.5,
+                -17,
+                8.5
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "Text": "Sequencer Play | Camera Preview optional",
+            "TextSize": 1.0,
+            "Font": "Fonts/CookieRun.json"
+          }
+        },
+        {
+          "Class": "UTextRenderComponent",
+          "Name": "SequenceTestEntryHelp",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                37.5,
+                -18,
+                5.5
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bHiddenInGame": false,
+            "bCastShadow": false,
+            "bReceiveShadow": true,
+            "Text": "Event keys + physics | Pause / Stop",
+            "TextSize": 1.1,
+            "Font": "Fonts/CookieRun.json"
+          }
+        },
+        {
+          "Class": "UTextRenderComponent",
+          "Name": "SequencePhysicsTitle",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                475,
+                -84,
+                176
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bCastShadow": false,
+            "Text": "PHYSICS | PLAY / PAUSE / STOP",
+            "TextSize": 6,
+            "Font": "Fonts/CookieRun.json"
+          }
+        },
+        {
+          "Class": "UTextRenderComponent",
+          "Name": "SequencePhysicsHint",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                475,
+                -82,
+                164
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bCastShadow": false,
+            "Text": "Hit Stop freezes bodies | Slomo slows them",
+            "TextSize": 4,
+            "Font": "Fonts/CookieRun.json"
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": false
+      },
+      "Components": [
+        {
+          "Class": "USceneComponent",
+          "Name": "SequenceTestLightingRoot",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                0,
+                0,
+                0
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            }
+          }
+        },
+        {
+          "Class": "UAmbientLightComponent",
+          "Name": "SequenceTestAmbient",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                300,
+                0,
+                240
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "LightColor": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "Intensity": 0.7,
+            "bAutoActivate": true
+          }
+        },
+        {
+          "Class": "UDirectionalLightComponent",
+          "Name": "SequenceTestSun",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                200,
+                0,
+                280
+              ],
+              "Rotation": [
+                48,
+                -30,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "LightColor": [
+              1,
+              0.96,
+              0.91,
+              1
+            ],
+            "Intensity": 1.8,
+            "bCastShadow": false,
+            "bAutoActivate": true
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": true
+      },
+      "Components": [
+        {
+          "Class": "UBoxComponent",
+          "Name": "SequencePhysicsPlatform",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                570,
+                0,
+                62
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 2,
+            "WorldDynamic": 2,
+            "bEnableGravity": false,
+            "GravityScale": 1.0,
+            "Mass": 1,
+            "Acceleration": [
+              0,
+              0,
+              0
+            ],
+            "COF": 0.0,
+            "Restitution": 1.0,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bDrawShape": false,
+            "bCastShadow": false,
+            "BoxExtent": [
+              85,
+              85,
+              4
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "SequencePhysicsPlatform_Visual",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                0,
+                0,
+                0
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                170,
+                170,
+                8
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.17,
+                  0.23,
+                  0.3,
+                  1
+                ],
+                "SpecularColor": [
+                  0.15,
+                  0.15,
+                  0.15
+                ],
+                "Shininess": 24
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": true
+      },
+      "Components": [
+        {
+          "Class": "USphereComponent",
+          "Name": "SequencePhysicsBall1",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                540,
+                -48,
+                125
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 2,
+            "ObjectChannel": 1,
+            "WorldStatic": 2,
+            "WorldDynamic": 2,
+            "bEnableGravity": true,
+            "GravityScale": 3.0,
+            "Mass": 1,
+            "Acceleration": [
+              0,
+              0,
+              0
+            ],
+            "COF": 0.0,
+            "Restitution": 0.9,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bDrawShape": false,
+            "bCastShadow": false,
+            "SphereRadius": 10
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "SequencePhysicsBall1_Visual",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                0,
+                0,
+                0
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                10,
+                10,
+                10
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "StaticMesh": "Sphere",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.15,
+                  0.8,
+                  1.0,
+                  1
+                ],
+                "SpecularColor": [
+                  0.15,
+                  0.15,
+                  0.15
+                ],
+                "Shininess": 24
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": true
+      },
+      "Components": [
+        {
+          "Class": "USphereComponent",
+          "Name": "SequencePhysicsBall2",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                585,
+                0,
+                145
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 2,
+            "ObjectChannel": 1,
+            "WorldStatic": 2,
+            "WorldDynamic": 2,
+            "bEnableGravity": true,
+            "GravityScale": 3.0,
+            "Mass": 2,
+            "Acceleration": [
+              0,
+              0,
+              0
+            ],
+            "COF": 0.0,
+            "Restitution": 0.9,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bDrawShape": false,
+            "bCastShadow": false,
+            "SphereRadius": 12
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "SequencePhysicsBall2_Visual",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                0,
+                0,
+                0
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                12,
+                12,
+                12
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "StaticMesh": "Sphere",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  1.0,
+                  0.65,
+                  0.12,
+                  1
+                ],
+                "SpecularColor": [
+                  0.15,
+                  0.15,
+                  0.15
+                ],
+                "Shininess": 24
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": true
+      },
+      "Components": [
+        {
+          "Class": "USphereComponent",
+          "Name": "SequencePhysicsBall3",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                620,
+                48,
+                165
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 2,
+            "ObjectChannel": 1,
+            "WorldStatic": 2,
+            "WorldDynamic": 2,
+            "bEnableGravity": true,
+            "GravityScale": 3.0,
+            "Mass": 3,
+            "Acceleration": [
+              0,
+              0,
+              0
+            ],
+            "COF": 0.0,
+            "Restitution": 0.9,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bDrawShape": false,
+            "bCastShadow": false,
+            "SphereRadius": 14
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "SequencePhysicsBall3_Visual",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                0,
+                0,
+                0
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                14,
+                14,
+                14
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "StaticMesh": "Sphere",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.8,
+                  0.25,
+                  0.9,
+                  1
+                ],
+                "SpecularColor": [
+                  0.15,
+                  0.15,
+                  0.15
+                ],
+                "Shininess": 24
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "Class": "AActor",
+      "Properties": {
+        "bActorEnableCollision": true
+      },
+      "Components": [
+        {
+          "Class": "UBoxComponent",
+          "Name": "SequencePhysicsBox",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                565,
+                45,
+                134
+              ],
+              "Rotation": [
+                0,
+                20,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "MotionType": 2,
+            "ObjectChannel": 1,
+            "WorldStatic": 2,
+            "WorldDynamic": 2,
+            "bEnableGravity": true,
+            "GravityScale": 3.0,
+            "Mass": 2,
+            "Acceleration": [
+              0,
+              0,
+              0
+            ],
+            "COF": 0.0,
+            "Restitution": 0.9,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bDrawShape": false,
+            "bCastShadow": false,
+            "BoxExtent": [
+              10,
+              10,
+              10
+            ]
+          }
+        },
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "SequencePhysicsBox_Visual",
+          "Properties": {
+            "Transform": {
+              "Location": [
+                0,
+                0,
+                0
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                20,
+                20,
+                20
+              ]
+            },
+            "MotionType": 0,
+            "ObjectChannel": 0,
+            "WorldStatic": 0,
+            "WorldDynamic": 0,
+            "bEnableGravity": false,
+            "bAutoActivate": true,
+            "bVisible": true,
+            "bCastShadow": true,
+            "bReceiveShadow": true,
+            "StaticMesh": "Cube",
+            "OverrideMaterials": [
+              {
+                "Base": "DefaultMaterial",
+                "BaseColor": [
+                  0.25,
+                  0.9,
+                  0.5,
+                  1
+                ],
+                "SpecularColor": [
+                  0.15,
+                  0.15,
+                  0.15
+                ],
+                "Shininess": 24
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

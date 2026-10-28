@@ -240,7 +240,7 @@ using FSequenceTrack = std::variant<
 struct FSequence
 {
 	TArray<FSequenceTrack> Tracks;
-	float PlayRate = 1.0f; // SetPlayRate로 편집한다.
+	float PlayRate = 1.0f; // 기본 재생 배율. Player 등록 시 복사하며 런타임 변경은 Player에만 적용한다.
 	float FrameRate = 30.0f; // 편집기 초 <-> 프레임 표시·스냅 기준
 	double Length = 0.0;
 };
