@@ -1,0 +1,53 @@
+{
+    "Actors": [
+        {
+            "Class": "ATextRenderActor",
+            "Components": [
+                {
+                    "Class": "UTextRenderComponent",
+                    "Name": "TextRenderComponent_0",
+                    "Properties": {
+                        "Font": "Assets/Fonts/CookieRun.json",
+                        "Text": "Text",
+                        "TextSize": 1.0,
+                        "Transform": {
+                            "Location": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        },
+                        "bAutoActivate": true,
+                        "bBackfaceDepth": false,
+                        "bCastShadow": true,
+                        "bHiddenInGame": false,
+                        "bReceiveShadow": true,
+                        "bVisible": true
+                    }
+                },
+                {
+                    "Class": "UScriptComponent",
+                    "Name": "LuaScript_0",
+                    "Properties": {
+                        "ScriptPath": "",
+                        "bAutoActivate": true
+                    }
+                }
+            ],
+            "Properties": {
+                "bActorEnableCollision": true
+            }
+        }
+    ],
+    "Version": 2
+}

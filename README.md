@@ -35,6 +35,7 @@
 * **담당 부분:** PIE, ExponentialHeightFog, ProjcetileMovementComponent, RotationMovementComponent, SpotLightComponent, FXAA, FWorldContext
 
 
+
 ### [Week7 — Hitori Engine](./Week7)
 
 * **주요 구현:** point light, directional light, ambient light, spot light 등 다양한 조명, Gouraud·Lambert·Phong 셰이딩 구현, 노멀매핑 구현,  Compute Shader를 활용한 타일 기반 라이트 컬링과 노멀·컬링 결과 시각화 구현.
@@ -44,3 +45,12 @@
 
 * **주요 구현:** CSM, PCF·PCSS 기반 그림자 렌더링과 다중 페이지 섀도 아틀라스, 그림자 캐싱을 구현
 * **담당 부분:** PCSS의 깊이 계산과 소프트 섀도 품질 개선. 광원별 그림자 설정과 최소 탐색 깊이 추가, Rect Light 광원 반경 처리 수정.
+
+\### \[Week9 — HitoriEngine](./Week9)
+
+
+
+\* \*\*주요 구현:\*\* “Light, Camera, Action!”을 주제로 시네마틱 연출을 추가한 2인 차량 축구 게임. LuaJIT·Hot Reload·Coroutine과 Delegate 기반 이벤트, Box·Capsule·Sphere 충돌을 지원하며, 카메라 효과·시퀀서·타격 연출과 게임 시작·종료·재시작·스코어를 구현.
+
+\* \*\*담당 부분:\*\* BVH 기반 형상 충돌 검사·충돌 응답·Hit/Overlap 이벤트·이동 Sweep 통합과 중력·가속도·마찰·반발 설정 구현. 시퀀스 데이터·재생기·시간 제어를 설계하고, Hit Stop·Slomo 및 카메라 효과의 시퀀서 연동·에디터 미리보기, 차량 Hit Squash와 주행 밸런스 개선.
+

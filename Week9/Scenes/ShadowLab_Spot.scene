@@ -1,0 +1,1523 @@
+{
+  "Version": 2,
+  "Actors": [
+    {
+      "Class": "AStaticMeshActor",
+      "Components": [
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "UPrimitiveComponent_0",
+          "Properties": {
+            "OverrideMaterials": [],
+            "StaticMesh": "Cube",
+            "Transform": {
+              "Location": [
+                12,
+                0,
+                -0.5
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                64,
+                36,
+                1
+              ]
+            },
+            "bAutoActivate": true,
+            "bCastShadow": false,
+            "bHiddenInGame": false,
+            "bReceiveShadow": true,
+            "bVisible": true
+          }
+        }
+      ],
+      "Properties": {
+        "bActorEnableCollision": true
+      }
+    },
+    {
+      "Class": "AStaticMeshActor",
+      "Components": [
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "UPrimitiveComponent_0",
+          "Properties": {
+            "OverrideMaterials": [],
+            "StaticMesh": "Cube",
+            "Transform": {
+              "Location": [
+                8,
+                12,
+                4
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                26,
+                0.5,
+                8
+              ]
+            },
+            "bAutoActivate": true,
+            "bCastShadow": true,
+            "bHiddenInGame": false,
+            "bReceiveShadow": true,
+            "bVisible": true
+          }
+        }
+      ],
+      "Properties": {
+        "bActorEnableCollision": true
+      }
+    },
+    {
+      "Class": "AStaticMeshActor",
+      "Components": [
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "UPrimitiveComponent_0",
+          "Properties": {
+            "OverrideMaterials": [],
+            "StaticMesh": "Cube",
+            "Transform": {
+              "Location": [
+                22,
+                5,
+                3
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                0.5,
+                14,
+                6
+              ]
+            },
+            "bAutoActivate": true,
+            "bCastShadow": true,
+            "bHiddenInGame": false,
+            "bReceiveShadow": true,
+            "bVisible": true
+          }
+        }
+      ],
+      "Properties": {
+        "bActorEnableCollision": true
+      }
+    },
+    {
+      "Class": "AStaticMeshActor",
+      "Components": [
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "UPrimitiveComponent_0",
+          "Properties": {
+            "OverrideMaterials": [],
+            "StaticMesh": "Cube",
+            "Transform": {
+              "Location": [
+                0,
+                -7,
+                1
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                2,
+                2,
+                2
+              ]
+            },
+            "bAutoActivate": true,
+            "bCastShadow": true,
+            "bHiddenInGame": false,
+            "bReceiveShadow": true,
+            "bVisible": true
+          }
+        }
+      ],
+      "Properties": {
+        "bActorEnableCollision": true
+      }
+    },
+    {
+      "Class": "AStaticMeshActor",
+      "Components": [
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "UPrimitiveComponent_0",
+          "Properties": {
+            "OverrideMaterials": [],
+            "StaticMesh": "Sphere",
+            "Transform": {
+              "Location": [
+                0,
+                -2,
+                1
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "bAutoActivate": true,
+            "bCastShadow": true,
+            "bHiddenInGame": false,
+            "bReceiveShadow": true,
+            "bVisible": true
+          }
+        }
+      ],
+      "Properties": {
+        "bActorEnableCollision": true
+      }
+    },
+    {
+      "Class": "AStaticMeshActor",
+      "Components": [
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "UPrimitiveComponent_0",
+          "Properties": {
+            "OverrideMaterials": [],
+            "StaticMesh": "Cylinder",
+            "Transform": {
+              "Location": [
+                0,
+                3,
+                2
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                0.8,
+                0.8,
+                4
+              ]
+            },
+            "bAutoActivate": true,
+            "bCastShadow": true,
+            "bHiddenInGame": false,
+            "bReceiveShadow": true,
+            "bVisible": true
+          }
+        }
+      ],
+      "Properties": {
+        "bActorEnableCollision": true
+      }
+    },
+    {
+      "Class": "AStaticMeshActor",
+      "Components": [
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "UPrimitiveComponent_0",
+          "Properties": {
+            "OverrideMaterials": [],
+            "StaticMesh": "Cone",
+            "Transform": {
+              "Location": [
+                5,
+                -7,
+                0
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                3
+              ]
+            },
+            "bAutoActivate": true,
+            "bCastShadow": true,
+            "bHiddenInGame": false,
+            "bReceiveShadow": true,
+            "bVisible": true
+          }
+        }
+      ],
+      "Properties": {
+        "bActorEnableCollision": true
+      }
+    },
+    {
+      "Class": "AStaticMeshActor",
+      "Components": [
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "UPrimitiveComponent_0",
+          "Properties": {
+            "OverrideMaterials": [],
+            "StaticMesh": "Cube",
+            "Transform": {
+              "Location": [
+                5,
+                -2,
+                3
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                2,
+                2,
+                2
+              ]
+            },
+            "bAutoActivate": true,
+            "bCastShadow": true,
+            "bHiddenInGame": false,
+            "bReceiveShadow": true,
+            "bVisible": true
+          }
+        }
+      ],
+      "Properties": {
+        "bActorEnableCollision": true
+      }
+    },
+    {
+      "Class": "AStaticMeshActor",
+      "Components": [
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "UPrimitiveComponent_0",
+          "Properties": {
+            "OverrideMaterials": [],
+            "StaticMesh": "Sphere",
+            "Transform": {
+              "Location": [
+                5,
+                3,
+                4
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "bAutoActivate": true,
+            "bCastShadow": true,
+            "bHiddenInGame": false,
+            "bReceiveShadow": true,
+            "bVisible": true
+          }
+        }
+      ],
+      "Properties": {
+        "bActorEnableCollision": true
+      }
+    },
+    {
+      "Class": "AStaticMeshActor",
+      "Components": [
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "UPrimitiveComponent_0",
+          "Properties": {
+            "OverrideMaterials": [],
+            "StaticMesh": "Cube",
+            "Transform": {
+              "Location": [
+                10,
+                -8.0,
+                2
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                0.12,
+                0.12,
+                4
+              ]
+            },
+            "bAutoActivate": true,
+            "bCastShadow": true,
+            "bHiddenInGame": false,
+            "bReceiveShadow": true,
+            "bVisible": true
+          }
+        }
+      ],
+      "Properties": {
+        "bActorEnableCollision": true
+      }
+    },
+    {
+      "Class": "AStaticMeshActor",
+      "Components": [
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "UPrimitiveComponent_0",
+          "Properties": {
+            "OverrideMaterials": [],
+            "StaticMesh": "Cube",
+            "Transform": {
+              "Location": [
+                10,
+                -6.8,
+                2
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                0.12,
+                0.12,
+                4
+              ]
+            },
+            "bAutoActivate": true,
+            "bCastShadow": true,
+            "bHiddenInGame": false,
+            "bReceiveShadow": true,
+            "bVisible": true
+          }
+        }
+      ],
+      "Properties": {
+        "bActorEnableCollision": true
+      }
+    },
+    {
+      "Class": "AStaticMeshActor",
+      "Components": [
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "UPrimitiveComponent_0",
+          "Properties": {
+            "OverrideMaterials": [],
+            "StaticMesh": "Cube",
+            "Transform": {
+              "Location": [
+                10,
+                -5.6,
+                2
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                0.12,
+                0.12,
+                4
+              ]
+            },
+            "bAutoActivate": true,
+            "bCastShadow": true,
+            "bHiddenInGame": false,
+            "bReceiveShadow": true,
+            "bVisible": true
+          }
+        }
+      ],
+      "Properties": {
+        "bActorEnableCollision": true
+      }
+    },
+    {
+      "Class": "AStaticMeshActor",
+      "Components": [
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "UPrimitiveComponent_0",
+          "Properties": {
+            "OverrideMaterials": [],
+            "StaticMesh": "Cube",
+            "Transform": {
+              "Location": [
+                10,
+                -4.4,
+                2
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                0.12,
+                0.12,
+                4
+              ]
+            },
+            "bAutoActivate": true,
+            "bCastShadow": true,
+            "bHiddenInGame": false,
+            "bReceiveShadow": true,
+            "bVisible": true
+          }
+        }
+      ],
+      "Properties": {
+        "bActorEnableCollision": true
+      }
+    },
+    {
+      "Class": "AStaticMeshActor",
+      "Components": [
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "UPrimitiveComponent_0",
+          "Properties": {
+            "OverrideMaterials": [],
+            "StaticMesh": "Cube",
+            "Transform": {
+              "Location": [
+                10,
+                -3.2,
+                2
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                0.12,
+                0.12,
+                4
+              ]
+            },
+            "bAutoActivate": true,
+            "bCastShadow": true,
+            "bHiddenInGame": false,
+            "bReceiveShadow": true,
+            "bVisible": true
+          }
+        }
+      ],
+      "Properties": {
+        "bActorEnableCollision": true
+      }
+    },
+    {
+      "Class": "AStaticMeshActor",
+      "Components": [
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "UPrimitiveComponent_0",
+          "Properties": {
+            "OverrideMaterials": [],
+            "StaticMesh": "Cube",
+            "Transform": {
+              "Location": [
+                10,
+                -2.0,
+                2
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                0.12,
+                0.12,
+                4
+              ]
+            },
+            "bAutoActivate": true,
+            "bCastShadow": true,
+            "bHiddenInGame": false,
+            "bReceiveShadow": true,
+            "bVisible": true
+          }
+        }
+      ],
+      "Properties": {
+        "bActorEnableCollision": true
+      }
+    },
+    {
+      "Class": "AStaticMeshActor",
+      "Components": [
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "UPrimitiveComponent_0",
+          "Properties": {
+            "OverrideMaterials": [],
+            "StaticMesh": "Cube",
+            "Transform": {
+              "Location": [
+                10,
+                -0.8000000000000007,
+                2
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                0.12,
+                0.12,
+                4
+              ]
+            },
+            "bAutoActivate": true,
+            "bCastShadow": true,
+            "bHiddenInGame": false,
+            "bReceiveShadow": true,
+            "bVisible": true
+          }
+        }
+      ],
+      "Properties": {
+        "bActorEnableCollision": true
+      }
+    },
+    {
+      "Class": "AStaticMeshActor",
+      "Components": [
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "UPrimitiveComponent_0",
+          "Properties": {
+            "OverrideMaterials": [],
+            "StaticMesh": "Cube",
+            "Transform": {
+              "Location": [
+                10,
+                -4.4,
+                4.1
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                0.2,
+                8,
+                0.2
+              ]
+            },
+            "bAutoActivate": true,
+            "bCastShadow": true,
+            "bHiddenInGame": false,
+            "bReceiveShadow": true,
+            "bVisible": true
+          }
+        }
+      ],
+      "Properties": {
+        "bActorEnableCollision": true
+      }
+    },
+    {
+      "Class": "AStaticMeshActor",
+      "Components": [
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "UPrimitiveComponent_0",
+          "Properties": {
+            "OverrideMaterials": [],
+            "StaticMesh": "Cube",
+            "Transform": {
+              "Location": [
+                9.0,
+                5,
+                0.25
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1.5,
+                4,
+                0.5
+              ]
+            },
+            "bAutoActivate": true,
+            "bCastShadow": true,
+            "bHiddenInGame": false,
+            "bReceiveShadow": true,
+            "bVisible": true
+          }
+        }
+      ],
+      "Properties": {
+        "bActorEnableCollision": true
+      }
+    },
+    {
+      "Class": "AStaticMeshActor",
+      "Components": [
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "UPrimitiveComponent_0",
+          "Properties": {
+            "OverrideMaterials": [],
+            "StaticMesh": "Cube",
+            "Transform": {
+              "Location": [
+                10.5,
+                5,
+                0.5
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1.5,
+                4,
+                1.0
+              ]
+            },
+            "bAutoActivate": true,
+            "bCastShadow": true,
+            "bHiddenInGame": false,
+            "bReceiveShadow": true,
+            "bVisible": true
+          }
+        }
+      ],
+      "Properties": {
+        "bActorEnableCollision": true
+      }
+    },
+    {
+      "Class": "AStaticMeshActor",
+      "Components": [
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "UPrimitiveComponent_0",
+          "Properties": {
+            "OverrideMaterials": [],
+            "StaticMesh": "Cube",
+            "Transform": {
+              "Location": [
+                12.0,
+                5,
+                0.75
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1.5,
+                4,
+                1.5
+              ]
+            },
+            "bAutoActivate": true,
+            "bCastShadow": true,
+            "bHiddenInGame": false,
+            "bReceiveShadow": true,
+            "bVisible": true
+          }
+        }
+      ],
+      "Properties": {
+        "bActorEnableCollision": true
+      }
+    },
+    {
+      "Class": "AStaticMeshActor",
+      "Components": [
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "UPrimitiveComponent_0",
+          "Properties": {
+            "OverrideMaterials": [],
+            "StaticMesh": "Cube",
+            "Transform": {
+              "Location": [
+                13.5,
+                5,
+                1.0
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1.5,
+                4,
+                2.0
+              ]
+            },
+            "bAutoActivate": true,
+            "bCastShadow": true,
+            "bHiddenInGame": false,
+            "bReceiveShadow": true,
+            "bVisible": true
+          }
+        }
+      ],
+      "Properties": {
+        "bActorEnableCollision": true
+      }
+    },
+    {
+      "Class": "AStaticMeshActor",
+      "Components": [
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "UPrimitiveComponent_0",
+          "Properties": {
+            "OverrideMaterials": [],
+            "StaticMesh": "Cube",
+            "Transform": {
+              "Location": [
+                15.0,
+                5,
+                1.25
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1.5,
+                4,
+                2.5
+              ]
+            },
+            "bAutoActivate": true,
+            "bCastShadow": true,
+            "bHiddenInGame": false,
+            "bReceiveShadow": true,
+            "bVisible": true
+          }
+        }
+      ],
+      "Properties": {
+        "bActorEnableCollision": true
+      }
+    },
+    {
+      "Class": "AStaticMeshActor",
+      "Components": [
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "UPrimitiveComponent_0",
+          "Properties": {
+            "OverrideMaterials": [],
+            "StaticMesh": "Cube",
+            "Transform": {
+              "Location": [
+                16,
+                -6,
+                1.5
+              ],
+              "Rotation": [
+                -25,
+                0,
+                0
+              ],
+              "Scale": [
+                6,
+                4,
+                0.3
+              ]
+            },
+            "bAutoActivate": true,
+            "bCastShadow": true,
+            "bHiddenInGame": false,
+            "bReceiveShadow": true,
+            "bVisible": true
+          }
+        }
+      ],
+      "Properties": {
+        "bActorEnableCollision": true
+      }
+    },
+    {
+      "Class": "AStaticMeshActor",
+      "Components": [
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "UPrimitiveComponent_0",
+          "Properties": {
+            "OverrideMaterials": [],
+            "StaticMesh": "Sphere",
+            "Transform": {
+              "Location": [
+                16,
+                -6,
+                3.1
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                0.7,
+                0.7,
+                0.7
+              ]
+            },
+            "bAutoActivate": true,
+            "bCastShadow": true,
+            "bHiddenInGame": false,
+            "bReceiveShadow": true,
+            "bVisible": true
+          }
+        }
+      ],
+      "Properties": {
+        "bActorEnableCollision": true
+      }
+    },
+    {
+      "Class": "AStaticMeshActor",
+      "Components": [
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "UPrimitiveComponent_0",
+          "Properties": {
+            "OverrideMaterials": [],
+            "StaticMesh": "Cube",
+            "Transform": {
+              "Location": [
+                17,
+                3,
+                5
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                4,
+                4,
+                0.3
+              ]
+            },
+            "bAutoActivate": true,
+            "bCastShadow": true,
+            "bHiddenInGame": false,
+            "bReceiveShadow": true,
+            "bVisible": true
+          }
+        }
+      ],
+      "Properties": {
+        "bActorEnableCollision": true
+      }
+    },
+    {
+      "Class": "AStaticMeshActor",
+      "Components": [
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "UPrimitiveComponent_0",
+          "Properties": {
+            "OverrideMaterials": [],
+            "StaticMesh": "Cube",
+            "Transform": {
+              "Location": [
+                15.5,
+                3,
+                2.5
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                0.3,
+                0.3,
+                5
+              ]
+            },
+            "bAutoActivate": true,
+            "bCastShadow": true,
+            "bHiddenInGame": false,
+            "bReceiveShadow": true,
+            "bVisible": true
+          }
+        }
+      ],
+      "Properties": {
+        "bActorEnableCollision": true
+      }
+    },
+    {
+      "Class": "AStaticMeshActor",
+      "Components": [
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "UPrimitiveComponent_0",
+          "Properties": {
+            "OverrideMaterials": [],
+            "StaticMesh": "Cube",
+            "Transform": {
+              "Location": [
+                18.5,
+                3,
+                2.5
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                0.3,
+                0.3,
+                5
+              ]
+            },
+            "bAutoActivate": true,
+            "bCastShadow": true,
+            "bHiddenInGame": false,
+            "bReceiveShadow": true,
+            "bVisible": true
+          }
+        }
+      ],
+      "Properties": {
+        "bActorEnableCollision": true
+      }
+    },
+    {
+      "Class": "AStaticMeshActor",
+      "Components": [
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "UPrimitiveComponent_0",
+          "Properties": {
+            "OverrideMaterials": [],
+            "StaticMesh": "Cube",
+            "Transform": {
+              "Location": [
+                -5,
+                -7,
+                1
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                2,
+                2,
+                2
+              ]
+            },
+            "bAutoActivate": true,
+            "bCastShadow": false,
+            "bHiddenInGame": false,
+            "bReceiveShadow": true,
+            "bVisible": true
+          }
+        }
+      ],
+      "Properties": {
+        "bActorEnableCollision": true
+      }
+    },
+    {
+      "Class": "AStaticMeshActor",
+      "Components": [
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "UPrimitiveComponent_0",
+          "Properties": {
+            "OverrideMaterials": [],
+            "StaticMesh": "Cube",
+            "Transform": {
+              "Location": [
+                -5,
+                -2,
+                1
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                2,
+                2,
+                2
+              ]
+            },
+            "bAutoActivate": true,
+            "bCastShadow": true,
+            "bHiddenInGame": false,
+            "bReceiveShadow": false,
+            "bVisible": true
+          }
+        }
+      ],
+      "Properties": {
+        "bActorEnableCollision": true
+      }
+    },
+    {
+      "Class": "AStaticMeshActor",
+      "Components": [
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "UPrimitiveComponent_0",
+          "Properties": {
+            "OverrideMaterials": [],
+            "StaticMesh": "Cube",
+            "Transform": {
+              "Location": [
+                26,
+                -5,
+                2
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                4
+              ]
+            },
+            "bAutoActivate": true,
+            "bCastShadow": true,
+            "bHiddenInGame": false,
+            "bReceiveShadow": true,
+            "bVisible": true
+          }
+        }
+      ],
+      "Properties": {
+        "bActorEnableCollision": true
+      }
+    },
+    {
+      "Class": "AStaticMeshActor",
+      "Components": [
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "UPrimitiveComponent_0",
+          "Properties": {
+            "OverrideMaterials": [],
+            "StaticMesh": "Sphere",
+            "Transform": {
+              "Location": [
+                26,
+                2,
+                1
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "bAutoActivate": true,
+            "bCastShadow": true,
+            "bHiddenInGame": false,
+            "bReceiveShadow": true,
+            "bVisible": true
+          }
+        }
+      ],
+      "Properties": {
+        "bActorEnableCollision": true
+      }
+    },
+    {
+      "Class": "AStaticMeshActor",
+      "Components": [
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "UPrimitiveComponent_0",
+          "Properties": {
+            "OverrideMaterials": [],
+            "StaticMesh": "Cube",
+            "Transform": {
+              "Location": [
+                32,
+                -5,
+                2
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                4
+              ]
+            },
+            "bAutoActivate": true,
+            "bCastShadow": true,
+            "bHiddenInGame": false,
+            "bReceiveShadow": true,
+            "bVisible": true
+          }
+        }
+      ],
+      "Properties": {
+        "bActorEnableCollision": true
+      }
+    },
+    {
+      "Class": "AStaticMeshActor",
+      "Components": [
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "UPrimitiveComponent_0",
+          "Properties": {
+            "OverrideMaterials": [],
+            "StaticMesh": "Sphere",
+            "Transform": {
+              "Location": [
+                32,
+                2,
+                1
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "bAutoActivate": true,
+            "bCastShadow": true,
+            "bHiddenInGame": false,
+            "bReceiveShadow": true,
+            "bVisible": true
+          }
+        }
+      ],
+      "Properties": {
+        "bActorEnableCollision": true
+      }
+    },
+    {
+      "Class": "AStaticMeshActor",
+      "Components": [
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "UPrimitiveComponent_0",
+          "Properties": {
+            "OverrideMaterials": [],
+            "StaticMesh": "Cube",
+            "Transform": {
+              "Location": [
+                39,
+                -5,
+                2
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                4
+              ]
+            },
+            "bAutoActivate": true,
+            "bCastShadow": true,
+            "bHiddenInGame": false,
+            "bReceiveShadow": true,
+            "bVisible": true
+          }
+        }
+      ],
+      "Properties": {
+        "bActorEnableCollision": true
+      }
+    },
+    {
+      "Class": "AStaticMeshActor",
+      "Components": [
+        {
+          "Class": "UStaticMeshComponent",
+          "Name": "UPrimitiveComponent_0",
+          "Properties": {
+            "OverrideMaterials": [],
+            "StaticMesh": "Sphere",
+            "Transform": {
+              "Location": [
+                39,
+                2,
+                1
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1,
+                1,
+                1
+              ]
+            },
+            "bAutoActivate": true,
+            "bCastShadow": true,
+            "bHiddenInGame": false,
+            "bReceiveShadow": true,
+            "bVisible": true
+          }
+        }
+      ],
+      "Properties": {
+        "bActorEnableCollision": true
+      }
+    },
+    {
+      "Class": "AAmbientLightActor",
+      "Components": [
+        {
+          "Class": "UBillboardComponent",
+          "Name": "UBillboardComponent_0",
+          "Properties": {
+            "Material": {
+              "Base": "BillboardMaterial",
+              "BaseColor": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "PSOType": 14,
+              "SamplerState": "LinearClamp",
+              "Textures": [
+                "Editor/Icon/SkyLight.png"
+              ],
+              "UVScrollSpeed": [
+                0.0,
+                0.0
+              ]
+            },
+            "Transform": {
+              "Location": [
+                0,
+                0,
+                10
+              ],
+              "Rotation": [
+                0,
+                0,
+                0
+              ],
+              "Scale": [
+                1.0,
+                1.0,
+                1.0
+              ]
+            },
+            "bAutoActivate": true,
+            "bHiddenInGame": false,
+            "bVisible": true,
+            "bCastShadow": false,
+            "bReceiveShadow": false
+          }
+        },
+        {
+          "Class": "UAmbientLightComponent",
+          "Name": "UAmbientLightComponent_0",
+          "Properties": {
+            "Intensity": 0.035,
+            "LightColor": [
+              1,
+              1,
+              1
+            ],
+            "Transform": {
+              "Location": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "Rotation": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "Scale": [
+                1.0,
+                1.0,
+                1.0
+              ]
+            },
+            "bAutoActivate": true,
+            "bEnabled": true,
+            "bHiddenInGame": false,
+            "bShowLightBounds": false,
+            "bVisible": true,
+            "ShadowSlopeBias": 0.5,
+            "ShadowMapResolution": 1024,
+            "ShadowSourceRadius": 0.12,
+            "ShadowBias": 0.5
+          }
+        }
+      ],
+      "Properties": {
+        "bActorEnableCollision": true
+      }
+    },
+    {
+      "Class": "ASpotLightActor",
+      "Components": [
+        {
+          "Class": "UBillboardComponent",
+          "Name": "UBillboardComponent_0",
+          "Properties": {
+            "Material": {
+              "Base": "BillboardMaterial",
+              "BaseColor": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              "PSOType": 14,
+              "SamplerState": "LinearClamp",
+              "Textures": [
+                "Editor/Icon/SpotLight_64x.png"
+              ],
+              "UVScrollSpeed": [
+                0.0,
+                0.0
+              ]
+            },
+            "Transform": {
+              "Location": [
+                -9,
+                0,
+                16
+              ],
+              "Rotation": [
+                35,
+                0,
+                0
+              ],
+              "Scale": [
+                2.561215877532959,
+                3.319441318511963,
+                2.9088001251220703
+              ]
+            },
+            "bAutoActivate": true,
+            "bHiddenInGame": false,
+            "bVisible": true,
+            "bCastShadow": false,
+            "bReceiveShadow": false
+          }
+        },
+        {
+          "Class": "USpotLightComponent",
+          "Name": "USpotLightComponent_0",
+          "Properties": {
+            "AttenuationRadius": 65,
+            "Falloff": 0.20000000298023224,
+            "InnerConeAngle": 27,
+            "Intensity": 600,
+            "LightColor": [
+              1,
+              1,
+              1
+            ],
+            "OuterConeAngle": 42,
+            "Transform": {
+              "Location": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "Rotation": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "Scale": [
+                1.0,
+                1.0,
+                1.0
+              ]
+            },
+            "bAutoActivate": true,
+            "bEnabled": true,
+            "bHiddenInGame": false,
+            "bShowLightBounds": false,
+            "bVisible": true,
+            "ShadowSlopeBias": 0.5,
+            "ShadowMapResolution": 1024,
+            "ShadowSourceRadius": 0.12,
+            "ShadowBias": 0.5
+          }
+        }
+      ],
+      "Properties": {
+        "bActorEnableCollision": true
+      }
+    }
+  ]
+}

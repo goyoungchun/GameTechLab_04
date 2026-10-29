@@ -1,0 +1,79 @@
+#pragma once
+
+#include "KeyCode.h"
+#include "MouseButton.h"
+#include "Core/Types.h"
+
+enum class EGameInputAxis
+{
+    MouseX,
+    MouseY,
+    MouseWheel
+};
+
+
+class FInputSystem
+{
+public:
+    static bool IsKeyPressed(EKeyCode KeyCode);
+    static bool IsKeyReleased(EKeyCode KeyCode);
+    static bool IsKeyDown(EKeyCode KeyCode);
+
+    static bool IsMouseDown(EMouseButton MouseButton);
+    static bool IsMousePressed(EMouseButton MouseButton);
+    static bool IsMouseReleased(EMouseButton MouseButton);
+
+    static void UpdateInputStates();
+    static void ClearAllStates();
+    static void SyncMousePosition(int32 x, int32 y);
+    static void OnKeyUp(int VirtualKey);
+    static void OnMouseUp(EMouseButton MouseButton);
+    static void OnKeyDown(int VirtualKey);
+
+    // Lctrl Rctrl / Lshift Rshift 구별위함
+    static void OnRawKeyDown(uint64 WParam, int64 LParam);
+    static void OnRawKeyUp(uint64 WParam, int64 LParam);
+    static void SyncModifierKeys();
+
+    static void OnMouseDown(EMouseButton MouseButton);
+    static void OnMouseMove(int32 x, int32 y);
+    static void OnMouseWheelDelta(int32 Wheel);
+
+    static inline int32 GetMouseX() { return MouseX; }
+    static inline int32 GetMouseY() { return MouseY; }
+
+    static inline int32 GetMouseDeltaX() { return DeltaX; }
+    static inline int32 GetMouseDeltaY() { return DeltaY; }
+
+    static inline int32 GetWheelDelta() 
+    { 
+        int32 Delta = WheelDelta;
+        WheelDelta = 0;
+        return Delta;
+    }
+
+private:
+    FInputSystem() = delete;
+
+    // Lctrl Rctrl / Lshift Rshift 구별위한 보정 함수
+    static int ResolveVirtualKey(uint64 WParam, int64 LParam);
+
+    // 한쪽이라도 눌러지면 범용키도 눌린 판정
+    // LShiftDown -> LShift/Shift 둘다 눌린 판정
+    static void CombineCtrShiftKeys();
+
+    // 한자키 고질적인 문제 위함   --> 윈도우에서 한자키 누르고 바로 false 로 주기 때문에 게임에서 감지 못 할수도 있음.
+    static inline bool bHanjaReleasePending = false;
+
+    static inline bool bMouseStates[5] = {};
+    static inline bool bPrevMouseStates[5] = {};
+
+    static inline bool bKeyStates[256] = {};
+    static inline bool bPrevKeyStates[256] = {};
+
+    static inline int32 MouseX = 0, MouseY = 0;
+    static inline int32 PrevMouseX = 0, PrevMouseY = 0;
+    static inline int32 DeltaX = 0, DeltaY = 0;
+
+    static inline int32 WheelDelta = 0;
+};

@@ -1,0 +1,249 @@
+{
+    "Cameras": [
+        {
+            "FOV": 68,
+            "OrthoWidth": 16.0,
+            "Orthographic": false,
+            "Transform": {
+                "Location": [
+                    16,
+                    18,
+                    12
+                ],
+                "Rotation": [
+                    17.63053252879271,
+                    122.36093755936992,
+                    0
+                ],
+                "Scale": [
+                    1,
+                    1,
+                    1
+                ]
+            }
+        }
+    ],
+    "FrameRate": 30.0,
+    "Length": 3.8,
+    "PlayRate": 1.0,
+    "Tracks": [
+        {
+            "Binding": 0,
+            "Name": "Goal wide orbit",
+            "Type": "Transform",
+            "ValueType": "Transform",
+            "Keys": [
+                {
+                    "Time": 0,
+                    "Value": {
+                        "Location": [
+                            16,
+                            18,
+                            12
+                        ],
+                        "Rotation": [
+                            17.63053252879271,
+                            122.36093755936992,
+                            0
+                        ],
+                        "Scale": [
+                            1,
+                            1,
+                            1
+                        ]
+                    },
+                    "Ease": [
+                        0,
+                        0,
+                        1,
+                        1
+                    ],
+                    "Interpolation": "Linear"
+                },
+                {
+                    "Time": 0.7,
+                    "Value": {
+                        "Location": [
+                            14,
+                            18,
+                            11.5
+                        ],
+                        "Rotation": [
+                            17.313629194040676,
+                            119.00641590227005,
+                            0
+                        ],
+                        "Scale": [
+                            1,
+                            1,
+                            1
+                        ]
+                    },
+                    "Ease": [
+                        0,
+                        0,
+                        1,
+                        1
+                    ],
+                    "Interpolation": "Linear"
+                },
+                {
+                    "Time": 1.8,
+                    "Value": {
+                        "Location": [
+                            5,
+                            19,
+                            10.5
+                        ],
+                        "Rotation": [
+                            17.90566994682873,
+                            101.65029943753767,
+                            0
+                        ],
+                        "Scale": [
+                            1,
+                            1,
+                            1
+                        ]
+                    },
+                    "Ease": [
+                        0,
+                        0,
+                        1,
+                        1
+                    ],
+                    "Interpolation": "Linear"
+                },
+                {
+                    "Time": 2.8,
+                    "Value": {
+                        "Location": [
+                            -6,
+                            21,
+                            10
+                        ],
+                        "Rotation": [
+                            18.027640338657754,
+                            74.90842732140513,
+                            0
+                        ],
+                        "Scale": [
+                            1,
+                            1,
+                            1
+                        ]
+                    },
+                    "Ease": [
+                        0,
+                        0,
+                        1,
+                        1
+                    ],
+                    "Interpolation": "Linear"
+                },
+                {
+                    "Time": 3.8,
+                    "Value": {
+                        "Location": [
+                            -12,
+                            22,
+                            10
+                        ],
+                        "Rotation": [
+                            17.083490849371394,
+                            60.54632727307906,
+                            0
+                        ],
+                        "Scale": [
+                            1,
+                            1,
+                            1
+                        ]
+                    },
+                    "Ease": [
+                        0,
+                        0,
+                        1,
+                        1
+                    ],
+                    "Interpolation": "Linear"
+                }
+            ]
+        },
+        {
+            "Binding": 0,
+            "Name": "Goal framing",
+            "Type": "Float",
+            "ValueType": "FOV",
+            "Keys": [
+                {
+                    "Time": 0,
+                    "Value": 68,
+                    "Ease": [
+                        0,
+                        0,
+                        1,
+                        1
+                    ],
+                    "Interpolation": "Linear"
+                },
+                {
+                    "Time": 0.7,
+                    "Value": 68,
+                    "Ease": [
+                        0,
+                        0,
+                        1,
+                        1
+                    ],
+                    "Interpolation": "Linear"
+                },
+                {
+                    "Time": 2.8,
+                    "Value": 62,
+                    "Ease": [
+                        0,
+                        0,
+                        1,
+                        1
+                    ],
+                    "Interpolation": "Linear"
+                },
+                {
+                    "Time": 3.8,
+                    "Value": 58,
+                    "Ease": [
+                        0,
+                        0,
+                        1,
+                        1
+                    ],
+                    "Interpolation": "Linear"
+                }
+            ]
+        },
+        {
+            "Name": "Goal slow motion",
+            "Type": "Event",
+            "Keys": [
+                {
+                    "Time": 0.7,
+                    "Event": "Slomo",
+                    "Params": {
+                        "TargetScale": 0.35,
+                        "Duration": 1.6,
+                        "BlendInTime": 0.15,
+                        "BlendOutTime": 0.35,
+                        "Ease": [
+                            0,
+                            0,
+                            1,
+                            1
+                        ]
+                    }
+                }
+            ]
+        }
+    ],
+    "Version": 1
+}

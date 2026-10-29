@@ -1,0 +1,1042 @@
+{
+    "Version": 1,
+    "Scene": "Scenes/RocketArena.scene",
+    "Length": 6.8,
+    "FrameRate": 30.0,
+    "PlayRate": 1.0,
+    "Cameras": [
+        {
+            "Transform": {
+                "Location": [
+                    -16.0,
+                    12.0,
+                    5.0
+                ],
+                "Rotation": [
+                    14.39,
+                    17.35,
+                    0.0
+                ],
+                "Scale": [
+                    1.0,
+                    1.0,
+                    1.0
+                ]
+            },
+            "FOV": 75.0,
+            "OrthoWidth": 16.0,
+            "Orthographic": false
+        }
+    ],
+    "Tracks": [
+        {
+            "Type": "Transform",
+            "Name": "Camera",
+            "ValueType": "Transform",
+            "Binding": 0,
+            "Keys": [
+                {
+                    "Time": 0.0,
+                    "Value": {
+                        "Location": [
+                            -16.0,
+                            12.0,
+                            5.0
+                        ],
+                        "Rotation": [
+                            14.39,
+                            17.35,
+                            0.0
+                        ],
+                        "Scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    },
+                    "Ease": [
+                        0.0,
+                        0.0,
+                        1.0,
+                        1.0
+                    ],
+                    "Interpolation": "Linear"
+                },
+                {
+                    "Time": 1.1666666666666667,
+                    "Value": {
+                        "Location": [
+                            -14.0,
+                            15.0,
+                            5.0
+                        ],
+                        "Rotation": [
+                            16.91,
+                            8.13,
+                            0.0
+                        ],
+                        "Scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    },
+                    "Ease": [
+                        0.0,
+                        0.0,
+                        1.0,
+                        1.0
+                    ],
+                    "Interpolation": "Constant"
+                },
+                {
+                    "Time": 1.2,
+                    "Value": {
+                        "Location": [
+                            1.5,
+                            1.0,
+                            2.5
+                        ],
+                        "Rotation": [
+                            6.81,
+                            95.71,
+                            0.0
+                        ],
+                        "Scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    },
+                    "Ease": [
+                        0.55,
+                        0.085,
+                        0.68,
+                        0.53
+                    ],
+                    "Interpolation": "Bezier"
+                },
+                {
+                    "Time": 1.9666666666666666,
+                    "Value": {
+                        "Location": [
+                            1.5,
+                            15.0,
+                            2.5
+                        ],
+                        "Rotation": [
+                            6.81,
+                            95.71,
+                            0.0
+                        ],
+                        "Scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    },
+                    "Ease": [
+                        0.0,
+                        0.0,
+                        1.0,
+                        1.0
+                    ],
+                    "Interpolation": "Constant"
+                },
+                {
+                    "Time": 2.0,
+                    "Value": {
+                        "Location": [
+                            9.0,
+                            41.0,
+                            2.5
+                        ],
+                        "Rotation": [
+                            7.22,
+                            -129.29,
+                            0.0
+                        ],
+                        "Scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    },
+                    "Ease": [
+                        0.215,
+                        0.61,
+                        0.355,
+                        1.0
+                    ],
+                    "Interpolation": "Bezier"
+                },
+                {
+                    "Time": 3.4,
+                    "Value": {
+                        "Location": [
+                            9.0,
+                            41.0,
+                            2.5
+                        ],
+                        "Rotation": [
+                            10.74,
+                            -161.57,
+                            0.0
+                        ],
+                        "Scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    },
+                    "Ease": [
+                        0.0,
+                        0.0,
+                        1.0,
+                        1.0
+                    ],
+                    "Interpolation": "Linear"
+                },
+                {
+                    "Time": 3.7666666666666666,
+                    "Value": {
+                        "Location": [
+                            9.0,
+                            41.0,
+                            2.5
+                        ],
+                        "Rotation": [
+                            11.05,
+                            -167.47,
+                            0.0
+                        ],
+                        "Scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    },
+                    "Ease": [
+                        0.0,
+                        0.0,
+                        1.0,
+                        1.0
+                    ],
+                    "Interpolation": "Constant"
+                },
+                {
+                    "Time": 3.8,
+                    "Value": {
+                        "Location": [
+                            4.95,
+                            31.95,
+                            2.5
+                        ],
+                        "Rotation": [
+                            12.09,
+                            -135.0,
+                            0.0
+                        ],
+                        "Scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    },
+                    "Ease": [
+                        0.445,
+                        0.05,
+                        0.55,
+                        0.95
+                    ],
+                    "Interpolation": "Bezier"
+                },
+                {
+                    "Time": 4.4,
+                    "Value": {
+                        "Location": [
+                            1.81,
+                            33.76,
+                            2.5
+                        ],
+                        "Rotation": [
+                            12.1,
+                            -104.99,
+                            0.0
+                        ],
+                        "Scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    },
+                    "Ease": [
+                        0.0,
+                        0.0,
+                        1.0,
+                        1.0
+                    ],
+                    "Interpolation": "Linear"
+                },
+                {
+                    "Time": 5.0,
+                    "Value": {
+                        "Location": [
+                            -1.81,
+                            33.76,
+                            2.5
+                        ],
+                        "Rotation": [
+                            12.1,
+                            -75.01,
+                            0.0
+                        ],
+                        "Scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    },
+                    "Ease": [
+                        0.0,
+                        0.0,
+                        1.0,
+                        1.0
+                    ],
+                    "Interpolation": "Linear"
+                },
+                {
+                    "Time": 5.6,
+                    "Value": {
+                        "Location": [
+                            -4.95,
+                            31.95,
+                            2.5
+                        ],
+                        "Rotation": [
+                            12.09,
+                            -45.0,
+                            0.0
+                        ],
+                        "Scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    },
+                    "Ease": [
+                        0.0,
+                        0.0,
+                        1.0,
+                        1.0
+                    ],
+                    "Interpolation": "Linear"
+                },
+                {
+                    "Time": 6.8,
+                    "Value": {
+                        "Location": [
+                            -4.95,
+                            31.95,
+                            2.5
+                        ],
+                        "Rotation": [
+                            12.09,
+                            -45.0,
+                            0.0
+                        ],
+                        "Scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    },
+                    "Ease": [
+                        0.0,
+                        0.0,
+                        1.0,
+                        1.0
+                    ],
+                    "Interpolation": "Linear"
+                }
+            ]
+        },
+        {
+            "Type": "Float",
+            "Name": "Camera FOV",
+            "ValueType": "FOV",
+            "Binding": 0,
+            "Keys": [
+                {
+                    "Time": 0.0,
+                    "Value": 75.0,
+                    "Ease": [
+                        0.0,
+                        0.0,
+                        1.0,
+                        1.0
+                    ],
+                    "Interpolation": "Linear"
+                },
+                {
+                    "Time": 1.1666666666666667,
+                    "Value": 75.0,
+                    "Ease": [
+                        0.0,
+                        0.0,
+                        1.0,
+                        1.0
+                    ],
+                    "Interpolation": "Constant"
+                },
+                {
+                    "Time": 1.2,
+                    "Value": 80.0,
+                    "Ease": [
+                        0.0,
+                        0.0,
+                        1.0,
+                        1.0
+                    ],
+                    "Interpolation": "Linear"
+                },
+                {
+                    "Time": 1.9666666666666666,
+                    "Value": 90.0,
+                    "Ease": [
+                        0.0,
+                        0.0,
+                        1.0,
+                        1.0
+                    ],
+                    "Interpolation": "Constant"
+                },
+                {
+                    "Time": 2.0,
+                    "Value": 70.0,
+                    "Ease": [
+                        0.25,
+                        0.46,
+                        0.45,
+                        0.94
+                    ],
+                    "Interpolation": "Bezier"
+                },
+                {
+                    "Time": 3.4,
+                    "Value": 55.0,
+                    "Ease": [
+                        0.0,
+                        0.0,
+                        1.0,
+                        1.0
+                    ],
+                    "Interpolation": "Linear"
+                },
+                {
+                    "Time": 3.7666666666666666,
+                    "Value": 55.0,
+                    "Ease": [
+                        0.0,
+                        0.0,
+                        1.0,
+                        1.0
+                    ],
+                    "Interpolation": "Constant"
+                },
+                {
+                    "Time": 3.8,
+                    "Value": 60.0,
+                    "Ease": [
+                        0.0,
+                        0.0,
+                        1.0,
+                        1.0
+                    ],
+                    "Interpolation": "Linear"
+                },
+                {
+                    "Time": 6.8,
+                    "Value": 60.0,
+                    "Ease": [
+                        0.0,
+                        0.0,
+                        1.0,
+                        1.0
+                    ],
+                    "Interpolation": "Linear"
+                }
+            ]
+        },
+        {
+            "Type": "Transform",
+            "Name": "Winner",
+            "ValueType": "Transform",
+            "Binding": -1,
+            "Actor": "AVehiclePawn_0",
+            "Component": "BoxComponent_0",
+            "Keys": [
+                {
+                    "Time": 0.0,
+                    "Value": {
+                        "Location": [
+                            0.0,
+                            8.0,
+                            0.7
+                        ],
+                        "Rotation": [
+                            0.0,
+                            90,
+                            0.0
+                        ],
+                        "Scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    },
+                    "Ease": [
+                        0.0,
+                        0.0,
+                        1.0,
+                        1.0
+                    ],
+                    "Interpolation": "Linear"
+                },
+                {
+                    "Time": 1.2,
+                    "Value": {
+                        "Location": [
+                            0.0,
+                            8.0,
+                            0.7
+                        ],
+                        "Rotation": [
+                            0.0,
+                            90,
+                            0.0
+                        ],
+                        "Scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    },
+                    "Ease": [
+                        0.55,
+                        0.085,
+                        0.68,
+                        0.53
+                    ],
+                    "Interpolation": "Bezier"
+                },
+                {
+                    "Time": 2.0,
+                    "Value": {
+                        "Location": [
+                            0.0,
+                            22.0,
+                            0.7
+                        ],
+                        "Rotation": [
+                            0.0,
+                            90,
+                            0.0
+                        ],
+                        "Scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    },
+                    "Ease": [
+                        0.25,
+                        0.46,
+                        0.45,
+                        0.94
+                    ],
+                    "Interpolation": "Bezier"
+                },
+                {
+                    "Time": 2.6,
+                    "Value": {
+                        "Location": [
+                            0.0,
+                            27.0,
+                            0.7
+                        ],
+                        "Rotation": [
+                            0.0,
+                            90,
+                            0.0
+                        ],
+                        "Scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    },
+                    "Ease": [
+                        0.0,
+                        0.0,
+                        1.0,
+                        1.0
+                    ],
+                    "Interpolation": "Linear"
+                },
+                {
+                    "Time": 6.8,
+                    "Value": {
+                        "Location": [
+                            0.0,
+                            27.0,
+                            0.7
+                        ],
+                        "Rotation": [
+                            0.0,
+                            90,
+                            0.0
+                        ],
+                        "Scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    },
+                    "Ease": [
+                        0.0,
+                        0.0,
+                        1.0,
+                        1.0
+                    ],
+                    "Interpolation": "Linear"
+                }
+            ]
+        },
+        {
+            "Type": "Transform",
+            "Name": "Loser",
+            "ValueType": "Transform",
+            "Binding": -1,
+            "Actor": "AVehiclePawn_1",
+            "Component": "BoxComponent_0",
+            "Keys": [
+                {
+                    "Time": 0.0,
+                    "Value": {
+                        "Location": [
+                            0.0,
+                            26.0,
+                            0.7
+                        ],
+                        "Rotation": [
+                            0.0,
+                            -90,
+                            0.0
+                        ],
+                        "Scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    },
+                    "Ease": [
+                        0.0,
+                        0.0,
+                        1.0,
+                        1.0
+                    ],
+                    "Interpolation": "Linear"
+                },
+                {
+                    "Time": 2.0,
+                    "Value": {
+                        "Location": [
+                            0.0,
+                            26.0,
+                            0.7
+                        ],
+                        "Rotation": [
+                            0.0,
+                            -90,
+                            0.0
+                        ],
+                        "Scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    },
+                    "Ease": [
+                        0.25,
+                        0.46,
+                        0.45,
+                        0.94
+                    ],
+                    "Interpolation": "Bezier"
+                },
+                {
+                    "Time": 2.2666666666666666,
+                    "Value": {
+                        "Location": [
+                            0.3,
+                            29.0,
+                            2.0
+                        ],
+                        "Rotation": [
+                            -20,
+                            -75,
+                            35
+                        ],
+                        "Scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    },
+                    "Ease": [
+                        0.0,
+                        0.0,
+                        1.0,
+                        1.0
+                    ],
+                    "Interpolation": "Linear"
+                },
+                {
+                    "Time": 2.6,
+                    "Value": {
+                        "Location": [
+                            0.9,
+                            32.5,
+                            3.0
+                        ],
+                        "Rotation": [
+                            -35,
+                            -35,
+                            125
+                        ],
+                        "Scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    },
+                    "Ease": [
+                        0.445,
+                        0.05,
+                        0.55,
+                        0.95
+                    ],
+                    "Interpolation": "Bezier"
+                },
+                {
+                    "Time": 2.933333333333333,
+                    "Value": {
+                        "Location": [
+                            1.0,
+                            36.0,
+                            2.0
+                        ],
+                        "Rotation": [
+                            -20,
+                            5,
+                            215
+                        ],
+                        "Scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    },
+                    "Ease": [
+                        0.0,
+                        0.0,
+                        1.0,
+                        1.0
+                    ],
+                    "Interpolation": "Linear"
+                },
+                {
+                    "Time": 3.2666666666666666,
+                    "Value": {
+                        "Location": [
+                            0.8,
+                            39.2,
+                            0.9
+                        ],
+                        "Rotation": [
+                            -5,
+                            35,
+                            300
+                        ],
+                        "Scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    },
+                    "Ease": [
+                        0.25,
+                        0.46,
+                        0.45,
+                        0.94
+                    ],
+                    "Interpolation": "Bezier"
+                },
+                {
+                    "Time": 3.4,
+                    "Value": {
+                        "Location": [
+                            0.6,
+                            40.5,
+                            0.7
+                        ],
+                        "Rotation": [
+                            0.0,
+                            45,
+                            360
+                        ],
+                        "Scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    },
+                    "Ease": [
+                        0.25,
+                        0.46,
+                        0.45,
+                        0.94
+                    ],
+                    "Interpolation": "Bezier"
+                },
+                {
+                    "Time": 3.533333333333333,
+                    "Value": {
+                        "Location": [
+                            0.5,
+                            40.9,
+                            1.2
+                        ],
+                        "Rotation": [
+                            8,
+                            52,
+                            355
+                        ],
+                        "Scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    },
+                    "Ease": [
+                        0.445,
+                        0.05,
+                        0.55,
+                        0.95
+                    ],
+                    "Interpolation": "Bezier"
+                },
+                {
+                    "Time": 3.7333333333333334,
+                    "Value": {
+                        "Location": [
+                            0.5,
+                            41.1,
+                            0.7
+                        ],
+                        "Rotation": [
+                            0.0,
+                            55,
+                            360
+                        ],
+                        "Scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    },
+                    "Ease": [
+                        0.0,
+                        0.0,
+                        1.0,
+                        1.0
+                    ],
+                    "Interpolation": "Linear"
+                },
+                {
+                    "Time": 6.8,
+                    "Value": {
+                        "Location": [
+                            0.5,
+                            41.1,
+                            0.7
+                        ],
+                        "Rotation": [
+                            0.0,
+                            55,
+                            360
+                        ],
+                        "Scale": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ]
+                    },
+                    "Ease": [
+                        0.0,
+                        0.0,
+                        1.0,
+                        1.0
+                    ],
+                    "Interpolation": "Linear"
+                }
+            ]
+        },
+        {
+            "Type": "Event",
+            "Name": "Event",
+            "Keys": [
+                {
+                    "Time": 0.0,
+                    "Event": "Letterbox",
+                    "Params": {
+                        "Enable": true,
+                        "Ratio": 0.12
+                    }
+                },
+                {
+                    "Time": 0.0,
+                    "Event": "CameraFade",
+                    "Params": {
+                        "FromAlpha": 1.0,
+                        "ToAlpha": 0.0,
+                        "Duration": 0.6,
+                        "Color": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "Hold": false,
+                        "Ease": [
+                            0.0,
+                            0.0,
+                            1.0,
+                            1.0
+                        ]
+                    }
+                },
+                {
+                    "Time": 2.0,
+                    "Event": "HitStop",
+                    "Params": {
+                        "Duration": 0.12
+                    }
+                },
+                {
+                    "Time": 2.0,
+                    "Event": "CameraShake",
+                    "Params": {
+                        "Type": "Perlin",
+                        "Strength": 1.5,
+                        "Duration": 0.5,
+                        "Frequency": 25.0,
+                        "Ease": [
+                            0.0,
+                            0.0,
+                            1.0,
+                            1.0
+                        ]
+                    }
+                },
+                {
+                    "Time": 2.0,
+                    "Event": "CameraFade",
+                    "Params": {
+                        "FromAlpha": 0.6,
+                        "ToAlpha": 0.0,
+                        "Duration": 0.25,
+                        "Color": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ],
+                        "Hold": false,
+                        "Ease": [
+                            0.0,
+                            0.0,
+                            1.0,
+                            1.0
+                        ]
+                    }
+                },
+                {
+                    "Time": 2.066666666666667,
+                    "Event": "Slomo",
+                    "Params": {
+                        "TargetScale": 0.25,
+                        "Duration": 1.6,
+                        "BlendInTime": 0.0,
+                        "BlendOutTime": 0.3,
+                        "Ease": [
+                            0.0,
+                            0.0,
+                            1.0,
+                            1.0
+                        ]
+                    }
+                },
+                {
+                    "Time": 3.4,
+                    "Event": "CameraShake",
+                    "Params": {
+                        "Type": "Sine",
+                        "Strength": 0.6,
+                        "Duration": 0.4,
+                        "Frequency": 12.0,
+                        "Ease": [
+                            0.0,
+                            0.0,
+                            1.0,
+                            1.0
+                        ]
+                    }
+                },
+                {
+                    "Time": 5.7,
+                    "Event": "CameraFade",
+                    "Params": {
+                        "FromAlpha": 0.0,
+                        "ToAlpha": 1.0,
+                        "Duration": 0.8,
+                        "Color": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "Hold": true,
+                        "Ease": [
+                            0.0,
+                            0.0,
+                            1.0,
+                            1.0
+                        ]
+                    }
+                },
+                {
+                    "Time": 6.6,
+                    "Event": "Letterbox",
+                    "Params": {
+                        "Enable": false,
+                        "Ratio": 0.12
+                    }
+                },
+                {
+                    "Time": 6.6,
+                    "Event": "StopCameraFade",
+                    "Params": {}
+                }
+            ]
+        }
+    ]
+}

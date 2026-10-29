@@ -1,0 +1,185 @@
+{
+    "Actors": [
+        {
+            "Class": "ADirectionalLightActor",
+            "Components": [
+                {
+                    "Class": "UBillboardComponent",
+                    "Name": "UBillboardComponent_0",
+                    "Properties": {
+                        "Material": {
+                            "Base": "BillboardMaterial",
+                            "BaseColor": [
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "PSOType": 14,
+                            "SamplerState": "LinearClamp",
+                            "Shininess": 16.0,
+                            "SpecularColor": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "Textures": [
+                                "Editor/Icon/S_LightDirectional.png"
+                            ],
+                            "UVScrollSpeed": [
+                                0.0,
+                                0.0
+                            ]
+                        },
+                        "Transform": {
+                            "Location": [
+                                -10.0,
+                                0.0,
+                                10.0
+                            ],
+                            "Rotation": [
+                                60.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        },
+                        "bAutoActivate": true,
+                        "bBackfaceDepth": false,
+                        "bCastShadow": false,
+                        "bHiddenInGame": false,
+                        "bReceiveShadow": false,
+                        "bVisible": true
+                    }
+                },
+                {
+                    "Class": "UDirectionalLightComponent",
+                    "Name": "UDirectionalLightComponent_0",
+                    "Properties": {
+                        "CascadeBlendRange": 5.0,
+                        "CascadeCount": 5,
+                        "CascadeExponential": 3,
+                        "Intensity": 1.0,
+                        "LightColor": [
+                            1.0,
+                            1.0,
+                            1.0
+                        ],
+                        "ShadowBias": 0.5,
+                        "ShadowSlopeBias": 0.5,
+                        "ShadowSourceRadius": 0.11999999731779099,
+                        "Transform": {
+                            "Location": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        },
+                        "bAutoActivate": true,
+                        "bCascadeDebug": false,
+                        "bEnabled": true,
+                        "bHiddenInGame": false,
+                        "bShowLightBounds": true,
+                        "bVisible": true
+                    }
+                }
+            ],
+            "Properties": {
+                "bActorEnableCollision": true
+            }
+        },
+        {
+            "Class": "AStaticMeshActor",
+            "Components": [
+                {
+                    "Class": "UStaticMeshComponent",
+                    "Name": "UPrimitiveComponent_0",
+                    "Properties": {
+                        "OverrideMaterials": [],
+                        "StaticMesh": "Cube",
+                        "Transform": {
+                            "Location": [
+                                0.0,
+                                0.0,
+                                -10.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                300.0,
+                                300.0,
+                                1.0
+                            ]
+                        },
+                        "bAutoActivate": true,
+                        "bBackfaceDepth": false,
+                        "bCastShadow": true,
+                        "bHiddenInGame": false,
+                        "bReceiveShadow": true,
+                        "bVisible": true
+                    }
+                }
+            ],
+            "Properties": {
+                "bActorEnableCollision": true
+            }
+        },
+        {
+            "Class": "AStaticMeshActor",
+            "Components": [
+                {
+                    "Class": "UStaticMeshComponent",
+                    "Name": "UPrimitiveComponent_0",
+                    "Properties": {
+                        "OverrideMaterials": [],
+                        "StaticMesh": "Cube",
+                        "Transform": {
+                            "Location": [
+                                0.0,
+                                0.0,
+                                -8.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                300.0,
+                                3.0
+                            ]
+                        },
+                        "bAutoActivate": true,
+                        "bBackfaceDepth": false,
+                        "bCastShadow": true,
+                        "bHiddenInGame": false,
+                        "bReceiveShadow": true,
+                        "bVisible": true
+                    }
+                }
+            ],
+            "Properties": {
+                "bActorEnableCollision": true
+            }
+        }
+    ],
+    "Version": 2
+}

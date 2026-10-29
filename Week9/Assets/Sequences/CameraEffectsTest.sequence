@@ -1,0 +1,52 @@
+{
+  "Version": 1,
+  "Length": 12.0,
+  "FrameRate": 30.0,
+  "PlayRate": 1.0,
+  "Cameras": [],
+  "Tracks": [
+    {
+      "Type": "Event", "Name": "Reset letterbox - 0s",
+      "Keys": [
+        { "Time": 0.0, "Event": "Letterbox", "Params": { "Enable": false, "Ratio": 0.12 } }
+      ]
+    },
+    {
+      "Type": "Event", "Name": "Letterbox - 0.5s on / 10s off",
+      "Keys": [
+        { "Time": 0.5, "Event": "Letterbox", "Params": { "Enable": true, "Ratio": 0.12 } },
+        { "Time": 10.0, "Event": "Letterbox", "Params": { "Enable": false, "Ratio": 0.12 } }
+      ]
+    },
+    {
+      "Type": "Event", "Name": "Sine shake - 0.9s",
+      "Keys": [
+        { "Time": 0.0, "Event": "StopCameraShake", "Params": {} },
+        { "Time": 0.9, "Event": "CameraShake", "Params": { "Duration": 2.0, "Strength": 4.0, "Type": "Sine", "Frequency": 7.0, "Ease": [0.42, 0.0, 0.58, 1.0] } },
+        { "Time": 2.5, "Event": "StopCameraShake", "Params": {} }
+      ]
+    },
+    {
+      "Type": "Event", "Name": "Perlin shake - 3s",
+      "Keys": [
+        { "Time": 3.0, "Event": "CameraShake", "Params": { "Duration": 2.0, "Strength": 6.0, "Type": "Perlin", "Frequency": 12.0, "Ease": [0.42, 0.0, 0.58, 1.0] } },
+        { "Time": 4.6, "Event": "StopCameraShake", "Params": {} }
+      ]
+    },
+    {
+      "Type": "Event", "Name": "Black fade - 5s out / 6.5s in",
+      "Keys": [
+        { "Time": 0.0, "Event": "StopCameraFade", "Params": {} },
+        { "Time": 5.0, "Event": "CameraFade", "Params": { "FromAlpha": 0.0, "ToAlpha": 1.0, "Duration": 1.0, "Color": [0.0, 0.0, 0.0], "Hold": true, "Ease": [0.42, 0.0, 0.58, 1.0] } },
+        { "Time": 6.5, "Event": "CameraFade", "Params": { "FromAlpha": 1.0, "ToAlpha": 0.0, "Duration": 1.0, "Color": [0.0, 0.0, 0.0], "Hold": false, "Ease": [0.42, 0.0, 0.58, 1.0] } }
+      ]
+    },
+    {
+      "Type": "Event", "Name": "Color fade - 8s / stop 9.2s",
+      "Keys": [
+        { "Time": 8.0, "Event": "CameraFade", "Params": { "FromAlpha": 0.0, "ToAlpha": 0.65, "Duration": 0.8, "Color": [0.2, 0.05, 0.02], "Hold": true, "Ease": [0.42, 0.0, 0.58, 1.0] } },
+        { "Time": 9.2, "Event": "StopCameraFade", "Params": {} }
+      ]
+    }
+  ]
+}

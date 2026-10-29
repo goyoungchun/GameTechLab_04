@@ -1,0 +1,976 @@
+#include "EnginePCH.h"
+#include "World.h"
+#include "Level.h"
+
+#include "ObjectSystem/ObjectFactory.h"
+#include "Core/EngineStatics.h"
+#include "GameFramework/Actor/StaticMeshActor.h"
+
+#include "Camera/CameraActor.h"
+#include "Camera/CameraComponent.h"
+#include "Camera/PlayerCameraManager.h"
+#include "Camera/CameraTypes.h"
+#include "Input/InputSystem.h"
+
+#include "UObject/UObjectIterator.h"
+
+#include "Collision/Ray.h"
+#include "Collision/FPhysSceneChaos.h"
+#include "Collision/PhysicsSweep.h"
+#include "Component/BillboardComponent.h"
+#include "Component/ParticleSubUVComponent.h"
+
+#include "Component/StaticMeshComponent.h"
+#include "Component/PointLightComponent.h"
+#include "Asset/LOD/StaticMeshLODSelector.h"
+
+#include "Math/Frustum.h"
+#include <cmath>
+
+#include "Core/Stats/LightweightStats.h"
+#include "Core/Stats/EditorStats.h"
+
+#include "Script/ScriptSystem.h"
+#include "GameFramework/PlayerController.h"
+
+DECLARE_CYCLE_STAT("Actor Tick", STAT_ActorTick); // Actor 틱 측정
+DECLARE_CYCLE_STAT("Update All Transforms", STAT_UpdateAllTransforms); // 각 Transform의 Update 시간 측정
+
+
+
+UWorld::UWorld()
+	: PhysicsScene(MakeUnique<FPhysSceneChaos>(this))
+{
+}
+
+UWorld::~UWorld()
+{
+	// Scene이 사라지기 전에 남아 있는 컴포넌트의 World 연결을 끊는다.
+	for (TObjectIterator<UActorComponent> Component; Component; ++Component)
+		if (Component->GetWorld() == this && Component->IsRegistered())
+			Component->UnregisterComponent();
+	for (ACameraActor*& Camera : ViewCameraOverrides)
+	{
+		delete Camera;
+		Camera = nullptr;
+	}
+}
+
+bool  UWorld::Init()
+{
+	// Spawn Actor로 카메라 생성하고 세팅하기
+	PersistentLevel = FObjectFactory::ConstructObject<ULevel>();
+
+	if (!PersistentLevel)
+	{
+		HTR_LOG(Error, "Failed to create PersistentLevel");
+		return false;
+	}
+
+	//레벨 연결
+	PersistentLevel->SetWorld(this);
+	Levels.Add(PersistentLevel);
+	CurrentLevel = PersistentLevel;
+
+	//카메라 생성
+	CreateMainCamera();
+
+	return true;
+}
+
+AActor* UWorld::SpawnActor(UClass* Class, FName InName, const FTransform* Transform)
+{
+	if (!Class) return nullptr;
+	if (!Class->IsChildOf(AActor::StaticClass())) return nullptr;
+
+	// 1. ObjectFactory로 Actor 생성
+	AActor* NewActor = Cast<AActor>(FObjectFactory::ConstructObject(Class, PersistentLevel, InName));
+
+	if (!NewActor)
+	{
+		HTR_LOG(Error, "SpawnActor : Failed to create Actor");
+		return nullptr;
+	}
+
+	// 2. Actor에 World/Level 연결
+	NewActor->World = this;
+	NewActor->Level = PersistentLevel;
+
+	// 3. Transform 적용
+	const FTransform SpawnTransform = Transform ? *Transform : FTransform::Identity;
+
+	if (NewActor->GetRootComponent())
+	{
+		NewActor->GetRootComponent()->SetTransform(SpawnTransform);
+	}
+
+	PersistentLevel->AddActor(NewActor);
+	NewActor->RegisterAllComponents();
+
+	// 재생 중 스폰 시 대기 목록 추가
+	if (bBegunPlay)
+	{
+		BeginPlayList.Enqueue(NewActor);
+	}
+
+	return NewActor;
+}
+
+void UWorld::FlushDestroyList()
+{
+	while (!DestroyList.IsEmpty())
+	{
+		TArray<AActor*> ToDestroy = DestroyList;
+		DestroyList.Reset();
+		for (AActor* Actor : ToDestroy)
+		{
+			if (Actor)
+			{
+				DestroyActor(Actor);
+			}
+		}
+	}
+}
+
+void UWorld::Tick(EWorldTick TickType, float DeltaTime)
+{
+	CurrentTickType = TickType;
+	GameDeltaSeconds = 0.0f;
+
+	if (CurrentTickType == EWorldTick::All)
+	{
+		while (!BeginPlayList.IsEmpty())
+		{
+			BeginPlayList.Peek()->BeginPlay();
+			BeginPlayList.Dequeue();
+		}
+
+		if (!bIsPaused)
+		{
+			const float UnscaledDeltaTime = std::isfinite(DeltaTime) && DeltaTime > 0.0f ? DeltaTime : 0.0f;
+			UnscaledTimeSeconds += UnscaledDeltaTime;
+			const float GameDeltaTime = static_cast<float>(TimeController.GetGameDeltaTime(UnscaledDeltaTime));
+			GameDeltaSeconds = GameDeltaTime;
+			TimeController.Update(UnscaledDeltaTime);
+			SequenceManager.Tick(this, GameDeltaTime, UnscaledDeltaTime);
+			SCOPE_CYCLE_COUNTER(STAT_ActorTick);
+			GameUIBuffer.Clear();
+			TickTaskManager.RunTickGroup(ETickingGroup::PrePhysics, GameDeltaTime, UnscaledDeltaTime);
+			if (GameDeltaTime > 0.0f)
+				PhysicsScene->StartFrame(GameDeltaTime);
+			TickTaskManager.RunTickGroup(ETickingGroup::DuringPhysics, GameDeltaTime, UnscaledDeltaTime);
+			if (GameDeltaTime > 0.0f)
+				PhysicsScene->EndFrame();
+			TickTaskManager.RunTickGroup(ETickingGroup::PostPhysics, GameDeltaTime, UnscaledDeltaTime);
+			TickTaskManager.RunTickGroup(ETickingGroup::PostUpdateWork, GameDeltaTime, UnscaledDeltaTime);
+			for (APlayerController* PC : PlayerControllers)
+				if (PC) PC->UpdateCameraManager(GameDeltaTime);
+			// 차량과 카메라 매니저 갱신 후의 실제 시점으로 복귀를 마무리한다.
+			UpdateViewCameraBlends();
+
+			if (GameDeltaTime > 0.0f)
+			{
+				for (ULevel* Level : Levels)
+				{
+					PathTracker.Tick(Level->GetActors(), GameDeltaTime);
+				}
+			}
+		}
+		FlushDestroyList();
+	}
+	else if (WorldType == EWorldType::Editor)
+	{
+
+		for (TObjectIterator<UParticleSubUVComponent> Comp; Comp; ++Comp)
+		{
+			if (!Comp->IsRegistered() || Comp->GetWorld() != this) continue;
+			Comp->SetParticles(10); // 이걸 매틱마다 하는게 맞나?
+			Comp->TickComponent(DeltaTime);
+		}
+	}
+
+
+
+	{
+		SCOPE_CYCLE_COUNTER(STAT_UpdateAllTransforms);
+		Scene.UpdateAllTransforms();
+	}
+}
+
+void UWorld::ClearWorld()
+{
+	SequenceManager.StopAll(this);
+	for (int32 Index = 0; Index < MaxViewCameraOverrides; ++Index)
+		ClearViewCameraOverride(Index);
+	UnscaledTimeSeconds = 0.0;
+
+	// BeginPlay 대기 중인 Actor 제거
+	while (!BeginPlayList.IsEmpty())
+	{
+		BeginPlayList.Dequeue();
+	}
+
+	PathTracker.SetPlaybackEnabled(false);
+	PathTracker.SetPathRenderingEnabled(false);
+	PathTracker.ClearPath();
+
+	// 컴포넌트 해제로 프록시와 Tick을 정리한 후 액터를 삭제한다.
+	for (ULevel* Level : Levels)
+	{
+		for (AActor* Actor : Level->Actors)
+			if (Actor)
+			{
+				Actor->RegisterAllActorTickFunctions(false);
+				Actor->UnregisterAllComponents();
+			}
+		Level->ClearActors();
+	}
+	Scene.RemoveAllPrimitives();
+	Scene.RemoveAllLights();
+	PlayerControllers.Reset();
+	DestroyList.Reset();
+	HTR_LOG(Info, "{} : ", PersistentLevel->GetActorNum());
+}
+
+// 메인 카메라 생성
+void UWorld::CreateMainCamera()
+{
+	if (MainCamera)
+		return;
+
+	MainCamera = FObjectFactory::ConstructObject<ACameraActor>();
+
+	if (!MainCamera)
+	{
+		HTR_LOG(Error, "Failed to create MainCamera");
+		return;
+	}
+
+	MainCamera->World = this;
+	MainCamera->Level = nullptr;
+	MainCamera->GetCameraComponent()->SetRelativeLocation(FVector(-5.0f, -5.0f, 5.0f));
+
+	// 메인 카메라는 Level에 속하지 않아 BeginPlay를 거치지 않으므로 여기서 등록한다.
+	MainCamera->RegisterAllComponents();
+	MainCamera->GetCameraComponent()->InitializeComponent();
+	MainCamera->GetCameraComponent()->Activate();
+	MainCamera->RegisterAllActorTickFunctions(true);
+}
+
+void UWorld::SetMainCamera(ACameraActor* Camera)
+{
+	if (MainCamera == Camera)
+		return;
+
+	if (MainCamera)
+	{
+		MainCamera->RegisterAllActorTickFunctions(false);
+		MainCamera->UnregisterAllComponents();
+	}
+
+	MainCamera = Camera;
+
+	if (MainCamera)
+	{
+		MainCamera->World = this;
+		MainCamera->RegisterAllComponents();
+		MainCamera->GetCameraComponent()->InitializeComponent();
+		MainCamera->GetCameraComponent()->Activate();
+		MainCamera->RegisterAllActorTickFunctions(true);
+	}
+}
+
+bool UWorld::CalcPlayerCameraView(int32 PlayerIndex, FMinimalViewInfo& OutView) const
+{
+	if (APlayerController* PC = GetPlayerController(static_cast<uint32>(PlayerIndex)))
+	{
+		if (const APlayerCameraManager* Manager = PC->GetCameraManager(); Manager && Manager->IsCameraCacheValid())
+		{
+			OutView = Manager->GetCameraCacheView();
+			return true;
+		}
+	}
+	if (APawn* Pawn = GetPlayerPawn(static_cast<uint32>(PlayerIndex)))
+		Pawn->CalcCamera(OutView);
+	else if (MainCamera)
+		MainCamera->CalcCamera(OutView);
+	else
+		return false;
+	return true;
+}
+
+void UWorld::SetViewCameraOverride(int32 PlayerIndex, const FVector& Location, const FRotator& Rotation, float BlendTime)
+{
+	if (PlayerIndex < 0 || PlayerIndex >= MaxViewCameraOverrides)
+		return;
+
+	const bool bBlend = std::isfinite(BlendTime) && BlendTime > 0.0f;
+	FMinimalViewInfo StartView;
+	if (bBlend)
+	{
+		if (UCameraComponent* CurrentCamera = GetViewCameraOverride(PlayerIndex))
+			CurrentCamera->GetCameraView(StartView);
+		else
+			CalcPlayerCameraView(PlayerIndex, StartView);
+	}
+
+	ACameraActor*& Camera = ViewCameraOverrides[PlayerIndex];
+	if (!Camera)
+	{
+		Camera = FObjectFactory::ConstructObject<ACameraActor>();
+		if (!Camera)
+			return;
+		Camera->World = this;
+		Camera->Level = nullptr;
+		Camera->GetCameraComponent()->SetExternalInputManaged(true);
+	}
+
+	UCameraComponent* CameraComponent = Camera->GetCameraComponent();
+	FViewCameraBlend& Blend = ViewCameraBlends[PlayerIndex];
+	const float TargetFOV = Blend.Duration > 0.0 ? Blend.TargetFOV : CameraComponent->GetFieldOfView();
+	Blend = {};
+	FTransform Transform = CameraComponent->GetTransform();
+	Transform.Location = Location;
+	Transform.Rotation = Rotation;
+	if (bBlend)
+	{
+		Blend.StartLocation = StartView.Location;
+		Blend.TargetLocation = Location;
+		Blend.StartRotation = StartView.Rotation.Quaternion();
+		Blend.TargetRotation = Rotation.Quaternion();
+		Blend.StartFOV = StartView.FOV;
+		Blend.TargetFOV = TargetFOV;
+		Blend.Duration = BlendTime;
+		Blend.StartTime = UnscaledTimeSeconds;
+		// 첫 화면은 기존 시점과 정확히 같게 두고 다음 프레임부터 이동한다.
+		Transform.Location = StartView.Location;
+		Transform.Rotation = StartView.Rotation;
+		CameraComponent->SetFieldOfView(StartView.FOV);
+	}
+	else
+		CameraComponent->SetFieldOfView(TargetFOV);
+	CameraComponent->SetTransform(Transform);
+	bViewCameraOverrideActive[PlayerIndex] = true;
+}
+
+void UWorld::UpdateViewCameraBlends()
+{
+	for (int32 Index = 0; Index < MaxViewCameraOverrides; ++Index)
+	{
+		FViewCameraBlend& Blend = ViewCameraBlends[Index];
+		UCameraComponent* Camera = GetViewCameraOverride(Index);
+		if (!Camera || Blend.Duration <= 0.0)
+			continue;
+		if (Blend.bReturnToPlayer)
+		{
+			FMinimalViewInfo TargetView;
+			if (!CalcPlayerCameraView(Index, TargetView))
+			{
+				ClearViewCameraOverride(Index);
+				continue;
+			}
+			Blend.TargetLocation = TargetView.Location;
+			Blend.TargetRotation = TargetView.Rotation.Quaternion();
+			Blend.TargetFOV = TargetView.FOV;
+		}
+		const double Elapsed = std::clamp(UnscaledTimeSeconds - Blend.StartTime, 0.0, Blend.Duration);
+		const float Alpha = static_cast<float>(Elapsed / Blend.Duration);
+		const float Weight = Alpha * Alpha * (3.0f - 2.0f * Alpha);
+		FTransform Transform = Camera->GetTransform();
+		Transform.Location = Blend.StartLocation + (Blend.TargetLocation - Blend.StartLocation) * Weight;
+		Transform.Rotation = FQuat::Slerp(Blend.StartRotation, Blend.TargetRotation, Weight).ToFRotator();
+		Camera->SetTransform(Transform);
+		Camera->SetFieldOfView(Blend.StartFOV + (Blend.TargetFOV - Blend.StartFOV) * Weight);
+		if (Elapsed >= Blend.Duration)
+		{
+			if (Blend.bReturnToPlayer)
+				ClearViewCameraOverride(Index);
+			else
+				Blend.Duration = 0.0;
+		}
+	}
+}
+
+void UWorld::ClearViewCameraOverride(int32 PlayerIndex, float BlendTime)
+{
+	if (PlayerIndex < 0 || PlayerIndex >= MaxViewCameraOverrides)
+		return;
+	FViewCameraBlend& Blend = ViewCameraBlends[PlayerIndex];
+	if (std::isfinite(BlendTime) && BlendTime > 0.0f)
+	{
+		UCameraComponent* Camera = GetViewCameraOverride(PlayerIndex);
+		FMinimalViewInfo TargetView;
+		if (Camera && CalcPlayerCameraView(PlayerIndex, TargetView))
+		{
+			FMinimalViewInfo StartView;
+			Camera->GetCameraView(StartView);
+			Blend = {};
+			Blend.StartLocation = StartView.Location;
+			Blend.StartRotation = StartView.Rotation.Quaternion();
+			Blend.StartFOV = StartView.FOV;
+			Blend.TargetLocation = TargetView.Location;
+			Blend.TargetRotation = TargetView.Rotation.Quaternion();
+			Blend.TargetFOV = TargetView.FOV;
+			Blend.Duration = BlendTime;
+			Blend.StartTime = UnscaledTimeSeconds;
+			Blend.bReturnToPlayer = true;
+			return;
+		}
+	}
+	if (Blend.Duration > 0.0 && ViewCameraOverrides[PlayerIndex])
+		ViewCameraOverrides[PlayerIndex]->GetCameraComponent()->SetFieldOfView(Blend.TargetFOV);
+	Blend = {};
+	bViewCameraOverrideActive[PlayerIndex] = false;
+}
+
+UCameraComponent* UWorld::GetViewCameraOverride(int32 PlayerIndex) const
+{
+	if (PlayerIndex < 0 || PlayerIndex >= MaxViewCameraOverrides || !bViewCameraOverrideActive[PlayerIndex])
+		return nullptr;
+	ACameraActor* Camera = ViewCameraOverrides[PlayerIndex];
+	return Camera ? Camera->GetCameraComponent() : nullptr;
+}
+
+int32 UWorld::GetActorNum()
+{
+	return PersistentLevel->GetActorNum();
+}
+
+void UWorld::AddDestroyList(AActor* InActor)
+{
+	DestroyList.Add(InActor);
+}
+
+bool UWorld::DestroyActor(AActor* Actor)
+{
+	int32 Index = DestroyList.Find(Actor);
+	if (Index >= 0 && Index < DestroyList.Num())
+	{
+		DestroyList.RemoveAt(Index, 1);
+	}
+
+	if (!Actor)
+		return false;
+
+	ULevel* Level = Actor->GetLevel();
+
+	if (!Level)
+		return false;
+
+	// 1. BeginPlay 대기열에서 제거
+	TQueue<AActor*> NewBeginPlayList;
+
+	while (!BeginPlayList.IsEmpty())
+	{
+		AActor* PendingActor = BeginPlayList.Peek();
+		BeginPlayList.Dequeue();
+
+		if (PendingActor != Actor)
+		{
+			NewBeginPlayList.Enqueue(PendingActor);
+		}
+	}
+
+	BeginPlayList = std::move(NewBeginPlayList);
+
+	// 2. PathTracker에서 제거
+	PathTracker.OnObjectDestroyed(Actor);
+
+	// 3. PlayerController / CameraManager
+	for (APlayerController* PC : PlayerControllers)
+	{
+		if (PC && PC != Actor)
+			PC->OnActorDestroyed(Actor);
+	}
+
+	// 4. Level의 Actors에서 제거
+	for (int32 i = Level->Actors.Num() - 1; i >= 0; --i)
+	{
+		if (Level->Actors[i] == Actor)
+		{
+			Level->Actors.RemoveAt(i, 1);
+			break;
+		}
+	}
+
+	FString ActorName = Actor->GetName();
+	uint32 ActorUUID = Actor->GetUUID();
+
+	Actor->EndPlay();
+	Actor->RegisterAllActorTickFunctions(false);
+	Actor->UnregisterAllComponents();
+
+	// 6. Actor 삭제
+	delete Actor;
+
+	HTR_LOG(Info, "Destroy Actor : {} UUID {}", ActorName, ActorUUID);
+
+	return true;
+}
+
+// 다른 World의 객체를 제외하고 Component 교차 중 최근접 결과를 선택한다.
+bool UWorld::LineTraceSingle(const FRay& WorldRay, FHitResult& OutHit,
+	FBillboardTraceTransform ResolveBillboard, const void* ViewContext)
+{
+	SCOPE_CYCLE_COUNTER_ALWAYS(EditorStats::STAT_PickingTime_Name);
+	OutHit = FHitResult();
+	float NearestT = std::numeric_limits<float>::max();
+
+	const auto TraceComponent = [&](FPrimitiveSceneProxy* Proxy, float& InOutNearestT)
+	{
+		if (UStaticMesh* Mesh = Proxy ? Proxy->GetMesh() : nullptr)
+		{
+			if (!Proxy->IsVisible())
+				return false;
+
+			const FMatrix& WorldToLocal = Proxy->GetWorldToLocal();
+			const FRay LocalRay{
+				.Origin = WorldToLocal.TransformPosition(WorldRay.Origin),
+				.Direction = WorldToLocal.TransformVector(WorldRay.Direction)
+			};
+
+			float T = InOutNearestT;
+			if (!RayIntersectsMesh(LocalRay, Mesh->GetMeshData(), T))
+				return false;
+
+			OutHit.HitComponent = Proxy->GetComponent();
+			OutHit.Distance = T;
+			OutHit.ImpactPoint = WorldRay.Origin + WorldRay.Direction * T;
+			InOutNearestT = T;
+			return true;
+		}
+
+		UPrimitiveComponent* Component = Proxy ? Proxy->GetComponent() : nullptr;
+
+		if (!Component || !Component->IsVisible())
+			return false;
+
+		if (UBillboardComponent* Billboard = Cast<UBillboardComponent>(Component))
+		{
+			if (!ResolveBillboard)
+			{
+				FHitResult Hit;
+				if (!Billboard->LineTraceComponent(WorldRay, Hit) ||
+					Hit.Distance >= InOutNearestT)
+				{
+					return false;
+				}
+
+				OutHit = Hit;
+				InOutNearestT = Hit.Distance;
+				return true;
+			}
+
+			const FMatrix BillboardToWorld = ResolveBillboard(*Billboard, ViewContext);
+
+			const FRay LocalRay = ToLocalRay(WorldRay, BillboardToWorld);
+
+			float T = InOutNearestT;
+			if (!Billboard->LineTraceComponentLocal(LocalRay, T))
+			{
+				return false;
+			}
+
+			OutHit.HitComponent = Billboard;
+			OutHit.Distance = T;
+			OutHit.ImpactPoint = WorldRay.Origin + WorldRay.Direction * T;
+			InOutNearestT = T;
+			return true;
+		}
+
+		const FMatrix& WorldToLocal = Proxy->GetWorldToLocal();
+		const FRay LocalRay{
+			.Origin = WorldToLocal.TransformPosition(WorldRay.Origin),
+			.Direction = WorldToLocal.TransformVector(WorldRay.Direction)
+		};
+
+		float T = InOutNearestT;
+		if (!Component->LineTraceComponentLocal(LocalRay, T))
+		{
+			return false;
+		}
+
+		OutHit.HitComponent = Component;
+		OutHit.Distance = T;
+		OutHit.ImpactPoint = WorldRay.Origin + WorldRay.Direction * T;
+		InOutNearestT = T;
+		return true;
+	};
+
+	const FPreparedRay PreparedRay(WorldRay);
+
+	Scene.BVH.TraceClosest(
+		[&](const FBox& Bounds, float& OutEnterT) { return RayIntersectsAABB(PreparedRay, Bounds.Min, Bounds.Max, OutEnterT); },
+		[&](FPrimitiveSceneProxy* Proxy, float& OutNearestT) { return TraceComponent(Proxy, OutNearestT); },
+		NearestT);
+
+	return OutHit.HitComponent != nullptr;
+}
+
+bool UWorld::SweepSingle(const FRay& WorldRay, float MaxDistance, float Radius, FHitResult& OutHit,
+	AActor* IgnoreActor, const UPrimitiveComponent* MovingComponent, TArray<FHitResult>* OutOverlaps)
+{
+	OutHit = FHitResult(1.0f);
+	if (OutOverlaps) OutOverlaps->Reset();
+	if (MaxDistance <= 0.0f || !std::isfinite(MaxDistance) || Radius < 0.0f || !std::isfinite(Radius)) return false;
+	if (MovingComponent && (MovingComponent->GetWorld() != this
+		|| (MovingComponent->GetOwner() && !MovingComponent->GetOwner()->GetActorEnableCollision()))) return false;
+	const float DirectionLength = WorldRay.Direction.Length();
+	if (!std::isfinite(DirectionLength) || DirectionLength <= 0.0f) return false;
+	const FRay Ray{ WorldRay.Origin, WorldRay.Direction / DirectionLength };
+	const FVector End = Ray.PointAt(MaxDistance);
+	const FVector Padding(Radius);
+	const FBox Bounds{
+		FVector(std::min(Ray.Origin.X, End.X), std::min(Ray.Origin.Y, End.Y), std::min(Ray.Origin.Z, End.Z)) - Padding,
+		FVector(std::max(Ray.Origin.X, End.X), std::max(Ray.Origin.Y, End.Y), std::max(Ray.Origin.Z, End.Z)) + Padding };
+	TArray<UPrimitiveComponent*> Candidates;
+	PhysicsScene->GatherSweepCandidates(Bounds, Candidates);
+	TArray<FHitResult> Overlaps;
+	float NearestDistance = MaxDistance;
+	for (UPrimitiveComponent* Target : Candidates)
+	{
+		const AActor* TargetOwner = Target->GetOwner();
+		if (Target == MovingComponent || (TargetOwner && (TargetOwner == IgnoreActor || !TargetOwner->GetActorEnableCollision()))
+			|| (MovingComponent && MovingComponent->GetOwner() && TargetOwner == MovingComponent->GetOwner())) continue;
+		const ECollisionChannel MovingChannel = MovingComponent ? MovingComponent->GetObjectChannel() : ECollisionChannel::WorldDynamic;
+		const ECollisionResponse MovingResponse = MovingComponent
+			? MovingComponent->GetCollisionResponseToChannel(Target->GetObjectChannel()) : ECollisionResponse::Block;
+		const ECollisionResponse Response = ResolveCollisionResponse(MovingResponse, Target->GetCollisionResponseToChannel(MovingChannel));
+		if (Response == ECollisionResponse::Ignore) continue;
+		FHitResult Hit;
+		if (!SweepSphereAgainstComponent(Ray, MaxDistance, Radius, Target, Hit)) continue;
+		Hit.bBlockingHit = Response == ECollisionResponse::Block;
+		if (Response == ECollisionResponse::Overlap)
+		{
+			if (OutOverlaps) Overlaps.Add(Hit);
+		}
+		else if ((Hit.Distance > 1e-6f || Hit.bStartPenetrating || Hit.Normal.Dot(Ray.Direction) < -1e-6f)
+			&& Hit.Distance <= NearestDistance)
+		{
+			NearestDistance = Hit.Distance;
+			OutHit = Hit;
+		}
+	}
+	if (OutOverlaps)
+	{
+		std::stable_sort(Overlaps.begin(), Overlaps.end(), [](const FHitResult& A, const FHitResult& B) { return A.Distance < B.Distance; });
+		for (const FHitResult& Hit : Overlaps)
+			if (Hit.Distance <= NearestDistance + 1e-5f) OutOverlaps->Add(Hit);
+	}
+	return OutHit.bBlockingHit;
+}
+
+void UWorld::BeginPlay()
+{
+	FScriptSystem::Get().Init();
+
+	// 플레이 모드 폰 및 컨트롤러 준비
+	if (WorldType == EWorldType::PIE)
+	{
+		APawn* PlayerPawn = nullptr;
+		if (!PlayerPawn)
+		{
+			for (ULevel* Level : Levels)
+			{
+				if (Level)
+				{
+					for (AActor* Actor : Level->GetActors())
+					{
+						if (APawn* ExistingPawn = Cast<APawn>(Actor))
+						{
+							PlayerPawn = ExistingPawn;
+							break;
+						}
+					}
+					if (PlayerPawn)
+					{
+						break;
+					}
+				}
+			}
+		}
+
+		if (!PlayerPawn)
+		{
+			const FTransform* SpawnTransform = nullptr;
+			FTransform TempTransform;
+			if (MainCamera)
+			{
+				TempTransform = MainCamera->GetActorTransform();
+				SpawnTransform = &TempTransform;
+			}
+			PlayerPawn = SpawnActor<ADefaultPawn>(NAME_None, SpawnTransform);
+		}
+
+		RegisterPlayer(PlayerPawn);
+	}
+
+    // BeginPlay can spawn actors (for example the Pawn's projectile pool).
+    // Snapshot the initial actors before callbacks; newly spawned actors enter BeginPlayList.
+    TArray<AActor*> InitialActors;
+    for (ULevel* Level : Levels)
+        if (Level)
+            for (AActor* Actor : Level->GetActors())
+                if (Actor) InitialActors.Add(Actor);
+
+    bBegunPlay = true;
+    for (AActor* Actor : InitialActors) Actor->BeginPlay();
+
+	// 대기열 액터 재생 시작
+	while (!BeginPlayList.IsEmpty())
+	{
+		BeginPlayList.Peek()->BeginPlay();
+		BeginPlayList.Dequeue();
+	}
+}
+
+void UWorld::EndPlay()
+{
+	// 아직 BeginPlay 전인 시퀀스 카메라도 Actor 스냅샷을 만들기 전에 정리한다.
+	SequenceManager.StopAll(this);
+	bBegunPlay = false;
+
+	TArray<AActor*> InitialActors;
+	for (ULevel* Level : Levels)
+		if (Level)
+			for (AActor* Actor : Level->GetActors())
+				if (Actor) InitialActors.Add(Actor);
+
+	for (AActor* Actor : InitialActors) Actor->EndPlay();
+	FScriptSystem::Get().Shutdown();
+}
+
+bool UWorld::DuplicateWorld(UWorld* Source)
+{
+	// 복제 대상은 아직 초기화하지 않은 월드여야 한다.
+	if (!Source || Source == this || !Source->GetPersistentLevel() ||
+		!Levels.IsEmpty() || MainCamera)
+		return false;
+
+	TMap<UObject*, UObject*> OriginalToDuplicate;
+	OriginalToDuplicate.Add(Source, this);
+
+	auto Resolve = [&](UObject* Original) -> UObject*
+	{
+		UObject** Duplicate = OriginalToDuplicate.Find(Original);
+		return Duplicate ? *Duplicate : nullptr;
+	};
+
+	// 생성된 객체는 즉시 레벨/액터의 소유 목록에 넣어 실패 시에도 회수한다.
+	auto CloneActor = [&](AActor* Original, ULevel* Level) -> bool
+	{
+		AActor* Duplicate = Cast<AActor>(FObjectFactory::ConstructObject(Original->GetClass(),
+			Level ? static_cast<UObject*>(Level) : this));
+		if (!Duplicate) return false;
+		Duplicate->SetName(Original->GetFName());
+		Duplicate->SetWorld(this);
+		Duplicate->SetLevel(Level);
+		if (Level) Level->AddActor(Duplicate);
+		else MainCamera = Cast<ACameraActor>(Duplicate);
+		OriginalToDuplicate.Add(Original, Duplicate);
+
+		for (UActorComponent* Component : Original->GetComponents())
+		{
+			if (!Component) continue;
+			UActorComponent* Copy = nullptr;
+			for (UActorComponent* Default : Duplicate->GetComponents())
+			{
+				if (Default && Default->GetFName() == Component->GetFName() &&
+					Default->GetClass() == Component->GetClass())
+				{
+					Copy = Default;
+					break;
+				}
+			}
+			if (!Copy)
+			{
+				Copy = Cast<UActorComponent>(FObjectFactory::ConstructObject(Component->GetClass(), Duplicate));
+				if (!Copy) return false;
+				Copy->SetName(Component->GetFName());
+				Duplicate->AddComponents(Copy);
+			}
+			Copy->SetOwner(Duplicate);
+			OriginalToDuplicate.Add(Component, Copy);
+		}
+		return true;
+	};
+
+	auto Rollback = [&]() -> bool
+	{
+		for (ULevel* Level : Levels)
+			for (AActor* Actor : Level->GetActors())
+				if (Actor) { Actor->RegisterAllActorTickFunctions(false); Actor->UnregisterAllComponents(); }
+		Scene.RemoveAllPrimitives();
+		Scene.RemoveAllLights();
+		ACameraActor* Camera = MainCamera;
+		const bool bStandaloneCamera = Camera && !Camera->GetLevel();
+		SetMainCamera(nullptr);
+		for (ULevel* Level : Levels)
+		{
+			Level->ClearActors();
+			delete Level;
+		}
+		if (bStandaloneCamera) delete Camera;
+		Levels.Reset();
+		PersistentLevel = CurrentLevel = nullptr;
+		return false;
+	};
+
+	try
+	{
+		// 1. 원본과 같은 객체 집합을 먼저 만든다. Init()의 빈 레벨은 만들지 않는다.
+		for (ULevel* Original : Source->GetLevel())
+		{
+			if (!Original) continue;
+			ULevel* Copy = Cast<ULevel>(FObjectFactory::ConstructObject(Original->GetClass(), this));
+			if (!Copy) return Rollback();
+			Copy->SetName(Original->GetFName());
+			Copy->SetWorld(this);
+			Levels.Add(Copy);
+			OriginalToDuplicate.Add(Original, Copy);
+			for (AActor* Actor : Original->GetActors())
+				if (Actor && !CloneActor(Actor, Copy)) return Rollback();
+		}
+		ACameraActor* OriginalCamera = Source->GetMainCamera();
+		if (OriginalCamera && !Resolve(OriginalCamera) && !CloneActor(OriginalCamera, nullptr))
+			return Rollback();
+
+		// 2. 직렬화 프로퍼티를 복사한다. 메모리상의 에셋은 다시 로드하지 않고 공유한다.
+		for (const auto& Pair : OriginalToDuplicate)
+		{
+			json Data = json::object();
+			Pair.first->Serialize(Data, false);
+			for (UClass* Class = Pair.first->GetClass(); Class; Class = Class->Super)
+				for (const FProperty& Property : Class->GetProperties())
+					if (Property.Type == EPropertyType::Object) Data.erase(Property.Name);
+			Data.erase("OverrideMaterials");
+			Pair.second->Serialize(Data, true);
+
+			for (UClass* Class = Pair.first->GetClass(); Class; Class = Class->Super)
+			{
+				for (const FProperty& Property : Class->GetProperties())
+				{
+					if (Property.Type != EPropertyType::Object) continue;
+					UObject* Reference = *reinterpret_cast<UObject**>(reinterpret_cast<uint8*>(Pair.first) + Property.Offset);
+					UObject* Remapped = Resolve(Reference);
+					*reinterpret_cast<UObject**>(reinterpret_cast<uint8*>(Pair.second) + Property.Offset) =
+						Remapped ? Remapped : Reference;
+					Pair.second->OnPropertyChanged(Property.Name);
+				}
+			}
+			if (UMeshComponent* Mesh = Cast<UMeshComponent>(Pair.first))
+			{
+				UMeshComponent* Copy = Cast<UMeshComponent>(Pair.second);
+				for (int32 Slot = 0; Slot < Mesh->GetNumMaterials(); ++Slot)
+					Copy->SetMaterial(Slot, Mesh->GetOverrideMaterial(Slot));
+			}
+			// Camera settings are not reflected; keep the source projection and controls.
+			if (UCameraComponent* Camera = Cast<UCameraComponent>(Pair.first))
+			{
+				UCameraComponent* Copy = Cast<UCameraComponent>(Pair.second);
+				Copy->SetFieldOfView(Camera->GetFieldOfView());
+				Copy->SetAspectRatio(Camera->GetAspectRatio());
+				Copy->SetNearZ(Camera->GetNearZ());
+				Copy->SetFarZ(Camera->GetFarZ());
+				Copy->SetIsOrthogonal(Camera->GetIsOrthogonal());
+				Copy->SetOrthoWidth(Camera->GetOrthoWidth());
+				Copy->SetMoveSpeed(Camera->GetMoveSpeed());
+				Copy->SetMouseSensitivity(Camera->GetMouseSensitivity());
+				Copy->SetWheelSpeed(Camera->GetWheelSpeed());
+			}
+		}
+
+		// 3. 모든 객체가 존재하는 상태에서 루트와 부모 연결을 복원한다.
+		for (const auto& Pair : OriginalToDuplicate)
+		{
+			if (AActor* Actor = Cast<AActor>(Pair.first))
+				Cast<AActor>(Pair.second)->SetRootComponent(Cast<USceneComponent>(Resolve(Actor->GetRootComponent())));
+			if (USceneComponent* Component = Cast<USceneComponent>(Pair.first))
+			{
+				USceneComponent* Copy = Cast<USceneComponent>(Pair.second);
+				Copy->SetupAttachment(Cast<USceneComponent>(Resolve(Component->GetAttachParent())));
+				Copy->SetTransform(Component->GetTransform());
+			}
+		}
+		PersistentLevel = Cast<ULevel>(Resolve(Source->GetPersistentLevel()));
+		CurrentLevel = Cast<ULevel>(Resolve(Source->GetCurrentLevel()));
+		if (!PersistentLevel || !CurrentLevel) return Rollback();
+		MainCamera = Cast<ACameraActor>(Resolve(OriginalCamera));
+		if (!MainCamera) CreateMainCamera();
+		if (!MainCamera) return Rollback();
+		MainCamera->RegisterAllComponents();
+		MainCamera->GetCameraComponent()->InitializeComponent();
+		MainCamera->GetCameraComponent()->Activate();
+		MainCamera->RegisterAllActorTickFunctions(true);
+
+		// 4. 완성된 소유/부모 관계로 프록시를 생성한다.
+		for (const auto& Pair : OriginalToDuplicate)
+		{
+			if (AActor* Actor = Cast<AActor>(Pair.second)) Actor->RegisterAllComponents();
+		}
+		WorldType = EWorldType::PIE;
+		return true;
+	}
+	catch (const std::exception& Error)
+	{
+		HTR_LOG(Error, "World duplication failed: {}", Error.what());
+		return Rollback();
+	}
+}
+
+int32 UWorld::RegisterPlayer(APawn* InPawnPtr)
+{
+	if (!InPawnPtr)
+	{
+		HTR_LOG(Warning, "nullptr can't registered");
+		return -1;
+	}
+
+	for (int32 i = 0; i < PlayerControllers.Num(); ++i)
+	{
+		if (PlayerControllers[i]->GetPawn() == InPawnPtr)
+		{
+			// 이미 등록된 Pawn의 경우 해당 인덱스 return 
+			HTR_LOG(Info, "Already registered Pawn - index {}", i);
+			return i;
+		}
+	}
+
+	APlayerController* PC = SpawnActor<APlayerController>();
+	PC->SpawnPlayerCameraManager();
+	PC->Possess(InPawnPtr);
+	PlayerControllers.Add(PC);
+	return PlayerControllers.Num() - 1;
+}
+
+APlayerController* UWorld::GetPlayerController(uint32 Index) const
+{
+	if (Index < PlayerControllers.Num())
+	{
+		return PlayerControllers[Index];
+	}
+	return nullptr;
+}
+
+APawn* UWorld::GetPlayerPawn(uint32 Index) const
+{
+	if (Index < PlayerControllers.Num())
+	{
+		if (PlayerControllers[Index])
+		{
+			return PlayerControllers[Index]->GetPawn();
+		}
+		return nullptr;
+	}
+	return nullptr;
+}
+
+FTimeController& UWorld::GetTimeController()
+{
+	return TimeController;
+}
+
+const FTimeController& UWorld::GetTimeController() const
+{
+	return TimeController;
+}
